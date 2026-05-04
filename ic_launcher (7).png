@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Solid background matching SVG background color -->
-    <background android:drawable="@color/ic_launcher_background"/>
-    <!-- Foreground PNG with 18dp safe-zone inset on all sides -->
-    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
-</adaptive-icon>
