@@ -1,0 +1,43 @@
+name: expensy
+description: A fully offline, feature-rich expense manager with Material You design.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  sqflite: ^2.3.3+1
+  path: ^1.9.0
+  path_provider: ^2.1.4
+  fl_chart: ^1.2.0
+  csv: ^6.0.0
+  share_plus: ^10.0.0
+  intl: ^0.20.2
+  uuid: ^4.5.0
+  file_picker: ^8.0.0
+  provider: ^6.1.2
+  shared_preferences: ^2.3.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+dependency_overrides:
+  meta: ^1.18.2
+  vector_math: ^2.3.0
+  xml: ^7.0.1
+  lints: ^6.1.0
+  matcher: ^0.12.20
+  test_api: ^0.7.12
+  file_picker: 8.3.2
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/splash_icon.png
+
