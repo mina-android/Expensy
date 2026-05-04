@@ -104,19 +104,19 @@ It stores everything locally using SQLite, works without internet, and respects 
 
 | Home | Transactions | Statistics |
 |------|-------------|------------|
-| ![Home](.github/screenshots/home.png) | ![Transactions](.github/screenshots/transactions.png) | ![Statistics](.github/screenshots/statistics.png) |
+| ![Home](screenshots/home.png) | ![Transactions](screenshots/transactions.png) | ![Statistics](screenshots/statistics.png) |
 
 | Accounts | Recurring Payments | Settings |
 |----------|-------------------|---------|
-| ![Accounts](.github/screenshots/accounts.png) | ![Recurring](.github/screenshots/recurring.png) | ![Settings](.github/screenshots/settings.png) |
+| ![Accounts](screenshots/accounts.png) | ![Recurring](screenshots/recurring.png) | ![Settings](screenshots/settings.png) |
 
 | Add Transaction | Transfer | Lent Money |
 |----------------|---------|-----------|
-| ![Add](.github/screenshots/add_transaction.png) | ![Transfer](.github/screenshots/transfer.png) | ![Lent](.github/screenshots/lent.png) |
+| ![Add](screenshots/add_transaction.png) | ![Transfer](screenshots/transfer.png) | ![Lent](screenshots/lent.png) |
 
 | Wishlist | Categories | Onboarding |
 |---------|------------|-----------|
-| ![Wishlist](.github/screenshots/wishlist.png) | ![Categories](.github/screenshots/categories.png) | ![Onboarding](.github/screenshots/onboarding.png) |
+| ![Wishlist](screenshots/wishlist.png) | ![Categories](screenshots/categories.png) | ![Onboarding](screenshots/onboarding.png) |
 
 ---
 
@@ -336,6 +336,42 @@ export PATH="$PATH:$HOME/Android/Sdk/platform-tools"
 - [ ] Multiple languages / localisation
 - [ ] Recurring payment auto-pay (automatically records the expense on due date)
 - [ ] PDF export for statements
+
+---
+
+
+## .gitignore
+
+When you create your GitHub repository, add a `.gitignore` file directly on GitHub  
+(*Add file → Create new file → name it `.gitignore`*) with the following content:
+
+```gitignore
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+*.iml
+
+# Android
+android/.gradle/
+android/local.properties
+android/key.properties
+*.jks
+*.keystore
+
+# IDE
+.idea/
+.vscode/
+*.suo
+*.log
+
+# macOS
+.DS_Store
+```
 
 ---
 
