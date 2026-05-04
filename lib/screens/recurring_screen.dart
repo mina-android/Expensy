@@ -17,6 +17,7 @@ class RecurringScreen extends StatelessWidget {
     final currency = app.settings.currency;
     String fmt(double v) => formatAmount(v, currency);
 
+    // Estimated monthly cost across all recurring payments
     double estMonthly = 0;
     for (final r in app.recurring) {
       switch (r.freqUnit) {
@@ -95,7 +96,7 @@ class RecurringScreen extends StatelessWidget {
   }
 }
 
-// ─── Card ─────────────────────────────────────────────────────────────────
+// ─── Card ──────────────────────────────────────────────────────────────────
 class _RecurringCard extends StatelessWidget {
   final RecurringPayment r;
   final AppProvider app;
@@ -109,16 +110,18 @@ class _RecurringCard extends StatelessWidget {
     final cat      = app.categoryById(r.categoryId);
     final catColor = cat != null ? Color(cat.colorValue) : cs.primary;
 
-    final total    = r.totalPayments;
-    final remaining = r.remainingPayments;
-    final progress = (total != null && total > 0)
+    final total     = r.totalPayments;     // null if no last payment set
+    final remaining = r.remainingPayments; // null if ongoing
+    final progress  = (total != null && total > 0)
         ? (r.paidPayments / total).clamp(0.0, 1.0)
         : null;
 
     final daysLeft = r.nextDate.difference(DateTime.now()).inDays;
     final overdue  = daysLeft < 0;
-    final endLabel = r.endDate != null
-        ? DateFormat('MMM yyyy').format(r.endDate!)
+
+    // Label for the last payment / end date
+    final lastLabel = r.endDate != null
+        ? DateFormat('d MMM yyyy').format(r.endDate!)
         : 'Ongoing';
 
     return Card(
@@ -128,6 +131,7 @@ class _RecurringCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header row
             Row(children: [
               CategoryDot(category: cat, size: 44),
               const SizedBox(width: 12),
@@ -139,40 +143,65 @@ class _RecurringCard extends StatelessWidget {
                         style: const TextStyle(
                             fontWeight: FontWeight.w700, fontSize: 15)),
                     Text(
-                      '${fmt(r.amount)} · ${r.frequencyLabel} · Until $endLabel',
+                      '${fmt(r.amount)} · ${r.frequencyLabel}',
                       style: TextStyle(
                           fontSize: 12,
                           color: cs.onSurface.withValues(alpha: 0.6)),
+                    ),
+                    // Show first → last payment dates
+                    Text(
+                      r.endDate != null
+                          ? '${DateFormat('d MMM yyyy').format(r.startDate)} → $lastLabel'
+                          : 'From ${DateFormat('d MMM yyyy').format(r.startDate)} · Ongoing',
+                      style: TextStyle(
+                          fontSize: 11,
+                          color: cs.onSurface.withValues(alpha: 0.5)),
                     ),
                   ],
                 ),
               ),
             ]),
 
-            if (progress != null) ...[
+            // Progress bar + payment count (only when last payment is set)
+            if (total != null && total > 0) ...[
               const SizedBox(height: 12),
-              LinearProgressCard(value: progress, color: catColor),
+              LinearProgressCard(value: progress ?? 0, color: catColor),
               const SizedBox(height: 6),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('${r.paidPayments}/${total ?? '?'} paid',
-                      style: const TextStyle(fontSize: 11)),
                   Text(
-                    remaining != null
-                        ? '$remaining left · ${fmt(r.remainingAmount)}'
-                        : '',
+                    '${r.paidPayments} of $total paid',
                     style: TextStyle(
                         fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: cs.primary),
+                        color: cs.onSurface.withValues(alpha: 0.6)),
                   ),
+                  // Remaining payments + remaining amount
+                  if (remaining != null && remaining > 0)
+                    Text(
+                      '$remaining left · ${fmt(r.remainingAmount)}',
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: cs.primary),
+                    ),
                 ],
+              ),
+              // Total cost line
+              const SizedBox(height: 2),
+              Text(
+                'Total: ${fmt(r.totalAmount)}  (${fmt(r.amount)} × $total)',
+                style: TextStyle(
+                    fontSize: 11,
+                    color: cs.onSurface.withValues(alpha: 0.5)),
               ),
             ],
 
             const SizedBox(height: 10),
+
+            // Action buttons row
             Row(children: [
+              // Due badge
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -214,7 +243,8 @@ class _RecurringCard extends StatelessWidget {
                     context: context,
                     builder: (ctx) => AlertDialog(
                       title: const Text('Skip Next Payment?'),
-                      content: Text('The next due date will move to '
+                      content: Text(
+                          'The next due date will move to '
                           '${DateFormat('d MMM yyyy').format(r.calcNextDate())}'),
                       actions: [
                         TextButton(
@@ -260,10 +290,7 @@ class _ActionBtn extends StatelessWidget {
   final Color color;
   final VoidCallback onTap;
   const _ActionBtn(
-      {required this.icon,
-      required this.label,
-      required this.color,
-      required this.onTap});
+      {required this.icon, required this.label, required this.color, required this.onTap});
 
   @override
   Widget build(BuildContext context) => GestureDetector(
@@ -287,7 +314,7 @@ class _ActionBtn extends StatelessWidget {
       );
 }
 
-// ─── Add / Edit sheet ─────────────────────────────────────────────────────
+// ─── Add / Edit sheet ──────────────────────────────────────────────────────
 class _RecurringSheet extends StatefulWidget {
   final AppProvider app;
   final RecurringPayment? existing;
@@ -303,8 +330,8 @@ class _RecurringSheetState extends State<_RecurringSheet> {
   final _freqValCtrl = TextEditingController(text: '1');
 
   String    _freqUnit  = 'months';
-  DateTime  _startDate = DateTime.now();
-  DateTime? _endDate;
+  DateTime  _firstPayment = DateTime.now(); // was startDate
+  DateTime? _lastPayment;                  // was endDate
   String?   _accountId;
   String?   _categoryId;
 
@@ -315,7 +342,7 @@ class _RecurringSheetState extends State<_RecurringSheet> {
     super.initState();
     final app = widget.app;
     final e   = widget.existing;
-    _accountId  = app.accounts.isNotEmpty ? app.accounts.first.id : null;
+    _accountId = app.accounts.isNotEmpty ? app.accounts.first.id : null;
     _categoryId =
         app.categories.where((c) => c.type == 'expense').isNotEmpty
             ? app.categories.firstWhere((c) => c.type == 'expense').id
@@ -325,8 +352,8 @@ class _RecurringSheetState extends State<_RecurringSheet> {
       _amountCtrl.text  = e.amount.toStringAsFixed(2);
       _freqValCtrl.text = '${e.freqVal}';
       _freqUnit         = e.freqUnit;
-      _startDate        = e.startDate;
-      _endDate          = e.endDate;
+      _firstPayment     = e.startDate;
+      _lastPayment      = e.endDate;
       _accountId        = e.accountId;
       _categoryId       = e.categoryId;
     }
@@ -340,34 +367,45 @@ class _RecurringSheetState extends State<_RecurringSheet> {
     super.dispose();
   }
 
+  // Live estimate based on first → last payment (inclusive)
   int? get _estPayments {
-    if (_endDate == null) return null;
+    if (_lastPayment == null) return null;
     final val = int.tryParse(_freqValCtrl.text) ?? 1;
+    // Use the model's _countPayments via a temporary object
     return RecurringPayment(
       id: '', name: '', accountId: '', categoryId: '',
       amount: 0, freqVal: val, freqUnit: _freqUnit,
-      startDate: _startDate, nextDate: _startDate, endDate: _endDate,
+      startDate: _firstPayment, nextDate: _firstPayment, endDate: _lastPayment,
     ).totalPayments;
   }
 
-  Future<void> _pickStartDate() async {
+  Future<void> _pickFirstPayment() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: _startDate,
+      initialDate: _firstPayment,
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
+      helpText: 'Select first payment date',
     );
-    if (picked != null) setState(() => _startDate = picked);
+    if (picked == null) return;
+    setState(() {
+      _firstPayment = picked;
+      // If last payment is now before first, clear it
+      if (_lastPayment != null && _lastPayment!.isBefore(picked)) {
+        _lastPayment = null;
+      }
+    });
   }
 
-  Future<void> _pickEndDate() async {
+  Future<void> _pickLastPayment() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: _endDate ?? _startDate.add(const Duration(days: 365)),
-      firstDate: _startDate,
+      initialDate: _lastPayment ?? _firstPayment.add(const Duration(days: 365)),
+      firstDate: _firstPayment,
       lastDate: DateTime(2100),
+      helpText: 'Select last payment date',
     );
-    if (picked != null) setState(() => _endDate = picked);
+    if (picked != null) setState(() => _lastPayment = picked);
   }
 
   Future<void> _submit() async {
@@ -377,24 +415,25 @@ class _RecurringSheetState extends State<_RecurringSheet> {
     if (_accountId == null || _categoryId == null) return;
 
     final freqVal = int.tryParse(_freqValCtrl.text) ?? 1;
+    final provider = context.read<AppProvider>();
 
     if (isEdit) {
       final e = widget.existing!;
-      await context.read<AppProvider>().updateRecurring(RecurringPayment(
+      await provider.updateRecurring(RecurringPayment(
         id: e.id, name: _nameCtrl.text.trim(),
         accountId: _accountId!, categoryId: _categoryId!,
         amount: amount, freqVal: freqVal, freqUnit: _freqUnit,
-        startDate: _startDate, nextDate: e.nextDate,
-        endDate: _endDate, paidPayments: e.paidPayments,
+        startDate: _firstPayment, nextDate: e.nextDate,
+        endDate: _lastPayment, paidPayments: e.paidPayments,
         reminderEnabled: false, notes: e.notes,
       ));
     } else {
-      await context.read<AppProvider>().addRecurring(RecurringPayment(
-        id: widget.app.newId(), name: _nameCtrl.text.trim(),
+      await provider.addRecurring(RecurringPayment(
+        id: provider.newId(), name: _nameCtrl.text.trim(),
         accountId: _accountId!, categoryId: _categoryId!,
         amount: amount, freqVal: freqVal, freqUnit: _freqUnit,
-        startDate: _startDate, nextDate: _startDate,
-        endDate: _endDate, paidPayments: 0, reminderEnabled: false,
+        startDate: _firstPayment, nextDate: _firstPayment,
+        endDate: _lastPayment, paidPayments: 0, reminderEnabled: false,
       ));
     }
     if (mounted) Navigator.pop(context);
@@ -429,6 +468,7 @@ class _RecurringSheetState extends State<_RecurringSheet> {
             ),
             const SizedBox(height: 18),
 
+            // Name
             TextField(
               controller: _nameCtrl,
               decoration: const InputDecoration(
@@ -437,6 +477,7 @@ class _RecurringSheetState extends State<_RecurringSheet> {
             ),
             const SizedBox(height: 12),
 
+            // Amount
             TextField(
               controller: _amountCtrl,
               keyboardType:
@@ -488,42 +529,43 @@ class _RecurringSheetState extends State<_RecurringSheet> {
                 ),
               ),
             ]),
-            const SizedBox(height: 12),
+            const SizedBox(height: 4),
 
-            // Start date
+            // ── First Payment date ──────────────────────────────────────
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.play_circle_outline),
               title: Text(
-                'Starts: ${DateFormat('d MMM yyyy').format(_startDate)}',
-                style: const TextStyle(fontWeight: FontWeight.w500),
+                'First Payment: ${DateFormat('d MMM yyyy').format(_firstPayment)}',
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
-              subtitle: const Text('Tap to change start date'),
-              onTap: _pickStartDate,
+              subtitle: const Text('Date of the first payment'),
+              onTap: _pickFirstPayment,
             ),
 
-            // End date
+            // ── Last Payment date ───────────────────────────────────────
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.event_outlined),
+              leading: const Icon(Icons.stop_circle_outlined),
               title: Text(
-                _endDate != null
-                    ? 'Ends: ${DateFormat('d MMM yyyy').format(_endDate!)}'
-                    : 'No end date (ongoing)',
-                style: const TextStyle(fontWeight: FontWeight.w500),
+                _lastPayment != null
+                    ? 'Last Payment: ${DateFormat('d MMM yyyy').format(_lastPayment!)}'
+                    : 'No last payment (ongoing)',
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
-              subtitle: const Text('Tap to set end date'),
-              trailing: _endDate != null
+              subtitle: const Text('Date of the final payment'),
+              trailing: _lastPayment != null
                   ? IconButton(
                       icon: const Icon(Icons.clear),
-                      onPressed: () => setState(() => _endDate = null),
+                      tooltip: 'Remove last payment date',
+                      onPressed: () => setState(() => _lastPayment = null),
                     )
                   : null,
-              onTap: _pickEndDate,
+              onTap: _pickLastPayment,
             ),
 
-            // Estimate
-            if (est != null && amount > 0)
+            // ── Live estimate card ──────────────────────────────────────
+            if (est != null && est > 0 && amount > 0)
               Container(
                 padding: const EdgeInsets.all(14),
                 margin: const EdgeInsets.only(bottom: 12),
@@ -531,43 +573,58 @@ class _RecurringSheetState extends State<_RecurringSheet> {
                   color: cs.primaryContainer,
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Estimated Payments',
-                            style: TextStyle(
-                                fontSize: 11,
-                                color: cs.onPrimaryContainer
-                                    .withValues(alpha: 0.7))),
-                        Text('$est payments',
-                            style: TextStyle(
-                                fontWeight: FontWeight.w800,
-                                color: cs.primary)),
-                      ],
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text('Total Cost',
-                            style: TextStyle(
-                                fontSize: 11,
-                                color: cs.onPrimaryContainer
-                                    .withValues(alpha: 0.7))),
-                        Text(
-                          formatAmount(est * amount, currency),
-                          style: TextStyle(
-                              fontWeight: FontWeight.w800,
-                              color: cs.primary),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Total Payments',
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color: cs.onPrimaryContainer
+                                        .withValues(alpha: 0.7))),
+                            Text('$est payments',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 16,
+                                    color: cs.primary)),
+                          ],
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text('Total Cost',
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color: cs.onPrimaryContainer
+                                        .withValues(alpha: 0.7))),
+                            Text(
+                              formatAmount(est * amount, currency),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 16,
+                                  color: cs.primary),
+                            ),
+                          ],
                         ),
                       ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${formatAmount(amount, currency)} × $est payments',
+                      style: TextStyle(
+                          fontSize: 11,
+                          color: cs.onPrimaryContainer.withValues(alpha: 0.6)),
                     ),
                   ],
                 ),
               ),
 
+            // Account
             if (app.accounts.isNotEmpty) ...[
               DropdownButtonFormField<String>(
                 initialValue: _accountId,
@@ -584,6 +641,7 @@ class _RecurringSheetState extends State<_RecurringSheet> {
               const SizedBox(height: 12),
             ],
 
+            // Category
             if (expCats.isNotEmpty) ...[
               DropdownButtonFormField<String>(
                 initialValue: _categoryId,
@@ -596,10 +654,9 @@ class _RecurringSheetState extends State<_RecurringSheet> {
                     .toList(),
                 onChanged: (v) => setState(() => _categoryId = v),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
             ],
 
-            const SizedBox(height: 4),
             FilledButton.icon(
               onPressed: _submit,
               icon: Icon(isEdit ? Icons.save_outlined : Icons.add),
@@ -611,6 +668,7 @@ class _RecurringSheetState extends State<_RecurringSheet> {
                     borderRadius: BorderRadius.circular(28)),
               ),
             ),
+            const SizedBox(height: 4),
           ],
         ),
       ),

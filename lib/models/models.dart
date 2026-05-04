@@ -196,20 +196,25 @@ class RecurringPayment {
     this.notes = '',
   });
 
+  // Total payments = exact count from first payment to last payment (inclusive).
+  // Example: monthly, first=Jan, last=Dec → 12 payments.
   int? get totalPayments {
     if (endDate == null) return null;
-    return _calcPaymentsInRange(startDate, endDate!, freqVal, freqUnit);
+    return _countPayments(startDate, endDate!, freqVal, freqUnit);
   }
 
+  // Remaining = total - already paid
   int? get remainingPayments {
     if (endDate == null) return null;
-    final now = DateTime.now();
-    if (nextDate.isAfter(endDate!)) return 0;
-    return _calcPaymentsInRange(
-        nextDate.isBefore(now) ? now : nextDate, endDate!, freqVal, freqUnit);
+    final total = totalPayments ?? 0;
+    final remaining = total - paidPayments;
+    return remaining < 0 ? 0 : remaining;
   }
 
   double get remainingAmount => (remainingPayments ?? 0) * amount;
+
+  // Total cost = number of payments × amount per payment
+  double get totalAmount => (totalPayments ?? 0) * amount;
 
   String get frequencyLabel {
     if (freqVal == 1) {
@@ -223,21 +228,27 @@ class RecurringPayment {
     return 'Every $freqVal $freqUnit';
   }
 
-  static int _calcPaymentsInRange(
-      DateTime from, DateTime to, int freqVal, String freqUnit) {
-    if (to.isBefore(from) || to.isAtSameMomentAs(from)) return 0;
+  /// Count the number of payment occurrences from [first] to [last] inclusive.
+  /// First payment is on [first], then every freqVal units, last on or before [last].
+  static int _countPayments(
+      DateTime first, DateTime last, int freqVal, String freqUnit) {
+    if (last.isBefore(first)) return 0;
     switch (freqUnit) {
       case 'days':
-        return (to.difference(from).inDays / freqVal).ceil();
+        final diff = last.difference(first).inDays;
+        return (diff / freqVal).floor() + 1;
       case 'weeks':
-        return (to.difference(from).inDays / (freqVal * 7)).ceil();
+        final diff = last.difference(first).inDays;
+        return (diff / (freqVal * 7)).floor() + 1;
       case 'months':
-        final months = (to.year - from.year) * 12 + (to.month - from.month);
-        return (months / freqVal).ceil();
+        final months = (last.year - first.year) * 12 + (last.month - first.month);
+        return (months / freqVal).floor() + 1;
       case 'years':
-        return ((to.year - from.year) / freqVal).ceil();
+        final years = last.year - first.year;
+        return (years / freqVal).floor() + 1;
       default:
-        return (to.difference(from).inDays / (freqVal * 30)).ceil();
+        final months = (last.year - first.year) * 12 + (last.month - first.month);
+        return (months / freqVal).floor() + 1;
     }
   }
 
