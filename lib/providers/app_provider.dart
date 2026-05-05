@@ -23,7 +23,7 @@ class AppSettings {
   AppSettings({
     this.currency    = 'EGP',
     this.themeSeed   = 'violet',
-    this.darkMode    = false,
+    this.darkMode    = true,
     this.weekStart   = 'monday',
     this.hideBalance = false,
     this.userName    = '',

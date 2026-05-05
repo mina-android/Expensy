@@ -59,26 +59,40 @@ class _SplashScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: cs.primary,
+      backgroundColor: cs.surface,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Custom app icon from drawable/splash_icon.png
-            ClipRRect(
-              borderRadius: BorderRadius.circular(28),
-              child: Image.asset(
-                'assets/splash_icon.png',
-                width: 110,
-                height: 110,
-                fit: BoxFit.cover,
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.35),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(28),
+                child: Image.asset(
+                  'assets/splash_icon.png',
+                  width: 120,
+                  height: 120,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
             const SizedBox(height: 28),
             Text(
               'Expensy',
               style: TextStyle(
-                color: cs.onPrimary,
+                color: cs.onSurface,
                 fontSize: 34,
                 fontWeight: FontWeight.w800,
                 letterSpacing: -0.5,
@@ -88,13 +102,12 @@ class _SplashScreen extends StatelessWidget {
             Text(
               'Your personal finance tracker',
               style: TextStyle(
-                color: cs.onPrimary.withValues(alpha: 0.7),
+                color: cs.onSurface.withValues(alpha: 0.6),
                 fontSize: 13,
               ),
             ),
             const SizedBox(height: 48),
-            CircularProgressIndicator(
-                color: cs.onPrimary.withValues(alpha: 0.7)),
+            CircularProgressIndicator(color: cs.primary),
           ],
         ),
       ),

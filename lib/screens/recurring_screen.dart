@@ -39,26 +39,38 @@ class RecurringScreen extends StatelessWidget {
             padding: const EdgeInsets.only(right: 14),
             child: Row(
               mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                  const Text('Monthly',
-                      style: TextStyle(fontSize: 9, color: Colors.white70)),
-                  Text(fmt(estMonthly),
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                          fontSize: 13)),
-                ]),
-                const SizedBox(width: 14),
-                Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                  const Text('Weekly',
-                      style: TextStyle(fontSize: 9, color: Colors.white70)),
-                  Text(fmt(estMonthly / 4.33),
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                          fontSize: 13)),
-                ]),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Text('Monthly',
+                        style: TextStyle(fontSize: 9, color: Colors.white70)),
+                    const SizedBox(height: 2),
+                    Text(fmt(estMonthly),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            fontSize: 13)),
+                  ],
+                ),
+                const SizedBox(width: 16),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Text('Weekly',
+                        style: TextStyle(fontSize: 9, color: Colors.white70)),
+                    const SizedBox(height: 2),
+                    Text(fmt(estMonthly / 4.33),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            fontSize: 13)),
+                  ],
+                ),
               ],
             ),
           ),
@@ -125,15 +137,15 @@ class _RecurringCard extends StatelessWidget {
         : 'Ongoing';
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 14),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header row
             Row(children: [
-              CategoryDot(category: cat, size: 44),
+              CategoryDot(category: cat, size: 50),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -141,11 +153,11 @@ class _RecurringCard extends StatelessWidget {
                   children: [
                     Text(r.name,
                         style: const TextStyle(
-                            fontWeight: FontWeight.w700, fontSize: 15)),
+                            fontWeight: FontWeight.w700, fontSize: 17)),
                     Text(
                       '${fmt(r.amount)} · ${r.frequencyLabel}',
                       style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 14,
                           color: cs.onSurface.withValues(alpha: 0.6)),
                     ),
                     // Show first → last payment dates

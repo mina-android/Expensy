@@ -136,13 +136,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       key: const ValueKey(0),
       children: [
         const SizedBox(height: 40),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: Image.asset(
-            'assets/splash_icon.png',
-            width: 100,
-            height: 100,
-            fit: BoxFit.cover,
+        Container(
+          width: 110,
+          height: 110,
+          decoration: BoxDecoration(
+            color: const Color(0xFFE3F2FD),
+            borderRadius: BorderRadius.circular(26),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF1565C0).withValues(alpha: 0.15),
+                blurRadius: 20,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(26),
+            child: Image.asset(
+              'assets/splash_icon.png',
+              width: 110,
+              height: 110,
+              fit: BoxFit.cover,
+            ),
           ),
         ),
         const SizedBox(height: 32),

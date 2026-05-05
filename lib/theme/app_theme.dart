@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 // ─── Seed colours ─────────────────────────────────────────────────────────
 const Map<String, Color> kSeedColours = {
+  // Original 15
   'violet':      Color(0xFF6750A4),
   'blue':        Color(0xFF0061A4),
   'green':       Color(0xFF386A1F),
@@ -18,6 +19,17 @@ const Map<String, Color> kSeedColours = {
   'crimson':     Color(0xFFB71C1C),
   'midnight':    Color(0xFF1A237E),
   'pitch_black': Color(0xFF1C1C1C),
+  // New 10
+  'sky':         Color(0xFF0277BD),
+  'forest':      Color(0xFF1B5E20),
+  'coral':       Color(0xFFD84315),
+  'gold':        Color(0xFFF9A825),
+  'slate':       Color(0xFF37474F),
+  'magenta':     Color(0xFF880E4F),
+  'turquoise':   Color(0xFF004D40),
+  'brown':       Color(0xFF4E342E),
+  'olive':       Color(0xFF827717),
+  'lavender':    Color(0xFF6A1B9A),
 };
 
 const Map<String, String> kSeedLabels = {
@@ -36,6 +48,16 @@ const Map<String, String> kSeedLabels = {
   'crimson':     'Crimson',
   'midnight':    'Midnight',
   'pitch_black': 'Pitch Black',
+  'sky':         'Sky Blue',
+  'forest':      'Forest',
+  'coral':       'Coral',
+  'gold':        'Gold',
+  'slate':       'Slate',
+  'magenta':     'Magenta',
+  'turquoise':   'Turquoise',
+  'brown':       'Brown',
+  'olive':       'Olive',
+  'lavender':    'Lavender',
 };
 
 Color seedColour(String key) =>

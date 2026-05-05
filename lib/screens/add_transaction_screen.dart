@@ -198,22 +198,87 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             ),
             const SizedBox(height: 14),
 
-            // Account
-            if (app.accounts.isNotEmpty)
-              DropdownButtonFormField<String>(
-                initialValue: _accountId,
-                decoration: const InputDecoration(
-                  labelText: 'Account',
-                  prefixIcon: Icon(Icons.account_balance_wallet_outlined),
+            // Account — clickable cards
+            if (app.accounts.isNotEmpty) ...[
+              Text('Account',
+                  style: Theme.of(context)
+                      .textTheme
+                      .labelMedium
+                      ?.copyWith(letterSpacing: 1)),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 72,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: app.accounts.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 10),
+                  itemBuilder: (_, i) {
+                    final acc = app.accounts[i];
+                    final sel = _accountId == acc.id;
+                    return GestureDetector(
+                      onTap: () => setState(() => _accountId = acc.id),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        width: 130,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: sel
+                              ? Color(acc.colorValue)
+                              : Color(acc.colorValue).withValues(alpha: 0.10),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: sel
+                                ? Color(acc.colorValue)
+                                : Color(acc.colorValue)
+                                    .withValues(alpha: 0.35),
+                            width: sel ? 2 : 1,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            AccountTypeIcon(
+                              type: acc.type,
+                              size: 16,
+                              color: sel
+                                  ? Colors.white
+                                  : Color(acc.colorValue),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              acc.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: sel
+                                    ? Colors.white
+                                    : Color(acc.colorValue),
+                              ),
+                            ),
+                            Text(
+                              formatAmount(acc.balance, acc.currency),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: sel
+                                    ? Colors.white.withValues(alpha: 0.8)
+                                    : cs.onSurface.withValues(alpha: 0.5),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
-                items: app.accounts
-                    .map((a) => DropdownMenuItem<String>(
-                        value: a.id,
-                        child: Text(a.name)))
-                    .toList(),
-                onChanged: (v) => setState(() => _accountId = v),
               ),
-            const SizedBox(height: 14),
+              const SizedBox(height: 14),
+            ],
 
             // Category chips
             if (filteredCats.isNotEmpty) ...[

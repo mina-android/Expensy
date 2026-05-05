@@ -50,9 +50,9 @@ class HomeScreen extends StatelessWidget {
                             Text(
                               'Hi, ${app.settings.userName}',
                               style: TextStyle(
-                                  color: cs.onPrimary.withValues(alpha: 0.85),
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500),
+                                  color: cs.onPrimary.withValues(alpha: 0.95),
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w800),
                             ),
                             Container(
                               padding: const EdgeInsets.symmetric(

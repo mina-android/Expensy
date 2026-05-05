@@ -226,8 +226,9 @@ class _AccountSheet extends StatefulWidget {
 class _AccountSheetState extends State<_AccountSheet> {
   final _nameCtrl = TextEditingController();
   final _balCtrl  = TextEditingController();
-  String _type  = 'bank';
-  int    _color = 0xFF6750A4;
+  String _type     = 'bank';
+  int    _color     = 0xFF6750A4;
+  String _currency  = 'EGP';
 
   static const _colors = [
     0xFF6750A4, 0xFF7D5260, 0xFF1565C0,
@@ -238,12 +239,14 @@ class _AccountSheetState extends State<_AccountSheet> {
   @override
   void initState() {
     super.initState();
+    _currency = widget.app.settings.currency;
     final e = widget.existing;
     if (e != null) {
       _nameCtrl.text = e.name;
       _balCtrl.text  = e.balance.toStringAsFixed(2);
-      _type  = e.type;
-      _color = e.colorValue;
+      _type     = e.type;
+      _color    = e.colorValue;
+      _currency = e.currency;
     }
   }
 
@@ -264,6 +267,7 @@ class _AccountSheetState extends State<_AccountSheet> {
         type:       _type,
         balance:    double.tryParse(_balCtrl.text) ?? widget.existing!.balance,
         colorValue: _color,
+        currency:   _currency,
       );
       await app.updateAccount(updated);
     } else {
@@ -272,7 +276,7 @@ class _AccountSheetState extends State<_AccountSheet> {
         name:        _nameCtrl.text.trim(),
         type:        _type,
         balance:     double.tryParse(_balCtrl.text) ?? 0,
-        currency:    app.settings.currency,
+        currency:    _currency,
         colorValue:  _color,
       );
       await app.addAccount(a);
@@ -318,6 +322,17 @@ class _AccountSheetState extends State<_AccountSheet> {
                 DropdownMenuItem(value: 'wallet',  child: Text('E-Wallet')),
               ],
               onChanged: (v) => setState(() => _type = v!),
+            ),
+            const SizedBox(height: 14),
+            DropdownButtonFormField<String>(
+              value: _currency,
+              decoration: const InputDecoration(
+                  labelText: 'Currency',
+                  prefixIcon: Icon(Icons.monetization_on_outlined)),
+              items: kCurrencies.map((cur) => DropdownMenuItem<String>(
+                  value: cur.code,
+                  child: Text('${cur.code}  ${cur.symbol}  — ${cur.name}'))).toList(),
+              onChanged: (v) => setState(() => _currency = v!),
             ),
             const SizedBox(height: 14),
             TextField(
