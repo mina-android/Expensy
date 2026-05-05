@@ -292,53 +292,6 @@ adb install build/app/outputs/flutter-apk/app-release.apk
 
 ---
 
-## Troubleshooting
-
-### `flutter pub get` fails
-```bash
-flutter clean
-flutter pub get
-```
-
-### Gradle build fails on Windows (different drive letters)
-This is a known Kotlin incremental compiler issue when your Flutter pub cache  
-is on a different drive than your project (e.g. cache on `C:`, project on `D:`).  
-
-**Fix** — Add this to `android/gradle.properties`:
-```properties
-kotlin.incremental=false
-```
-Then run `flutter clean && flutter run`.
-
-### Accept Android SDK licenses
-```bash
-flutter doctor --android-licenses
-# Type 'y' to accept each one
-```
-
-### `adb: command not found`
-Add Android SDK platform-tools to your PATH:
-```bash
-# Windows (PowerShell)
-$env:Path += ";$HOME\AppData\Local\Android\Sdk\platform-tools"
-
-# macOS / Linux
-export PATH="$PATH:$HOME/Android/Sdk/platform-tools"
-```
-
----
-
-## Roadmap
-
-- [ ] iOS support
-- [ ] Home screen widget (current balance)
-- [ ] Custom currency input (manual symbol + code)
-- [ ] Multiple languages / localisation
-- [ ] Recurring payment auto-pay (automatically records the expense on due date)
-- [ ] PDF export for statements
-
----
-
 
 ## .gitignore
 
