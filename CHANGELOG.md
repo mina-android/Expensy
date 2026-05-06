@@ -4,22 +4,50 @@ All notable changes to Expensy are documented in this file.
 
 ---
 
+## [1.0.2] — 2025-05-06
+
+### Added
+- **Themed monochrome icon (Android 13+)** — Expensy now ships an `ic_launcher_monochrome` layer using a clean wallet outline silhouette. On Android 13+ with Themed Icons enabled, the launcher automatically recolours the icon to match your wallpaper palette
+- **Adaptive icon — all density buckets** — Monochrome layer generated at all 5 density sizes (mdpi → xxxhdpi) at 32/108dp fill ratio
+- **Account cards in Recurring Payments** — Account selection in the add/edit sheet replaced with horizontal scrollable coloured cards
+- **Account cards in Lent Money** — Card-based account picker (includes a "None" card for optional linking)
+- **Account cards in Transfer** — FROM and TO each have their own horizontal card row; same-as-FROM account is dimmed and non-tappable
+- **Category chips in Recurring Payments** — Coloured pill chips in a wrapping layout replace the category dropdown
+- **24 account colours** — Colour picker expanded from 8 to 24 colours
+
+### Changed
+- **App icon** — New 3D wallet PNG with white background, 45/108dp fill ratio, +1px right / −1px up offset
+- **Splash screen** — Icon shown directly on app surface, no background container
+- **Onboarding welcome** — Icon shown without a background container, same as splash
+- **Navigation restructured** — Bottom bar: Home · Transactions · **Recurring** · Accounts · More. Statistics moved to the More tab
+- **Recurring — Monthly/Weekly** — Moved from inside the AppBar into two separate summary cards below the title bar
+- **Skip button** — Now increments `paidPayments` (advances progress bar) without touching the account balance or recording a transaction
+- **Description field** — No longer required when adding a transaction
+- **Colour picker scrollable** — All 24 account colours now horizontally scrollable; no longer clipped on small screens
+- **Version** — Bumped to `1.0.2+3`
+
+### Fixed
+- Account colour picker clipped on narrow screens — wrapped in `SingleChildScrollView`
+- Monthly/Weekly estimates were inside the AppBar rectangle; now below it
+
+---
+
 ## [1.0.1] — 2025-05-05
 
 ### Added
-- **Account currency** — each account now has its own independent currency setting; choose it when creating or editing an account (`Accounts → + / Edit`)
-- **10 new theme colours** — total themes expanded from 15 to 25: Sky Blue, Forest, Coral, Gold, Slate, Magenta, Turquoise, Brown, Olive, Lavender
-- **Account cards in Add Transaction** — instead of a dropdown, accounts are now shown as horizontal scrollable cards with their colour, name, and current balance; tap a card to select it
+- **Account currency** — each account has its own independent currency setting
+- **10 new theme colours** — total 25: Sky Blue, Forest, Coral, Gold, Slate, Magenta, Turquoise, Brown, Olive, Lavender
+- **Account cards in Add Transaction** — horizontal scrollable cards replace the account dropdown
 
 ### Changed
 - **Dark mode on by default** — new installs start in dark mode
-- **"Hi, [name]" greeting** — font size increased from 14 to 22px (Bold) on the Home dashboard
-- **Recurring payment cards** — larger padding (16 → 20px), bigger icon (44 → 50px), larger name font (15 → 17px) and amount font (12 → 14px)
-- **Recurring app bar** — Monthly and Weekly estimates are now properly centred vertically in the app bar
+- **"Hi, [name]" greeting** — font size 14 → 22px, weight w500 → w800
+- **Recurring payment cards** — padding 16 → 20px, icon 44 → 50px, fonts larger
+- **App icon** — updated to new 3D wallet PNG with white background
 - **Version** — bumped to `1.0.1+2`
 
 ### Fixed
-- Monthly and Weekly estimates in the Recurring Payments header were slightly top-aligned; now centred
+- Monthly/Weekly estimates in Recurring header slightly top-aligned; now centred
 
 ---
 
@@ -28,32 +56,20 @@ All notable changes to Expensy are documented in this file.
 ### Initial Release
 
 #### Core features
-- **Multi-account management** — Bank, Cash, Savings, Credit Card, E-Wallet; custom colours
-- **Transactions** — Add, edit, delete income and expense transactions; search and filter by type/account; group by date
-- **Account transfers** — Move money between accounts with live balance preview; auto-records debit + credit
-- **Statistics** — 6-month side-by-side bar chart (income vs expense); monthly expense pie chart; navigate by month
-- **Recurring payments** — Track subscriptions and instalments; set First Payment / Last Payment dates; see total payments and total cost (inclusive count); frequency: days / weeks / months / years; Skip next payment; Pay (records expense); Edit; Delete; monthly + weekly estimate in header
-- **Wishlist** — Track items to save for with target price and priority (Low / Medium / High); mark as purchased
-- **Lent Money** — Track money lent or borrowed; link to account (balance affected automatically); due dates; settle (reverses balance); net summary
-- **Categories** — Custom income and expense categories with colour picker; default categories editable and deletable
-- **Export** — CSV export via system share sheet; compatible with Excel and Google Sheets
-- **Backup & Restore** — Full JSON backup of all data; restore from file
+- Multi-account management (Bank, Cash, Savings, Credit Card, E-Wallet; custom colours)
+- Transactions — add, edit, delete, search, filter by type/account, grouped by date
+- Account transfers — live balance preview, auto debit + credit records
+- Statistics — 6-month bar chart, expense pie chart, month navigation
+- Recurring payments — First/Last payment dates, inclusive count, skip, pay, edit, delete
+- Wishlist — target price, priority, mark purchased
+- Lent Money — lent/borrowed, link account, due dates, settle
+- Categories — custom income/expense categories, colour picker, default categories editable
+- Export — CSV via share sheet
+- Backup & Restore — full JSON backup
 
 #### Settings
-- Dark mode toggle
-- 15 theme colour seeds: Violet, Blue, Green, Rose, Amber, Teal, Orange, Indigo, Cyan, Pink, Lime, Deep Purple, Crimson, Midnight, Pitch Black
-- 8 currency options: EGP, USD, EUR, GBP, SAR, AED, JPY, CAD
-- Per-account currency
-- Week starts on Monday or Sunday
-- Hide balance (shows •••••• in dashboard)
-- Display name
+- Dark mode, 15 theme colours, 8 currencies, per-account currency, week start day, hide balance, display name
 
 #### Technical
-- 100% offline — no internet permission
-- SQLite local database (`sqflite`)
-- Material You design system with adaptive themes
-- Provider state management
-- Adaptive Android launcher icon (supports circle, squircle, square, and all launcher shapes)
-- Custom app icon with light-blue background
-- Package: `com.ma.expensy`
-- Min Android: 5.0 (API 21)
+- 100% offline, SQLite, Material You, Provider state management
+- Adaptive launcher icon, `com.ma.expensy`, min Android 5.0 (API 21)
