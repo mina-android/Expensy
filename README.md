@@ -135,94 +135,6 @@ More tab:    Statistics · Wishlist · Lent Money · Categories · Export · Bac
 
 ---
 
-## Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| **Framework** | Flutter 3.3+ |
-| **Language** | Dart 3.3+ |
-| **Database** | sqflite — local SQLite |
-| **State** | provider |
-| **Charts** | fl_chart 1.2+ |
-| **Preferences** | shared_preferences |
-| **CSV Export** | csv |
-| **File Sharing** | share_plus |
-| **File Picker** | file_picker |
-| **Date Formatting** | intl |
-
-No internet permission. All data lives in a local SQLite database.
-
----
-
-## Project Structure
-
-```
-lib/
-├── main.dart                      # Entry point, splash screen, theme setup
-├── models/models.dart             # All data models
-├── database/db_helper.dart        # SQLite CRUD for all 6 tables
-├── providers/app_provider.dart    # Global state (ChangeNotifier)
-├── theme/app_theme.dart           # 25 theme seeds, 8 currencies, formatting
-├── widgets/shared_widgets.dart    # Reusable UI components
-└── screens/
-    ├── onboarding_screen.dart     # 4-step first-launch setup
-    ├── main_shell.dart            # Bottom navigation (Home/Transactions/Recurring/Accounts/More)
-    ├── home_screen.dart           # Dashboard — balance, income/expense/net chips
-    ├── transactions_screen.dart   # Transaction history, search, filter
-    ├── add_transaction_screen.dart# Add / edit a transaction (account cards)
-    ├── statistics_screen.dart     # Charts and monthly summary (in More tab)
-    ├── accounts_screen.dart       # Account list, add/edit with 24 colours
-    ├── transfer_screen.dart       # Move money — FROM row + TO row cards
-    ├── more_screen.dart           # Hub: Statistics, Wishlist, Lent, Categories, Export, Backup, Settings
-    ├── recurring_screen.dart      # Recurring payments (bottom bar tab)
-    ├── wishlist_screen.dart       # Wishlist tracker
-    ├── lended_screen.dart         # Lent / borrowed money
-    ├── categories_screen.dart     # Category management
-    ├── settings_screen.dart       # App settings
-    ├── export_screen.dart         # CSV export
-    └── backup_screen.dart         # Backup & restore
-```
-
----
-
-## Building from Source
-
-### Prerequisites
-
-| Tool | Version | Download |
-|------|---------|---------|
-| Flutter SDK | 3.3+ | [flutter.dev](https://flutter.dev/docs/get-started/install) |
-| Android Studio | Latest | [developer.android.com/studio](https://developer.android.com/studio) |
-| Java JDK | 11+ | [adoptium.net](https://adoptium.net/) |
-
-```bash
-flutter doctor
-```
-
-### Steps
-
-```bash
-# 1. Clone
-git clone https://github.com/yourusername/expensy.git
-cd expensy
-
-# 2. Install dependencies
-flutter pub get
-
-# 3. Run in development
-flutter run
-
-# 4. Build release APK
-flutter build apk --release
-
-# Split by CPU architecture (smaller files, recommended)
-flutter build apk --split-per-abi --release
-```
-
-Output: `build/app/outputs/flutter-apk/app-arm64-v8a-release.apk`
-
----
-
 ## Installation
 
 1. Go to [**Releases**](https://github.com/yourusername/expensy/releases)
@@ -259,62 +171,6 @@ Output: `build/app/outputs/flutter-apk/app-arm64-v8a-release.apk`
 
 ---
 
-## Troubleshooting
-
-**`flutter pub get` fails**
-```bash
-flutter clean && flutter pub get
-```
-
-**Gradle build fails on Windows (different drive letters)**  
-Add to `android/gradle.properties`:
-```properties
-kotlin.incremental=false
-```
-Then `flutter clean && flutter run`.
-
-**Accept Android SDK licenses**
-```bash
-flutter doctor --android-licenses
-```
-
----
-
-## .gitignore
-
-Create `.gitignore` directly on GitHub (*Add file → Create new file*):
-
-```gitignore
-.dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
-.packages
-.pub-cache/
-.pub/
-build/
-*.iml
-android/.gradle/
-android/local.properties
-android/key.properties
-*.jks
-*.keystore
-.idea/
-.vscode/
-.DS_Store
-```
-
----
-
-## Roadmap
-
-- [ ] iOS support
-- [ ] Home screen widget (current balance)
-- [ ] Custom currency input
-- [ ] Multiple languages / localisation
-- [ ] Recurring payment auto-pay
-
----
-
 ## Contributing
 
 1. Fork the repository
@@ -329,7 +185,7 @@ Code style: no `withOpacity()` (use `withValues(alpha:)`), no unnecessary blank 
 
 ## License
 
-MIT License — Copyright (c) 2025 Mina
+MIT License — Copyright (c) 2026 Mina
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
