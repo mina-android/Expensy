@@ -110,19 +110,19 @@ Most finance apps require you to sign up, sync to the cloud, or show ads. Expens
 
 | Home | Transactions | Recurring |
 |------|-------------|-----------|
-| ![Home](screenshots/home.pn) | ![Transactions](screenshots/transactions.pn) | ![Recurring](screenshots/recurring.pn) |
+| ![Home](screenshots/home.png) | ![Transactions](screenshots/transactions.png) | ![Recurring](screenshots/recurring.png) |
 
 | Accounts | Lent Money | Transfer |
 |----------|-----------|---------|
-| ![Accounts](screenshots/accounts.pn) | ![Lent](screenshots/lent.pn) | ![Transfer](screenshots/transfer.pn) |
+| ![Accounts](screenshots/accounts.png) | ![Lent](screenshots/lent.png) | ![Transfer](screenshots/transfer.png) |
 
 | Statistics | Wishlist | Settings |
 |-----------|---------|---------|
-| ![Statistics](screenshots/statistics.pn) | ![Wishlist](screenshots/wishlist.pn) | ![Settings](screenshots/settings.pn) |
+| ![Statistics](screenshots/statistics.png) | ![Wishlist](screenshots/wishlist.png) | ![Settings](screenshots/settings.png) |
 
 | Add Transaction | Categories | Onboarding |
 |----------------|-----------|-----------|
-| ![Add](screenshots/add_transaction.pn) | ![Categories](screenshots/categories.pn) | ![Onboarding](screenshots/onboarding.pn) |
+| ![Add](screenshots/add_transaction.png) | ![Categories](screenshots/categories.png) | ![Onboarding](screenshots/onboarding.png) |
 
 ---
 
