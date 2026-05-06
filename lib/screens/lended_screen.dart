@@ -403,22 +403,99 @@ class _LendSheetState extends State<_LendSheet> {
           ),
           const SizedBox(height: 12),
 
-          // Account picker
-          if (widget.app.accounts.isNotEmpty)
-            DropdownButtonFormField<String>(
-              initialValue: _accountId,
-              decoration: const InputDecoration(
-                labelText: 'From Account (optional)',
-                prefixIcon: Icon(Icons.account_balance_wallet_outlined),
+          // Account picker — cards (fix 3)
+          if (widget.app.accounts.isNotEmpty) ...[
+            Text('Account (optional)',
+                style: TextStyle(fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurface
+                        .withValues(alpha: 0.6), letterSpacing: 0.8)),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 72,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: widget.app.accounts.length + 1,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (_, i) {
+                  final cs = Theme.of(context).colorScheme;
+                  if (i == 0) {
+                    final sel = _accountId == null;
+                    return GestureDetector(
+                      onTap: () => setState(() => _accountId = null),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        width: 90,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: sel
+                              ? cs.primary.withValues(alpha: 0.15)
+                              : cs.surfaceContainerHigh,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                              color: sel ? cs.primary : Colors.transparent,
+                              width: sel ? 2 : 1),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.block_outlined, size: 16,
+                                color: sel ? cs.primary
+                                    : cs.onSurface.withValues(alpha: 0.5)),
+                            const SizedBox(height: 4),
+                            Text('None', style: TextStyle(fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: sel ? cs.primary
+                                    : cs.onSurface.withValues(alpha: 0.6))),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+                  final acc = widget.app.accounts[i - 1];
+                  final sel = _accountId == acc.id;
+                  final color = Color(acc.colorValue);
+                  return GestureDetector(
+                    onTap: () => setState(() => _accountId = acc.id),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      width: 120,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: sel ? color : color.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: sel ? color : color.withValues(alpha: 0.35),
+                            width: sel ? 2 : 1),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          AccountTypeIcon(type: acc.type, size: 14,
+                              color: sel ? Colors.white : color),
+                          const SizedBox(height: 3),
+                          Text(acc.name, maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: sel ? Colors.white : color)),
+                          Text(formatAmount(acc.balance, acc.currency),
+                              maxLines: 1, overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 9,
+                                  color: sel
+                                      ? Colors.white.withValues(alpha: 0.8)
+                                      : cs.onSurface.withValues(alpha: 0.5))),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
-              items: [
-                const DropdownMenuItem(value: null, child: Text('No account')),
-                ...widget.app.accounts.map((a) =>
-                    DropdownMenuItem(value: a.id, child: Text(a.name))),
-              ],
-              onChanged: (v) => setState(() => _accountId = v),
             ),
-          const SizedBox(height: 12),
+            const SizedBox(height: 12),
+          ],
 
           ListTile(
             contentPadding: EdgeInsets.zero,

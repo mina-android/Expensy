@@ -54,10 +54,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       showError(context, 'Please enter a valid amount');
       return;
     }
-    if (_descCtrl.text.trim().isEmpty) {
-      showError(context, 'Please enter a description');
-      return;
-    }
     final accId = _accountId ?? (app.accounts.isNotEmpty ? app.accounts.first.id : null);
     final catId = _categoryId ??
         (app.categories.where((c) => c.type == _type).isNotEmpty

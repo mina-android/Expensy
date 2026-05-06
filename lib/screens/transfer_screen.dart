@@ -167,72 +167,131 @@ class _TransferScreenState extends State<TransferScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // From / To row
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('FROM',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelSmall
-                                    ?.copyWith(letterSpacing: 1)),
-                            const SizedBox(height: 6),
-                            DropdownButtonFormField<String>(
-                              initialValue: _fromId,
-                              decoration: const InputDecoration(
-                                  isDense: true,
-                                  contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 12)),
-                              items: app.accounts
-                                  .map((a) => DropdownMenuItem<String>(
-                                      value: a.id, child: Text(a.name)))
-                                  .toList(),
-                              onChanged: (v) =>
-                                  setState(() => _fromId = v),
+                  // FROM row — cards (fix 6)
+                  Text('FROM',
+                      style: Theme.of(context)
+                          .textTheme.labelSmall?.copyWith(letterSpacing: 1)),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 72,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: app.accounts.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      itemBuilder: (_, i) {
+                        final acc = app.accounts[i];
+                        final sel = _fromId == acc.id;
+                        final color = Color(acc.colorValue);
+                        return GestureDetector(
+                          onTap: () => setState(() => _fromId = acc.id),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            width: 120,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: sel ? color : color.withValues(alpha: 0.10),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                  color: sel ? color : color.withValues(alpha: 0.35),
+                                  width: sel ? 2 : 1),
                             ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 4),
-                        child: CircleAvatar(
-                          backgroundColor: cs.primaryContainer,
-                          child: Icon(Icons.swap_horiz_rounded,
-                              color: cs.primary),
-                        ),
-                      ),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('TO',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelSmall
-                                    ?.copyWith(letterSpacing: 1)),
-                            const SizedBox(height: 6),
-                            DropdownButtonFormField<String>(
-                              initialValue: _toId,
-                              decoration: const InputDecoration(
-                                  isDense: true,
-                                  contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 12)),
-                              items: app.accounts
-                                  .map((a) => DropdownMenuItem<String>(
-                                      value: a.id, child: Text(a.name)))
-                                  .toList(),
-                              onChanged: (v) =>
-                                  setState(() => _toId = v),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                AccountTypeIcon(type: acc.type, size: 14,
+                                    color: sel ? Colors.white : color),
+                                const SizedBox(height: 3),
+                                Text(acc.name, maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        color: sel ? Colors.white : color)),
+                                Text(fmt(acc.balance),
+                                    style: TextStyle(fontSize: 9,
+                                        color: sel
+                                            ? Colors.white.withValues(alpha: 0.8)
+                                            : cs.onSurface.withValues(alpha: 0.5))),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
-                    ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+
+                  // TO row — cards
+                  Row(children: [
+                    Text('TO',
+                        style: Theme.of(context)
+                            .textTheme.labelSmall?.copyWith(letterSpacing: 1)),
+                    const Spacer(),
+                    Icon(Icons.arrow_downward_rounded,
+                        size: 16, color: cs.primary),
+                  ]),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 72,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: app.accounts.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      itemBuilder: (_, i) {
+                        final acc = app.accounts[i];
+                        final sel = _toId == acc.id;
+                        final color = Color(acc.colorValue);
+                        final isSameAsFrom = acc.id == _fromId;
+                        return GestureDetector(
+                          onTap: isSameAsFrom
+                              ? null
+                              : () => setState(() => _toId = acc.id),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            width: 120,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: isSameAsFrom
+                                  ? cs.surfaceContainerHigh
+                                  : sel ? color : color.withValues(alpha: 0.10),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                  color: isSameAsFrom
+                                      ? Colors.transparent
+                                      : sel ? color : color.withValues(alpha: 0.35),
+                                  width: sel ? 2 : 1),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                AccountTypeIcon(type: acc.type, size: 14,
+                                    color: isSameAsFrom
+                                        ? cs.onSurface.withValues(alpha: 0.3)
+                                        : sel ? Colors.white : color),
+                                const SizedBox(height: 3),
+                                Text(acc.name, maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        color: isSameAsFrom
+                                            ? cs.onSurface.withValues(alpha: 0.3)
+                                            : sel ? Colors.white : color)),
+                                Text(fmt(acc.balance),
+                                    style: TextStyle(fontSize: 9,
+                                        color: isSameAsFrom
+                                            ? cs.onSurface.withValues(alpha: 0.25)
+                                            : sel
+                                                ? Colors.white.withValues(alpha: 0.8)
+                                                : cs.onSurface.withValues(alpha: 0.5))),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                   const SizedBox(height: 16),
 

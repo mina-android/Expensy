@@ -293,7 +293,7 @@ class AppProvider extends ChangeNotifier {
       categoryId: r.categoryId, amount: r.amount,
       freqVal: r.freqVal, freqUnit: r.freqUnit,
       startDate: r.startDate, nextDate: r.calcNextDate(),
-      endDate: r.endDate, paidPayments: r.paidPayments,
+      endDate: r.endDate, paidPayments: r.paidPayments + 1,  // count as paid, no balance change
       reminderEnabled: r.reminderEnabled, notes: r.notes,
     );
     await DBHelper.updateRecurringPayment(updated);

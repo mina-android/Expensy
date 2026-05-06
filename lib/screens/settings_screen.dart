@@ -258,7 +258,7 @@ class SettingsScreen extends StatelessWidget {
                 title: const Text('Version',
                     style: TextStyle(
                         fontWeight: FontWeight.w600, fontSize: 14)),
-                subtitle: const Text('Expensy v1.0.1',
+                subtitle: const Text('Expensy v1.0.2',
                     style: TextStyle(fontSize: 12)),
                 trailing: Container(
                   padding: const EdgeInsets.symmetric(

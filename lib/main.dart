@@ -64,29 +64,12 @@ class _SplashScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                color: Colors.black,
-                borderRadius: BorderRadius.circular(28),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.35),
-                    blurRadius: 24,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(28),
-                child: Image.asset(
-                  'assets/splash_icon.png',
-                  width: 120,
-                  height: 120,
-                  fit: BoxFit.cover,
-                ),
-              ),
+            // No background container — icon renders on app surface directly
+            Image.asset(
+              'assets/splash_icon.png',
+              width: 130,
+              height: 130,
+              fit: BoxFit.contain,
             ),
             const SizedBox(height: 28),
             Text(

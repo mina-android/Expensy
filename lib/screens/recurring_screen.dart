@@ -34,60 +34,80 @@ class RecurringScreen extends StatelessWidget {
             style: TextStyle(fontWeight: FontWeight.w800)),
         backgroundColor: cs.primary,
         foregroundColor: cs.onPrimary,
-        actions: [
+      ),
+      body: Column(
+        children: [
+          // ── Monthly / Weekly summary cards — below AppBar, outside it ──
           Padding(
-            padding: const EdgeInsets.only(right: 14),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const Text('Monthly',
-                        style: TextStyle(fontSize: 9, color: Colors.white70)),
-                    const SizedBox(height: 2),
-                    Text(fmt(estMonthly),
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                            fontSize: 13)),
-                  ],
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
+            child: Row(children: [
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+                  decoration: BoxDecoration(
+                    color: cs.primaryContainer,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Monthly',
+                          style: TextStyle(fontSize: 11,
+                              color: cs.onPrimaryContainer.withValues(alpha: 0.65),
+                              fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 2),
+                      Text(fmt(estMonthly),
+                          style: TextStyle(fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: cs.primary)),
+                    ],
+                  ),
                 ),
-                const SizedBox(width: 16),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const Text('Weekly',
-                        style: TextStyle(fontSize: 9, color: Colors.white70)),
-                    const SizedBox(height: 2),
-                    Text(fmt(estMonthly / 4.33),
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                            fontSize: 13)),
-                  ],
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+                  decoration: BoxDecoration(
+                    color: cs.secondaryContainer,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Weekly',
+                          style: TextStyle(fontSize: 11,
+                              color: cs.onSecondaryContainer.withValues(alpha: 0.65),
+                              fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 2),
+                      Text(fmt(estMonthly / 4.33),
+                          style: TextStyle(fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: cs.secondary)),
+                    ],
+                  ),
                 ),
-              ],
-            ),
+              ),
+            ]),
+          ),
+          const SizedBox(height: 10),
+          // ── Payment list ───────────────────────────────────────────────
+          Expanded(
+            child: app.recurring.isEmpty
+                ? const EmptyState(
+                    icon: Icons.repeat_rounded,
+                    message: 'No recurring payments',
+                    subMessage: 'Track subscriptions & instalments',
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(14, 4, 14, 100),
+                    itemCount: app.recurring.length,
+                    itemBuilder: (_, i) =>
+                        _RecurringCard(r: app.recurring[i], app: app, fmt: fmt),
+                  ),
           ),
         ],
       ),
-      body: app.recurring.isEmpty
-          ? const EmptyState(
-              icon: Icons.repeat_rounded,
-              message: 'No recurring payments',
-              subMessage: 'Track subscriptions & instalments',
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.fromLTRB(14, 14, 14, 100),
-              itemCount: app.recurring.length,
-              itemBuilder: (_, i) =>
-                  _RecurringCard(r: app.recurring[i], app: app, fmt: fmt),
-            ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showSheet(context, app),
         child: const Icon(Icons.add),
@@ -636,35 +656,104 @@ class _RecurringSheetState extends State<_RecurringSheet> {
                 ),
               ),
 
-            // Account
+            // Account — cards (fix 3)
             if (app.accounts.isNotEmpty) ...[
-              DropdownButtonFormField<String>(
-                initialValue: _accountId,
-                decoration: const InputDecoration(
-                    labelText: 'Account',
-                    prefixIcon:
-                        Icon(Icons.account_balance_wallet_outlined)),
-                items: app.accounts
-                    .map((a) => DropdownMenuItem<String>(
-                        value: a.id, child: Text(a.name)))
-                    .toList(),
-                onChanged: (v) => setState(() => _accountId = v),
+              Text('Account',
+                  style: Theme.of(context).textTheme.labelMedium
+                      ?.copyWith(letterSpacing: 1)),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 72,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: app.accounts.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemBuilder: (_, i) {
+                    final acc = app.accounts[i];
+                    final sel = _accountId == acc.id;
+                    final color = Color(acc.colorValue);
+                    return GestureDetector(
+                      onTap: () => setState(() => _accountId = acc.id),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        width: 120,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: sel ? color : color.withValues(alpha: 0.10),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: sel ? color : color.withValues(alpha: 0.35),
+                            width: sel ? 2 : 1,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            AccountTypeIcon(type: acc.type, size: 14,
+                                color: sel ? Colors.white : color),
+                            const SizedBox(height: 3),
+                            Text(acc.name, maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: sel ? Colors.white : color)),
+                            Text(formatAmount(acc.balance, acc.currency),
+                                maxLines: 1, overflow: TextOverflow.ellipsis,
+                                style: TextStyle(fontSize: 9,
+                                    color: sel
+                                        ? Colors.white.withValues(alpha: 0.8)
+                                        : cs.onSurface.withValues(alpha: 0.5))),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
             ],
 
-            // Category
+            // Category — small cards (fix 4)
             if (expCats.isNotEmpty) ...[
-              DropdownButtonFormField<String>(
-                initialValue: _categoryId,
-                decoration: const InputDecoration(
-                    labelText: 'Category',
-                    prefixIcon: Icon(Icons.label_outline)),
-                items: expCats
-                    .map((c) => DropdownMenuItem<String>(
-                        value: c.id, child: Text(c.name)))
-                    .toList(),
-                onChanged: (v) => setState(() => _categoryId = v),
+              Text('Category',
+                  style: Theme.of(context).textTheme.labelMedium
+                      ?.copyWith(letterSpacing: 1)),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8, runSpacing: 8,
+                children: expCats.map((cat) {
+                  final sel = _categoryId == cat.id;
+                  final color = Color(cat.colorValue);
+                  return GestureDetector(
+                    onTap: () => setState(() => _categoryId = cat.id),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: sel ? color : color.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: sel ? color : color.withValues(alpha: 0.40),
+                          width: sel ? 2 : 1,
+                        ),
+                      ),
+                      child: Row(mainAxisSize: MainAxisSize.min, children: [
+                        Container(width: 8, height: 8,
+                            decoration: BoxDecoration(
+                                color: sel ? Colors.white : color,
+                                shape: BoxShape.circle)),
+                        const SizedBox(width: 6),
+                        Text(cat.name,
+                            style: TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.w600,
+                                color: sel ? Colors.white : color)),
+                      ]),
+                    ),
+                  );
+                }).toList(),
               ),
               const SizedBox(height: 16),
             ],

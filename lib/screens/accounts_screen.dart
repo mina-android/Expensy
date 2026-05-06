@@ -231,9 +231,18 @@ class _AccountSheetState extends State<_AccountSheet> {
   String _currency  = 'EGP';
 
   static const _colors = [
+    // Row 1 – originals
     0xFF6750A4, 0xFF7D5260, 0xFF1565C0,
     0xFF2E7D32, 0xFFE65100, 0xFF00897B,
     0xFFC62828, 0xFF37474F,
+    // Row 2 – new
+    0xFF0077B6, 0xFF9C27B0, 0xFF00BFA5,
+    0xFFF9A825, 0xFF6D4C41, 0xFF283593,
+    0xFFAD1457, 0xFF558B2F,
+    // Row 3 – new
+    0xFF00838F, 0xFFBF360C, 0xFF4527A0,
+    0xFF1B5E20, 0xFF880E4F, 0xFF33691E,
+    0xFF004D40, 0xFFB71C1C,
   ];
 
   @override
@@ -351,25 +360,36 @@ class _AccountSheetState extends State<_AccountSheet> {
                     .labelMedium
                     ?.copyWith(letterSpacing: 1)),
             const SizedBox(height: 10),
-            Row(
-              children: _colors.map((c) => GestureDetector(
-                    onTap: () => setState(() => _color = c),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 80),
-                      width: 30,
-                      height: 30,
-                      margin: const EdgeInsets.only(right: 8),
-                      decoration: BoxDecoration(
-                        color: Color(c),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                            color: _color == c
-                                ? Theme.of(context).colorScheme.onSurface
-                                : Colors.transparent,
-                            width: 3),
-                      ),
-                    ),
-                  )).toList(),
+            SizedBox(
+              height: 46,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: _colors.map((col) => GestureDetector(
+                        onTap: () => setState(() => _color = col),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 80),
+                          width: 34,
+                          height: 34,
+                          margin: const EdgeInsets.only(right: 10),
+                          decoration: BoxDecoration(
+                            color: Color(col),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                                color: _color == col
+                                    ? Theme.of(context).colorScheme.onSurface
+                                    : Colors.transparent,
+                                width: 3),
+                            boxShadow: _color == col
+                                ? [BoxShadow(
+                                    color: Color(col).withValues(alpha: 0.5),
+                                    blurRadius: 6, spreadRadius: 1)]
+                                : null,
+                          ),
+                        ),
+                      )).toList(),
+                ),
+              ),
             ),
             const SizedBox(height: 20),
             FilledButton(

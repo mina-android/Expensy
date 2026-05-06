@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'transactions_screen.dart';
-import 'statistics_screen.dart';
+import 'recurring_screen.dart';
 import 'accounts_screen.dart';
 import 'more_screen.dart';
 
@@ -18,7 +18,7 @@ class _MainShellState extends State<MainShell> {
   static const _screens = [
     HomeScreen(),
     TransactionsScreen(),
-    StatisticsScreen(),
+    RecurringScreen(),
     AccountsScreen(),
     MoreScreen(),
   ];
@@ -42,9 +42,9 @@ class _MainShellState extends State<MainShell> {
             label: 'Transactions',
           ),
           NavigationDestination(
-            icon: Icon(Icons.bar_chart_outlined),
-            selectedIcon: Icon(Icons.bar_chart),
-            label: 'Statistics',
+            icon: Icon(Icons.repeat_rounded),
+            selectedIcon: Icon(Icons.repeat_rounded),
+            label: 'Recurring',
           ),
           NavigationDestination(
             icon: Icon(Icons.account_balance_wallet_outlined),

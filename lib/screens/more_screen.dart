@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
-import 'recurring_screen.dart';
+import 'statistics_screen.dart';
 import 'wishlist_screen.dart';
 import 'lended_screen.dart';
 import 'categories_screen.dart';
@@ -18,17 +18,16 @@ class MoreScreen extends StatelessWidget {
     final app = context.watch<AppProvider>();
     final cs  = Theme.of(context).colorScheme;
 
-    final activeWish     = app.wishlist.where((w) => !w.isPurchased).length;
-    final activeRec      = app.recurring.length;
-    final activeLend     = app.lended.where((l) => !l.isSettled).length;
+    final activeWish = app.wishlist.where((w) => !w.isPurchased).length;
+    final activeLend = app.lended.where((l) => !l.isSettled).length;
 
     final items = [
       _MoreItem(
-        icon: Icons.repeat_rounded,
-        label: 'Recurring Payments',
-        sub: '$activeRec active',
-        color: const Color(0xFF6750A4),
-        onTap: () => _push(context, const RecurringScreen()),
+        icon: Icons.bar_chart_outlined,
+        label: 'Statistics',
+        sub: 'Charts & monthly summary',
+        color: const Color(0xFF1565C0),
+        onTap: () => _push(context, const StatisticsScreen()),
       ),
       _MoreItem(
         icon: Icons.star_outline_rounded,
@@ -55,7 +54,7 @@ class MoreScreen extends StatelessWidget {
         icon: Icons.file_download_outlined,
         label: 'Export Transactions',
         sub: 'Download as CSV',
-        color: const Color(0xFF1565C0),
+        color: const Color(0xFF00838F),
         onTap: () => _push(context, const ExportScreen()),
       ),
       _MoreItem(
@@ -68,7 +67,7 @@ class MoreScreen extends StatelessWidget {
       _MoreItem(
         icon: Icons.settings_outlined,
         label: 'Settings',
-        sub: 'Theme, currency & notifications',
+        sub: 'Theme, currency & more',
         color: const Color(0xFF4A148C),
         onTap: () => _push(context, const SettingsScreen()),
       ),
@@ -91,8 +90,7 @@ class MoreScreen extends StatelessWidget {
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16)),
               leading: Container(
-                width: 46,
-                height: 46,
+                width: 46, height: 46,
                 decoration: BoxDecoration(
                   color: item.color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(14),
@@ -100,8 +98,7 @@ class MoreScreen extends StatelessWidget {
                 child: Icon(item.icon, color: item.color, size: 22),
               ),
               title: Text(item.label,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w700, fontSize: 15)),
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
               subtitle: Text(item.sub,
                   style: TextStyle(
                       fontSize: 12,
