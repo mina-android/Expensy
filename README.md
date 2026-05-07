@@ -50,13 +50,13 @@ Most finance apps require you to sign up, sync to the cloud, or show ads. Expens
 - Live preview of both balances after transfer
 - Auto-records a debit and a credit transaction
 
-### 📊 Statistics *(in More tab)*
+### 📊 Statistics 
 - **6-month bar chart** — income vs expense side by side
 - **Expense pie chart** — breakdown by category
 - Navigate month by month
 - Summary cards: Income, Expense, Net
 
-### 🔁 Recurring Payments *(bottom bar)*
+### 🔁 Recurring Payments 
 - Track subscriptions, loan instalments, rent, any repeating payment
 - Frequency: every X **days / weeks / months / years**
 - **First Payment** date + optional **Last Payment** date
@@ -106,7 +106,6 @@ Most finance apps require you to sign up, sync to the cloud, or show ads. Expens
 
 ## Screenshots
 
-> Place your screenshots in `screenshots/` with the filenames below.
 
 | Home | Transactions | Recurring |
 |------|-------------|-----------|
@@ -180,14 +179,6 @@ More tab:    Statistics · Wishlist · Lent Money · Categories · Export · Bac
 5. Open a Pull Request
 
 Code style: no `withOpacity()` (use `withValues(alpha:)`), no unnecessary blank lines, `flutter analyze` must pass.
-
----
-
-## License
-
-MIT License — Copyright (c) 2026 Mina Ashraf
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 ---
 
