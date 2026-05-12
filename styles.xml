@@ -1,0 +1,7 @@
+org.gradle.jvmargs=-Xmx4G -XX:MaxMetaspaceSize=2G -XX:+HeapDumpOnOutOfMemoryError
+android.useAndroidX=true
+android.enableJetifier=true
+# Disable configuration cache (required for Flutter plugin compatibility)
+org.gradle.configuration-cache=false
+# Disable Kotlin incremental compilation (prevents cross-drive cache issues on Windows)
+kotlin.incremental=false
