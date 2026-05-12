@@ -31,16 +31,16 @@ Most finance apps require you to sign up, sync to the cloud, or show ads. Expens
 
 ### 💰 Accounts
 - Add unlimited accounts: **Bank**, **Cash**, **Savings**, **Credit Card**, **E-Wallet**
-- Account type selected via **pill cards** — not a dropdown
+- Account type selected via
 - Each account has its own **currency** chosen from a searchable dialog of **64 currencies**
-- Pick from **24 custom colours** (horizontally scrollable)
+- Pick from **24 custom colours**
 - **Exclude from Total Balance** toggle — hide savings or investment accounts from the home screen total
 - See balance, total income, total expense, and transaction count per account
 - Edit or delete any account
 
 ### 📝 Transactions
 - Add **income** and **expense** transactions
-- Select account using **scrollable colour cards**
+- Select account using 
 - Assign to any category using **coloured pill chips**
 - Description is optional; add an optional note field
 - Full-text **search** and filter chips by type or account
@@ -51,7 +51,6 @@ Most finance apps require you to sign up, sync to the cloud, or show ads. Expens
 - Transfer between accounts using **FROM and TO card rows**
 - The same-as-FROM account is dimmed and non-selectable
 - Live preview of both balances
-- Auto-records a debit and a credit transaction
 
 ### 📊 Statistics *(in More tab)*
 - **6-month bar chart** — income vs expense side by side
@@ -82,7 +81,6 @@ Most finance apps require you to sign up, sync to the cloud, or show ads. Expens
 - Account balance automatically adjusted when linked
 - Set a due date and notes
 - **Settle** reverses the balance effect
-- Summary bar in the accent colour shows: They Owe Me / I Owe Them / Net
 
 ### 🏷️ Categories
 - Default categories for income and expense — all editable and deletable
@@ -96,8 +94,7 @@ Most finance apps require you to sign up, sync to the cloud, or show ads. Expens
 
 ### 💾 Backup & Restore
 - **Full JSON backup** of all data (accounts, transactions, categories, recurring, wishlist, lent, settings)
-- **File picker** to choose where to save — no share sheet
-- Only shows "backup saved" when you actually confirm a save location (no false positives)
+- **File picker** to choose where to save
 - **Restore** from any `.json` backup file — replaces all current data after a confirmation prompt
 
 ### ⚙️ Settings
@@ -110,7 +107,6 @@ Most finance apps require you to sign up, sync to the cloud, or show ads. Expens
 
 **Accent colour** — 29 seeds displayed as coloured dots:  
 Violet, Blue, Green, Rose, Amber, Teal, Orange, Indigo, Cyan, Pink, Lime, Deep Purple, Crimson, Midnight, Forest, Mint, Olive, Sage, Sky Blue, Navy, Cobalt, Ocean, Coral, Gold, Slate, Magenta, Turquoise, Brown, Lavender  
-_(AMOLED mode uses your chosen accent for interactive elements; only the surface is black)_
 
 **Currency** — searchable dialog (search by code or name) across **64 currencies**:
 - Global, Middle East & North Africa, Sub-Saharan Africa, Asia, Europe
@@ -128,8 +124,6 @@ _(AMOLED mode uses your chosen accent for interactive elements; only the surface
 ---
 
 ## Screenshots
-
-> Place your screenshots in `screenshots/` with the filenames below.
 
 | Home | Transactions | Recurring |
 |------|-------------|-----------|
@@ -251,7 +245,7 @@ Output: `build/app/outputs/flutter-apk/app-arm64-v8a-release.apk`
 
 ## Installation
 
-1. Go to [**Releases**](https://github.com/yourusername/expensy/releases)
+1. Go to [**Releases**](https://github.com/mina-android/expensy/releases)
 2. Download `app-release.apk`
 3. On your phone: **Settings → Security → Install Unknown Apps** → enable for your file manager
 4. Open the APK and install
@@ -338,16 +332,6 @@ android/key.properties
 
 ---
 
-## Roadmap
-
-- [ ] iOS support
-- [ ] Home screen widget (current balance)
-- [ ] Push notifications for recurring payments due
-- [ ] Multiple languages / localisation
-- [ ] Custom currency input
-- [ ] Recurring payment auto-pay
-
----
 
 ## Contributing
 
