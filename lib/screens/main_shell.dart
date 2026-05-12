@@ -24,40 +24,25 @@ class _MainShellState extends State<MainShell> {
   ];
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: IndexedStack(index: _index, children: _screens),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.receipt_long_outlined),
-            selectedIcon: Icon(Icons.receipt_long),
-            label: 'Transactions',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.repeat_rounded),
-            selectedIcon: Icon(Icons.repeat_rounded),
-            label: 'Recurring',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.account_balance_wallet_outlined),
-            selectedIcon: Icon(Icons.account_balance_wallet),
-            label: 'Accounts',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.more_horiz_outlined),
-            selectedIcon: Icon(Icons.more_horiz),
-            label: 'More',
-          ),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Scaffold(
+        body: IndexedStack(index: _index, children: _screens),
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: _index,
+          onDestinationSelected: (i) => setState(() => _index = i),
+          destinations: const [
+            NavigationDestination(icon: Icon(Icons.home_outlined),
+                selectedIcon: Icon(Icons.home), label: 'Home'),
+            NavigationDestination(icon: Icon(Icons.receipt_long_outlined),
+                selectedIcon: Icon(Icons.receipt_long), label: 'Transactions'),
+            NavigationDestination(icon: Icon(Icons.repeat_rounded),
+                selectedIcon: Icon(Icons.repeat_rounded), label: 'Recurring'),
+            NavigationDestination(
+                icon: Icon(Icons.account_balance_wallet_outlined),
+                selectedIcon: Icon(Icons.account_balance_wallet),
+                label: 'Accounts'),
+            NavigationDestination(icon: Icon(Icons.more_horiz_outlined),
+                selectedIcon: Icon(Icons.more_horiz), label: 'More'),
+          ],
+        ),
+      );
 }

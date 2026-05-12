@@ -2,8 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
-import '../theme/app_theme.dart';
-import '../widgets/shared_widgets.dart';
 
 class ExportScreen extends StatefulWidget {
   const ExportScreen({super.key});
@@ -12,241 +10,153 @@ class ExportScreen extends StatefulWidget {
 }
 
 class _ExportScreenState extends State<ExportScreen> {
-  bool _exporting = false;
-  bool _done = false;
-  String? _error;
+  DateTime _from = DateTime.now().subtract(const Duration(days: 30));
+  DateTime _to   = DateTime.now();
+  bool    _busy  = false;
+  String? _ok;
+  String? _err;
+
+  Future<void> _pickFrom() async {
+    final p = await showDatePicker(context: context,
+        initialDate: _from, firstDate: DateTime(2000), lastDate: _to);
+    if (p != null) setState(() => _from = p);
+  }
+
+  Future<void> _pickTo() async {
+    final p = await showDatePicker(context: context,
+        initialDate: _to, firstDate: _from, lastDate: DateTime.now());
+    if (p != null) setState(() => _to = p);
+  }
 
   Future<void> _export() async {
-    setState(() { _exporting = true; _done = false; _error = null; });
+    setState(() { _busy = true; _ok = null; _err = null; });
     try {
-      await context.read<AppProvider>().exportTransactionsCSV();
-      setState(() => _done = true);
+      final path = await context.read<AppProvider>()
+          .exportTransactionsExcel(from: _from, to: _to);
+      setState(() => _ok = path ?? 'Export complete');
     } catch (e) {
-      setState(() => _error = e.toString());
+      setState(() => _err = e.toString());
     } finally {
-      setState(() => _exporting = false);
+      setState(() => _busy = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final app      = context.watch<AppProvider>();
-    final cs       = Theme.of(context).colorScheme;
-    final currency = app.settings.currency;
-    String fmt(double v) => formatAmount(v, currency);
-
-    final totalIncome = app.transactions
-        .where((t) => t.type == 'income')
-        .fold(0.0, (s, t) => s + t.amount);
-    final totalExpense = app.transactions
-        .where((t) => t.type == 'expense')
-        .fold(0.0, (s, t) => s + t.amount);
+    final app   = context.watch<AppProvider>();
+    final cs    = Theme.of(context).colorScheme;
+    final start = DateTime(_from.year, _from.month, _from.day);
+    final end   = DateTime(_to.year, _to.month, _to.day, 23, 59, 59);
+    final count = app.transactions
+        .where((t) => !t.date.isBefore(start) && !t.date.isAfter(end)).length;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Export Transactions',
             style: TextStyle(fontWeight: FontWeight.w800)),
-        backgroundColor: const Color(0xFF1565C0),
-        foregroundColor: Colors.white,
+        backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Status messages
-            if (_done)
-              Container(
-                padding: const EdgeInsets.all(14),
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE8F5E9),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFA5D6A7)),
-                ),
-                child: const Row(children: [
-                  Icon(Icons.check_circle_outline, color: Color(0xFF2E7D32)),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: Text('Export complete! Check your share sheet.',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF2E7D32))),
-                  ),
-                ]),
-              ),
-            if (_error != null)
-              Container(
-                padding: const EdgeInsets.all(14),
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFEBEE),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFEF9A9A)),
-                ),
-                child: Row(children: [
-                  const Icon(Icons.error_outline, color: Color(0xFFC62828)),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text('Error: $_error',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFFC62828))),
-                  ),
-                ]),
-              ),
-
-            // Summary card
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Export Summary',
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 14),
-                    _SummaryRow(
-                      label: 'Total Transactions',
-                      value: '${app.transactions.length}',
-                    ),
-                    _SummaryRow(
-                      label: 'Income Entries',
-                      value: '${app.transactions.where((t) => t.type == "income").length}',
-                      valueColor: const Color(0xFF2E7D32),
-                    ),
-                    _SummaryRow(
-                      label: 'Expense Entries',
-                      value: '${app.transactions.where((t) => t.type == "expense").length}',
-                      valueColor: const Color(0xFFC62828),
-                    ),
-                    _SummaryRow(
-                      label: 'Total Income',
-                      value: fmt(totalIncome),
-                      valueColor: const Color(0xFF2E7D32),
-                    ),
-                    _SummaryRow(
-                      label: 'Total Expense',
-                      value: fmt(totalExpense),
-                      valueColor: const Color(0xFFC62828),
-                      last: true,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Format info card
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('CSV Format',
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleSmall
-                            ?.copyWith(fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 10),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: cs.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Text(
-                        'Date, Description, Type, Amount, Account, Category, Note',
-                        style: TextStyle(fontFamily: 'monospace', fontSize: 12),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Compatible with Excel, Google Sheets, and any CSV viewer.',
-                      style: TextStyle(
-                          fontSize: 12,
-                          color: cs.onSurface.withValues(alpha: 0.6)),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 28),
-
-            if (app.transactions.isEmpty)
-              const EmptyState(
-                icon: Icons.receipt_long_outlined,
-                message: 'No transactions to export',
-                subMessage: 'Add some transactions first',
-              )
-            else
-              FilledButton.icon(
-                onPressed: _exporting ? null : _export,
-                icon: _exporting
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white))
-                    : const Icon(Icons.file_download_outlined),
-                label: Text(_exporting ? 'Exporting…' : 'Export as CSV'),
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(52),
-                  backgroundColor: const Color(0xFF1565C0),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(28)),
-                ),
-              ),
-          ],
-        ),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('Date Range', style: Theme.of(context).textTheme.labelMedium
+              ?.copyWith(letterSpacing: 1)),
+          const SizedBox(height: 10),
+          Row(children: [
+            Expanded(child: _DateCard(label: 'From', date: _from, onTap: _pickFrom)),
+            Padding(padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Icon(Icons.arrow_forward_rounded,
+                    color: cs.onSurface.withValues(alpha: 0.4))),
+            Expanded(child: _DateCard(label: 'To', date: _to, onTap: _pickTo)),
+          ]),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(color: cs.primaryContainer,
+                borderRadius: BorderRadius.circular(14)),
+            child: Row(children: [
+              Icon(Icons.table_chart_outlined, color: cs.primary, size: 24),
+              const SizedBox(width: 12),
+              Expanded(child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('$count transactions in range',
+                      style: TextStyle(fontWeight: FontWeight.w700, color: cs.primary)),
+                  Text('Format: Excel (.xlsx)',
+                      style: TextStyle(fontSize: 12,
+                          color: cs.onPrimaryContainer.withValues(alpha: 0.6))),
+                ],
+              )),
+            ]),
+          ),
+          const SizedBox(height: 16),
+          if (_ok != null) _Banner(ok: true, msg: 'Saved: $_ok'),
+          if (_err != null) _Banner(ok: false, msg: _err!),
+          const Spacer(),
+          FilledButton.icon(
+            onPressed: count == 0 || _busy ? null : _export,
+            icon: _busy
+                ? const SizedBox(width: 18, height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                : const Icon(Icons.save_alt_rounded),
+            label: Text(_busy ? 'Exporting...' : 'Export as Excel'),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(52),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28))),
+          ),
+        ]),
       ),
     );
   }
 }
 
-class _SummaryRow extends StatelessWidget {
-  final String label, value;
-  final Color? valueColor;
-  final bool last;
-
-  const _SummaryRow({
-    required this.label,
-    required this.value,
-    this.valueColor,
-    this.last = false,
-  });
+class _DateCard extends StatelessWidget {
+  final String label;
+  final DateTime date;
+  final VoidCallback onTap;
+  const _DateCard({required this.label, required this.date, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      decoration: BoxDecoration(
-        border: last
-            ? null
-            : Border(
-                bottom: BorderSide(
-                    color: cs.outlineVariant.withValues(alpha: 0.5), width: 1)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label,
-              style: TextStyle(
-                  fontSize: 14,
-                  color: cs.onSurface.withValues(alpha: 0.7))),
-          Text(value,
-              style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: valueColor ?? cs.onSurface)),
-        ],
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: cs.primary.withValues(alpha: 0.4)),
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600,
+              color: cs.onSurface.withValues(alpha: 0.55))),
+          const SizedBox(height: 4),
+          Text('${date.day}/${date.month}/${date.year}',
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+        ]),
       ),
     );
   }
+}
+
+class _Banner extends StatelessWidget {
+  final bool ok;
+  final String msg;
+  const _Banner({required this.ok, required this.msg});
+  @override
+  Widget build(BuildContext context) => Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: ok ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE),
+          borderRadius: BorderRadius.circular(12)),
+        child: Row(children: [
+          Icon(ok ? Icons.check_circle_outline : Icons.error_outline,
+              color: ok ? const Color(0xFF2E7D32) : const Color(0xFFC62828)),
+          const SizedBox(width: 8),
+          Expanded(child: Text(msg, style: TextStyle(fontSize: 12,
+              color: ok ? const Color(0xFF2E7D32) : const Color(0xFFC62828)))),
+        ]),
+      );
 }

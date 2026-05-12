@@ -1,111 +1,102 @@
 // lib/providers/app_provider.dart
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/foundation.dart' hide Category;
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show ChangeNotifier;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:csv/csv.dart';
 import 'package:file_picker/file_picker.dart';
-import '../database/db_helper.dart';
+import 'package:excel/excel.dart' hide Border;
 import '../models/models.dart';
+import '../database/db_helper.dart';
 
 class AppSettings {
   String currency;
   String themeSeed;
-  bool darkMode;
-  String weekStart;
-  bool hideBalance;
+  String themeMode;   // system|light|dark|amoled
+  String weekStart;   // monday|sunday
+  bool   hideBalance;
   String userName;
-  bool onboarded;
+  bool   onboarded;
 
   AppSettings({
-    this.currency    = 'EGP',
-    this.themeSeed   = 'violet',
-    this.darkMode    = true,
-    this.weekStart   = 'monday',
+    this.currency   = 'EGP',
+    this.themeSeed  = 'violet',
+    this.themeMode  = 'dark',
+    this.weekStart  = 'monday',
     this.hideBalance = false,
-    this.userName    = '',
-    this.onboarded   = false,
+    this.userName   = '',
+    this.onboarded  = false,
   });
 
   Map<String, dynamic> toJson() => {
-        'currency':    currency,
-        'themeSeed':   themeSeed,
-        'darkMode':    darkMode,
-        'weekStart':   weekStart,
-        'hideBalance': hideBalance,
-        'userName':    userName,
-        'onboarded':   onboarded,
-      };
+    'currency': currency, 'themeSeed': themeSeed, 'themeMode': themeMode,
+    'weekStart': weekStart, 'hideBalance': hideBalance,
+    'userName': userName, 'onboarded': onboarded,
+  };
 
-  factory AppSettings.fromJson(Map<String, dynamic> j) => AppSettings(
-        currency:    (j['currency']    as String?) ?? 'EGP',
-        themeSeed:   (j['themeSeed']   as String?) ?? 'violet',
-        darkMode:    (j['darkMode']    as bool?)   ?? false,
-        weekStart:   (j['weekStart']   as String?) ?? 'monday',
-        hideBalance: (j['hideBalance'] as bool?)   ?? false,
-        userName:    (j['userName']    as String?) ?? '',
-        onboarded:   (j['onboarded']   as bool?)   ?? false,
-      );
+  static AppSettings fromJson(Map<String, dynamic> j) => AppSettings(
+    currency:    (j['currency']    as String?) ?? 'EGP',
+    themeSeed:   (j['themeSeed']   as String?) ?? 'violet',
+    themeMode:   (j['themeMode']   as String?) ??
+        ((j['darkMode'] as bool? ?? false) ? 'dark' : 'system'),
+    weekStart:   (j['weekStart']   as String?) ?? 'monday',
+    hideBalance: (j['hideBalance'] as bool?)   ?? false,
+    userName:    (j['userName']    as String?) ?? '',
+    onboarded:   (j['onboarded']   as bool?)   ?? false,
+  );
 }
 
 class AppProvider extends ChangeNotifier {
-  final _uuid = const Uuid();
-
   AppSettings settings = AppSettings();
-  List<Account>          accounts     = [];
-  List<Category>         categories   = [];
-  List<Transaction>      transactions = [];
-  List<RecurringPayment> recurring    = [];
-  List<WishlistItem>     wishlist     = [];
-  List<LendedMoney>      lended       = [];
-  bool isLoading = true;
+  List<Account>          accounts   = [];
+  List<AppCategory>      categories = [];
+  List<AppTransaction>   transactions = [];
+  List<RecurringPayment> recurring  = [];
+  List<WishlistItem>     wishlist   = [];
+  List<LendedMoney>      lended     = [];
 
-  // ── Init ──────────────────────────────────────────────────────────────────
-  Future<void> init() async {
-    isLoading = true;
-    notifyListeners();
-    try {
-      await _loadSettings();
-      await _loadAll();
-    } catch (e) {
-      debugPrint('AppProvider init error: $e');
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
-  }
+  bool _loaded = false;
+  bool get loaded => _loaded;
 
-  Future<void> _loadSettings() async {
+  final _uuid = const Uuid();
+  String newId() => _uuid.v4();
+
+  // ── Boot ─────────────────────────────────────────────────────────────
+  Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString('app_settings');
+    final raw = prefs.getString('settings');
     if (raw != null) {
-      try {
-        settings = AppSettings.fromJson(
-            jsonDecode(raw) as Map<String, dynamic>);
-      } catch (_) {
-        settings = AppSettings();
-      }
+      settings = AppSettings.fromJson(jsonDecode(raw) as Map<String, dynamic>);
     }
+    accounts     = await DBHelper.getAccounts();
+    categories   = await DBHelper.getCategories();
+    transactions = await DBHelper.getTransactions();
+    recurring    = await DBHelper.getRecurring();
+    wishlist     = await DBHelper.getWishlist();
+    lended       = await DBHelper.getLended();
+    _loaded = true;
+    notifyListeners();
   }
 
   Future<void> _saveSettings() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('app_settings', jsonEncode(settings.toJson()));
+    await prefs.setString('settings', jsonEncode(settings.toJson()));
+    notifyListeners();
   }
 
-  Future<void> _loadAll() async {
-    accounts     = await DBHelper.getAccounts();
-    categories   = await DBHelper.getCategories();
-    transactions = (await DBHelper.getTransactions()).cast<Transaction>();
-    recurring    = await DBHelper.getRecurringPayments();
-    wishlist     = await DBHelper.getWishlistItems();
-    lended       = await DBHelper.getLendedItems();
+  void updateSetting(String key, dynamic value) {
+    switch (key) {
+      case 'currency':    settings.currency    = value as String; break;
+      case 'themeSeed':   settings.themeSeed   = value as String; break;
+      case 'themeMode':   settings.themeMode   = value as String; break;
+      case 'weekStart':   settings.weekStart   = value as String; break;
+      case 'hideBalance': settings.hideBalance = value as bool;   break;
+      case 'userName':    settings.userName    = value as String; break;
+    }
+    _saveSettings();
   }
 
-  // ── Onboarding ────────────────────────────────────────────────────────────
   Future<void> completeOnboarding({
     required String name,
     required String currency,
@@ -114,54 +105,20 @@ class AppProvider extends ChangeNotifier {
     settings.currency  = currency;
     settings.onboarded = true;
     await _saveSettings();
-    await _loadAll();
-    notifyListeners();
   }
 
-  // ── Settings ──────────────────────────────────────────────────────────────
-  Future<void> updateSetting(String key, dynamic value) async {
-    switch (key) {
-      case 'currency':    settings.currency    = value as String; break;
-      case 'themeSeed':   settings.themeSeed   = value as String; break;
-      case 'darkMode':    settings.darkMode    = value as bool;   break;
-      case 'weekStart':   settings.weekStart   = value as String; break;
-      case 'hideBalance': settings.hideBalance = value as bool;   break;
-      case 'userName':    settings.userName    = value as String; break;
-    }
-    await _saveSettings();
-    notifyListeners();
-  }
+  // ── Helpers ───────────────────────────────────────────────────────────
+  /// Sum of non-excluded account balances (actual signed values).
+  double get totalBalance => accounts
+      .where((a) => !a.excludeFromTotal)
+      .fold(0.0, (s, a) => s + a.balance.abs());
 
-  // ── Computed ──────────────────────────────────────────────────────────────
-  double get totalBalance => accounts.fold(0.0, (s, a) => s + a.balance);
+  Account?        accountById(String id)  =>
+      accounts.where((a) => a.id == id).firstOrNull;
+  AppCategory?    categoryById(String id) =>
+      categories.where((c) => c.id == id).firstOrNull;
 
-  double get monthIncome {
-    final now = DateTime.now();
-    return transactions
-        .where((t) => t.type == 'income' &&
-            t.date.month == now.month && t.date.year == now.year)
-        .fold(0.0, (s, t) => s + t.amount);
-  }
-
-  double get monthExpense {
-    final now = DateTime.now();
-    return transactions
-        .where((t) => t.type == 'expense' &&
-            t.date.month == now.month && t.date.year == now.year)
-        .fold(0.0, (s, t) => s + t.amount);
-  }
-
-  Category? categoryById(String id) {
-    for (final c in categories) { if (c.id == id) return c; }
-    return null;
-  }
-
-  Account? accountById(String id) {
-    for (final a in accounts) { if (a.id == id) return a; }
-    return null;
-  }
-
-  // ── Accounts ──────────────────────────────────────────────────────────────
+  // ── Accounts ─────────────────────────────────────────────────────────
   Future<void> addAccount(Account a) async {
     await DBHelper.insertAccount(a);
     accounts = await DBHelper.getAccounts();
@@ -176,56 +133,28 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> deleteAccount(String id) async {
     await DBHelper.deleteAccount(id);
-    await _loadAll();
+    accounts     = await DBHelper.getAccounts();
+    transactions = await DBHelper.getTransactions();
     notifyListeners();
   }
 
-  Future<void> transferBetweenAccounts({
-    required String fromId,
-    required String toId,
-    required double amount,
-    String note = '',
-  }) async {
-    final fromAcc = accountById(fromId);
-    final toAcc   = accountById(toId);
-    if (fromAcc == null || toAcc == null || fromId == toId) return;
-    if (amount <= 0 || amount > fromAcc.balance) return;
-
-    Category? expCat;
-    Category? incCat;
-    for (final c in categories) {
-      if (c.type == 'expense' && expCat == null) expCat = c;
-      if (c.type == 'income'  && incCat == null) incCat = c;
-      if (expCat != null && incCat != null) break;
-    }
-    if (expCat == null || incCat == null) return;
-
-    final now = DateTime.now();
-    await DBHelper.insertTransaction(Transaction(
-      id: _uuid.v4(), accountId: fromId, categoryId: expCat.id,
-      amount: amount, type: 'expense',
-      description: 'Transfer to ${toAcc.name}', date: now, note: note,
-    ));
-    await DBHelper.insertTransaction(Transaction(
-      id: _uuid.v4(), accountId: toId, categoryId: incCat.id,
-      amount: amount, type: 'income',
-      description: 'Transfer from ${fromAcc.name}', date: now, note: note,
-    ));
-    await _loadAll();
-    notifyListeners();
+  Future<void> _updateAccountBalance(String id, double delta) async {
+    final acc = accountById(id);
+    if (acc == null) return;
+    await DBHelper.updateAccount(acc.copyWith(balance: acc.balance + delta));
+    accounts = await DBHelper.getAccounts();
   }
 
-  // ── Categories ────────────────────────────────────────────────────────────
-  Future<void> addCategory(Category c) async {
+  // ── Categories ────────────────────────────────────────────────────────
+  Future<void> addCategory(AppCategory c) async {
     await DBHelper.insertCategory(c);
     categories = await DBHelper.getCategories();
     notifyListeners();
   }
 
-  Future<void> updateCategory(Category c) async {
+  Future<void> updateCategory(AppCategory c) async {
     await DBHelper.updateCategory(c);
-    final idx = categories.indexWhere((x) => x.id == c.id);
-    if (idx >= 0) categories[idx] = c;
+    categories = await DBHelper.getCategories();
     notifyListeners();
   }
 
@@ -235,232 +164,296 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ── Transactions ──────────────────────────────────────────────────────────
-  Future<void> addTransaction(Transaction t) async {
+  // ── Transactions ──────────────────────────────────────────────────────
+  Future<void> addTransaction(AppTransaction t) async {
     await DBHelper.insertTransaction(t);
-    await _loadAll();
+    final delta = t.type == 'income' ? t.amount : -t.amount;
+    await _updateAccountBalance(t.accountId, delta);
+    transactions = await DBHelper.getTransactions();
     notifyListeners();
   }
 
-  Future<void> updateTransaction(Transaction oldTx, Transaction newTx) async {
-    await DBHelper.updateTransaction(oldTx, newTx);
-    await _loadAll();
+  Future<void> updateTransaction(AppTransaction updated,
+      AppTransaction original) async {
+    // Reverse old balance effect
+    final oldDelta = original.type == 'income' ? -original.amount : original.amount;
+    await _updateAccountBalance(original.accountId, oldDelta);
+    // Apply new balance effect
+    final newDelta = updated.type == 'income' ? updated.amount : -updated.amount;
+    await _updateAccountBalance(updated.accountId, newDelta);
+    await DBHelper.updateTransaction(updated);
+    transactions = await DBHelper.getTransactions();
+    accounts     = await DBHelper.getAccounts();
     notifyListeners();
   }
 
-  Future<void> deleteTransaction(Transaction t) async {
-    await DBHelper.deleteTransaction(t);
-    await _loadAll();
+  Future<void> deleteTransaction(String id) async {
+    final t = transactions.where((x) => x.id == id).firstOrNull;
+    if (t == null) return;
+    final delta = t.type == 'income' ? -t.amount : t.amount;
+    await _updateAccountBalance(t.accountId, delta);
+    await DBHelper.deleteTransaction(id);
+    transactions = await DBHelper.getTransactions();
+    accounts     = await DBHelper.getAccounts();
     notifyListeners();
   }
 
-  // ── Recurring ─────────────────────────────────────────────────────────────
+  Future<void> addTransfer({
+    required String fromId, required String toId, required double amount,
+    String note = '',
+  }) async {
+    final now = DateTime.now();
+    final catId = categories.where((c) => c.type == 'expense').isNotEmpty
+        ? categories.firstWhere((c) => c.type == 'expense').id
+        : '';
+    // Debit from source
+    final debit = AppTransaction(
+      id: newId(), type: 'expense', amount: amount,
+      description: 'Transfer out', accountId: fromId,
+      categoryId: catId, date: now, note: note,
+    );
+    // Credit to destination
+    final credit = AppTransaction(
+      id: newId(), type: 'income', amount: amount,
+      description: 'Transfer in', accountId: toId,
+      categoryId: catId, date: now, note: note,
+    );
+    await DBHelper.insertTransaction(debit);
+    await _updateAccountBalance(fromId, -amount);
+    await DBHelper.insertTransaction(credit);
+    await _updateAccountBalance(toId, amount);
+    transactions = await DBHelper.getTransactions();
+    accounts     = await DBHelper.getAccounts();
+    notifyListeners();
+  }
+
+  // ── Recurring ─────────────────────────────────────────────────────────
   Future<void> addRecurring(RecurringPayment r) async {
-    await DBHelper.insertRecurringPayment(r);
-    recurring = await DBHelper.getRecurringPayments();
+    await DBHelper.insertRecurring(r);
+    recurring = await DBHelper.getRecurring();
     notifyListeners();
   }
 
   Future<void> updateRecurring(RecurringPayment r) async {
-    await DBHelper.updateRecurringPayment(r);
-    final idx = recurring.indexWhere((x) => x.id == r.id);
-    if (idx >= 0) recurring[idx] = r;
-    notifyListeners();
-  }
-
-  Future<void> markRecurringPaid(RecurringPayment r) async {
-    final updated = RecurringPayment(
-      id: r.id, name: r.name, accountId: r.accountId,
-      categoryId: r.categoryId, amount: r.amount,
-      freqVal: r.freqVal, freqUnit: r.freqUnit,
-      startDate: r.startDate, nextDate: r.calcNextDate(),
-      endDate: r.endDate, paidPayments: r.paidPayments + 1,
-      reminderEnabled: r.reminderEnabled, notes: r.notes,
-    );
-    await DBHelper.updateRecurringPayment(updated);
-    await DBHelper.insertTransaction(Transaction(
-      id: _uuid.v4(), accountId: r.accountId, categoryId: r.categoryId,
-      amount: r.amount, type: 'expense',
-      description: '${r.name} (recurring)', date: DateTime.now(),
-    ));
-    await _loadAll();
-    notifyListeners();
-  }
-
-  Future<void> skipNextRecurring(RecurringPayment r) async {
-    final updated = RecurringPayment(
-      id: r.id, name: r.name, accountId: r.accountId,
-      categoryId: r.categoryId, amount: r.amount,
-      freqVal: r.freqVal, freqUnit: r.freqUnit,
-      startDate: r.startDate, nextDate: r.calcNextDate(),
-      endDate: r.endDate, paidPayments: r.paidPayments + 1,  // count as paid, no balance change
-      reminderEnabled: r.reminderEnabled, notes: r.notes,
-    );
-    await DBHelper.updateRecurringPayment(updated);
-    recurring = await DBHelper.getRecurringPayments();
+    await DBHelper.updateRecurring(r);
+    recurring = await DBHelper.getRecurring();
     notifyListeners();
   }
 
   Future<void> deleteRecurring(String id) async {
-    await DBHelper.deleteRecurringPayment(id);
-    recurring = await DBHelper.getRecurringPayments();
+    await DBHelper.deleteRecurring(id);
+    recurring = await DBHelper.getRecurring();
     notifyListeners();
   }
 
-  // ── Wishlist ──────────────────────────────────────────────────────────────
-  Future<void> addWishlistItem(WishlistItem w) async {
-    await DBHelper.insertWishlistItem(w);
-    wishlist = await DBHelper.getWishlistItems();
+  Future<void> markRecurringPaid(RecurringPayment r) async {
+    // Record transaction
+    final t = AppTransaction(
+      id: newId(), type: r.paymentType, amount: r.amount,
+      description: '${r.name} (recurring)',
+      accountId: r.accountId, categoryId: r.categoryId,
+      date: DateTime.now(),
+    );
+    await addTransaction(t);
+    // Advance next date and increment paid count
+    final updated = RecurringPayment(
+      id: r.id, name: r.name, accountId: r.accountId,
+      categoryId: r.categoryId, amount: r.amount,
+      paymentType: r.paymentType, freqVal: r.freqVal, freqUnit: r.freqUnit,
+      startDate: r.startDate, nextDate: r.calcNextDate(),
+      endDate: r.endDate, paidPayments: r.paidPayments + 1,
+      reminderEnabled: r.reminderEnabled, notes: r.notes,
+    );
+    await DBHelper.updateRecurring(updated);
+    recurring = await DBHelper.getRecurring();
     notifyListeners();
   }
 
-  Future<void> updateWishlistItemFull(WishlistItem w) async {
-    await DBHelper.updateWishlistItem(w);
-    final idx = wishlist.indexWhere((x) => x.id == w.id);
-    if (idx >= 0) wishlist[idx] = w;
+  Future<void> skipNextRecurring(RecurringPayment r) async {
+    // Advance date and increment paid count WITHOUT recording a transaction
+    final updated = RecurringPayment(
+      id: r.id, name: r.name, accountId: r.accountId,
+      categoryId: r.categoryId, amount: r.amount,
+      paymentType: r.paymentType, freqVal: r.freqVal, freqUnit: r.freqUnit,
+      startDate: r.startDate, nextDate: r.calcNextDate(),
+      endDate: r.endDate, paidPayments: r.paidPayments + 1,
+      reminderEnabled: r.reminderEnabled, notes: r.notes,
+    );
+    await DBHelper.updateRecurring(updated);
+    recurring = await DBHelper.getRecurring();
     notifyListeners();
   }
 
-  Future<void> toggleWishlistPurchased(String id) async {
-    final idx = wishlist.indexWhere((w) => w.id == id);
-    if (idx < 0) return;
-    final updated = wishlist[idx].copyWith(
-        isPurchased: !wishlist[idx].isPurchased);
-    await DBHelper.updateWishlistItem(updated);
-    wishlist[idx] = updated;
+  // ── Wishlist ──────────────────────────────────────────────────────────
+  Future<void> addWishlist(WishlistItem w) async {
+    await DBHelper.insertWishlist(w);
+    wishlist = await DBHelper.getWishlist();
     notifyListeners();
   }
 
-  Future<void> deleteWishlistItem(String id) async {
-    await DBHelper.deleteWishlistItem(id);
-    wishlist = await DBHelper.getWishlistItems();
+  Future<void> updateWishlist(WishlistItem w) async {
+    await DBHelper.updateWishlist(w);
+    wishlist = await DBHelper.getWishlist();
     notifyListeners();
   }
 
-  // ── Lended ────────────────────────────────────────────────────────────────
-  Future<void> addLendedItem(LendedMoney l) async {
-    await DBHelper.insertLendedItem(l);
-    lended = await DBHelper.getLendedItems();
+  Future<void> deleteWishlist(String id) async {
+    await DBHelper.deleteWishlist(id);
+    wishlist = await DBHelper.getWishlist();
+    notifyListeners();
+  }
+
+  // ── Lended Money ──────────────────────────────────────────────────────
+  Future<void> addLended(LendedMoney l) async {
+    await DBHelper.insertLended(l);
     if (l.accountId != null) {
-      final acc = accountById(l.accountId!);
-      if (acc != null) {
-        final delta = l.type == 'lent' ? -l.amount : l.amount;
-        final updated = acc.copyWith(balance: acc.balance + delta);
-        await DBHelper.updateAccount(updated);
-        final idx = accounts.indexWhere((a) => a.id == acc.id);
-        if (idx >= 0) accounts[idx] = updated;
-      }
+      final delta = l.type == 'lent' ? -l.amount : l.amount;
+      await _updateAccountBalance(l.accountId!, delta);
     }
+    lended = await DBHelper.getLended();
+    accounts = await DBHelper.getAccounts();
     notifyListeners();
   }
 
-  Future<void> settleLendedItem(String id) async {
-    final idx = lended.indexWhere((l) => l.id == id);
-    if (idx < 0) return;
-    final old = lended[idx];
-    if (old.accountId != null) {
-      final acc = accountById(old.accountId!);
-      if (acc != null) {
-        final delta = old.type == 'lent' ? old.amount : -old.amount;
-        final updated = acc.copyWith(balance: acc.balance + delta);
-        await DBHelper.updateAccount(updated);
-        final accIdx = accounts.indexWhere((a) => a.id == acc.id);
-        if (accIdx >= 0) accounts[accIdx] = updated;
-      }
-    }
-    final settled = old.copyWith(isSettled: true);
-    await DBHelper.updateLendedItem(settled);
-    lended[idx] = settled;
-    notifyListeners();
-  }
-
-  Future<void> updateLendedItemFull(
-      LendedMoney updated, LendedMoney original) async {
+  Future<void> updateLended(LendedMoney updated, LendedMoney original) async {
+    // Reverse original effect
     if (original.accountId != null && !original.isSettled) {
-      final acc = accountById(original.accountId!);
-      if (acc != null) {
-        final reversal =
-            original.type == 'lent' ? original.amount : -original.amount;
-        final reverted = acc.copyWith(balance: acc.balance + reversal);
-        await DBHelper.updateAccount(reverted);
-        final idx = accounts.indexWhere((a) => a.id == acc.id);
-        if (idx >= 0) accounts[idx] = reverted;
-      }
+      final delta = original.type == 'lent' ? original.amount : -original.amount;
+      await _updateAccountBalance(original.accountId!, delta);
     }
+    // Apply new effect
     if (updated.accountId != null && !updated.isSettled) {
-      final acc = accountById(updated.accountId!);
-      if (acc != null) {
-        final delta =
-            updated.type == 'lent' ? -updated.amount : updated.amount;
-        final newAcc = acc.copyWith(balance: acc.balance + delta);
-        await DBHelper.updateAccount(newAcc);
-        final idx = accounts.indexWhere((a) => a.id == acc.id);
-        if (idx >= 0) accounts[idx] = newAcc;
-      }
+      final delta = updated.type == 'lent' ? -updated.amount : updated.amount;
+      await _updateAccountBalance(updated.accountId!, delta);
     }
-    await DBHelper.updateLendedItem(updated);
-    lended = await DBHelper.getLendedItems();
+    await DBHelper.updateLended(updated);
+    lended   = await DBHelper.getLended();
+    accounts = await DBHelper.getAccounts();
     notifyListeners();
   }
 
-  Future<void> deleteLendedItem(String id) async {
-    await DBHelper.deleteLendedItem(id);
-    lended = await DBHelper.getLendedItems();
+  Future<void> settleLended(LendedMoney l) async {
+    if (l.accountId != null) {
+      // Reverse the balance effect
+      final delta = l.type == 'lent' ? l.amount : -l.amount;
+      await _updateAccountBalance(l.accountId!, delta);
+    }
+    final settled = l.copyWith(isSettled: true);
+    await DBHelper.updateLended(settled);
+    lended   = await DBHelper.getLended();
+    accounts = await DBHelper.getAccounts();
     notifyListeners();
   }
 
-  // ── Export ────────────────────────────────────────────────────────────────
-  Future<void> exportTransactionsCSV() async {
-    final rows = <List<dynamic>>[
-      ['Date', 'Description', 'Type', 'Amount', 'Account', 'Category', 'Note'],
-    ];
-    for (final t in transactions) {
-      rows.add([
+  Future<void> deleteLended(String id) async {
+    await DBHelper.deleteLended(id);
+    lended = await DBHelper.getLended();
+    notifyListeners();
+  }
+
+  // ── Export ────────────────────────────────────────────────────────────
+  /// Export filtered transactions to .xlsx via file picker.
+  /// Returns save path or null if cancelled.
+  Future<String?> exportTransactionsExcel({
+    required DateTime from, required DateTime to,
+  }) async {
+    final fromStart = DateTime(from.year, from.month, from.day);
+    final toEnd     = DateTime(to.year, to.month, to.day, 23, 59, 59);
+    final filtered  = transactions
+        .where((t) => !t.date.isBefore(fromStart) && !t.date.isAfter(toEnd))
+        .toList();
+    if (filtered.isEmpty) throw Exception('No transactions in this date range');
+
+    final excel = Excel.createExcel();
+    final sheet = excel['Transactions'];
+    try { excel.delete('Sheet1'); } catch (_) {}
+
+    const headers = ['Date','Description','Type','Amount','Account','Category','Note'];
+    for (int col = 0; col < headers.length; col++) {
+      final cell = sheet.cell(
+          CellIndex.indexByColumnRow(columnIndex: col, rowIndex: 0));
+      cell.value = TextCellValue(headers[col]);
+      cell.cellStyle = CellStyle(bold: true);
+    }
+    for (int i = 0; i < filtered.length; i++) {
+      final t = filtered[i];
+      final vals = [
         '${t.date.day}/${t.date.month}/${t.date.year}',
-        t.description, t.type, t.amount.toStringAsFixed(2),
-        accountById(t.accountId)?.name  ?? '',
+        t.description, t.type,
+        t.amount.toStringAsFixed(2),
+        accountById(t.accountId)?.name   ?? '',
         categoryById(t.categoryId)?.name ?? '',
         t.note,
-      ]);
+      ];
+      for (int col = 0; col < vals.length; col++) {
+        sheet.cell(CellIndex.indexByColumnRow(columnIndex: col, rowIndex: i + 1))
+            .value = TextCellValue(vals[col]);
+      }
     }
-    final csv  = ListToCsvConverter().convert(rows);
-    final dir  = await getTemporaryDirectory();
-    final file = File('${dir.path}/expensy_export.csv');
-    await file.writeAsString(csv);
-    await Share.shareXFiles(
-        [XFile(file.path)], text: 'Expensy Transactions Export');
+
+    final bytes = excel.encode();
+    if (bytes == null) throw Exception('Excel encoding failed');
+    final uint8 = Uint8List.fromList(bytes);
+
+    final fileName =
+        'expensy_${from.year}-${from.month.toString().padLeft(2,'0')}'
+        '_to_${to.year}-${to.month.toString().padLeft(2,'0')}.xlsx';
+
+    final savePath = await FilePicker.platform.saveFile(
+      dialogTitle: 'Save transactions as Excel',
+      fileName: fileName,
+      type: FileType.custom,
+      allowedExtensions: ['xlsx'],
+      bytes: uint8,
+    );
+    return savePath;
   }
 
-  // ── Backup / Restore ──────────────────────────────────────────────────────
-  Future<void> createBackup() async {
+  // ── Backup ────────────────────────────────────────────────────────────
+  /// Returns save path or null if user cancelled.
+  Future<String?> createBackup() async {
     final data = await DBHelper.exportAll();
     data['settings'] = settings.toJson();
-    final dir  = await getTemporaryDirectory();
-    final ts   = DateTime.now().millisecondsSinceEpoch;
-    final file = File('${dir.path}/expensy_backup_$ts.json');
-    await file.writeAsString(
-        const JsonEncoder.withIndent('  ').convert(data));
-    await Share.shareXFiles([XFile(file.path)], text: 'Expensy Backup');
+    final json  = const JsonEncoder.withIndent('  ').convert(data);
+    final uint8 = Uint8List.fromList(utf8.encode(json));
+    final ts    = DateTime.now().millisecondsSinceEpoch;
+
+    final savePath = await FilePicker.platform.saveFile(
+      dialogTitle: 'Save Expensy Backup',
+      fileName: 'expensy_backup_$ts.json',
+      type: FileType.custom,
+      allowedExtensions: ['json'],
+      bytes: uint8,
+    );
+    return savePath; // null if cancelled
   }
 
   Future<bool> restoreBackup() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['json'],
+      withData: true,
     );
-    if (result == null || result.files.single.path == null) return false;
-    final content = await File(result.files.single.path!).readAsString();
-    final data    = jsonDecode(content) as Map<String, dynamic>;
+    if (result == null || result.files.isEmpty) return false;
+
+    final bytes = result.files.first.bytes;
+    String jsonStr;
+    if (bytes != null) {
+      jsonStr = utf8.decode(bytes);
+    } else {
+      final path = result.files.first.path;
+      if (path == null) return false;
+      jsonStr = await File(path).readAsString();
+    }
+
+    final data = jsonDecode(jsonStr) as Map<String, dynamic>;
     await DBHelper.importAll(data);
     if (data['settings'] != null) {
       settings = AppSettings.fromJson(
           data['settings'] as Map<String, dynamic>);
       await _saveSettings();
     }
-    await _loadAll();
-    notifyListeners();
+    await load();
     return true;
   }
-
-  String newId() => _uuid.v4();
 }

@@ -1,8 +1,8 @@
 // lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../providers/app_provider.dart';
-import '../models/models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
 import 'add_transaction_screen.dart';
@@ -14,364 +14,242 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final app = context.watch<AppProvider>();
-    final cs = Theme.of(context).colorScheme;
-    final currency = app.settings.currency;
-    String fmt(double v) => formatAmount(v, currency);
-    final now = DateTime.now();
-    final recent = List<Transaction>.from(app.transactions)
-      ..sort((a, b) => b.date.compareTo(a.date));
-    final recentFive = recent.take(5).toList();
+    final cs  = Theme.of(context).colorScheme;
+    final s   = app.settings;
+    String fmt(double v) => formatAmount(v, s.currency);
+
+    final now    = DateTime.now();
+    final mStart = DateTime(now.year, now.month, 1);
+    final mEnd   = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
+
+    final monthTxs = app.transactions
+        .where((t) => !t.date.isBefore(mStart) && !t.date.isAfter(mEnd))
+        .toList();
+    final income  = monthTxs.where((t) => t.type == 'income')
+        .fold(0.0, (sum, t) => sum + t.amount);
+    final expense = monthTxs.where((t) => t.type == 'expense')
+        .fold(0.0, (sum, t) => sum + t.amount);
+
+    final recent = app.transactions.take(5).toList();
 
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          // ── Hero header ───────────────────────────────────────────────
-          SliverAppBar(
-            expandedHeight: 222,
-            pinned: true,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [cs.primary, cs.tertiary],
-                  ),
-                ),
-                child: SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Hi, ${app.settings.userName}',
-                              style: TextStyle(
-                                  color: cs.onPrimary.withValues(alpha: 0.95),
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w800),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                '${_monthName(now.month)} ${now.year}',
-                                style: TextStyle(
-                                    color: cs.onPrimary,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text('Total Balance',
-                            style: TextStyle(
-                                color: cs.onPrimary.withValues(alpha: 0.7),
-                                fontSize: 12,
-                                letterSpacing: 1)),
-                        const SizedBox(height: 2),
-                        Text(
-                          app.settings.hideBalance
-                              ? '••••••'
-                              : fmt(app.totalBalance),
-                          style: TextStyle(
-                              color: cs.onPrimary,
-                              fontSize: 34,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -1),
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            _StatChip(
-                              label: 'Income',
-                              value: fmt(app.monthIncome),
-                              icon: Icons.arrow_downward_rounded,
-                              iconColor: const Color(0xFFA5D6A7),
-                              cs: cs,
-                            ),
-                            const SizedBox(width: 10),
-                            _StatChip(
-                              label: 'Expense',
-                              value: fmt(app.monthExpense),
-                              icon: Icons.arrow_upward_rounded,
-                              iconColor: const Color(0xFFEF9A9A),
-                              cs: cs,
-                            ),
-                            const SizedBox(width: 10),
-                            _StatChip(
-                              label: 'Net',
-                              value: fmt(app.monthIncome - app.monthExpense),
-                              icon: app.monthIncome >= app.monthExpense
-                                  ? Icons.trending_up_rounded
-                                  : Icons.trending_down_rounded,
-                              iconColor: app.monthIncome >= app.monthExpense
-                                  ? const Color(0xFFA5D6A7)
-                                  : const Color(0xFFEF9A9A),
-                              cs: cs,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+          // ── Compact greeting + balance header ──────────────────────────
+          SliverToBoxAdapter(child: Container(
+            color: cs.primary,
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 12,
+              left: 20, right: 8, bottom: 16,
             ),
-          ),
-
-          // ── Accounts strip ────────────────────────────────────────────
-          SliverToBoxAdapter(
-            child: Column(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Padding(
-                  padding:
-                      const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Accounts',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w800)),
-                      TextButton.icon(
-                        onPressed: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => const TransferScreen())),
-                        icon: const Icon(Icons.swap_horiz_rounded, size: 18),
-                        label: const Text('Transfer'),
-                        style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6)),
-                      ),
-                    ],
+                Expanded(child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Hi, ${s.userName.isNotEmpty ? s.userName : 'there'} \u{1F44B}',
+                      style: TextStyle(
+                          color: cs.onPrimary.withValues(alpha: 0.85),
+                          fontSize: 20, fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 1),
+                    Text('Total Balance', style: TextStyle(
+                        color: cs.onPrimary.withValues(alpha: 0.6), fontSize: 12)),
+                    Text(
+                      s.hideBalance ? '• • • • • •' : fmt(app.totalBalance),
+                      style: TextStyle(
+                          color: cs.onPrimary,
+                          fontSize: 28, fontWeight: FontWeight.w800),
+                    ),
+                  ],
+                )),
+                // Action icons – use cs.onPrimary so they're always readable
+                IconButton(
+                  icon: Icon(
+                    s.hideBalance
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                    color: cs.onPrimary,
                   ),
+                  onPressed: () => app.updateSetting('hideBalance', !s.hideBalance),
                 ),
-                SizedBox(
-                  height: 128,
-                  child: app.accounts.isEmpty
-                      ? const Center(
-                          child: Text('No accounts yet',
-                              style: TextStyle(color: Colors.grey)))
-                      : ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 12),
-                          itemCount: app.accounts.length,
-                          itemBuilder: (_, i) =>
-                              _AccountCard(account: app.accounts[i], fmt: fmt),
-                        ),
+                IconButton(
+                  icon: Icon(Icons.swap_horiz_rounded, color: cs.onPrimary),
+                  onPressed: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const TransferScreen())),
                 ),
               ],
             ),
-          ),
+          )),
 
-          // ── Recent transactions ───────────────────────────────────────
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          SliverToBoxAdapter(child: Column(children: [
+            // Month summary chips
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+              child: Row(children: [
+                Expanded(child: _SummaryChip(label: 'Income',
+                    amount: fmt(income), color: const Color(0xFF2E7D32),
+                    icon: Icons.arrow_downward_rounded)),
+                const SizedBox(width: 8),
+                Expanded(child: _SummaryChip(label: 'Expenses',
+                    amount: fmt(expense), color: const Color(0xFFC62828),
+                    icon: Icons.arrow_upward_rounded)),
+                const SizedBox(width: 8),
+                Expanded(child: _SummaryChip(label: 'Net',
+                    amount: fmt(income - expense),
+                    color: income >= expense
+                        ? const Color(0xFF1565C0) : const Color(0xFF785900),
+                    icon: Icons.account_balance_outlined)),
+              ]),
+            ),
+
+            // Accounts
+            if (app.accounts.isNotEmpty) ...[
+              const Padding(
+                padding: EdgeInsets.fromLTRB(16, 16, 16, 4),
+                child: Row(children: [
+                  Text('Accounts', style: TextStyle(
+                      fontWeight: FontWeight.w800, fontSize: 15)),
+                ]),
+              ),
+              SizedBox(
+                height: 90,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: app.accounts.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 10),
+                  itemBuilder: (_, i) {
+                    final acc   = app.accounts[i];
+                    final color = Color(acc.colorValue);
+                    return Container(
+                      width: 155,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [color.withValues(alpha: 0.75), color],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(children: [
+                            AccountTypeIcon(type: acc.type, size: 14,
+                                color: Colors.white),
+                            const SizedBox(width: 4),
+                            Expanded(child: Text(acc.name,
+                                maxLines: 1, overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(color: Colors.white,
+                                    fontSize: 12, fontWeight: FontWeight.w600))),
+                          ]),
+                          Text(
+                            s.hideBalance ? '• • •'
+                                : formatAmount(acc.balance, acc.currency),
+                            style: const TextStyle(color: Colors.white,
+                                fontSize: 14, fontWeight: FontWeight.w800),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+
+            // Recent transactions
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 16, 16, 4),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Recent',
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w800)),
+                  Text('Recent Transactions',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w800, fontSize: 15)),
                 ],
               ),
             ),
-          ),
 
-          recentFive.isEmpty
-              ? const SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.all(24),
-                    child: Center(
-                        child: Text('No transactions yet',
-                            style: TextStyle(color: Colors.grey))),
+            if (recent.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Text('No transactions yet',
+                    style: TextStyle(
+                        color: cs.onSurface.withValues(alpha: 0.4))),
+              )
+            else
+              ...recent.map((t) {
+                final acc   = app.accountById(t.accountId);
+                final cat   = app.categoryById(t.categoryId);
+                final isInc = t.type == 'income';
+                return ListTile(
+                  leading: CategoryDot(category: cat, size: 40),
+                  title: Text(
+                    t.description.isNotEmpty ? t.description : t.type,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 14),
                   ),
-                )
-              : SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (_, i) {
-                      final tx = recentFive[i];
-                      final cat = app.categoryById(tx.categoryId);
-                      final acc = app.accountById(tx.accountId);
-                      return _TxListTile(
-                          tx: tx, cat: cat, acc: acc, currency: currency);
-                    },
-                    childCount: recentFive.length,
+                  subtitle: Text(
+                    '${DateFormat('d MMM').format(t.date)} · ${acc?.name ?? ''}',
+                    style: TextStyle(fontSize: 11,
+                        color: cs.onSurface.withValues(alpha: 0.5)),
                   ),
-                ),
+                  trailing: Text(
+                    '${isInc ? '+' : '-'}${fmt(t.amount)}',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700,
+                        color: isInc
+                            ? const Color(0xFF2E7D32)
+                            : const Color(0xFFC62828)),
+                  ),
+                );
+              }),
 
-          const SliverToBoxAdapter(child: SizedBox(height: 100)),
+            const SizedBox(height: 100),
+          ])),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (_) => const AddTransactionScreen())),
+        heroTag: null,
+        onPressed: () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const AddTransactionScreen())),
         icon: const Icon(Icons.add),
         label: const Text('Add'),
       ),
     );
   }
-
-  String _monthName(int m) => const [
-        '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-      ][m];
 }
 
-class _StatChip extends StatelessWidget {
-  final String label;
-  final String value;
+class _SummaryChip extends StatelessWidget {
+  final String label, amount;
+  final Color color;
   final IconData icon;
-  final Color iconColor;
-  final ColorScheme cs;
-
-  const _StatChip({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.iconColor,
-    required this.cs,
-  });
+  const _SummaryChip({required this.label, required this.amount,
+      required this.color, required this.icon});
 
   @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(16),
+          color: color.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withValues(alpha: 0.25)),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(children: [
-              Icon(icon, color: iconColor, size: 16),
-              const SizedBox(width: 5),
-              Text(label,
-                  style: TextStyle(
-                      color: cs.onPrimary.withValues(alpha: 0.75),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.3)),
-            ]),
-            const SizedBox(height: 5),
-            Text(value,
-                style: TextStyle(
-                    color: cs.onPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800),
-                overflow: TextOverflow.ellipsis),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _AccountCard extends StatelessWidget {
-  final Account account;
-  final String Function(double) fmt;
-  const _AccountCard({required this.account, required this.fmt});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 175,
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Color(account.colorValue),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-              color: Color(account.colorValue).withValues(alpha: 0.4),
-              blurRadius: 12,
-              offset: const Offset(0, 4)),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              AccountTypeIcon(type: account.type, size: 18),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.25),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(account.type.toUpperCase(),
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 8,
-                        fontWeight: FontWeight.w700)),
-              ),
-            ],
-          ),
-          const Spacer(),
-          Text(fmt(account.balance),
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 19,
-                  fontWeight: FontWeight.w800),
-              overflow: TextOverflow.ellipsis),
-          Text(account.name,
-              style: const TextStyle(color: Colors.white70, fontSize: 13),
-              overflow: TextOverflow.ellipsis),
-        ],
-      ),
-    );
-  }
-}
-
-class _TxListTile extends StatelessWidget {
-  final Transaction tx;
-  final Category? cat;
-  final Account? acc;
-  final String currency;
-
-  const _TxListTile(
-      {required this.tx, this.cat, this.acc, required this.currency});
-
-  @override
-  Widget build(BuildContext context) {
-    final isIncome = tx.type == 'income';
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      leading: CategoryDot(category: cat, size: 42),
-      title: Text(tx.description,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-      subtitle: Text('${cat?.name ?? ''} · ${acc?.name ?? ''}',
-          style: const TextStyle(fontSize: 12)),
-      trailing: AmountText(
-        amount: tx.amount,
-        currencyCode: currency,
-        isIncome: isIncome,
-        fontSize: 14,
-      ),
-    );
-  }
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Icon(icon, size: 11, color: color),
+            const SizedBox(width: 3),
+            Text(label, style: TextStyle(fontSize: 10, color: color,
+                fontWeight: FontWeight.w600)),
+          ]),
+          const SizedBox(height: 2),
+          Text(amount, maxLines: 1, overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800,
+                  color: color)),
+        ]),
+      );
 }

@@ -10,39 +10,40 @@ class BackupScreen extends StatefulWidget {
 }
 
 class _BackupScreenState extends State<BackupScreen> {
-  bool _backingUp  = false;
-  bool _restoring  = false;
-  String? _message;
-  bool _messageOk  = true;
+  bool    _backingUp = false;
+  bool    _restoring = false;
+  String? _msg;
+  bool    _msgOk = true;
 
-  void _setMsg(String msg, {bool ok = true}) =>
-      setState(() { _message = msg; _messageOk = ok; });
+  void _setMsg(String m, {bool ok = true}) =>
+      setState(() { _msg = m; _msgOk = ok; });
 
   Future<void> _backup() async {
-    setState(() { _backingUp = true; _message = null; });
+    setState(() { _backingUp = true; _msg = null; });
     try {
-      await context.read<AppProvider>().createBackup();
-      _setMsg('Backup created — check your share sheet.');
+      final savedPath = await context.read<AppProvider>().createBackup();
+      if (savedPath != null) {
+        _setMsg('Backup saved to:\n$savedPath');
+      }
+      // If null, user cancelled — show nothing
     } catch (e) {
       _setMsg('Backup failed: $e', ok: false);
     } finally {
-      setState(() => _backingUp = false);
+      if (mounted) setState(() => _backingUp = false);
     }
   }
 
   Future<void> _restore() async {
-    // Confirm first
     if (!mounted) return;
-    final ok = await showDialog<bool>(
+    final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Restore Backup?'),
         content: const Text(
-            'This will replace ALL your current data with the backup file.\n\n'
-            'This action cannot be undone. Continue?'),
+            'This will replace ALL your current data with the backup.\n'
+            'This cannot be undone.'),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
+          TextButton(onPressed: () => Navigator.pop(ctx, false),
               child: const Text('Cancel')),
           FilledButton(
             style: FilledButton.styleFrom(
@@ -53,323 +54,148 @@ class _BackupScreenState extends State<BackupScreen> {
         ],
       ),
     );
-    if (ok != true) return;
-    if (!mounted) return;
+    if (confirmed != true || !mounted) return;
 
-    setState(() { _restoring = true; _message = null; });
+    setState(() { _restoring = true; _msg = null; });
     try {
-      final success = await context.read<AppProvider>().restoreBackup();
-      if (success) {
-        _setMsg('Data restored successfully!');
-      } else {
-        _setMsg('No file selected or restore cancelled.', ok: false);
+      final ok = await context.read<AppProvider>().restoreBackup();
+      if (mounted) {
+        if (ok) {
+          _setMsg('Data restored successfully!');
+        } else {
+          _setMsg('No file selected.', ok: false);
+        }
       }
     } catch (e) {
-      _setMsg('Restore failed: invalid backup file.', ok: false);
+      if (mounted) _setMsg('Restore failed: invalid backup file.', ok: false);
     } finally {
-      setState(() => _restoring = false);
+      if (mounted) setState(() => _restoring = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final app = context.watch<AppProvider>();
-    final cs  = Theme.of(context).colorScheme;
-
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Backup & Restore',
             style: TextStyle(fontWeight: FontWeight.w800)),
-        backgroundColor: const Color(0xFF37474F),
-        foregroundColor: Colors.white,
+        backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Status banner
-            if (_message != null)
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          // Backup card
+          Card(child: Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [
+                Container(width: 44, height: 44,
+                    decoration: BoxDecoration(
+                        color: cs.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12)),
+                    child: Icon(Icons.backup_outlined, color: cs.primary)),
+                const SizedBox(width: 14),
+                const Expanded(child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Create Backup', style: TextStyle(
+                        fontWeight: FontWeight.w800, fontSize: 15)),
+                    Text('Save all data as a JSON file',
+                        style: TextStyle(fontSize: 12)),
+                  ],
+                )),
+              ]),
+              const SizedBox(height: 14),
+              FilledButton.icon(
+                onPressed: _backingUp ? null : _backup,
+                icon: _backingUp
+                    ? const SizedBox(width: 16, height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2,
+                            color: Colors.white))
+                    : const Icon(Icons.save_outlined),
+                label: Text(_backingUp ? 'Saving...' : 'Save Backup'),
+                style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(44),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(22))),
+              ),
+            ]),
+          )),
+          const SizedBox(height: 12),
+
+          // Restore card
+          Card(child: Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [
+                Container(width: 44, height: 44,
+                    decoration: BoxDecoration(
+                        color: cs.error.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12)),
+                    child: Icon(Icons.restore_outlined, color: cs.error)),
+                const SizedBox(width: 14),
+                Expanded(child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Restore Backup', style: TextStyle(
+                        fontWeight: FontWeight.w800, fontSize: 15)),
+                    Text('Load from a JSON backup file',
+                        style: TextStyle(fontSize: 12,
+                            color: cs.onSurface.withValues(alpha: 0.6))),
+                  ],
+                )),
+              ]),
+              const SizedBox(height: 8),
               Container(
-                padding: const EdgeInsets.all(14),
-                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: _messageOk
-                      ? const Color(0xFFE8F5E9)
-                      : const Color(0xFFFFEBEE),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                      color: _messageOk
-                          ? const Color(0xFFA5D6A7)
-                          : const Color(0xFFEF9A9A)),
-                ),
+                    color: cs.errorContainer,
+                    borderRadius: BorderRadius.circular(10)),
                 child: Row(children: [
-                  Icon(
-                    _messageOk
-                        ? Icons.check_circle_outline
-                        : Icons.error_outline,
-                    color: _messageOk
-                        ? const Color(0xFF2E7D32)
-                        : const Color(0xFFC62828),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      _message!,
-                      style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: _messageOk
-                              ? const Color(0xFF2E7D32)
-                              : const Color(0xFFC62828)),
-                    ),
-                  ),
+                  Icon(Icons.warning_amber_rounded, color: cs.error, size: 16),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(
+                    'Warning: This will overwrite all current data!',
+                    style: TextStyle(fontSize: 12, color: cs.onErrorContainer),
+                  )),
                 ]),
               ),
-
-            // Data overview card
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Current Data',
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleSmall
-                            ?.copyWith(fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 12),
-                    _DataRow(icon: Icons.account_balance_wallet_outlined,
-                        label: 'Accounts', count: app.accounts.length),
-                    _DataRow(icon: Icons.receipt_long_outlined,
-                        label: 'Transactions', count: app.transactions.length),
-                    _DataRow(icon: Icons.repeat_rounded,
-                        label: 'Recurring Payments', count: app.recurring.length),
-                    _DataRow(icon: Icons.star_outline_rounded,
-                        label: 'Wishlist Items', count: app.wishlist.length),
-                    _DataRow(icon: Icons.handshake_outlined,
-                        label: 'Lending Records', count: app.lended.length),
-                    _DataRow(icon: Icons.label_outline_rounded,
-                        label: 'Categories', count: app.categories.length,
-                        last: true),
-                  ],
-                ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: _restoring ? null : _restore,
+                icon: _restoring
+                    ? const SizedBox(width: 16, height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.upload_file_outlined),
+                label: Text(_restoring ? 'Restoring...' : 'Restore Backup'),
+                style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(44),
+                    foregroundColor: cs.error,
+                    side: BorderSide(color: cs.error),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(22))),
               ),
-            ),
+            ]),
+          )),
+
+          if (_msg != null) ...[
             const SizedBox(height: 16),
-
-            // Backup card
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF37474F).withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(Icons.backup_outlined,
-                            color: Color(0xFF37474F)),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Backup Data',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleSmall
-                                    ?.copyWith(fontWeight: FontWeight.w800)),
-                            Text(
-                              'Save a complete snapshot of all your data',
-                              style: TextStyle(
-                                  fontSize: 12,
-                                  color: cs.onSurface.withValues(alpha: 0.6)),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ]),
-                    const SizedBox(height: 14),
-                    Text(
-                      'The backup file (JSON) includes all accounts, transactions, '
-                      'recurring payments, wishlist, lending records, categories, '
-                      'and settings.',
-                      style: TextStyle(
-                          fontSize: 13,
-                          color: cs.onSurface.withValues(alpha: 0.65),
-                          height: 1.5),
-                    ),
-                    const SizedBox(height: 16),
-                    FilledButton.icon(
-                      onPressed: _backingUp ? null : _backup,
-                      icon: _backingUp
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white))
-                          : const Icon(Icons.file_download_outlined),
-                      label: Text(
-                          _backingUp ? 'Creating backup…' : 'Create Backup'),
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size.fromHeight(48),
-                        backgroundColor: const Color(0xFF37474F),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(28)),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Restore card
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(
-                    color: cs.error.withValues(alpha: 0.3), width: 1.5),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: cs.errorContainer,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(Icons.restore_outlined,
-                            color: cs.onErrorContainer),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Restore Data',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleSmall
-                                    ?.copyWith(fontWeight: FontWeight.w800)),
-                            Text(
-                              'Load data from a backup file',
-                              style: TextStyle(
-                                  fontSize: 12,
-                                  color: cs.onSurface.withValues(alpha: 0.6)),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ]),
-                    const SizedBox(height: 14),
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: cs.errorContainer.withValues(alpha: 0.4),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(children: [
-                        Icon(Icons.warning_amber_outlined,
-                            size: 18, color: cs.error),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Warning: This will permanently replace all current data.',
-                            style: TextStyle(
-                                fontSize: 12,
-                                color: cs.error,
-                                fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                      ]),
-                    ),
-                    const SizedBox(height: 16),
-                    OutlinedButton.icon(
-                      onPressed: _restoring ? null : _restore,
-                      icon: _restoring
-                          ? SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: cs.error))
-                          : const Icon(Icons.file_upload_outlined),
-                      label: Text(
-                          _restoring ? 'Restoring…' : 'Restore from File'),
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size.fromHeight(48),
-                        foregroundColor: cs.error,
-                        side: BorderSide(color: cs.error),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(28)),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: _msgOk ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE),
+                borderRadius: BorderRadius.circular(12)),
+              child: Row(children: [
+                Icon(_msgOk ? Icons.check_circle_outline : Icons.error_outline,
+                    color: _msgOk ? const Color(0xFF2E7D32) : const Color(0xFFC62828)),
+                const SizedBox(width: 10),
+                Expanded(child: Text(_msg!, style: TextStyle(fontSize: 13,
+                    color: _msgOk ? const Color(0xFF2E7D32) : const Color(0xFFC62828)))),
+              ]),
             ),
           ],
-        ),
+        ]),
       ),
-    );
-  }
-}
-
-class _DataRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final int count;
-  final bool last;
-  const _DataRow(
-      {required this.icon,
-      required this.label,
-      required this.count,
-      this.last = false});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 9),
-      decoration: last
-          ? null
-          : BoxDecoration(
-              border: Border(
-                  bottom: BorderSide(
-                      color: cs.outlineVariant.withValues(alpha: 0.5)))),
-      child: Row(children: [
-        Icon(icon, size: 18, color: cs.primary),
-        const SizedBox(width: 10),
-        Expanded(
-            child: Text(label,
-                style: const TextStyle(fontSize: 13))),
-        Container(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-          decoration: BoxDecoration(
-            color: cs.primaryContainer,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text('$count',
-              style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: cs.primary)),
-        ),
-      ]),
     );
   }
 }

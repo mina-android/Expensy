@@ -12,346 +12,228 @@ class LendedScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final app      = context.watch<AppProvider>();
-    final currency = app.settings.currency;
-    String fmt(double v) => formatAmount(v, currency);
+    final app = context.watch<AppProvider>();
+    final cs  = Theme.of(context).colorScheme;
+    String fmt(double v) => formatAmount(v, app.settings.currency);
 
-    final lentOut  = app.lended.where((l) => l.type == 'lent'     && !l.isSettled).toList();
-    final borrowed = app.lended.where((l) => l.type == 'borrowed' && !l.isSettled).toList();
-    final settled  = app.lended.where((l) => l.isSettled).toList();
-
-    final totalLent = lentOut .fold(0.0, (s, l) => s + l.amount);
-    final totalOwed = borrowed.fold(0.0, (s, l) => s + l.amount);
+    final active   = app.lended.where((l) => !l.isSettled).toList();
+    final settled  = app.lended.where((l) =>  l.isSettled).toList();
+    final theyOwe  = active.where((l) => l.type == 'lent').fold(0.0, (s,l) => s+l.amount);
+    final iOwe     = active.where((l) => l.type == 'borrowed').fold(0.0, (s,l) => s+l.amount);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Lent Money',
-            style: TextStyle(fontWeight: FontWeight.w800)),
-        backgroundColor: const Color(0xFFE65100),
-        foregroundColor: Colors.white,
+        title: const Text('Lent Money', style: TextStyle(fontWeight: FontWeight.w800)),
+        backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
       ),
-      body: Column(
-        children: [
-          // Summary bar
+      body: Column(children: [
+        // Summary bar
+        if (app.lended.isNotEmpty)
           Container(
-            color: const Color(0xFFE65100),
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            color: cs.primary,
             child: Row(children: [
-              _SumChip(label: 'They Owe Me',  value: fmt(totalLent), positive: true),
-              const SizedBox(width: 10),
-              _SumChip(label: 'I Owe Them',   value: fmt(totalOwed), positive: false),
-              const SizedBox(width: 10),
-              _SumChip(
-                label: 'Net',
-                value: fmt((totalLent - totalOwed).abs()),
-                positive: totalLent >= totalOwed,
-              ),
+              Expanded(child: _SumCol(label: 'They Owe Me', value: fmt(theyOwe),
+                  color: cs.onPrimary.withValues(alpha: 0.9),
+                  labelColor: cs.onPrimary.withValues(alpha: 0.65))),
+              Expanded(child: _SumCol(label: 'I Owe Them', value: fmt(iOwe),
+                  color: cs.onPrimary.withValues(alpha: 0.9),
+                  labelColor: cs.onPrimary.withValues(alpha: 0.65))),
+              Expanded(child: _SumCol(label: 'Net', value: fmt(theyOwe - iOwe),
+                  color: cs.onPrimary,
+                  labelColor: cs.onPrimary.withValues(alpha: 0.65))),
             ]),
           ),
-
-          Expanded(
-            child: app.lended.isEmpty
-                ? const EmptyState(
-                    icon: Icons.handshake_outlined,
-                    message: 'No lending records',
-                    subMessage: 'Track money you lent or borrowed',
-                  )
-                : ListView(
-                    padding: const EdgeInsets.fromLTRB(14, 14, 14, 100),
-                    children: [
-                      if (lentOut.isNotEmpty) ...[
-                        _GroupHeader(title: 'THEY OWE ME', color: const Color(0xFF2E7D32)),
-                        ...lentOut .map((l) => _LendCard(l: l, app: app, fmt: fmt)),
-                        const SizedBox(height: 8),
-                      ],
-                      if (borrowed.isNotEmpty) ...[
-                        _GroupHeader(title: 'I OWE THEM', color: const Color(0xFFC62828)),
-                        ...borrowed.map((l) => _LendCard(l: l, app: app, fmt: fmt)),
-                        const SizedBox(height: 8),
-                      ],
-                      if (settled.isNotEmpty) ...[
-                        _GroupHeader(title: 'SETTLED', color: Colors.grey),
-                        ...settled .map((l) => _LendCard(l: l, app: app, fmt: fmt)),
-                      ],
-                    ],
-                  ),
-          ),
-        ],
-      ),
+        Expanded(child: app.lended.isEmpty
+          ? const EmptyState(icon: Icons.handshake_outlined,
+              message: 'No records', subMessage: 'Tap + to track lent or borrowed money')
+          : ListView(
+              padding: const EdgeInsets.fromLTRB(14, 14, 14, 100),
+              children: [
+                if (active.isNotEmpty) ...[
+                  const SectionHeader(title: 'Active'),
+                  ...active.map((l) => _LendedCard(l: l, fmt: fmt)),
+                ],
+                if (settled.isNotEmpty) ...[
+                  const SectionHeader(title: 'Settled'),
+                  ...settled.map((l) => _LendedCard(l: l, fmt: fmt)),
+                ],
+              ],
+            )),
+      ]),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFFE65100),
-        foregroundColor: Colors.white,
-        onPressed: () => _showSheet(context, app),
+        heroTag: null,
+        onPressed: () => _openSheet(context),
         child: const Icon(Icons.add),
       ),
     );
   }
 
-  static void openSheet(BuildContext ctx, AppProvider app,
-      {LendedMoney? existing}) =>
-      _showSheet(ctx, app, existing: existing);
-
-  static void _showSheet(BuildContext ctx, AppProvider app,
-      {LendedMoney? existing}) {
+  static void _openSheet(BuildContext ctx, {LendedMoney? existing}) {
     showModalBottomSheet(
-      context: ctx,
-      isScrollControlled: true,
-      useSafeArea: true,
+      context: ctx, isScrollControlled: true, useSafeArea: true,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (_) => _LendSheet(app: app, existing: existing),
+      builder: (_) => _LendedSheet(existing: existing),
     );
   }
 }
 
-class _SumChip extends StatelessWidget {
+class _SumCol extends StatelessWidget {
   final String label, value;
-  final bool positive;
-  const _SumChip({required this.label, required this.value, required this.positive});
-
-  @override
-  Widget build(BuildContext context) => Expanded(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(label,
-                style: const TextStyle(
-                    color: Colors.white70, fontSize: 9, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 2),
-            Text(value,
-                style: const TextStyle(
-                    color: Colors.white, fontSize: 13, fontWeight: FontWeight.w800),
-                overflow: TextOverflow.ellipsis),
-          ]),
-        ),
-      );
-}
-
-class _GroupHeader extends StatelessWidget {
-  final String title;
   final Color color;
-  const _GroupHeader({required this.title, required this.color});
-
+  final Color? labelColor;
+  const _SumCol({required this.label, required this.value,
+      required this.color, this.labelColor});
   @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: Text(title,
-            style: TextStyle(
-                fontSize: 11, fontWeight: FontWeight.w800,
-                color: color, letterSpacing: 1)),
-      );
+  Widget build(BuildContext context) => Column(children: [
+    Text(label, style: TextStyle(fontSize: 10,
+        color: labelColor ?? Theme.of(context).colorScheme.onPrimaryContainer
+            .withValues(alpha: 0.6))),
+    const SizedBox(height: 2),
+    Text(value, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800,
+        color: color)),
+  ]);
 }
 
-class _LendCard extends StatelessWidget {
+class _LendedCard extends StatelessWidget {
   final LendedMoney l;
-  final AppProvider app;
   final String Function(double) fmt;
-  const _LendCard({required this.l, required this.app, required this.fmt});
+  const _LendedCard({required this.l, required this.fmt});
 
   @override
   Widget build(BuildContext context) {
     final cs     = Theme.of(context).colorScheme;
     final isLent = l.type == 'lent';
-    final accent = isLent ? const Color(0xFF2E7D32) : const Color(0xFFC62828);
-    final acc    = l.accountId != null ? app.accountById(l.accountId!) : null;
+    final color  = isLent ? const Color(0xFF2E7D32) : const Color(0xFFC62828);
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 10),
-      shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: accent.withValues(alpha: 0.3), width: 1.5)),
+      margin: const EdgeInsets.only(bottom: 8),
       child: Padding(
         padding: const EdgeInsets.all(14),
-        child: Row(children: [
-          Container(
-            width: 44, height: 44,
-            decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              l.isSettled ? Icons.check_circle_outline
-                  : (isLent ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded),
-              color: l.isSettled ? Colors.grey : accent, size: 22,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(children: [
-                  Expanded(
-                    child: Text(l.personName,
-                        style: TextStyle(
-                            fontWeight: FontWeight.w700, fontSize: 14,
-                            decoration: l.isSettled ? TextDecoration.lineThrough : null)),
-                  ),
-                  PillBadge(label: isLent ? 'I lent' : 'I owe', color: accent),
-                  if (l.isOverdue) ...[
-                    const SizedBox(width: 4),
-                    const PillBadge(label: 'Overdue', color: Color(0xFFC62828)),
-                  ],
-                ]),
-                const SizedBox(height: 2),
-                Text(
-                  DateFormat('d MMM yyyy').format(l.date) +
-                      (l.dueDate != null
-                          ? ' · Due: ${DateFormat('d MMM yyyy').format(l.dueDate!)}'
-                          : ''),
-                  style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.55)),
-                ),
-                if (acc != null)
-                  Text('Account: ${acc.name}',
-                      style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.5))),
-                if (l.notes.isNotEmpty)
-                  Text(l.notes,
-                      style: TextStyle(
-                          fontSize: 11, color: cs.onSurface.withValues(alpha: 0.5),
-                          fontStyle: FontStyle.italic)),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(fmt(l.amount),
-                  style: TextStyle(
-                      fontWeight: FontWeight.w800, fontSize: 15,
-                      color: l.isSettled ? Colors.grey : accent)),
-              const SizedBox(height: 4),
-              if (!l.isSettled) ...[
-                // Edit button
-                GestureDetector(
-                  onTap: () => LendedScreen._showSheet(context, app, existing: l),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: cs.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text('Edit',
-                        style: TextStyle(
-                            fontSize: 11, fontWeight: FontWeight.w700,
-                            color: cs.primary)),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                GestureDetector(
-                  onTap: () => app.settleLendedItem(l.id),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2E7D32).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text('Settled',
-                        style: TextStyle(
-                            fontSize: 11, fontWeight: FontWeight.w700,
-                            color: Color(0xFF2E7D32))),
-                  ),
-                ),
-              ],
-              const SizedBox(height: 2),
-              IconButton(
-                icon: const Icon(Icons.delete_outline_rounded, size: 18),
-                color: cs.onSurface.withValues(alpha: 0.35),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                onPressed: () async {
-                  final ok = await showDeleteConfirm(context, l.personName);
-                  if (ok && context.mounted) app.deleteLendedItem(l.id);
-                },
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Container(width: 42, height: 42,
+                decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12)),
+                child: Icon(isLent ? Icons.arrow_upward_rounded
+                    : Icons.arrow_downward_rounded, color: color)),
+            const SizedBox(width: 12),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+              Text(l.personName, style: const TextStyle(
+                  fontWeight: FontWeight.w700, fontSize: 15)),
+              Text(isLent ? 'Lent to' : 'Borrowed from',
+                  style: TextStyle(fontSize: 11,
+                      color: cs.onSurface.withValues(alpha: 0.5))),
+            ])),
+            Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+              Text(fmt(l.amount), style: TextStyle(fontSize: 16,
+                  fontWeight: FontWeight.w800, color: color)),
+              if (l.dueDate != null)
+                Text('Due ${DateFormat('d MMM yy').format(l.dueDate!)}',
+                    style: TextStyle(fontSize: 10,
+                        color: cs.onSurface.withValues(alpha: 0.5))),
+            ]),
+          ]),
+          if (l.notes.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(l.notes, style: TextStyle(fontSize: 12,
+                color: cs.onSurface.withValues(alpha: 0.6))),
+          ],
+          const SizedBox(height: 8),
+          Row(children: [
+            if (l.isSettled)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                    color: const Color(0xFFE8F5E9),
+                    borderRadius: BorderRadius.circular(8)),
+                child: const Text('SETTLED', style: TextStyle(fontSize: 10,
+                    fontWeight: FontWeight.w700, color: Color(0xFF2E7D32))),
+              )
+            else
+              TextButton.icon(
+                icon: const Icon(Icons.check_circle_outline, size: 16),
+                label: const Text('Settle', style: TextStyle(fontSize: 12)),
+                onPressed: () => context.read<AppProvider>().settleLended(l),
               ),
-            ],
-          ),
+            const Spacer(),
+            IconButton(icon: const Icon(Icons.edit_outlined, size: 18),
+                onPressed: () => LendedScreen._openSheet(context, existing: l)),
+            IconButton(icon: Icon(Icons.delete_outline_rounded, size: 18,
+                color: cs.error),
+                onPressed: () async {
+                  if (await showDeleteConfirm(context, l.personName)
+                      && context.mounted) {
+                    context.read<AppProvider>().deleteLended(l.id);
+                  }
+                }),
+          ]),
         ]),
       ),
     );
   }
 }
 
-// ─── Add / Edit Sheet ─────────────────────────────────────────────────────
-class _LendSheet extends StatefulWidget {
-  final AppProvider app;
+class _LendedSheet extends StatefulWidget {
   final LendedMoney? existing;
-  const _LendSheet({required this.app, this.existing});
-
+  const _LendedSheet({this.existing});
   @override
-  State<_LendSheet> createState() => _LendSheetState();
+  State<_LendedSheet> createState() => _LendedSheetState();
 }
 
-class _LendSheetState extends State<_LendSheet> {
-  late TextEditingController _personCtrl;
-  late TextEditingController _amountCtrl;
-  late TextEditingController _notesCtrl;
-  late String _type;
-  String? _accountId;
+class _LendedSheetState extends State<_LendedSheet> {
+  final _personCtrl = TextEditingController();
+  final _amtCtrl    = TextEditingController();
+  final _notesCtrl  = TextEditingController();
+  String    _type      = 'lent';
+  String?   _accountId;
   DateTime? _dueDate;
-
   bool get isEdit => widget.existing != null;
 
   @override
   void initState() {
     super.initState();
-    final ex = widget.existing;
-    _personCtrl = TextEditingController(text: ex?.personName ?? '');
-    _amountCtrl = TextEditingController(
-        text: ex != null ? ex.amount.toStringAsFixed(2) : '');
-    _notesCtrl  = TextEditingController(text: ex?.notes ?? '');
-    _type       = ex?.type ?? 'lent';
-    _accountId  = ex?.accountId;
-    _dueDate    = ex?.dueDate;
+    final e = widget.existing;
+    if (e != null) {
+      _personCtrl.text = e.personName;
+      _amtCtrl.text    = e.amount.toStringAsFixed(2);
+      _notesCtrl.text  = e.notes;
+      _type      = e.type;
+      _accountId = e.accountId;
+      _dueDate   = e.dueDate;
+    }
   }
 
   @override
   void dispose() {
-    _personCtrl.dispose();
-    _amountCtrl.dispose();
-    _notesCtrl.dispose();
+    _personCtrl.dispose(); _amtCtrl.dispose(); _notesCtrl.dispose();
     super.dispose();
-  }
-
-  Future<void> _pickDue() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _dueDate ?? DateTime.now().add(const Duration(days: 30)),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-    if (picked != null) setState(() => _dueDate = picked);
   }
 
   Future<void> _submit() async {
     if (_personCtrl.text.trim().isEmpty) return;
-    final amount = double.tryParse(_amountCtrl.text);
+    final amount = double.tryParse(_amtCtrl.text);
     if (amount == null || amount <= 0) return;
+    final app = context.read<AppProvider>();
 
     if (isEdit) {
       final updated = widget.existing!.copyWith(
         personName: _personCtrl.text.trim(),
-        amount:     amount,
-        type:       _type,
-        accountId:  _accountId,
-        dueDate:    _dueDate,
-        notes:      _notesCtrl.text.trim(),
+        amount: amount, type: _type,
+        accountId: _accountId,
+        dueDate: _dueDate, notes: _notesCtrl.text.trim(),
+        clearAccount: _accountId == null,
       );
-      await widget.app.updateLendedItemFull(updated, widget.existing!);
+      await app.updateLended(updated, widget.existing!);
     } else {
-      await widget.app.addLendedItem(LendedMoney(
-        id:         widget.app.newId(),
-        personName: _personCtrl.text.trim(),
-        amount:     amount,
-        type:       _type,
-        accountId:  _accountId,
-        date:       DateTime.now(),
-        dueDate:    _dueDate,
-        notes:      _notesCtrl.text.trim(),
+      await app.addLended(LendedMoney(
+        id: app.newId(), personName: _personCtrl.text.trim(),
+        amount: amount, type: _type, accountId: _accountId,
+        date: DateTime.now(), dueDate: _dueDate,
+        notes: _notesCtrl.text.trim(),
       ));
     }
     if (mounted) Navigator.pop(context);
@@ -359,185 +241,104 @@ class _LendSheetState extends State<_LendSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final currency = widget.app.settings.currency;
-    final sym      = currencyInfo(currency).symbol;
+    final app = context.watch<AppProvider>();
+    final sym = currencyInfo(app.settings.currency).symbol;
 
     return Padding(
       padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-        left: 20, right: 20, top: 20,
-      ),
-      child: Column(
+          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+          left: 20, right: 20, top: 20),
+      child: SingleChildScrollView(child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(isEdit ? 'Edit Lending Record' : 'Add Lending Record',
+          Text(isEdit ? 'Edit Record' : 'Add Record',
               style: Theme.of(context).textTheme.titleLarge
                   ?.copyWith(fontWeight: FontWeight.w800)),
-          const SizedBox(height: 18),
+          const SizedBox(height: 12),
 
-          SegmentedButton<String>(
-            segments: const [
-              ButtonSegment(value: 'lent',     label: Text('I Lent Money'),
-                  icon: Icon(Icons.arrow_upward_rounded)),
-              ButtonSegment(value: 'borrowed', label: Text('I Borrowed'),
-                  icon: Icon(Icons.arrow_downward_rounded)),
-            ],
-            selected: {_type},
-            onSelectionChanged: (s) => setState(() => _type = s.first),
-          ),
+          // Type toggle
+          Row(children: [
+            Expanded(child: GestureDetector(
+              onTap: () => setState(() => _type = 'lent'),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 140),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  color: _type == 'lent'
+                      ? const Color(0xFF2E7D32) : const Color(0xFFE8F5E9),
+                  borderRadius: BorderRadius.circular(12)),
+                child: Center(child: Text('I Lent',
+                    style: TextStyle(fontWeight: FontWeight.w700,
+                        color: _type == 'lent'
+                            ? Colors.white : const Color(0xFF2E7D32)))),
+              ),
+            )),
+            const SizedBox(width: 10),
+            Expanded(child: GestureDetector(
+              onTap: () => setState(() => _type = 'borrowed'),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 140),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  color: _type == 'borrowed'
+                      ? const Color(0xFFC62828) : const Color(0xFFFFEBEE),
+                  borderRadius: BorderRadius.circular(12)),
+                child: Center(child: Text('I Borrowed',
+                    style: TextStyle(fontWeight: FontWeight.w700,
+                        color: _type == 'borrowed'
+                            ? Colors.white : const Color(0xFFC62828)))),
+              ),
+            )),
+          ]),
+          const SizedBox(height: 12),
+          TextField(controller: _personCtrl,
+              decoration: const InputDecoration(labelText: 'Person\'s Name',
+                  prefixIcon: Icon(Icons.person_outline_rounded))),
+          const SizedBox(height: 12),
+          TextField(controller: _amtCtrl,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(labelText: 'Amount', prefixText: '$sym ')),
           const SizedBox(height: 14),
 
-          TextField(
-            controller: _personCtrl,
-            decoration: const InputDecoration(
-                labelText: 'Person Name',
-                prefixIcon: Icon(Icons.person_outline)),
+          Text('Account (optional)', style: Theme.of(context).textTheme.labelMedium
+              ?.copyWith(letterSpacing: 1)),
+          const SizedBox(height: 8),
+          AccountCardPicker(
+            accounts: app.accounts, selectedId: _accountId, allowNone: true,
+            onSelected: (id) => setState(() => _accountId = id),
           ),
           const SizedBox(height: 12),
 
-          TextField(
-            controller: _amountCtrl,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(labelText: 'Amount', prefixText: '$sym '),
-          ),
-          const SizedBox(height: 12),
-
-          // Account picker — cards (fix 3)
-          if (widget.app.accounts.isNotEmpty) ...[
-            Text('Account (optional)',
-                style: TextStyle(fontSize: 12,
-                    color: Theme.of(context).colorScheme.onSurface
-                        .withValues(alpha: 0.6), letterSpacing: 0.8)),
-            const SizedBox(height: 8),
-            SizedBox(
-              height: 72,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: widget.app.accounts.length + 1,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (_, i) {
-                  final cs = Theme.of(context).colorScheme;
-                  if (i == 0) {
-                    final sel = _accountId == null;
-                    return GestureDetector(
-                      onTap: () => setState(() => _accountId = null),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 150),
-                        width: 90,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: sel
-                              ? cs.primary.withValues(alpha: 0.15)
-                              : cs.surfaceContainerHigh,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                              color: sel ? cs.primary : Colors.transparent,
-                              width: sel ? 2 : 1),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.block_outlined, size: 16,
-                                color: sel ? cs.primary
-                                    : cs.onSurface.withValues(alpha: 0.5)),
-                            const SizedBox(height: 4),
-                            Text('None', style: TextStyle(fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: sel ? cs.primary
-                                    : cs.onSurface.withValues(alpha: 0.6))),
-                          ],
-                        ),
-                      ),
-                    );
-                  }
-                  final acc = widget.app.accounts[i - 1];
-                  final sel = _accountId == acc.id;
-                  final color = Color(acc.colorValue);
-                  return GestureDetector(
-                    onTap: () => setState(() => _accountId = acc.id),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 150),
-                      width: 120,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: sel ? color : color.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                            color: sel ? color : color.withValues(alpha: 0.35),
-                            width: sel ? 2 : 1),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          AccountTypeIcon(type: acc.type, size: 14,
-                              color: sel ? Colors.white : color),
-                          const SizedBox(height: 3),
-                          Text(acc.name, maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: sel ? Colors.white : color)),
-                          Text(formatAmount(acc.balance, acc.currency),
-                              maxLines: 1, overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontSize: 9,
-                                  color: sel
-                                      ? Colors.white.withValues(alpha: 0.8)
-                                      : cs.onSurface.withValues(alpha: 0.5))),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 12),
-          ],
-
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.calendar_today_outlined),
-            title: Text(
-              _dueDate != null
-                  ? 'Due: ${DateFormat('d MMM yyyy').format(_dueDate!)}'
-                  : 'No due date',
-              style: const TextStyle(fontWeight: FontWeight.w500),
-            ),
+          ListTile(contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.event_outlined),
+            title: Text(_dueDate != null
+                ? 'Due: ${DateFormat('d MMM yyyy').format(_dueDate!)}'
+                : 'No due date',
+                style: const TextStyle(fontWeight: FontWeight.w600)),
             trailing: _dueDate != null
-                ? IconButton(
-                    icon: const Icon(Icons.clear),
+                ? IconButton(icon: const Icon(Icons.clear),
                     onPressed: () => setState(() => _dueDate = null))
                 : null,
-            onTap: _pickDue,
+            onTap: () async {
+              final p = await showDatePicker(context: context,
+                  initialDate: _dueDate ?? DateTime.now().add(const Duration(days: 30)),
+                  firstDate: DateTime.now(), lastDate: DateTime(2100));
+              if (p != null) setState(() => _dueDate = p);
+            },
           ),
-          const SizedBox(height: 4),
-
-          TextField(
-            controller: _notesCtrl,
-            maxLines: 2,
-            decoration: const InputDecoration(
-                labelText: 'Notes (optional)',
-                prefixIcon: Icon(Icons.notes_outlined)),
-          ),
+          TextField(controller: _notesCtrl, maxLines: 2,
+              decoration: const InputDecoration(labelText: 'Notes (optional)',
+                  prefixIcon: Icon(Icons.sticky_note_2_outlined))),
           const SizedBox(height: 20),
-
-          FilledButton.icon(
+          FilledButton(
             onPressed: _submit,
-            icon: Icon(isEdit ? Icons.save_outlined : Icons.add),
-            label: Text(isEdit ? 'Save Changes' : 'Add Record'),
-            style: FilledButton.styleFrom(
-              minimumSize: const Size.fromHeight(50),
-              backgroundColor: const Color(0xFFE65100),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(28)),
-            ),
+            style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28))),
+            child: Text(isEdit ? 'Save Changes' : 'Add Record'),
           ),
         ],
-      ),
+      )),
     );
   }
 }
