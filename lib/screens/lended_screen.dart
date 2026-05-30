@@ -69,6 +69,11 @@ class LendedScreen extends StatelessWidget {
     );
   }
 
+  /// Public entry-point so other screens (e.g. TransactionsScreen) can open
+  /// the lended sheet without importing internal helpers.
+  static void openSheetFromExternal(BuildContext ctx, {LendedMoney? existing}) =>
+      _openSheet(ctx, existing: existing);
+
   static void _openSheet(BuildContext ctx, {LendedMoney? existing}) {
     showModalBottomSheet(
       context: ctx, isScrollControlled: true, useSafeArea: true,
@@ -305,7 +310,8 @@ class _LendedSheetState extends State<_LendedSheet> {
               ?.copyWith(letterSpacing: 1)),
           const SizedBox(height: 8),
           AccountCardPicker(
-            accounts: app.accounts, selectedId: _accountId, allowNone: true,
+            accounts: app.accounts.where((a) => !a.isGold).toList(),
+            selectedId: _accountId, allowNone: true,
             onSelected: (id) => setState(() => _accountId = id),
           ),
           const SizedBox(height: 12),

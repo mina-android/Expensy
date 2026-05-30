@@ -1,6 +1,7 @@
 // lib/screens/settings_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
@@ -184,7 +185,7 @@ class SettingsScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(color: cs.primaryContainer,
                     borderRadius: BorderRadius.circular(20)),
-                child: Text('v1.0.3', style: TextStyle(
+                child: Text('v1.0.4', style: TextStyle(
                     fontSize: 12, fontWeight: FontWeight.w700, color: cs.primary)),
               ),
             ),
@@ -195,6 +196,34 @@ class SettingsScreen extends StatelessWidget {
               subtitle: const Text('All data stored locally — 100% offline'),
               trailing: const Icon(Icons.check_circle_outline,
                   color: Color(0xFF2E7D32)),
+            ),
+            const Divider(height: 1, indent: 56),
+            ListTile(
+              leading: Icon(Icons.code_rounded, color: cs.primary),
+              title: const Text('GitHub', style: TextStyle(fontWeight: FontWeight.w700)),
+              subtitle: const Text('View source code'),
+              trailing: Icon(Icons.open_in_new_rounded,
+                  size: 18, color: cs.onSurface.withValues(alpha: 0.4)),
+              onTap: () async {
+                final uri = Uri.parse('https://github.com/mina-android/Expensy');
+                if (await canLaunchUrl(uri)) {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                }
+              },
+            ),
+            const Divider(height: 1, indent: 56),
+            ListTile(
+              leading: Icon(Icons.person_outline_rounded, color: cs.primary),
+              title: const Text('Developer', style: TextStyle(fontWeight: FontWeight.w700)),
+              subtitle: const Text('Discover more projects by Mina Android'),
+              trailing: Icon(Icons.open_in_new_rounded,
+                  size: 18, color: cs.onSurface.withValues(alpha: 0.4)),
+              onTap: () async {
+                final uri = Uri.parse('https://github.com/mina-android');
+                if (await canLaunchUrl(uri)) {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                }
+              },
             ),
           ])),
         ],

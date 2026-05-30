@@ -5,7 +5,7 @@ import '../models/models.dart';
 
 class DBHelper {
   static Database? _db;
-  static const int _version = 2;
+  static const int _version = 7;
 
   static Future<Database> get database async {
     _db ??= await _open();
@@ -20,14 +20,59 @@ class DBHelper {
 
   static Future<void> _onUpgrade(Database db, int oldV, int newV) async {
     // v1 → v2
-    try {
-      await db.execute(
-          'ALTER TABLE accounts ADD COLUMN exclude_from_total INTEGER NOT NULL DEFAULT 0');
-    } catch (_) {}
-    try {
-      await db.execute(
-          "ALTER TABLE recurring_payments ADD COLUMN payment_type TEXT NOT NULL DEFAULT 'expense'");
-    } catch (_) {}
+    if (oldV < 2) {
+      try {
+        await db.execute(
+            'ALTER TABLE accounts ADD COLUMN exclude_from_total INTEGER NOT NULL DEFAULT 0');
+      } catch (_) {}
+      try {
+        await db.execute(
+            "ALTER TABLE recurring_payments ADD COLUMN payment_type TEXT NOT NULL DEFAULT 'expense'");
+      } catch (_) {}
+    }
+    // v2 → v3: add reminder_time column
+    if (oldV < 3) {
+      try {
+        await db.execute(
+            "ALTER TABLE recurring_payments ADD COLUMN reminder_time TEXT NOT NULL DEFAULT '09:00'");
+      } catch (_) {}
+    }
+    // v3 → v4: add currency column to transactions
+    if (oldV < 4) {
+      try {
+        await db.execute(
+            "ALTER TABLE transactions ADD COLUMN currency TEXT NOT NULL DEFAULT ''");
+      } catch (_) {}
+    }
+    // v4 → v5: add assets table
+    if (oldV < 5) {
+      try {
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS assets (
+            id TEXT PRIMARY KEY, name TEXT NOT NULL, value REAL NOT NULL,
+            currency TEXT NOT NULL DEFAULT 'EGP',
+            notes TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL
+          )''');
+      } catch (_) {}
+    }
+    // v5 → v6: add gold fields to accounts
+    if (oldV < 6) {
+      try {
+        await db.execute(
+            'ALTER TABLE accounts ADD COLUMN gold_karat INTEGER');
+      } catch (_) {}
+      try {
+        await db.execute(
+            'ALTER TABLE accounts ADD COLUMN gold_grams REAL');
+      } catch (_) {}
+    }
+    // v6 → v7: add early_reminder_enabled to recurring_payments
+    if (oldV < 7) {
+      try {
+        await db.execute(
+            'ALTER TABLE recurring_payments ADD COLUMN early_reminder_enabled INTEGER NOT NULL DEFAULT 0');
+      } catch (_) {}
+    }
   }
 
   static Future<void> _onCreate(Database db, int version) async {
@@ -36,7 +81,9 @@ class DBHelper {
         id TEXT PRIMARY KEY, name TEXT NOT NULL, type TEXT NOT NULL,
         balance REAL NOT NULL, currency TEXT NOT NULL DEFAULT 'EGP',
         color_value INTEGER NOT NULL, exclude_from_total INTEGER NOT NULL DEFAULT 0,
-        created_at TEXT NOT NULL
+        created_at TEXT NOT NULL,
+        gold_karat INTEGER,
+        gold_grams REAL
       )''');
     await db.execute('''
       CREATE TABLE categories (
@@ -47,7 +94,9 @@ class DBHelper {
       CREATE TABLE transactions (
         id TEXT PRIMARY KEY, type TEXT NOT NULL, amount REAL NOT NULL,
         description TEXT NOT NULL, account_id TEXT NOT NULL,
-        category_id TEXT NOT NULL, date TEXT NOT NULL, note TEXT NOT NULL DEFAULT ''
+        category_id TEXT NOT NULL, date TEXT NOT NULL,
+        note TEXT NOT NULL DEFAULT '',
+        currency TEXT NOT NULL DEFAULT ''
       )''');
     await db.execute('''
       CREATE TABLE recurring_payments (
@@ -57,7 +106,10 @@ class DBHelper {
         freq_val INTEGER NOT NULL DEFAULT 1, freq_unit TEXT NOT NULL DEFAULT 'months',
         start_date TEXT NOT NULL, next_date TEXT NOT NULL, end_date TEXT,
         paid_payments INTEGER NOT NULL DEFAULT 0,
-        reminder_enabled INTEGER NOT NULL DEFAULT 0, notes TEXT NOT NULL DEFAULT ''
+        reminder_enabled INTEGER NOT NULL DEFAULT 0,
+        reminder_time TEXT NOT NULL DEFAULT '09:00',
+        early_reminder_enabled INTEGER NOT NULL DEFAULT 0,
+        notes TEXT NOT NULL DEFAULT ''
       )''');
     await db.execute('''
       CREATE TABLE wishlist (
@@ -70,6 +122,12 @@ class DBHelper {
         id TEXT PRIMARY KEY, person_name TEXT NOT NULL, amount REAL NOT NULL,
         type TEXT NOT NULL, account_id TEXT, is_settled INTEGER NOT NULL DEFAULT 0,
         date TEXT NOT NULL, due_date TEXT, notes TEXT NOT NULL DEFAULT ''
+      )''');
+    await db.execute('''
+      CREATE TABLE assets (
+        id TEXT PRIMARY KEY, name TEXT NOT NULL, value REAL NOT NULL,
+        currency TEXT NOT NULL DEFAULT 'EGP',
+        notes TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL
       )''');
 
     await _insertDefaults(db);
@@ -186,6 +244,20 @@ class DBHelper {
   static Future<void> deleteLended(String id) async =>
       (await database).delete('lended_money', where: 'id=?', whereArgs: [id]);
 
+  // ── Assets ────────────────────────────────────────────────────────────
+  static Future<List<AssetItem>> getAssets() async {
+    final db = await database;
+    final rows = await db.query('assets', orderBy: 'created_at ASC');
+    return rows.map(AssetItem.fromMap).toList();
+  }
+  static Future<void> insertAsset(AssetItem a) async =>
+      (await database).insert('assets', a.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace);
+  static Future<void> updateAsset(AssetItem a) async =>
+      (await database).update('assets', a.toMap(), where: 'id=?', whereArgs: [a.id]);
+  static Future<void> deleteAsset(String id) async =>
+      (await database).delete('assets', where: 'id=?', whereArgs: [id]);
+
   // ── Backup / Restore ──────────────────────────────────────────────────
   static Future<Map<String, dynamic>> exportAll() async {
     final db = await database;
@@ -196,22 +268,111 @@ class DBHelper {
       'recurring_payments':  await db.query('recurring_payments'),
       'wishlist':            await db.query('wishlist'),
       'lended_money':        await db.query('lended_money'),
+      'assets':              await db.query('assets'),
       'version':             _version,
     };
   }
 
   static Future<void> importAll(Map<String, dynamic> data) async {
     final db = await database;
+
+    // ── Normalise backup data before touching the DB ─────────────────
+    _normaliseBackup(data);
+
     await db.transaction((txn) async {
-      for (final table in ['accounts','categories','transactions',
-                            'recurring_payments','wishlist','lended_money']) {
+      for (final table in [
+        'accounts', 'categories', 'transactions',
+        'recurring_payments', 'wishlist', 'lended_money', 'assets',
+      ]) {
         await txn.delete(table);
-        final rows = (data[table] as List?)?.cast<Map<String, dynamic>>() ?? [];
-        for (final row in rows) {
-          await txn.insert(table, Map<String, dynamic>.from(row),
+        final rows =
+            (data[table] as List?)?.cast<Map<String, dynamic>>() ?? [];
+        for (final raw in rows) {
+          final row = Map<String, dynamic>.from(raw);
+          await txn.insert(table, row,
               conflictAlgorithm: ConflictAlgorithm.replace);
         }
       }
     });
+  }
+
+  /// Mutates [data] in-place so every row in every table has all columns
+  /// the current schema expects.  Handles every backup version (1 → 6).
+  static void _normaliseBackup(Map<String, dynamic> data) {
+    final backupVersion = (data['version'] as int?) ?? 1;
+
+    // ── accounts ──────────────────────────────────────────────────────
+    for (final row in _rows(data, 'accounts')) {
+      row.putIfAbsent('exclude_from_total', () => 0); // v1→v2
+      row.putIfAbsent('currency', () => 'EGP');
+      // v5→v6: gold fields — nullable, so we only add if absent
+      if (!row.containsKey('gold_karat')) row['gold_karat'] = null;
+      if (!row.containsKey('gold_grams')) row['gold_grams'] = null;
+    }
+
+    // ── transactions ──────────────────────────────────────────────────
+    for (final row in _rows(data, 'transactions')) {
+      row.putIfAbsent('note', () => '');
+      row.putIfAbsent('currency', () => '');   // v3→v4
+    }
+
+    // ── recurring_payments ────────────────────────────────────────────
+    for (final row in _rows(data, 'recurring_payments')) {
+      row.putIfAbsent('payment_type',            () => 'expense'); // v1→v2
+      row.putIfAbsent('reminder_enabled',        () => 0);
+      row.putIfAbsent('reminder_time',           () => '09:00');   // v2→v3
+      row.putIfAbsent('early_reminder_enabled',  () => 0);         // v6→v7
+      row.putIfAbsent('notes',                   () => '');
+      row.putIfAbsent('paid_payments',     () => 0);
+      // Rename legacy field names if present
+      if (row.containsKey('freq_unit')) {
+        final u = row['freq_unit'] as String? ?? 'months';
+        const map = {
+          'day': 'days', 'week': 'weeks', 'month': 'months', 'year': 'years',
+        };
+        row['freq_unit'] = map[u] ?? u;
+      }
+    }
+
+    // ── wishlist ──────────────────────────────────────────────────────
+    for (final row in _rows(data, 'wishlist')) {
+      row.putIfAbsent('is_purchased', () => 0);
+      row.putIfAbsent('notes',        () => '');
+      row.putIfAbsent('priority',     () => 'low');
+    }
+
+    // ── lended_money ──────────────────────────────────────────────────
+    for (final row in _rows(data, 'lended_money')) {
+      row.putIfAbsent('is_settled', () => 0);
+      row.putIfAbsent('notes',      () => '');
+      row.putIfAbsent('due_date',   () => null);
+      row.putIfAbsent('account_id', () => null);
+    }
+
+    // ── assets (new in v5) ────────────────────────────────────────────
+    data.putIfAbsent('assets', () => <dynamic>[]);
+    for (final row in _rows(data, 'assets')) {
+      row.putIfAbsent('currency', () => 'EGP');
+      row.putIfAbsent('notes',    () => '');
+    }
+
+    // Stamp the normalised version so callers can log it
+    data['_originalVersion'] = backupVersion;
+  }
+
+  /// Safe helper: returns a mutable list of row maps for [table].
+  static List<Map<String, dynamic>> _rows(
+      Map<String, dynamic> data, String table) {
+    final raw = data[table];
+    if (raw == null) {
+      data[table] = <Map<String, dynamic>>[];
+      return data[table] as List<Map<String, dynamic>>;
+    }
+    final list = (raw as List)
+        .whereType<Map>()
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList();
+    data[table] = list;
+    return list;
   }
 }

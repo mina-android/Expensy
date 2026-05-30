@@ -5,6 +5,7 @@ import '../providers/app_provider.dart';
 import 'statistics_screen.dart';
 import 'wishlist_screen.dart';
 import 'lended_screen.dart';
+import 'assets_screen.dart';
 import 'categories_screen.dart';
 import 'export_screen.dart';
 import 'backup_screen.dart';
@@ -28,6 +29,9 @@ class MoreScreen extends StatelessWidget {
       _Item(icon: Icons.handshake_outlined, label: 'Lent Money',
           sub: '${app.lended.where((l) => !l.isSettled).length} outstanding',
           color: const Color(0xFFE65100), screen: const LendedScreen()),
+      _Item(icon: Icons.inventory_2_outlined, label: 'Assets',
+          sub: '${app.assets.length} item${app.assets.length == 1 ? '' : 's'}',
+          color: const Color(0xFF1565C0), screen: const AssetsScreen()),
       _Item(icon: Icons.label_outline_rounded, label: 'Categories',
           sub: '${app.categories.length} categories',
           color: const Color(0xFF00897B), screen: const CategoriesScreen()),

@@ -148,11 +148,35 @@ class HomeScreen extends StatelessWidget {
                                 style: const TextStyle(color: Colors.white,
                                     fontSize: 12, fontWeight: FontWeight.w600))),
                           ]),
-                          Text(
-                            s.hideBalance ? '• • •'
-                                : formatAmount(acc.balance, acc.currency),
-                            style: const TextStyle(color: Colors.white,
-                                fontSize: 14, fontWeight: FontWeight.w800),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                s.hideBalance ? '• • •'
+                                    : formatAmount(acc.balance, acc.currency),
+                                style: const TextStyle(color: Colors.white,
+                                    fontSize: 14, fontWeight: FontWeight.w800),
+                              ),
+                              if (!s.hideBalance && acc.isGold &&
+                                  acc.goldKarat != null && acc.goldGrams != null)
+                                Text(
+                                  '${acc.goldKarat}k · ${acc.goldGrams!.toStringAsFixed(2)} g',
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.65),
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                )
+                              else if (!s.hideBalance && app.canShowConverted(acc))
+                                Text(
+                                  '≈ ${formatAmount(app.convertToMain(acc.balance, acc.currency), s.currency)}',
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.65),
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                            ],
                           ),
                         ],
                       ),

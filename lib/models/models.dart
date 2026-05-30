@@ -3,12 +3,15 @@
 class Account {
   final String id;
   String name;
-  String type;        // bank|cash|savings|credit|wallet
+  String type;        // bank|cash|savings|credit|wallet|gold
   double balance;
   String currency;
   int    colorValue;
   bool   excludeFromTotal;
   DateTime createdAt;
+  // Gold-specific fields (null for non-gold accounts)
+  final int?    goldKarat;  // 24, 22, 21, 18, 14, 10, 9
+  final double? goldGrams;
 
   Account({
     required this.id,
@@ -19,13 +22,20 @@ class Account {
     required this.colorValue,
     this.excludeFromTotal = false,
     DateTime? createdAt,
+    this.goldKarat,
+    this.goldGrams,
   }) : createdAt = createdAt ?? DateTime.now();
+
+  /// True when this account tracks a physical gold holding.
+  bool get isGold => type == 'gold';
 
   Map<String, dynamic> toMap() => {
     'id': id, 'name': name, 'type': type, 'balance': balance,
     'currency': currency, 'color_value': colorValue,
     'exclude_from_total': excludeFromTotal ? 1 : 0,
     'created_at': createdAt.toIso8601String(),
+    'gold_karat': goldKarat,
+    'gold_grams': goldGrams,
   };
 
   static Account fromMap(Map<String, dynamic> m) => Account(
@@ -35,17 +45,23 @@ class Account {
     colorValue: m['color_value'] as int,
     excludeFromTotal: (m['exclude_from_total'] as int? ?? 0) == 1,
     createdAt: DateTime.parse(m['created_at'] as String),
+    goldKarat: m['gold_karat'] as int?,
+    goldGrams: (m['gold_grams'] as num?)?.toDouble(),
   );
 
   Account copyWith({
     String? name, String? type, double? balance,
     String? currency, int? colorValue, bool? excludeFromTotal,
+    int? goldKarat, double? goldGrams,
+    bool clearGold = false,
   }) => Account(
     id: id, name: name ?? this.name, type: type ?? this.type,
     balance: balance ?? this.balance, currency: currency ?? this.currency,
     colorValue: colorValue ?? this.colorValue,
     excludeFromTotal: excludeFromTotal ?? this.excludeFromTotal,
     createdAt: createdAt,
+    goldKarat: clearGold ? null : (goldKarat ?? this.goldKarat),
+    goldGrams: clearGold ? null : (goldGrams ?? this.goldGrams),
   );
 }
 
@@ -80,17 +96,21 @@ class AppTransaction {
   String categoryId;
   DateTime date;
   String note;
+  /// Currency the amount was entered in. Empty string = same as account currency.
+  String currency;
 
   AppTransaction({
     required this.id, required this.type, required this.amount,
     required this.description, required this.accountId,
     required this.categoryId, required this.date, this.note = '',
+    this.currency = '',
   });
 
   Map<String, dynamic> toMap() => {
     'id': id, 'type': type, 'amount': amount,
     'description': description, 'account_id': accountId,
-    'category_id': categoryId, 'date': date.toIso8601String(), 'note': note,
+    'category_id': categoryId, 'date': date.toIso8601String(),
+    'note': note, 'currency': currency,
   };
 
   static AppTransaction fromMap(Map<String, dynamic> m) => AppTransaction(
@@ -101,17 +121,20 @@ class AppTransaction {
     categoryId: m['category_id'] as String,
     date: DateTime.parse(m['date'] as String),
     note: (m['note'] as String?) ?? '',
+    currency: (m['currency'] as String?) ?? '',
   );
 
   AppTransaction copyWith({
     String? type, double? amount, String? description,
-    String? accountId, String? categoryId, DateTime? date, String? note,
+    String? accountId, String? categoryId, DateTime? date,
+    String? note, String? currency,
   }) => AppTransaction(
     id: id, type: type ?? this.type, amount: amount ?? this.amount,
     description: description ?? this.description,
     accountId: accountId ?? this.accountId,
     categoryId: categoryId ?? this.categoryId,
     date: date ?? this.date, note: note ?? this.note,
+    currency: currency ?? this.currency,
   );
 }
 
@@ -129,6 +152,11 @@ class RecurringPayment {
   DateTime? endDate;    // last payment (null = ongoing)
   int    paidPayments;
   bool   reminderEnabled;
+  /// Time of day for the reminder in 'HH:mm' format, e.g. '09:00'.
+  String reminderTime;
+  /// When true, an additional notification fires 2 days before [nextDate]
+  /// at the same [reminderTime]. Only meaningful when [reminderEnabled] is true.
+  bool   earlyReminderEnabled;
   String notes;
 
   RecurringPayment({
@@ -138,7 +166,10 @@ class RecurringPayment {
     required this.freqVal, required this.freqUnit,
     required this.startDate, required this.nextDate,
     this.endDate, this.paidPayments = 0,
-    this.reminderEnabled = false, this.notes = '',
+    this.reminderEnabled = false,
+    this.reminderTime = '09:00',
+    this.earlyReminderEnabled = false,
+    this.notes = '',
   });
 
   // Inclusive count: first → last
@@ -215,6 +246,8 @@ class RecurringPayment {
     'end_date': endDate?.toIso8601String(),
     'paid_payments': paidPayments,
     'reminder_enabled': reminderEnabled ? 1 : 0,
+    'reminder_time': reminderTime,
+    'early_reminder_enabled': earlyReminderEnabled ? 1 : 0,
     'notes': notes,
   };
 
@@ -232,6 +265,8 @@ class RecurringPayment {
         ? DateTime.parse(m['end_date'] as String) : null,
     paidPayments: m['paid_payments'] as int? ?? 0,
     reminderEnabled: (m['reminder_enabled'] as int? ?? 0) == 1,
+    reminderTime: (m['reminder_time'] as String?) ?? '09:00',
+    earlyReminderEnabled: (m['early_reminder_enabled'] as int? ?? 0) == 1,
     notes: (m['notes'] as String?) ?? '',
   );
 }
@@ -325,5 +360,49 @@ class LendedMoney {
     isSettled: isSettled ?? this.isSettled,
     date: date, dueDate: dueDate ?? this.dueDate,
     notes: notes ?? this.notes,
+  );
+}
+
+/// A single asset entry (product name + value).
+class AssetItem {
+  final String id;
+  String name;
+  double value;
+  String currency;
+  String notes;
+  DateTime createdAt;
+
+  AssetItem({
+    required this.id,
+    required this.name,
+    required this.value,
+    required this.currency,
+    this.notes = '',
+    DateTime? createdAt,
+  }) : createdAt = createdAt ?? DateTime.now();
+
+  Map<String, dynamic> toMap() => {
+    'id': id, 'name': name, 'value': value, 'currency': currency,
+    'notes': notes, 'created_at': createdAt.toIso8601String(),
+  };
+
+  static AssetItem fromMap(Map<String, dynamic> m) => AssetItem(
+    id: m['id'] as String,
+    name: m['name'] as String,
+    value: (m['value'] as num).toDouble(),
+    currency: (m['currency'] as String?) ?? 'EGP',
+    notes: (m['notes'] as String?) ?? '',
+    createdAt: DateTime.parse(m['created_at'] as String),
+  );
+
+  AssetItem copyWith({
+    String? name, double? value, String? currency, String? notes,
+  }) => AssetItem(
+    id: id,
+    name: name ?? this.name,
+    value: value ?? this.value,
+    currency: currency ?? this.currency,
+    notes: notes ?? this.notes,
+    createdAt: createdAt,
   );
 }

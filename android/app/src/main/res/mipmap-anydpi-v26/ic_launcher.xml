@@ -5,6 +5,7 @@
     <!-- Foreground: the full-colour wallet icon -->
     <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
     <!-- Monochrome: single-channel silhouette for Android 13+ Themed Icons.
-         The launcher recolors this using the wallpaper-derived palette. -->
-    <monochrome android:drawable="@mipmap/ic_launcher_monochrome"/>
+         The launcher recolors this using the wallpaper-derived palette.
+         Separate ic_notification drawable is used for notifications. -->
+    <monochrome android:drawable="@drawable/ic_launcher_monochrome"/>
 </adaptive-icon>

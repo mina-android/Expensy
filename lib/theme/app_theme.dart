@@ -166,6 +166,7 @@ const List<CurrencyInfo> kCurrencies = [
   CurrencyInfo('BGN', 'лв',  'Bulgarian Lev'),
   CurrencyInfo('RUB', '₽',   'Russian Ruble'),
   CurrencyInfo('UAH', '₴',   'Ukrainian Hryvnia'),
+  CurrencyInfo('GEL', '₾',   'Georgian Lari'),
 ];
 
 CurrencyInfo currencyInfo(String code) =>

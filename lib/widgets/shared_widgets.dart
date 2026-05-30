@@ -101,6 +101,7 @@ class AccountTypeIcon extends StatelessWidget {
       case 'savings': return Icons.savings_outlined;
       case 'credit':  return Icons.credit_card_outlined;
       case 'wallet':  return Icons.account_balance_wallet_outlined;
+      case 'gold':    return Icons.diamond_outlined;
       default:        return Icons.account_balance_outlined;
     }
   }

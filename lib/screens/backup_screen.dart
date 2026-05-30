@@ -1,6 +1,7 @@
 // lib/screens/backup_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../providers/app_provider.dart';
 
 class BackupScreen extends StatefulWidget {
@@ -23,9 +24,9 @@ class _BackupScreenState extends State<BackupScreen> {
     try {
       final savedPath = await context.read<AppProvider>().createBackup();
       if (savedPath != null) {
-        _setMsg('Backup saved to:\n$savedPath');
+        _setMsg('Backup saved successfully:\n$savedPath');
       }
-      // If null, user cancelled — show nothing
+      // null = user cancelled file picker — show nothing
     } catch (e) {
       _setMsg('Backup failed: $e', ok: false);
     } finally {
@@ -58,16 +59,23 @@ class _BackupScreenState extends State<BackupScreen> {
 
     setState(() { _restoring = true; _msg = null; });
     try {
-      final ok = await context.read<AppProvider>().restoreBackup();
+      final originalVersion = await context.read<AppProvider>().restoreBackup();
       if (mounted) {
-        if (ok) {
-          _setMsg('Data restored successfully!');
+        if (originalVersion == 0) {
+          // User cancelled the file picker — say nothing
         } else {
-          _setMsg('No file selected.', ok: false);
+          final vLabel = originalVersion < _kBackupVersion
+              ? ' (upgraded from v$originalVersion → v$_kBackupVersion)'
+              : '';
+          _setMsg('Data restored successfully!$vLabel');
         }
       }
+    } on FormatException catch (e) {
+      if (mounted) _setMsg('Restore failed: ${e.message}', ok: false);
     } catch (e) {
-      if (mounted) _setMsg('Restore failed: invalid backup file.', ok: false);
+      if (mounted) _setMsg(
+          'Restore failed: the file may be corrupted or not an Expensy backup.',
+          ok: false);
     } finally {
       if (mounted) setState(() => _restoring = false);
     }
@@ -75,17 +83,77 @@ class _BackupScreenState extends State<BackupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final app = context.watch<AppProvider>();
+    final cs  = Theme.of(context).colorScheme;
+
+    // Live counts for the "what's included" breakdown
+    final counts = [
+      _CountRow(Icons.account_balance_wallet_outlined,  'Accounts',        app.accounts.length),
+      _CountRow(Icons.receipt_long_outlined,            'Transactions',    app.transactions.length),
+      _CountRow(Icons.repeat_rounded,                   'Recurring',       app.recurring.length),
+      _CountRow(Icons.star_outline_rounded,             'Wishlist',        app.wishlist.length),
+      _CountRow(Icons.handshake_outlined,               'Lent & Borrowed', app.lended.length),
+      _CountRow(Icons.inventory_2_outlined,             'Assets',          app.assets.length),
+      _CountRow(Icons.label_outline_rounded,            'Categories',      app.categories.length),
+      _CountRow(Icons.settings_outlined,                'Settings',        -1), // -1 = 'included'
+    ];
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Backup & Restore',
             style: TextStyle(fontWeight: FontWeight.w800)),
         backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          // Backup card
+
+          // ── What's included ────────────────────────────────────────────
+          Text('What\'s included',
+              style: Theme.of(context).textTheme.labelMedium
+                  ?.copyWith(letterSpacing: 1,
+                      color: cs.onSurface.withValues(alpha: 0.6))),
+          const SizedBox(height: 8),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Column(
+                children: counts.map((r) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(children: [
+                    Icon(r.icon, size: 18,
+                        color: cs.primary.withValues(alpha: 0.8)),
+                    const SizedBox(width: 12),
+                    Expanded(child: Text(r.label,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w600, fontSize: 13))),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: cs.primaryContainer,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        r.count < 0 ? 'included' : '${r.count}',
+                        style: TextStyle(
+                            fontSize: 11, fontWeight: FontWeight.w700,
+                            color: cs.onPrimaryContainer),
+                      ),
+                    ),
+                  ]),
+                )).toList(),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // ── Create backup ──────────────────────────────────────────────
+          Text('Create Backup',
+              style: Theme.of(context).textTheme.labelMedium
+                  ?.copyWith(letterSpacing: 1,
+                      color: cs.onSurface.withValues(alpha: 0.6))),
+          const SizedBox(height: 8),
           Card(child: Padding(
             padding: const EdgeInsets.all(18),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -99,9 +167,9 @@ class _BackupScreenState extends State<BackupScreen> {
                 const Expanded(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Create Backup', style: TextStyle(
+                    Text('Save as JSON', style: TextStyle(
                         fontWeight: FontWeight.w800, fontSize: 15)),
-                    Text('Save all data as a JSON file',
+                    Text('Exports all data to a portable file',
                         style: TextStyle(fontSize: 12)),
                   ],
                 )),
@@ -115,7 +183,8 @@ class _BackupScreenState extends State<BackupScreen> {
                             color: Colors.white))
                     : const Icon(Icons.save_outlined),
                 label: Text(_backingUp ? 'Saving...' : 'Save Backup'),
-                style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(44),
+                style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(44),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(22))),
               ),
@@ -123,7 +192,12 @@ class _BackupScreenState extends State<BackupScreen> {
           )),
           const SizedBox(height: 12),
 
-          // Restore card
+          // ── Restore backup ─────────────────────────────────────────────
+          Text('Restore Backup',
+              style: Theme.of(context).textTheme.labelMedium
+                  ?.copyWith(letterSpacing: 1,
+                      color: cs.onSurface.withValues(alpha: 0.6))),
+          const SizedBox(height: 8),
           Card(child: Padding(
             padding: const EdgeInsets.all(18),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -137,26 +211,41 @@ class _BackupScreenState extends State<BackupScreen> {
                 Expanded(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Restore Backup', style: TextStyle(
+                    const Text('Load from JSON', style: TextStyle(
                         fontWeight: FontWeight.w800, fontSize: 15)),
-                    Text('Load from a JSON backup file',
+                    Text('Picks a backup file and restores it',
                         style: TextStyle(fontSize: 12,
                             color: cs.onSurface.withValues(alpha: 0.6))),
                   ],
                 )),
               ]),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                     color: cs.errorContainer,
                     borderRadius: BorderRadius.circular(10)),
-                child: Row(children: [
-                  Icon(Icons.warning_amber_rounded, color: cs.error, size: 16),
+                child: Row(crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                  Icon(Icons.warning_amber_rounded,
+                      color: cs.error, size: 16),
                   const SizedBox(width: 8),
-                  Expanded(child: Text(
-                    'Warning: This will overwrite all current data!',
-                    style: TextStyle(fontSize: 12, color: cs.onErrorContainer),
+                  Expanded(child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('This overwrites ALL current data.',
+                          style: TextStyle(fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: cs.onErrorContainer)),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Compatible with backups from any app version. '
+                        'Missing fields are filled with safe defaults.',
+                        style: TextStyle(fontSize: 11,
+                            color: cs.onErrorContainer
+                                .withValues(alpha: 0.75)),
+                      ),
+                    ],
                   )),
                 ]),
               ),
@@ -178,24 +267,58 @@ class _BackupScreenState extends State<BackupScreen> {
             ]),
           )),
 
+          // ── Status message ─────────────────────────────────────────────
           if (_msg != null) ...[
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: _msgOk ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE),
+                color: _msgOk
+                    ? const Color(0xFFE8F5E9)
+                    : const Color(0xFFFFEBEE),
                 borderRadius: BorderRadius.circular(12)),
-              child: Row(children: [
-                Icon(_msgOk ? Icons.check_circle_outline : Icons.error_outline,
-                    color: _msgOk ? const Color(0xFF2E7D32) : const Color(0xFFC62828)),
+              child: Row(crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                Icon(_msgOk
+                    ? Icons.check_circle_outline
+                    : Icons.error_outline,
+                    color: _msgOk
+                        ? const Color(0xFF2E7D32)
+                        : const Color(0xFFC62828)),
                 const SizedBox(width: 10),
-                Expanded(child: Text(_msg!, style: TextStyle(fontSize: 13,
-                    color: _msgOk ? const Color(0xFF2E7D32) : const Color(0xFFC62828)))),
+                Expanded(child: Text(_msg!, style: TextStyle(
+                    fontSize: 13,
+                    color: _msgOk
+                        ? const Color(0xFF2E7D32)
+                        : const Color(0xFFC62828)))),
               ]),
             ),
           ],
+
+          const SizedBox(height: 24),
+          // ── Format note ───────────────────────────────────────────────
+          Center(child: Text(
+            'Backup format v$_kBackupVersion  ·  JSON  ·  '
+            'Generated on ${DateFormat('d MMM yyyy').format(DateTime.now())}',
+            style: TextStyle(fontSize: 11,
+                color: cs.onSurface.withValues(alpha: 0.35)),
+            textAlign: TextAlign.center,
+          )),
         ]),
       ),
     );
   }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/// Must match DBHelper._version so the label is always accurate.
+const int _kBackupVersion = 6;
+
+class _CountRow {
+  final IconData icon;
+  final String   label;
+  /// Negative means "show 'included' instead of a number."
+  final int      count;
+  const _CountRow(this.icon, this.label, this.count);
 }

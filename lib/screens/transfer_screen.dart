@@ -21,11 +21,13 @@ class _TransferScreenState extends State<TransferScreen> {
   void initState() {
     super.initState();
     final app = context.read<AppProvider>();
-    if (app.accounts.length >= 2) {
-      _fromId = app.accounts[0].id;
-      _toId   = app.accounts[1].id;
-    } else if (app.accounts.length == 1) {
-      _fromId = app.accounts[0].id;
+    // Gold accounts have synthetic balances — exclude from manual transfers.
+    final transferable = app.accounts.where((a) => !a.isGold).toList();
+    if (transferable.length >= 2) {
+      _fromId = transferable[0].id;
+      _toId   = transferable[1].id;
+    } else if (transferable.length == 1) {
+      _fromId = transferable[0].id;
     }
   }
 
@@ -37,7 +39,7 @@ class _TransferScreenState extends State<TransferScreen> {
     final amount = double.tryParse(_amtCtrl.text);
     if (amount == null || amount <= 0) return;
     await context.read<AppProvider>().addTransfer(
-      fromId: _fromId!, toId: _toId!, amount: amount,
+      fromId: _fromId!, toId: _toId!, fromAmount: amount,
       note: _noteCtrl.text.trim(),
     );
     if (mounted) Navigator.pop(context);
@@ -45,11 +47,26 @@ class _TransferScreenState extends State<TransferScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final app = context.watch<AppProvider>();
-    final cs  = Theme.of(context).colorScheme;
-    final sym = currencyInfo(app.settings.currency).symbol;
+    final app  = context.watch<AppProvider>();
+    final cs   = Theme.of(context).colorScheme;
+    // Gold accounts update automatically — exclude from manual transfers.
+    final transferable = app.accounts.where((a) => !a.isGold).toList();
     final from = app.accountById(_fromId ?? '');
     final to   = app.accountById(_toId   ?? '');
+
+    final fromCurrency = from?.currency ?? app.settings.currency;
+    final toCurrency   = to?.currency   ?? app.settings.currency;
+    final isCrossCurrency = from != null && to != null &&
+        fromCurrency != toCurrency;
+
+    final sym = currencyInfo(fromCurrency).symbol;
+
+    // Live conversion preview
+    final inputAmount = double.tryParse(_amtCtrl.text);
+    final convertedAmount = (isCrossCurrency && inputAmount != null &&
+            app.exchangeRates.isNotEmpty)
+        ? app.convertBetween(inputAmount, fromCurrency, toCurrency)
+        : null;
 
     return Scaffold(
       appBar: AppBar(
@@ -59,20 +76,21 @@ class _TransferScreenState extends State<TransferScreen> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          // From row
+          // ── FROM row ──────────────────────────────────────────────────
           Text('FROM', style: Theme.of(context).textTheme.labelMedium
               ?.copyWith(letterSpacing: 1)),
           const SizedBox(height: 8),
           AccountCardPicker(
-            accounts: app.accounts, selectedId: _fromId,
+            accounts: transferable, selectedId: _fromId,
             onSelected: (id) => setState(() {
               _fromId = id;
               if (_toId == id) _toId = null;
+              _amtCtrl.clear();
             }),
           ),
           const SizedBox(height: 14),
 
-          // To row
+          // ── TO row ────────────────────────────────────────────────────
           Row(children: [
             Text('TO', style: Theme.of(context).textTheme.labelMedium
                 ?.copyWith(letterSpacing: 1)),
@@ -84,15 +102,18 @@ class _TransferScreenState extends State<TransferScreen> {
             height: 76,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              itemCount: app.accounts.length,
+              itemCount: transferable.length,
               separatorBuilder: (_, __) => const SizedBox(width: 8),
               itemBuilder: (_, i) {
-                final acc   = app.accounts[i];
+                final acc    = transferable[i];
                 final isSame = acc.id == _fromId;
                 final sel    = _toId == acc.id;
                 final color  = Color(acc.colorValue);
                 return GestureDetector(
-                  onTap: isSame ? null : () => setState(() => _toId = acc.id),
+                  onTap: isSame ? null : () => setState(() {
+                    _toId = acc.id;
+                    _amtCtrl.clear();
+                  }),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 140),
                     width: 125,
@@ -134,33 +155,76 @@ class _TransferScreenState extends State<TransferScreen> {
           ),
           const SizedBox(height: 16),
 
-          // Preview
-          if (from != null && to != null)
+          // ── Preview card ──────────────────────────────────────────────
+          if (from != null && to != null) ...[
             Container(
               padding: const EdgeInsets.all(14),
               margin: const EdgeInsets.only(bottom: 14),
               decoration: BoxDecoration(color: cs.primaryContainer,
                   borderRadius: BorderRadius.circular(14)),
-              child: Row(children: [
-                Expanded(child: _BalanceCol(name: from.name,
-                    balance: formatAmount(from.balance, from.currency),
-                    label: 'From')),
-                Icon(Icons.arrow_forward_rounded, color: cs.primary),
-                Expanded(child: _BalanceCol(name: to.name,
-                    balance: formatAmount(to.balance, to.currency),
-                    label: 'To', align: CrossAxisAlignment.end)),
+              child: Column(children: [
+                Row(children: [
+                  Expanded(child: _BalanceCol(name: from.name,
+                      balance: formatAmount(from.balance, from.currency),
+                      label: 'From (${from.currency})')),
+                  Icon(Icons.arrow_forward_rounded, color: cs.primary),
+                  Expanded(child: _BalanceCol(name: to.name,
+                      balance: formatAmount(to.balance, to.currency),
+                      label: 'To (${to.currency})',
+                      align: CrossAxisAlignment.end)),
+                ]),
+                // Cross-currency conversion preview
+                if (isCrossCurrency) ...[
+                  const Divider(height: 16),
+                  if (convertedAmount != null)
+                    Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                      Icon(Icons.currency_exchange_rounded,
+                          size: 14, color: cs.primary),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${formatAmount(inputAmount!, fromCurrency)} '
+                        '→ ${formatAmount(convertedAmount, toCurrency)}',
+                        style: TextStyle(fontSize: 13,
+                            fontWeight: FontWeight.w700, color: cs.primary),
+                      ),
+                    ])
+                  else if (app.exchangeRates.isEmpty)
+                    Text(
+                      'Exchange rates not loaded — '
+                      'amount will be transferred as-is',
+                      style: TextStyle(fontSize: 11,
+                          color: cs.error, fontWeight: FontWeight.w500),
+                      textAlign: TextAlign.center,
+                    )
+                  else
+                    Text(
+                      'Enter an amount to see the conversion',
+                      style: TextStyle(fontSize: 11,
+                          color: cs.onPrimaryContainer.withValues(alpha: 0.6)),
+                      textAlign: TextAlign.center,
+                    ),
+                ],
               ]),
             ),
+          ],
 
+          // ── Amount field ──────────────────────────────────────────────
           TextField(
             controller: _amtCtrl,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(labelText: 'Amount', prefixText: '$sym '),
+            decoration: InputDecoration(
+              labelText: 'Amount',
+              prefixText: '$sym ',
+              suffixText: fromCurrency,
+            ),
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+            onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: 12),
+
           TextField(controller: _noteCtrl,
-              decoration: const InputDecoration(labelText: 'Note (optional)',
+              decoration: const InputDecoration(
+                  labelText: 'Note (optional)',
                   prefixIcon: Icon(Icons.sticky_note_2_outlined))),
           const SizedBox(height: 24),
 
