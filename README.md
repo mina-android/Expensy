@@ -33,7 +33,7 @@ Most finance apps require you to sign up, sync to the cloud, or show ads. Expens
 - Add unlimited accounts: **Bank**, **Cash**, **Savings**, **Credit Card**, **E-Wallet**, **Gold**
 - Account type selected via **pill cards** — not a dropdown
 - Each account has its own **currency** chosen from a searchable dialog of **61 currencies**
-- Pick from **24 custom colours** (horizontally scrollable)
+- Pick from **24 custom colours**
 - **Exclude from Total Balance** toggle — hide investment accounts from the home screen total
 - See balance, total income, total expense, and transaction count per account
 - Edit or delete any account
@@ -60,21 +60,21 @@ Most finance apps require you to sign up, sync to the cloud, or show ads. Expens
 - **Cross-currency transfers** — when accounts use different currencies, a live conversion preview shows exactly how much the destination account will receive
 - Auto-records a debit and a credit transaction, each tagged with its account's currency
 
-### 📊 Statistics *(in More tab)*
+### 📊 Statistics 
 - **6-month bar chart** — income vs expense side by side
 - **Expense pie chart** — breakdown by category with percentage labels
 - **Per-account filter pills** — restrict the whole screen (summary cards, bar chart, and pie chart) to a single account
 - Navigate month by month with summary cards: Income, Expense, Net
 - Category legend rows show **% of budget used** and a mini progress bar for any category that has a budget set
 
-### 🎯 Budgets *(bottom bar tab)*
+### 🎯 Budgets 
 - Set a **Monthly** or **Weekly** spending limit for any expense category
 - Colour-coded progress bar: green → orange at 75% → red once exceeded
 - Summary strip shows total **Budgeted**, total **Spent**, and a live **Over limit** count
 - Live spend preview while you're still typing in the amount
 - Tap a budget to edit it, long-press to delete
 
-### 🔁 Recurring Payments *(bottom bar tab)*
+### 🔁 Recurring Payments 
 - Split into two tabs: **Expenses** and **Income**
 - Track subscriptions, rent, instalments, salary, freelance income, and more
 - Frequency: every X **days / weeks / months / years**
@@ -123,7 +123,7 @@ Most finance apps require you to sign up, sync to the cloud, or show ads. Expens
 - **40 colours** to choose from, grouped by hue (purples, blues, teals, greens, reds/pinks, oranges/ambers, browns, slates)
 - Live preview chip shows the chosen icon + colour while editing
 
-### 🔍 Insights *(More tab)*
+### 🔍 Insights 
 - Month-over-month spending comparison with an up/down trend badge
 - Daily average spend for the current month
 - Biggest single transaction this month
@@ -131,7 +131,7 @@ Most finance apps require you to sign up, sync to the cloud, or show ads. Expens
 - Category trends vs last month
 - 12-month income/expense trend line chart
 
-### 💱 Currency Converter *(More tab)*
+### 💱 Currency Converter 
 - Instant conversion between any two supported currencies using live exchange rates
 - One-tap swap between From/To
 - Offline banner shown if rates haven't loaded yet
@@ -186,8 +186,6 @@ Global, Middle East & North Africa, Sub-Saharan Africa, Asia, Europe (includes G
 ---
 
 ## Screenshots
-
-> Place your screenshots in `screenshots/` with the filenames below.
 
 | Home | Transactions | Recurring |
 |------|-------------|-----------|
