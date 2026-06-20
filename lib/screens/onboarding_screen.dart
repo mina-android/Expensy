@@ -85,7 +85,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     if (mounted) {
       Navigator.pushReplacement(context,
-          MaterialPageRoute(builder: (_) => const MainShell()));
+          ExpensyRoute(builder: (_) => const MainShell()));
     }
   }
 
@@ -352,7 +352,7 @@ class _PageThree extends StatelessWidget {
               GestureDetector(
                 onTap: () => onType(opt.$1),
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 140),
+                  duration: const Duration(milliseconds: 100),
                   margin: const EdgeInsets.only(right: 8),
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
@@ -420,7 +420,7 @@ class _PageThree extends StatelessWidget {
             child: Row(children: _kColors.map((col) => GestureDetector(
               onTap: () => onColor(col),
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 80),
+                duration: const Duration(milliseconds: 60),
                 width: 34, height: 34,
                 margin: const EdgeInsets.only(right: 8),
                 decoration: BoxDecoration(

@@ -4,6 +4,88 @@ All notable changes to Expensy are documented in this file.
 
 ---
 
+## [1.0.5] — 2026-06-20
+
+### Added
+
+#### Budgets (new bottom-nav tab)
+- **Per-category spending limits** — set a Monthly or Weekly amount against any expense category from a new **Budgets** tab in the bottom navigation bar
+- **Progress bar per budget** — colour-coded green → orange (≥75%) → red (≥100% / exceeded), with "X left" or "X over" label
+- **Summary strip** — total Budgeted, total Spent, and a live "Over limit" count across all budgets
+- **Live preview while creating a budget** — shows current spend against the entered amount before saving
+- **Budgets surfaced on the Statistics pie chart** — each category's legend row shows "% of budget" and a mini progress bar when a budget exists for that category
+
+#### Insights (More tab)
+- **New Insights screen** — month-over-month spending comparison with an up/down trend badge
+- **Daily average spend** — this month's expense total divided by days elapsed
+- **Biggest single transaction** this month, with description and date
+- **Top 3 spending categories** with amount and share of total
+- **Category trends vs last month** — per-category up/down comparison rows
+- **12-month trend line chart** — income vs expense over the last year
+
+#### Currency Converter (More tab)
+- **New Currency Converter screen** — instant conversion between any two supported currencies using live exchange rates
+- **Swap button** to flip the From/To currencies instantly
+- **Offline banner** shown when rates have not loaded yet
+
+#### Category Icons
+- **57 selectable icons** (Finance, Food & Home, Transport, Shopping, Health, Entertainment & Education, Work & Business, Misc groups) plus an **"Auto" mode** that picks an icon from the category name, shown in a 7-column grid in the Add/Edit Category sheet with a live preview chip
+- Stored as a **1-based index** (`icon_code_point`) into a constant icon list rather than a raw `IconData` — keeps Flutter's release-mode icon tree-shaking intact
+- **Category colour palette expanded from 12 to 40 colours**, grouped into Purples, Blues, Teals, Greens, Reds/Pinks, Oranges/Ambers, Browns, and Slates
+
+#### Recurring Payment History
+- Every **Pay** or **Skip** action on a recurring payment is now logged with its date, amount, and currency
+- Each recurring card has an expandable **"Payment history"** panel listing every past Pay/Skip entry, loaded on demand and cached in memory
+- History entries for a payment are deleted automatically when the payment itself is deleted
+
+#### Lent / Borrowed Due-Date Reminders
+- **Optional reminder notification** on a lent/borrowed record's due date, with a time picker (same permission flow as recurring reminders)
+- **"Overdue!" badge** replaces the due-date label once the date has passed without being settled
+- Dedicated **`expensy_lended`** notification channel, separate from recurring payment reminders
+- Reminder is automatically cancelled on settle or delete, and re-scheduled on edit or backup restore
+
+#### Material You Dynamic Colour
+- When theme mode is **"System"** on Android 12+, Expensy now extracts its colour scheme from the device wallpaper (Material You) instead of the chosen accent seed
+- Falls back to the selected seed colour automatically on older devices, or whenever System mode is not active
+
+#### App Fonts
+- **10 font options** in Settings: System Default plus 9 Google Fonts — Plus Jakarta Sans, DM Sans, Inter, Nunito Sans, Space Grotesk, Outfit, Sora, Poppins, Nunito
+
+#### Statistics
+- **Per-account filter pills** above the month navigator — restrict the summary cards, 6-month bar chart, and expense pie chart to a single account
+
+#### Other
+- **AUD (Australian Dollar)** added to the currency list
+- **Custom page transitions** — a new `ExpensyRoute` (220 ms push / 160 ms pop, upward 8 px slide + fade, `easeOutCubic` / `easeIn`) replaces `MaterialPageRoute` for every screen-to-screen navigation in the app
+
+### Changed
+- **AMOLED decoupled from theme mode** — "Black AMOLED" is now an independent `amoledSurfaces` toggle layered on top of System / Light / Dark, instead of being its own theme-mode value. Settings now shows a single row of 3 cards (**System / Light / Dark**) instead of a 2×2 grid of 4; the AMOLED switch appears below it and is hidden while Light mode is selected
+- **Themed filter pills** — the Transactions screen's type/account filters and the new Statistics account filter now use coloured pill buttons matching each item's own colour, replacing the default Material `FilterChip`
+- **Snappier micro-interactions** — most pill/chip/colour-swatch tap animations were shortened (typically 140 ms → 100 ms, 80 ms → 60 ms) for a more responsive feel
+- **Assets screen header simplified** — removed the redundant "Currency" summary column; now shows only Total Value and Item count
+- **Bottom navigation** — now 6 tabs: Home · Transactions · Recurring · Accounts · **Budgets** · More
+- **Backup format** — exported JSON now includes `budgets` and `recurring_history`; `_normaliseBackup()` patches both new tables (and the new `categories.icon_code_point` / `lended_money.reminder_enabled`/`reminder_time` columns) for every older backup version
+- **`AppSettings`** gained `appFont` and `amoledSurfaces`; legacy `themeMode: 'amoled'` values are migrated automatically to `themeMode: 'dark'` + `amoledSurfaces: true` on load
+- **Version** — bumped to `1.0.5+6`
+- **DB schema** — version bumped from 7 to **9**, adding the `budgets` and `recurring_history` tables, `categories.icon_code_point`, and `lended_money.reminder_enabled` / `reminder_time`
+
+### Fixed
+- **Exchange rates lagging one refresh cycle behind** — `ExchangeRateService.getRates()` previously kicked off a stale-cache background refresh and returned immediately without ever surfacing the result, so the freshly fetched rates only appeared on the *next* app launch. Rate loading was rewritten in `AppProvider._loadRates()` as an explicit two-phase stale-while-revalidate: cached rates are served and rendered immediately, then a background `forceRefresh()` runs when the cache is stale and the UI is notified a second time when it completes. `ExchangeRateService` gained `getCached()` and `isFresh()` so the provider can drive this without triggering an implicit fetch
+
+### Known Issues
+- The **Backup screen**'s "what's included" live-count list was not updated for this release — it still shows the original categories (Accounts, Transactions, Recurring, Wishlist, Lent & Borrowed, Assets, Categories, Settings) and does not yet display a row for Budgets or Recurring History, even though both are now included in the exported JSON and fully restored
+
+### Technical
+- **New screens** — `budget_screen.dart`, `currency_converter_screen.dart`, `insights_screen.dart`
+- **New models** — `Budget`, `RecurringHistoryEntry`; `AppCategory` gained `iconCodePoint`; `LendedMoney` gained `reminderEnabled` / `reminderTime`
+- **New provider state** — `budgets` list, recurring-history cache + `getHistoryFor()`, budget CRUD (`addBudget`/`updateBudget`/`deleteBudget`) and `budgetSpent()` / `budgetRemaining()` / `budgetProgress()` / `budgetExceeded()`
+- **New widget catalogue** — `kCategoryIconOptions` (57 entries) and `CategoryIconOption` in `shared_widgets.dart`
+- **New theme additions** — `kFonts` map + `_applyFont()`, `dynamicScheme` parameter on `buildTheme()`, `ExpensyRoute` and `_FadeUpTransitionBuilder` in `app_theme.dart`
+- **`main.dart`** wrapped in `DynamicColorBuilder` to source the Material You palette on supported devices
+- **New packages** — `google_fonts ^6.2.1`, `dynamic_color ^1.7.0`
+
+---
+
 ## [1.0.4] — 2026-05-27
 
 ### Added

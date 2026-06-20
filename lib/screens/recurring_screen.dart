@@ -52,7 +52,8 @@ class _RecurringScreenState extends State<RecurringScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Recurring', style: TextStyle(fontWeight: FontWeight.w800)),
+        title: const Text('Recurring',
+            style: TextStyle(fontWeight: FontWeight.w800)),
         backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
         bottom: TabBar(
           controller: _tab,
@@ -66,15 +67,20 @@ class _RecurringScreenState extends State<RecurringScreen>
         ),
       ),
       body: Column(children: [
-        // Summary cards
         Padding(
           padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
           child: Row(children: [
-            Expanded(child: _SummaryCard(label: 'Monthly', value: fmt(m),
-                color: cs.primary, bg: cs.primaryContainer, fg: cs.onPrimaryContainer)),
+            Expanded(child: _SummaryCard(
+                label: 'Monthly', value: fmt(m),
+                color: cs.primary,
+                bg: cs.primaryContainer,
+                fg: cs.onPrimaryContainer)),
             const SizedBox(width: 10),
-            Expanded(child: _SummaryCard(label: 'Weekly', value: fmt(m / 4.33),
-                color: cs.secondary, bg: cs.secondaryContainer, fg: cs.onSecondaryContainer)),
+            Expanded(child: _SummaryCard(
+                label: 'Weekly', value: fmt(m / 4.33),
+                color: cs.secondary,
+                bg: cs.secondaryContainer,
+                fg: cs.onSecondaryContainer)),
           ]),
         ),
         const SizedBox(height: 8),
@@ -115,13 +121,14 @@ class _SummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
-        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(14)),
+        decoration: BoxDecoration(
+            color: bg, borderRadius: BorderRadius.circular(14)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(label, style: TextStyle(fontSize: 11,
               color: fg.withValues(alpha: 0.65), fontWeight: FontWeight.w600)),
           const SizedBox(height: 2),
-          Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800,
-              color: color)),
+          Text(value, style: TextStyle(fontSize: 16,
+              fontWeight: FontWeight.w800, color: color)),
         ]),
       );
 }
@@ -137,31 +144,54 @@ class _RecurringList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (items.isEmpty) return EmptyState(icon: Icons.repeat_rounded,
-        message: empty, subMessage: 'Tap + to add one');
+    if (items.isEmpty) return EmptyState(
+        icon: Icons.repeat_rounded, message: empty, subMessage: 'Tap + to add one');
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(14, 4, 14, 100),
       itemCount: items.length,
-      itemBuilder: (_, i) => _RecurringCard(r: items[i], app: app, fmt: fmt),
+      itemBuilder: (_, i) => _RecurringCard(
+          key: ValueKey(items[i].id), r: items[i], app: app, fmt: fmt),
     );
   }
 }
 
-// ── Card ──────────────────────────────────────────────────────────────────────
-class _RecurringCard extends StatelessWidget {
+// ── Card (stateful for history expansion) ────────────────────────────────────
+class _RecurringCard extends StatefulWidget {
   final RecurringPayment r;
   final AppProvider app;
   final String Function(double) fmt;
-  const _RecurringCard({required this.r, required this.app, required this.fmt});
+  const _RecurringCard({
+    super.key,
+    required this.r,
+    required this.app,
+    required this.fmt,
+  });
+  @override
+  State<_RecurringCard> createState() => _RecurringCardState();
+}
+
+class _RecurringCardState extends State<_RecurringCard> {
+  List<RecurringHistoryEntry>? _history;
+  bool _expanded = false;
+
+  Future<void> _loadHistory() async {
+    final entries =
+        await context.read<AppProvider>().getHistoryFor(widget.r.id);
+    if (mounted) setState(() => _history = entries);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final r        = widget.r;
+    final app      = widget.app;
+    final fmt      = widget.fmt;
     final cs       = Theme.of(context).colorScheme;
     final cat      = app.categoryById(r.categoryId);
     final catColor = cat != null ? Color(cat.colorValue) : cs.primary;
     final total    = r.totalPayments;
     final progress = (total != null && total > 0)
-        ? (r.paidPayments / total).clamp(0.0, 1.0) : null;
+        ? (r.paidPayments / total).clamp(0.0, 1.0)
+        : null;
     final days     = r.nextDate.difference(DateTime.now()).inDays;
     final overdue  = days < 0;
 
@@ -170,75 +200,70 @@ class _RecurringCard extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          // ── Header row ──────────────────────────────────────────────
           Row(children: [
             CategoryDot(category: cat, size: 46),
             const SizedBox(width: 12),
             Expanded(child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(r.name, style: const TextStyle(fontWeight: FontWeight.w700,
-                    fontSize: 16)),
-                Text('${fmt(r.amount)} · ${r.frequencyLabel}',
-                    style: TextStyle(fontSize: 13,
-                        color: cs.onSurface.withValues(alpha: 0.6))),
-                Text(r.endDate != null
-                    ? '${DateFormat('d MMM yy').format(r.startDate)} → ${DateFormat('d MMM yy').format(r.endDate!)}'
-                    : 'From ${DateFormat('d MMM yy').format(r.startDate)} · Ongoing',
-                    style: TextStyle(fontSize: 11,
-                        color: cs.onSurface.withValues(alpha: 0.45))),
-              ],
-            )),
-            // Badges column — INCOME tag and/or bell reminder
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                if (r.paymentType == 'income')
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                    decoration: BoxDecoration(color: const Color(0xFFE8F5E9),
-                        borderRadius: BorderRadius.circular(8)),
-                    child: const Text('INCOME', style: TextStyle(fontSize: 9,
-                        fontWeight: FontWeight.w800, color: Color(0xFF2E7D32))),
-                  ),
-                if (r.reminderEnabled) ...[
-                  if (r.paymentType == 'income') const SizedBox(height: 4),
+                crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(r.name, style: const TextStyle(
+                  fontWeight: FontWeight.w700, fontSize: 16)),
+              Text('${fmt(r.amount)} · ${r.frequencyLabel}',
+                  style: TextStyle(fontSize: 13,
+                      color: cs.onSurface.withValues(alpha: 0.6))),
+              Text(r.endDate != null
+                  ? '${DateFormat('d MMM yy').format(r.startDate)} → ${DateFormat('d MMM yy').format(r.endDate!)}'
+                  : 'From ${DateFormat('d MMM yy').format(r.startDate)} · Ongoing',
+                  style: TextStyle(fontSize: 11,
+                      color: cs.onSurface.withValues(alpha: 0.45))),
+            ])),
+            // Badges
+            Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+              if (r.paymentType == 'income')
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  decoration: BoxDecoration(
+                      color: const Color(0xFFE8F5E9),
+                      borderRadius: BorderRadius.circular(8)),
+                  child: const Text('INCOME', style: TextStyle(fontSize: 9,
+                      fontWeight: FontWeight.w800, color: Color(0xFF2E7D32))),
+                ),
+              if (r.reminderEnabled) ...[
+                if (r.paymentType == 'income') const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  decoration: BoxDecoration(
+                      color: cs.primaryContainer,
+                      borderRadius: BorderRadius.circular(8)),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    Icon(Icons.notifications_active_outlined,
+                        size: 10, color: cs.primary),
+                    const SizedBox(width: 3),
+                    Text(r.reminderTime, style: TextStyle(fontSize: 9,
+                        fontWeight: FontWeight.w700, color: cs.primary)),
+                  ]),
+                ),
+                if (r.earlyReminderEnabled) ...[
+                  const SizedBox(height: 3),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                     decoration: BoxDecoration(
-                      color: cs.primaryContainer,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                        color: cs.secondaryContainer,
+                        borderRadius: BorderRadius.circular(8)),
                     child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      Icon(Icons.notifications_active_outlined,
-                          size: 10, color: cs.primary),
+                      Icon(Icons.notifications_outlined,
+                          size: 10, color: cs.secondary),
                       const SizedBox(width: 3),
-                      Text(r.reminderTime, style: TextStyle(fontSize: 9,
-                          fontWeight: FontWeight.w700, color: cs.primary)),
+                      Text('−2d', style: TextStyle(fontSize: 9,
+                          fontWeight: FontWeight.w700, color: cs.secondary)),
                     ]),
                   ),
-                  // 2-day advance reminder badge
-                  if (r.earlyReminderEnabled) ...[
-                    const SizedBox(height: 3),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: cs.secondaryContainer,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(mainAxisSize: MainAxisSize.min, children: [
-                        Icon(Icons.notifications_outlined,
-                            size: 10, color: cs.secondary),
-                        const SizedBox(width: 3),
-                        Text('−2d', style: TextStyle(fontSize: 9,
-                            fontWeight: FontWeight.w700, color: cs.secondary)),
-                      ]),
-                    ),
-                  ],
                 ],
               ],
-            ),
+            ]),
           ]),
 
+          // ── Progress bar ─────────────────────────────────────────────
           if (total != null && total > 0) ...[
             const SizedBox(height: 10),
             LinearProgressCard(value: progress ?? 0, color: catColor),
@@ -253,21 +278,27 @@ class _RecurringCard extends StatelessWidget {
             ]),
           ],
 
+          // ── Action buttons ───────────────────────────────────────────
           const SizedBox(height: 10),
           Row(children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: overdue ? const Color(0xFFFFEBEE) : const Color(0xFFE8F5E9),
+                color: overdue
+                    ? const Color(0xFFFFEBEE)
+                    : const Color(0xFFE8F5E9),
                 borderRadius: BorderRadius.circular(8)),
               child: Text(
                 overdue ? 'Overdue!' : days == 0 ? 'Due Today' : 'Due in ${days}d',
                 style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700,
-                    color: overdue ? const Color(0xFFC62828) : const Color(0xFF2E7D32)),
+                    color: overdue
+                        ? const Color(0xFFC62828)
+                        : const Color(0xFF2E7D32)),
               ),
             ),
             const Spacer(),
-            _Btn(icon: Icons.edit_outlined, label: 'Edit', color: cs.secondary,
+            _Btn(icon: Icons.edit_outlined, label: 'Edit',
+                color: cs.secondary,
                 onTap: () => _openRecurringSheet(context, existing: r)),
             const SizedBox(width: 6),
             _Btn(icon: Icons.skip_next_outlined, label: 'Skip',
@@ -276,7 +307,8 @@ class _RecurringCard extends StatelessWidget {
                   final ok = await showDialog<bool>(context: context,
                       builder: (ctx) => AlertDialog(
                         title: const Text('Skip Next Payment?'),
-                        content: Text('Next: ${DateFormat('d MMM yyyy').format(r.calcNextDate())}'),
+                        content: Text(
+                            'Next: ${DateFormat('d MMM yyyy').format(r.calcNextDate())}'),
                         actions: [
                           TextButton(onPressed: () => Navigator.pop(ctx, false),
                               child: const Text('Cancel')),
@@ -285,28 +317,131 @@ class _RecurringCard extends StatelessWidget {
                         ],
                       ));
                   if (ok == true && context.mounted) {
-                    context.read<AppProvider>().skipNextRecurring(r);
+                    await context.read<AppProvider>().skipNextRecurring(r);
+                    // Invalidate history so it reloads on next expand
+                    if (mounted) setState(() => _history = null);
                   }
                 }),
             const SizedBox(width: 6),
             _Btn(icon: Icons.check_circle_outline, label: 'Pay',
                 color: cs.primary,
-                onTap: () => context.read<AppProvider>().markRecurringPaid(r)),
+                onTap: () async {
+                  await context.read<AppProvider>().markRecurringPaid(r);
+                  // Invalidate history so it reloads on next expand
+                  if (mounted) setState(() => _history = null);
+                }),
             const SizedBox(width: 6),
             _Btn(icon: Icons.delete_outline_rounded, label: 'Del',
                 color: const Color(0xFFC62828),
                 onTap: () async {
-                  if (await showDeleteConfirm(context, r.name) && context.mounted) {
+                  if (await showDeleteConfirm(context, r.name) &&
+                      context.mounted) {
                     context.read<AppProvider>().deleteRecurring(r.id);
                   }
                 }),
           ]),
+
+          // ── History expansion ─────────────────────────────────────────
+          const SizedBox(height: 4),
+          Theme(
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              childrenPadding: EdgeInsets.zero,
+              dense: true,
+              leading: Icon(Icons.history_rounded, size: 16,
+                  color: cs.onSurface.withValues(alpha: 0.45)),
+              title: Text(
+                _expanded && _history != null
+                    ? 'History (${_history!.length})'
+                    : 'Payment history',
+                style: TextStyle(fontSize: 12,
+                    color: cs.onSurface.withValues(alpha: 0.55)),
+              ),
+              trailing: Icon(
+                _expanded
+                    ? Icons.expand_less_rounded
+                    : Icons.expand_more_rounded,
+                size: 18,
+                color: cs.onSurface.withValues(alpha: 0.4),
+              ),
+              onExpansionChanged: (expanded) {
+                setState(() {
+                  _expanded = expanded;
+                  if (expanded && _history == null) _loadHistory();
+                });
+              },
+              children: [
+                if (_history == null && _expanded)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: Center(
+                        child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2))),
+                  )
+                else if (_history != null && _history!.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: Text('No history yet',
+                        style: TextStyle(fontSize: 12,
+                            color: cs.onSurface.withValues(alpha: 0.4))),
+                  )
+                else if (_history != null)
+                  ..._history!.map((e) => _HistoryRow(entry: e, fmt: fmt)),
+              ],
+            ),
+          ),
         ]),
       ),
     );
   }
 }
 
+// ── History row ───────────────────────────────────────────────────────────────
+class _HistoryRow extends StatelessWidget {
+  final RecurringHistoryEntry entry;
+  final String Function(double) fmt;
+  const _HistoryRow({required this.entry, required this.fmt});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs      = Theme.of(context).colorScheme;
+    final isPaid  = entry.action == 'paid';
+    final color   = isPaid ? const Color(0xFF2E7D32) : const Color(0xFF785900);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 4, 0, 4),
+      child: Row(children: [
+        Container(
+          width: 28, height: 28,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            isPaid ? Icons.check_rounded : Icons.skip_next_rounded,
+            size: 14, color: color,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(child: Text(
+          DateFormat('d MMM yyyy · HH:mm').format(entry.date),
+          style: TextStyle(fontSize: 12,
+              color: cs.onSurface.withValues(alpha: 0.6)),
+        )),
+        Text(
+          '${isPaid ? '' : ''}${formatAmount(entry.amount, entry.currency)}',
+          style: TextStyle(
+              fontSize: 12, fontWeight: FontWeight.w700, color: color),
+        ),
+      ]),
+    );
+  }
+}
+
+// ── Small action button ───────────────────────────────────────────────────────
 class _Btn extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -319,7 +454,8 @@ class _Btn extends StatelessWidget {
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
-          decoration: BoxDecoration(color: color.withValues(alpha: 0.1),
+          decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8)),
           child: Row(mainAxisSize: MainAxisSize.min, children: [
             Icon(icon, size: 13, color: color),
@@ -345,9 +481,9 @@ class _RecurringSheetState extends State<_RecurringSheet> {
   final _amtCtrl  = TextEditingController();
   final _freqCtrl = TextEditingController(text: '1');
 
-  String    _payType         = 'expense';
-  String    _freqUnit        = 'months';
-  DateTime  _first           = DateTime.now();
+  String    _payType              = 'expense';
+  String    _freqUnit             = 'months';
+  DateTime  _first                = DateTime.now();
   DateTime? _last;
   String?   _accountId;
   String?   _categoryId;
@@ -357,12 +493,10 @@ class _RecurringSheetState extends State<_RecurringSheet> {
 
   bool get isEdit => widget.existing != null;
 
-  /// Format TimeOfDay → 'HH:mm' for storage.
   String get _reminderTimeStr =>
       '${_reminderTime.hour.toString().padLeft(2, '0')}:'
       '${_reminderTime.minute.toString().padLeft(2, '0')}';
 
-  /// Parse stored 'HH:mm' → TimeOfDay.
   static TimeOfDay _parseTime(String s) {
     final parts = s.split(':');
     return TimeOfDay(
@@ -383,15 +517,15 @@ class _RecurringSheetState extends State<_RecurringSheet> {
 
     final e = widget.existing;
     if (e != null) {
-      _nameCtrl.text  = e.name;
-      _amtCtrl.text   = e.amount.toStringAsFixed(2);
-      _freqCtrl.text  = '${e.freqVal}';
-      _payType        = e.paymentType;
-      _freqUnit       = e.freqUnit;
-      _first          = e.startDate;
-      _last           = e.endDate;
-      _accountId      = e.accountId;
-      _categoryId     = e.categoryId;
+      _nameCtrl.text        = e.name;
+      _amtCtrl.text         = e.amount.toStringAsFixed(2);
+      _freqCtrl.text        = '${e.freqVal}';
+      _payType              = e.paymentType;
+      _freqUnit             = e.freqUnit;
+      _first                = e.startDate;
+      _last                 = e.endDate;
+      _accountId            = e.accountId;
+      _categoryId           = e.categoryId;
       _reminderEnabled      = e.reminderEnabled;
       _earlyReminderEnabled = e.earlyReminderEnabled;
       _reminderTime         = _parseTime(e.reminderTime);
@@ -423,16 +557,14 @@ class _RecurringSheetState extends State<_RecurringSheet> {
     ).totalPayments;
   }
 
-  // ── Reminder toggle ────────────────────────────────────────────────────
   Future<void> _toggleReminder(bool value) async {
     if (!value) {
       setState(() {
         _reminderEnabled      = false;
-        _earlyReminderEnabled = false; // advance reminder requires main reminder
+        _earlyReminderEnabled = false;
       });
       return;
     }
-    // Check / request permission before enabling
     final hasPermission = await NotificationService().hasPermission();
     if (!hasPermission) {
       final granted = await NotificationService().requestPermissions();
@@ -446,7 +578,7 @@ class _RecurringSheetState extends State<_RecurringSheet> {
             duration: Duration(seconds: 4),
           ));
         }
-        return; // Don't enable reminder — no permission
+        return;
       }
     }
     setState(() => _reminderEnabled = true);
@@ -461,7 +593,6 @@ class _RecurringSheetState extends State<_RecurringSheet> {
     if (picked != null) setState(() => _reminderTime = picked);
   }
 
-  // ── Submit ─────────────────────────────────────────────────────────────
   Future<void> _submit() async {
     if (_nameCtrl.text.trim().isEmpty) return;
     final amount = double.tryParse(_amtCtrl.text);
@@ -521,7 +652,7 @@ class _RecurringSheetState extends State<_RecurringSheet> {
             Expanded(child: GestureDetector(
               onTap: () => _setPayType('expense'),
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 140),
+                duration: const Duration(milliseconds: 100),
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
                   color: _payType == 'expense'
@@ -537,7 +668,7 @@ class _RecurringSheetState extends State<_RecurringSheet> {
             Expanded(child: GestureDetector(
               onTap: () => _setPayType('income'),
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 140),
+                duration: const Duration(milliseconds: 100),
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
                   color: _payType == 'income'
@@ -563,7 +694,6 @@ class _RecurringSheetState extends State<_RecurringSheet> {
               onChanged: (_) => setState(() {})),
           const SizedBox(height: 12),
 
-          // Frequency
           Row(children: [
             const Text('Every ', style: TextStyle(fontSize: 15)),
             SizedBox(width: 70, child: TextField(
@@ -589,7 +719,6 @@ class _RecurringSheetState extends State<_RecurringSheet> {
           ]),
           const SizedBox(height: 4),
 
-          // First/Last payment dates
           ListTile(contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.play_circle_outline),
             title: Text('First: ${DateFormat('d MMM yyyy').format(_first)}',
@@ -622,7 +751,6 @@ class _RecurringSheetState extends State<_RecurringSheet> {
             },
           ),
 
-          // Estimate
           if (est != null && est > 0 && amt > 0)
             Container(
               padding: const EdgeInsets.all(14),
@@ -647,7 +775,6 @@ class _RecurringSheetState extends State<_RecurringSheet> {
               ]),
             ),
 
-          // Account
           if (app.accounts.any((a) => !a.isGold)) ...[
             Text('Account', style: Theme.of(context).textTheme.labelMedium
                 ?.copyWith(letterSpacing: 1)),
@@ -659,7 +786,6 @@ class _RecurringSheetState extends State<_RecurringSheet> {
             const SizedBox(height: 14),
           ],
 
-          // Category
           if (cats.isNotEmpty) ...[
             Text('Category', style: Theme.of(context).textTheme.labelMedium
                 ?.copyWith(letterSpacing: 1)),
@@ -669,7 +795,6 @@ class _RecurringSheetState extends State<_RecurringSheet> {
             const SizedBox(height: 8),
           ],
 
-          // ── Reminder section ────────────────────────────────────────────
           const Divider(height: 24),
           SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
@@ -679,27 +804,20 @@ class _RecurringSheetState extends State<_RecurringSheet> {
                   : Icons.notifications_none_outlined,
               color: _reminderEnabled ? cs.primary : null,
             ),
-            title: Text(
-              'Payment Reminder',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: _reminderEnabled ? cs.primary : null,
-              ),
-            ),
+            title: Text('Payment Reminder',
+                style: TextStyle(fontWeight: FontWeight.w600,
+                    color: _reminderEnabled ? cs.primary : null)),
             subtitle: Text(
               _reminderEnabled
                   ? 'You\'ll be notified on the due date'
                   : 'Get notified when a payment is due',
-              style: TextStyle(
-                fontSize: 12,
-                color: cs.onSurface.withValues(alpha: 0.5),
-              ),
+              style: TextStyle(fontSize: 12,
+                  color: cs.onSurface.withValues(alpha: 0.5)),
             ),
             value: _reminderEnabled,
             onChanged: _toggleReminder,
           ),
 
-          // Time picker + early reminder — only shown when reminder is enabled
           if (_reminderEnabled) ...[
             const SizedBox(height: 4),
             InkWell(
@@ -710,31 +828,19 @@ class _RecurringSheetState extends State<_RecurringSheet> {
                 decoration: BoxDecoration(
                   color: cs.primaryContainer.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: cs.primary.withValues(alpha: 0.35),
-                  ),
+                  border: Border.all(color: cs.primary.withValues(alpha: 0.35)),
                 ),
                 child: Row(children: [
                   Icon(Icons.access_time_rounded, size: 20, color: cs.primary),
                   const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Remind me at',
-                            style: TextStyle(fontSize: 11,
-                                color: cs.onSurface.withValues(alpha: 0.55))),
-                        Text(
-                          _reminderTime.format(context),
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: cs.primary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  Expanded(child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('Remind me at', style: TextStyle(fontSize: 11,
+                        color: cs.onSurface.withValues(alpha: 0.55))),
+                    Text(_reminderTime.format(context),
+                        style: TextStyle(fontSize: 16,
+                            fontWeight: FontWeight.w700, color: cs.primary)),
+                  ])),
                   Icon(Icons.chevron_right_rounded, color: cs.primary),
                 ]),
               ),
@@ -748,8 +854,6 @@ class _RecurringSheetState extends State<_RecurringSheet> {
                     color: cs.onSurface.withValues(alpha: 0.4)),
               ),
             ),
-
-            // ── Early (2-day advance) reminder sub-toggle ────────────────
             const SizedBox(height: 8),
             SwitchListTile.adaptive(
               contentPadding: const EdgeInsets.only(left: 4),
@@ -760,14 +864,9 @@ class _RecurringSheetState extends State<_RecurringSheet> {
                 color: _earlyReminderEnabled ? cs.secondary : null,
                 size: 22,
               ),
-              title: Text(
-                'Remind 2 days before',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: _earlyReminderEnabled ? cs.secondary : null,
-                ),
-              ),
+              title: Text('Remind 2 days before',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600,
+                      color: _earlyReminderEnabled ? cs.secondary : null)),
               subtitle: Text(
                 _earlyReminderEnabled
                     ? 'Extra heads-up 2 days early at the same time'
@@ -787,7 +886,8 @@ class _RecurringSheetState extends State<_RecurringSheet> {
             label: Text(isEdit ? 'Save Changes' : 'Add Recurring'),
             style: FilledButton.styleFrom(
               minimumSize: const Size.fromHeight(50),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28))),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28))),
           ),
           const SizedBox(height: 4),
         ],

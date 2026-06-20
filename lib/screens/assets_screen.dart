@@ -40,12 +40,6 @@ class AssetsScreen extends StatelessWidget {
               color: cs.onPrimary.withValues(alpha: 0.9),
               labelColor: cs.onPrimary.withValues(alpha: 0.65),
             )),
-            Expanded(child: _SumCol(
-              label: 'Currency',
-              value: app.settings.currency,
-              color: cs.onPrimary.withValues(alpha: 0.9),
-              labelColor: cs.onPrimary.withValues(alpha: 0.65),
-            )),
           ]),
         ),
 

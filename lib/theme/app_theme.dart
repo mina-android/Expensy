@@ -1,5 +1,6 @@
 // lib/theme/app_theme.dart
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 // ── Seed colours ─────────────────────────────────────────────────────────────
 const Map<String, Color> kSeedColours = {
@@ -51,41 +52,100 @@ const Map<String, String> kSeedLabels = {
 
 Color seedColour(String key) => kSeedColours[key] ?? const Color(0xFF6750A4);
 
-/// themeMode: 'system' | 'light' | 'dark' | 'amoled'
+// ── Fonts ─────────────────────────────────────────────────────────────────────
+/// Key stored in AppSettings.appFont → display label shown in Settings UI.
+const Map<String, String> kFonts = {
+  'default':           'System Default',
+  'plus_jakarta_sans': 'Plus Jakarta Sans',
+  'dm_sans':           'DM Sans',
+  'inter':             'Inter',
+  'nunito_sans':       'Nunito Sans',
+  'space_grotesk':     'Space Grotesk',
+  'outfit':            'Outfit',
+  'sora':              'Sora',
+  'poppins':           'Poppins',
+  'nunito':            'Nunito',
+};
+
+TextTheme _applyFont(String font, TextTheme base) {
+  switch (font) {
+    case 'plus_jakarta_sans': return GoogleFonts.plusJakartaSansTextTheme(base);
+    case 'dm_sans':           return GoogleFonts.dmSansTextTheme(base);
+    case 'inter':             return GoogleFonts.interTextTheme(base);
+    case 'nunito_sans':       return GoogleFonts.nunitoSansTextTheme(base);
+    case 'space_grotesk':     return GoogleFonts.spaceGroteskTextTheme(base);
+    case 'outfit':            return GoogleFonts.outfitTextTheme(base);
+    case 'sora':              return GoogleFonts.soraTextTheme(base);
+    case 'poppins':           return GoogleFonts.poppinsTextTheme(base);
+    case 'nunito':            return GoogleFonts.nunitoTextTheme(base);
+    default:                  return base; // Flutter/Roboto default
+  }
+}
+
+/// themeMode: 'system' | 'light' | 'dark'
+/// AMOLED is now a separate bool (amoledSurfaces) decoupled from the mode.
 ThemeMode resolveThemeMode(String mode) {
   switch (mode) {
-    case 'light':  return ThemeMode.light;
-    case 'dark':   return ThemeMode.dark;
-    case 'amoled': return ThemeMode.dark;
-    default:       return ThemeMode.system;
+    case 'light': return ThemeMode.light;
+    case 'dark':  return ThemeMode.dark;
+    default:      return ThemeMode.system;
   }
 }
 
-ThemeData buildTheme({required String seed, required bool dark, bool amoled = false}) {
-  final seedColor = kSeedColours[seed] ?? const Color(0xFF6750A4);
-  if (dark && amoled) {
-    // AMOLED: pure black surface + chosen accent colour for primary/secondary
-    final cs = ColorScheme.fromSeed(
+/// [dynamicScheme] — when provided (Android 12+ with themeMode='system'),
+/// uses the device's wallpaper-extracted palette instead of [seed].
+/// [amoled]        — forces pure-black surfaces on any dark theme.
+ThemeData buildTheme({
+  required String seed,
+  required bool dark,
+  bool amoled = false,
+  String appFont = 'default',
+  ColorScheme? dynamicScheme,
+}) {
+  final ColorScheme base;
+
+  if (dynamicScheme != null) {
+    // Device palette: apply AMOLED surface override if requested.
+    base = amoled
+        ? dynamicScheme.copyWith(
+            surface:                 Colors.black,
+            surfaceContainerLow:     const Color(0xFF0A0A0A),
+            surfaceContainer:        const Color(0xFF111111),
+            surfaceContainerHigh:    const Color(0xFF1A1A1A),
+            surfaceContainerHighest: const Color(0xFF222222),
+          )
+        : dynamicScheme;
+  } else {
+    final seedColor = kSeedColours[seed] ?? const Color(0xFF6750A4);
+    final seeded = ColorScheme.fromSeed(
       seedColor: seedColor,
-      brightness: Brightness.dark,
-    ).copyWith(
-      surface:                 Colors.black,
-      surfaceContainerLow:     const Color(0xFF0A0A0A),
-      surfaceContainer:        const Color(0xFF111111),
-      surfaceContainerHigh:    const Color(0xFF1A1A1A),
-      surfaceContainerHighest: const Color(0xFF222222),
+      brightness: dark ? Brightness.dark : Brightness.light,
     );
-    return _base(cs);
+    base = (dark && amoled)
+        ? seeded.copyWith(
+            surface:                 Colors.black,
+            surfaceContainerLow:     const Color(0xFF0A0A0A),
+            surfaceContainer:        const Color(0xFF111111),
+            surfaceContainerHigh:    const Color(0xFF1A1A1A),
+            surfaceContainerHighest: const Color(0xFF222222),
+          )
+        : seeded;
   }
-  return _base(ColorScheme.fromSeed(
-    seedColor: seedColor,
-    brightness: dark ? Brightness.dark : Brightness.light,
-  ));
+
+  return _base(base, appFont);
 }
 
-ThemeData _base(ColorScheme cs) => ThemeData(
+ThemeData _base(ColorScheme cs, String appFont) {
+  final baseTextTheme = ThemeData(brightness: cs.brightness).textTheme;
+  return ThemeData(
   colorScheme: cs,
   useMaterial3: true,
+  textTheme: _applyFont(appFont, baseTextTheme),
+  // Fast page transitions: subtle upward slide + fade in 140 ms.
+  pageTransitionsTheme: const PageTransitionsTheme(builders: {
+    TargetPlatform.android: _FadeUpTransitionBuilder(),
+    TargetPlatform.iOS:     CupertinoPageTransitionsBuilder(),
+  }),
   appBarTheme: const AppBarTheme(centerTitle: false, elevation: 0),
   cardTheme: CardThemeData(
     elevation: 0,
@@ -98,7 +158,54 @@ ThemeData _base(ColorScheme cs) => ThemeData(
     focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: cs.primary, width: 2)),
   ),
-);
+);}
+
+
+/// A page transition that slides up 8 px + fades in over 220 ms (push)
+/// or fades out over 160 ms (pop). Uses [ExpensyRoute] for real duration control.
+class _FadeUpTransitionBuilder extends PageTransitionsBuilder {
+  const _FadeUpTransitionBuilder();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    // Forward (push): easeOutCubic slide-up + fade.
+    // Reverse (pop):  easeIn — accelerates out, feels instant.
+    final curved = CurvedAnimation(
+      parent: animation,
+      curve:        Curves.easeOutCubic,
+      reverseCurve: Curves.easeIn,
+    );
+    return FadeTransition(
+      opacity: curved,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.03),
+          end: Offset.zero,
+        ).animate(curved),
+        child: child,
+      ),
+    );
+  }
+}
+
+/// Drop-in replacement for [MaterialPageRoute] with shorter transition durations.
+/// Push: 220 ms  |  Pop: 160 ms
+/// Import [app_theme.dart] and use instead of MaterialPageRoute everywhere.
+class ExpensyRoute<T> extends MaterialPageRoute<T> {
+  ExpensyRoute({required super.builder, super.settings});
+
+  @override
+  Duration get transitionDuration => const Duration(milliseconds: 220);
+
+  @override
+  Duration get reverseTransitionDuration => const Duration(milliseconds: 160);
+}
 
 // ── Currency ─────────────────────────────────────────────────────────────────
 class CurrencyInfo {
@@ -111,6 +218,7 @@ const List<CurrencyInfo> kCurrencies = [
   CurrencyInfo('EUR', '€',   'Euro'),
   CurrencyInfo('GBP', '£',   'British Pound'),
   CurrencyInfo('CAD', r'C$', 'Canadian Dollar'),
+  CurrencyInfo('AUD', r'A$', 'Australian Dollar'),
   CurrencyInfo('EGP', 'EGP', 'Egyptian Pound'),
   CurrencyInfo('SAR', 'SR',  'Saudi Riyal'),
   CurrencyInfo('AED', 'د.إ', 'UAE Dirham'),

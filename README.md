@@ -9,7 +9,7 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.3%2B-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-3.3%2B-0175C2?logo=dart&logoColor=white)](https://dart.dev)
 [![Android](https://img.shields.io/badge/Android-5.0%2B-3DDC84?logo=android&logoColor=white)](https://android.com)
-[![Version](https://img.shields.io/badge/Version-1.0.4-brightgreen)](https://github.com/mina-android/Expensy/releases)
+[![Version](https://img.shields.io/badge/Version-1.0.5-brightgreen)](https://github.com/mina-android/Expensy/releases)
 [![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
 
 **Expensy** is a clean, fast, and fully offline expense manager built with Flutter.  
@@ -32,7 +32,7 @@ Most finance apps require you to sign up, sync to the cloud, or show ads. Expens
 ### 💰 Accounts
 - Add unlimited accounts: **Bank**, **Cash**, **Savings**, **Credit Card**, **E-Wallet**, **Gold**
 - Account type selected via **pill cards** — not a dropdown
-- Each account has its own **currency** chosen from a searchable dialog of **65 currencies**
+- Each account has its own **currency** chosen from a searchable dialog of **61 currencies**
 - Pick from **24 custom colours** (horizontally scrollable)
 - **Exclude from Total Balance** toggle — hide investment accounts from the home screen total
 - See balance, total income, total expense, and transaction count per account
@@ -63,7 +63,16 @@ Most finance apps require you to sign up, sync to the cloud, or show ads. Expens
 ### 📊 Statistics *(in More tab)*
 - **6-month bar chart** — income vs expense side by side
 - **Expense pie chart** — breakdown by category with percentage labels
+- **Per-account filter pills** — restrict the whole screen (summary cards, bar chart, and pie chart) to a single account
 - Navigate month by month with summary cards: Income, Expense, Net
+- Category legend rows show **% of budget used** and a mini progress bar for any category that has a budget set
+
+### 🎯 Budgets *(bottom bar tab)*
+- Set a **Monthly** or **Weekly** spending limit for any expense category
+- Colour-coded progress bar: green → orange at 75% → red once exceeded
+- Summary strip shows total **Budgeted**, total **Spent**, and a live **Over limit** count
+- Live spend preview while you're still typing in the amount
+- Tap a budget to edit it, long-press to delete
 
 ### 🔁 Recurring Payments *(bottom bar tab)*
 - Split into two tabs: **Expenses** and **Income**
@@ -76,6 +85,7 @@ Most finance apps require you to sign up, sync to the cloud, or show ads. Expens
 - **On-day reminder notification** — get notified on the payment due date at a time you choose
 - **2-day advance reminder** — optional second notification fires 2 days before the due date
 - Reminder badges shown on each card (bell icon + time, advance badge if enabled)
+- **Payment history** — every Pay/Skip action is logged; expand a card to see the full history with dates and amounts
 
 ### 📈 Exchange Rates & Gold Prices
 - **Daily rate fetch** from `open.er-api.com` (free, no API key needed)
@@ -102,12 +112,29 @@ Most finance apps require you to sign up, sync to the cloud, or show ads. Expens
 - Link to an account (gold accounts excluded) with a "None" option
 - Account balance automatically adjusted when linked
 - Set a due date and notes
-- **Settle** reverses the balance effect
+- **Due-date reminder notification** — optional, with its own time picker; shows an "Overdue!" badge once the date passes unsettled
+- **Settle** reverses the balance effect and cancels any pending reminder
 - Summary bar shows: They Owe Me / I Owe Them / Net
 
 ### 🏷️ Categories
 - Default categories for income and expense — all editable and deletable
-- Add custom categories with a name and colour
+- Add custom categories with a name, colour, and **icon**
+- **57 selectable icons** across Finance, Food & Home, Transport, Shopping, Health, Entertainment & Education, Work & Business, and Misc — or leave it on **Auto** to pick an icon from the category name
+- **40 colours** to choose from, grouped by hue (purples, blues, teals, greens, reds/pinks, oranges/ambers, browns, slates)
+- Live preview chip shows the chosen icon + colour while editing
+
+### 🔍 Insights *(More tab)*
+- Month-over-month spending comparison with an up/down trend badge
+- Daily average spend for the current month
+- Biggest single transaction this month
+- Top 3 spending categories
+- Category trends vs last month
+- 12-month income/expense trend line chart
+
+### 💱 Currency Converter *(More tab)*
+- Instant conversion between any two supported currencies using live exchange rates
+- One-tap swap between From/To
+- Offline banner shown if rates haven't loaded yet
 
 ### 📤 Export Transactions
 - Choose a **From → To date range** to filter which transactions to export
@@ -116,26 +143,29 @@ Most finance apps require you to sign up, sync to the cloud, or show ads. Expens
 - **File picker** lets you choose exactly where to save on your device
 
 ### 💾 Backup & Restore
-- **Full JSON backup** — accounts, transactions, categories, recurring, wishlist, lent, **assets**, settings
+- **Full JSON backup** — accounts, transactions, categories, recurring (+ payment history), wishlist, lent, **assets**, **budgets**, settings
 - **File picker** to choose where to save — no share sheet
-- Live item counts for all 8 categories shown before backing up
+- Live item counts shown before backing up (currently covers Accounts, Transactions, Recurring, Wishlist, Lent & Borrowed, Assets, Categories, and Settings — Budgets and Recurring History are included in the backup file itself but not yet shown in this count list)
 - **Restore** from any `.json` backup file — old backup versions are automatically upgraded to the current schema
-- Shows upgrade label when restoring from an older version (e.g. `upgraded from v3 → v7`)
+- Shows upgrade label when restoring from an older version (e.g. `upgraded from v3 → v9`)
 - Invalid files detected and rejected with a clear error message
 
 ### ⚙️ Settings
 
-**Theme mode** — 4 options in a 2×2 grid:
-- **Follow System** — auto light/dark based on device setting
-- **Light Mode** — always light
-- **Dark Mode** — always dark
-- **Black AMOLED** — true `#000000` background for OLED displays
+**Theme mode** — 3 options in a row:
+- **System** — auto light/dark based on device setting; on Android 12+ this also pulls a **Material You** colour scheme from your wallpaper instead of the accent seed below
+- **Light** — always light
+- **Dark** — always dark
 
-**Accent colour** — 29 seeds displayed as coloured dots:  
+**Pure Black (AMOLED)** — independent toggle below the theme row; forces true `#000000` backgrounds whenever the active theme is dark (works with System, Dark, and the Material You palette)
+
+**App Font** — 10 options: System Default, Plus Jakarta Sans, DM Sans, Inter, Nunito Sans, Space Grotesk, Outfit, Sora, Poppins, Nunito
+
+**Accent colour** — 29 seeds displayed as coloured dots (used whenever Material You isn't active):  
 Violet, Blue, Green, Rose, Amber, Teal, Orange, Indigo, Cyan, Pink, Lime, Deep Purple, Crimson, Midnight, Forest, Mint, Olive, Sage, Sky Blue, Navy, Cobalt, Ocean, Coral, Gold, Slate, Magenta, Turquoise, Brown, Lavender
 
-**Currency** — searchable dialog (search by code or name) across **65 currencies**:
-Global, Middle East & North Africa, Sub-Saharan Africa, Asia, Europe (includes GEL Georgian Lari)
+**Currency** — searchable dialog (search by code or name) across **61 currencies**:
+Global, Middle East & North Africa, Sub-Saharan Africa, Asia, Europe (includes GEL Georgian Lari, AUD Australian Dollar)
 
 **Other preferences:**
 - Week starts on Monday or Sunday
@@ -175,13 +205,17 @@ Global, Middle East & North Africa, Sub-Saharan Africa, Asia, Europe (includes G
 |----------------|-------|-----------| 
 | ![Add](screenshots/add_transaction.png) | ![Assets](screenshots/assets.png) | ![Onboarding](screenshots/onboarding.png) |
 
+| Budgets | Insights | Currency Converter |
+|---------|---------|---------------------|
+| ![Budgets](screenshots/budgets.png) | ![Insights](screenshots/insights.png) | ![Currency Converter](screenshots/currency_converter.png) |
+
 ---
 
 ## Navigation
 
 ```
-Bottom bar:  Home · Transactions · Recurring · Accounts · More
-More tab:    Statistics · Wishlist · Lent Money · Assets · Categories · Export · Backup & Restore · Settings
+Bottom bar:  Home · Transactions · Recurring · Accounts · Budgets · More
+More tab:    Statistics · Insights · Currency Converter · Wishlist · Lent Money · Assets · Categories · Export · Backup & Restore · Settings
 ```
 
 ---
@@ -192,9 +226,11 @@ More tab:    Statistics · Wishlist · Lent Money · Assets · Categories · Exp
 |-------|-----------|
 | **Framework** | Flutter 3.3+ |
 | **Language** | Dart 3.3+ |
-| **Database** | sqflite — local SQLite (v7, WAL mode) |
+| **Database** | sqflite — local SQLite (v9, WAL mode) |
 | **State** | provider (ChangeNotifier) |
 | **Charts** | fl_chart |
+| **Fonts** | google_fonts ^6.2.1 |
+| **Dynamic Colour** | dynamic_color ^1.7.0 — Material You on Android 12+ |
 | **Excel Export** | excel ^4.0.6 |
 | **File I/O** | file_picker ^8.1.2 |
 | **Preferences** | shared_preferences |
@@ -212,41 +248,49 @@ Exchange rates and gold prices are fetched once a day and cached locally. All fi
 
 ```
 lib/
-├── main.dart                       # Async entry point — awaits NotificationService.initialize()
-│                                   #   and provider.load() before runApp(); no loading screen
-├── models/models.dart              # 7 data classes: Account (+ gold fields), AppCategory,
-│                                   #   AppTransaction (+ currency), RecurringPayment
-│                                   #   (+ reminderTime, earlyReminderEnabled),
-│                                   #   WishlistItem, LendedMoney, AssetItem
-├── database/db_helper.dart         # SQLite v7 CRUD for all 7 tables + backup import/export
+├── main.dart                       # Async entry point — wrapped in DynamicColorBuilder;
+│                                   #   awaits NotificationService.initialize() and
+│                                   #   provider.load() before runApp(); no loading screen
+├── models/models.dart              # 9 data classes: Account (+ gold fields), AppCategory
+│                                   #   (+ iconCodePoint), AppTransaction (+ currency),
+│                                   #   RecurringPayment (+ reminderTime, earlyReminderEnabled),
+│                                   #   WishlistItem, LendedMoney (+ reminderTime), AssetItem,
+│                                   #   Budget, RecurringHistoryEntry
+├── database/db_helper.dart         # SQLite v9 CRUD for all 9 tables + backup import/export
 │                                   #   + _normaliseBackup() for safe cross-version restore
 ├── providers/app_provider.dart     # AppProvider (ChangeNotifier) + AppSettings
-│                                   #   + exchange rate state + gold balance refresh
+│                                   #   + exchange rate state (stale-while-revalidate)
+│                                   #   + gold balance refresh + budget & history helpers
 ├── services/
 │   ├── exchange_rate_service.dart  # Fetch/cache daily rates (USD pivot) + XAU gold price
-│   └── notification_service.dart  # Schedule/cancel exact-alarm reminders; 2-day advance
-├── theme/app_theme.dart            # buildTheme(), resolveThemeMode(), 29 seed colours,
-│                                   #   65 currencies, formatAmount()
-├── widgets/shared_widgets.dart     # EmptyState, CategoryDot, AccountTypeIcon (incl. gold),
-│                                   #   AccountCardPicker, CategoryChipPicker,
-│                                   #   showCurrencyPicker, etc.
+│   └── notification_service.dart  # Schedule/cancel exact-alarm reminders for recurring
+│                                   #   payments (+ 2-day advance) and lent/borrowed due dates
+├── theme/app_theme.dart            # buildTheme() (+ Material You + 10 fonts), ExpensyRoute,
+│                                   #   resolveThemeMode(), 29 seed colours, 61 currencies,
+│                                   #   formatAmount()
+├── widgets/shared_widgets.dart     # EmptyState, CategoryDot (+ icon catalogue, 57 icons),
+│                                   #   AccountTypeIcon (incl. gold), AccountCardPicker,
+│                                   #   CategoryChipPicker, showCurrencyPicker, etc.
 └── screens/
-    ├── main_shell.dart             # IndexedStack bottom nav (5 tabs)
+    ├── main_shell.dart             # IndexedStack bottom nav (6 tabs)
     ├── home_screen.dart            # Dashboard — balance, gold sub-labels, summary chips
     ├── accounts_screen.dart        # Account list + rates banner + sync button + gold sheet
     ├── add_transaction_screen.dart # Add / edit a transaction with per-tx currency picker
-    ├── transactions_screen.dart    # Transaction history — search, filter (incl. Lent & Borrowed)
-    ├── recurring_screen.dart       # Tabbed recurring payments + notification reminders
+    ├── transactions_screen.dart    # Transaction history — search, themed filter pills
+    ├── recurring_screen.dart       # Tabbed recurring payments + reminders + payment history
     ├── transfer_screen.dart        # Cross-currency account transfer with conversion preview
+    ├── budget_screen.dart          # Per-category Monthly/Weekly spending limits
     ├── more_screen.dart            # Hub screen for secondary features
-    ├── statistics_screen.dart      # Bar chart + pie chart per month
-    ├── categories_screen.dart      # Category management
+    ├── statistics_screen.dart      # Bar chart + pie chart per month, per-account filter
+    ├── insights_screen.dart        # Trends, averages, top categories, 12-month chart
+    ├── currency_converter_screen.dart # Instant conversion between two currencies
+    ├── categories_screen.dart      # Category management — icon picker + 40 colours
     ├── wishlist_screen.dart        # Wishlist tracker
-    ├── lended_screen.dart          # Lent / borrowed money tracker
+    ├── lended_screen.dart          # Lent / borrowed money tracker + due-date reminders
     ├── assets_screen.dart          # Asset tracker (property, investments, etc.)
     ├── export_screen.dart          # Excel export with date range + Currency column
     ├── backup_screen.dart          # Full JSON backup & restore with live counts
-    ├── settings_screen.dart        # Theme, accent, currency, preferences, About links
+    ├── settings_screen.dart        # Theme, AMOLED toggle, font, accent, currency, About links
     └── onboarding_screen.dart      # 3-step first-launch setup
 ```
 
@@ -404,9 +448,12 @@ android/key.properties
 - [ ] iOS support
 - [ ] Home screen widget (current balance)
 - [x] Push notifications for recurring payments due
+- [x] Push notifications for lent/borrowed due dates
+- [x] Budgets per category
 - [ ] Multiple languages / localisation
 - [ ] Custom currency input
 - [ ] Recurring payment auto-pay
+- [ ] Budgets/Recurring History counts in the Backup screen's live-count list
 
 ---
 

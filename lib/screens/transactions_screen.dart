@@ -94,6 +94,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                   : null,
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(vertical: 10),
+              border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(28)),
+              enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(28)),
+              focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(28),
+                  borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.primary, width: 2)),
             ),
             onChanged: (v) => setState(() => _search = v),
           ),
@@ -107,17 +115,18 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             children: [
               for (final f in const [
-                ('all', 'All'),
-                ('income', 'Income'),
-                ('expense', 'Expenses'),
-                ('lent', 'Lent & Borrowed'),
+                ('all',     'All',              0xFF6750A4),
+                ('income',  'Income',           0xFF2E7D32),
+                ('expense', 'Expenses',         0xFFC62828),
+                ('lent',    'Lent & Borrowed',  0xFF0077B6),
               ])
                 Padding(
                   padding: const EdgeInsets.only(right: 6),
-                  child: FilterChip(
-                    label: Text(f.$2),
+                  child: _FilterPill(
+                    label: f.$2,
+                    color: Color(f.$3),
                     selected: _filter == f.$1,
-                    onSelected: (_) => setState(() {
+                    onTap: () => setState(() {
                       _filter = f.$1;
                       if (f.$1 == 'lent') _accFilter = null;
                     }),
@@ -128,10 +137,11 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 for (final acc in app.accounts)
                   Padding(
                     padding: const EdgeInsets.only(right: 6),
-                    child: FilterChip(
-                      label: Text(acc.name),
+                    child: _FilterPill(
+                      label: acc.name,
+                      color: Color(acc.colorValue),
                       selected: _accFilter == acc.id,
-                      onSelected: (_) => setState(() =>
+                      onTap: () => setState(() =>
                           _accFilter = _accFilter == acc.id ? null : acc.id),
                     ),
                   ),
@@ -191,7 +201,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       floatingActionButton: FloatingActionButton(
         heroTag: null,
         onPressed: () => Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const AddTransactionScreen())),
+            ExpensyRoute(builder: (_) => const AddTransactionScreen())),
         child: const Icon(Icons.add),
       ),
     );
@@ -257,7 +267,7 @@ class _TxTile extends StatelessWidget {
             Icon(Icons.sticky_note_2_outlined,
                 size: 12, color: cs.onSurface.withValues(alpha: 0.4)),
         ]),
-        onTap: () => Navigator.push(context, MaterialPageRoute(
+        onTap: () => Navigator.push(context, ExpensyRoute(
             builder: (_) => AddTransactionScreen(existing: t))),
         onLongPress: () async {
           if (await showDeleteConfirm(
@@ -356,6 +366,50 @@ class _LentTile extends StatelessWidget {
           // Navigate to lended screen to view / edit
           LendedScreen.openSheetFromExternal(context, existing: l);
         },
+      ),
+    );
+  }
+}
+
+// ── Colored filter pill ───────────────────────────────────────────────────────
+class _FilterPill extends StatelessWidget {
+  final String label;
+  final Color color;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _FilterPill({
+    required this.label,
+    required this.color,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 120),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
+        decoration: BoxDecoration(
+          color: selected ? color : color.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? color : color.withValues(alpha: 0.35),
+            width: selected ? 0 : 1,
+          ),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: selected ? Colors.white : color,
+            ),
+          ),
+        ),
       ),
     );
   }

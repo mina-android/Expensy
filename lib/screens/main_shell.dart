@@ -4,6 +4,7 @@ import 'home_screen.dart';
 import 'transactions_screen.dart';
 import 'recurring_screen.dart';
 import 'accounts_screen.dart';
+import 'budget_screen.dart';
 import 'more_screen.dart';
 
 class MainShell extends StatefulWidget {
@@ -20,6 +21,7 @@ class _MainShellState extends State<MainShell> {
     TransactionsScreen(),
     RecurringScreen(),
     AccountsScreen(),
+    BudgetScreen(),
     MoreScreen(),
   ];
 
@@ -28,20 +30,33 @@ class _MainShellState extends State<MainShell> {
         body: IndexedStack(index: _index, children: _screens),
         bottomNavigationBar: NavigationBar(
           selectedIndex: _index,
+          animationDuration: const Duration(milliseconds: 120),
           onDestinationSelected: (i) => setState(() => _index = i),
           destinations: const [
-            NavigationDestination(icon: Icon(Icons.home_outlined),
-                selectedIcon: Icon(Icons.home), label: 'Home'),
-            NavigationDestination(icon: Icon(Icons.receipt_long_outlined),
-                selectedIcon: Icon(Icons.receipt_long), label: 'Transactions'),
-            NavigationDestination(icon: Icon(Icons.repeat_rounded),
-                selectedIcon: Icon(Icons.repeat_rounded), label: 'Recurring'),
+            NavigationDestination(
+                icon: Icon(Icons.home_outlined),
+                selectedIcon: Icon(Icons.home),
+                label: 'Home'),
+            NavigationDestination(
+                icon: Icon(Icons.receipt_long_outlined),
+                selectedIcon: Icon(Icons.receipt_long),
+                label: 'Transactions'),
+            NavigationDestination(
+                icon: Icon(Icons.repeat_rounded),
+                selectedIcon: Icon(Icons.repeat_rounded),
+                label: 'Recurring'),
             NavigationDestination(
                 icon: Icon(Icons.account_balance_wallet_outlined),
                 selectedIcon: Icon(Icons.account_balance_wallet),
                 label: 'Accounts'),
-            NavigationDestination(icon: Icon(Icons.more_horiz_outlined),
-                selectedIcon: Icon(Icons.more_horiz), label: 'More'),
+            NavigationDestination(
+                icon: Icon(Icons.pie_chart_outline_rounded),
+                selectedIcon: Icon(Icons.pie_chart_rounded),
+                label: 'Budgets'),
+            NavigationDestination(
+                icon: Icon(Icons.more_horiz_outlined),
+                selectedIcon: Icon(Icons.more_horiz),
+                label: 'More'),
           ],
         ),
       );

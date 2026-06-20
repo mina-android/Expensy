@@ -70,21 +70,28 @@ class AppCategory {
   String name;
   String type;        // income|expense
   int    colorValue;
+  /// Code point of the icon (Icons.xxx.codePoint). 0 = use name-based default.
+  int    iconCodePoint;
 
   AppCategory({required this.id, required this.name,
-               required this.type, required this.colorValue});
+               required this.type, required this.colorValue,
+               this.iconCodePoint = 0});
 
-  Map<String, dynamic> toMap() =>
-      {'id': id, 'name': name, 'type': type, 'color_value': colorValue};
+  Map<String, dynamic> toMap() => {
+    'id': id, 'name': name, 'type': type,
+    'color_value': colorValue, 'icon_code_point': iconCodePoint,
+  };
 
   static AppCategory fromMap(Map<String, dynamic> m) => AppCategory(
     id: m['id'] as String, name: m['name'] as String,
     type: m['type'] as String, colorValue: m['color_value'] as int,
+    iconCodePoint: m['icon_code_point'] as int? ?? 0,
   );
 
-  AppCategory copyWith({String? name, int? colorValue}) =>
+  AppCategory copyWith({String? name, int? colorValue, int? iconCodePoint}) =>
       AppCategory(id: id, name: name ?? this.name,
-                  type: type, colorValue: colorValue ?? this.colorValue);
+                  type: type, colorValue: colorValue ?? this.colorValue,
+                  iconCodePoint: iconCodePoint ?? this.iconCodePoint);
 }
 
 class AppTransaction {
@@ -323,11 +330,16 @@ class LendedMoney {
   DateTime date;
   DateTime? dueDate;
   String notes;
+  bool   reminderEnabled;
+  /// Time of day for the reminder, 'HH:mm' format.
+  String reminderTime;
 
   LendedMoney({
     required this.id, required this.personName, required this.amount,
     required this.type, this.accountId, this.isSettled = false,
     required this.date, this.dueDate, this.notes = '',
+    this.reminderEnabled = false,
+    this.reminderTime = '09:00',
   });
 
   Map<String, dynamic> toMap() => {
@@ -336,6 +348,8 @@ class LendedMoney {
     'date': date.toIso8601String(),
     'due_date': dueDate?.toIso8601String(),
     'notes': notes,
+    'reminder_enabled': reminderEnabled ? 1 : 0,
+    'reminder_time': reminderTime,
   };
 
   static LendedMoney fromMap(Map<String, dynamic> m) => LendedMoney(
@@ -347,12 +361,15 @@ class LendedMoney {
     dueDate: m['due_date'] != null
         ? DateTime.parse(m['due_date'] as String) : null,
     notes: (m['notes'] as String?) ?? '',
+    reminderEnabled: (m['reminder_enabled'] as int? ?? 0) == 1,
+    reminderTime: (m['reminder_time'] as String?) ?? '09:00',
   );
 
   LendedMoney copyWith({
     String? personName, double? amount, String? type,
     String? accountId, bool? isSettled, DateTime? dueDate, String? notes,
     bool clearAccount = false,
+    bool? reminderEnabled, String? reminderTime,
   }) => LendedMoney(
     id: id, personName: personName ?? this.personName,
     amount: amount ?? this.amount, type: type ?? this.type,
@@ -360,6 +377,8 @@ class LendedMoney {
     isSettled: isSettled ?? this.isSettled,
     date: date, dueDate: dueDate ?? this.dueDate,
     notes: notes ?? this.notes,
+    reminderEnabled: reminderEnabled ?? this.reminderEnabled,
+    reminderTime: reminderTime ?? this.reminderTime,
   );
 }
 
@@ -405,4 +424,83 @@ class AssetItem {
     notes: notes ?? this.notes,
     createdAt: createdAt,
   );
+}
+
+// ── Budget ────────────────────────────────────────────────────────────────────
+class Budget {
+  final String id;
+  final String categoryId;
+  final double amount;
+  final String period;    // 'monthly' | 'weekly'
+  final DateTime createdAt;
+
+  const Budget({
+    required this.id,
+    required this.categoryId,
+    required this.amount,
+    required this.period,
+    required this.createdAt,
+  });
+
+  Budget copyWith({String? categoryId, double? amount, String? period}) => Budget(
+    id: id,
+    categoryId: categoryId ?? this.categoryId,
+    amount: amount ?? this.amount,
+    period: period ?? this.period,
+    createdAt: createdAt,
+  );
+
+  Map<String, dynamic> toMap() => {
+    'id': id,
+    'category_id': categoryId,
+    'amount': amount,
+    'period': period,
+    'created_at': createdAt.toIso8601String(),
+  };
+
+  static Budget fromMap(Map<String, dynamic> m) => Budget(
+    id: m['id'] as String,
+    categoryId: m['category_id'] as String,
+    amount: (m['amount'] as num).toDouble(),
+    period: (m['period'] as String?) ?? 'monthly',
+    createdAt: DateTime.parse(m['created_at'] as String),
+  );
+}
+
+// ── Recurring History Entry ────────────────────────────────────────────────────
+class RecurringHistoryEntry {
+  final String id;
+  final String recurringId;
+  final String action;    // 'paid' | 'skipped'
+  final DateTime date;
+  final double amount;
+  final String currency;
+
+  const RecurringHistoryEntry({
+    required this.id,
+    required this.recurringId,
+    required this.action,
+    required this.date,
+    required this.amount,
+    required this.currency,
+  });
+
+  Map<String, dynamic> toMap() => {
+    'id': id,
+    'recurring_id': recurringId,
+    'action': action,
+    'date': date.toIso8601String(),
+    'amount': amount,
+    'currency': currency,
+  };
+
+  static RecurringHistoryEntry fromMap(Map<String, dynamic> m) =>
+      RecurringHistoryEntry(
+        id: m['id'] as String,
+        recurringId: m['recurring_id'] as String,
+        action: m['action'] as String,
+        date: DateTime.parse(m['date'] as String),
+        amount: (m['amount'] as num).toDouble(),
+        currency: m['currency'] as String,
+      );
 }

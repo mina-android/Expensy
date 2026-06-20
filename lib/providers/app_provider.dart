@@ -15,80 +15,103 @@ import '../services/notification_service.dart';
 class AppSettings {
   String currency;
   String themeSeed;
-  String themeMode;   // system|light|dark|amoled
+  String themeMode;   // system|light|dark  ('amoled' is migrated on load)
   String weekStart;   // monday|sunday
   bool   hideBalance;
   String userName;
   bool   onboarded;
+  String appFont;     // key into kFonts; 'default' = system/Roboto
+  bool   amoledSurfaces; // pure-black surfaces when dark — decoupled from themeMode
 
   AppSettings({
-    this.currency   = 'EGP',
-    this.themeSeed  = 'violet',
-    this.themeMode  = 'dark',
-    this.weekStart  = 'monday',
-    this.hideBalance = false,
-    this.userName   = '',
-    this.onboarded  = false,
+    this.currency      = 'EGP',
+    this.themeSeed     = 'violet',
+    this.themeMode     = 'dark',
+    this.weekStart     = 'monday',
+    this.hideBalance   = false,
+    this.userName      = '',
+    this.onboarded     = false,
+    this.appFont       = 'default',
+    this.amoledSurfaces = false,
   });
 
   Map<String, dynamic> toJson() => {
     'currency': currency, 'themeSeed': themeSeed, 'themeMode': themeMode,
     'weekStart': weekStart, 'hideBalance': hideBalance,
     'userName': userName, 'onboarded': onboarded,
+    'appFont': appFont, 'amoledSurfaces': amoledSurfaces,
   };
 
-  static const _validThemeModes = {'system', 'light', 'dark', 'amoled'};
+  static const _validThemeModes = {'system', 'light', 'dark'};
+  // 'amoled' is legacy — migrated to themeMode:'dark' + amoledSurfaces:true
   static const _validSeeds = {
     'violet','blue','green','rose','amber','teal','orange','indigo','cyan',
     'pink','lime','deep_purple','crimson','midnight','forest','mint','olive',
     'sage','sky','navy','cobalt','ocean','coral','gold','slate','magenta',
     'turquoise','brown','lavender',
   };
+  static const _validFonts = {
+    'default','plus_jakarta_sans','dm_sans','inter','nunito_sans',
+    'space_grotesk','outfit','sora','poppins','nunito',
+  };
 
   static AppSettings fromJson(Map<String, dynamic> j) {
-    // ── Seed colour migration ──────────────────────────────────────────
     String seed = (j['themeSeed'] as String?) ?? 'violet';
     bool   wasAmoled = seed == 'pitch_black';
     if (wasAmoled) seed = 'midnight';
     if (!_validSeeds.contains(seed)) seed = 'violet';
 
-    // ── Theme mode migration ───────────────────────────────────────────
     String mode;
+    bool   legacyAmoled = false;
     if (j.containsKey('themeMode') && j['themeMode'] != null) {
       mode = j['themeMode'] as String;
-      if (!_validThemeModes.contains(mode)) mode = 'dark';
+      // Migrate legacy 'amoled' themeMode → 'dark' + amoledSurfaces:true
+      if (mode == 'amoled') { mode = 'dark'; legacyAmoled = true; }
+      else if (!_validThemeModes.contains(mode)) mode = 'dark';
     } else {
       mode = (j['darkMode'] as bool? ?? false) ? 'dark' : 'system';
     }
-    if (wasAmoled) mode = 'amoled';
+    if (wasAmoled) mode = 'dark';
+
+    // amoledSurfaces: prefer stored value; fall back to any legacy amoled flag.
+    final amoled = (j['amoledSurfaces'] as bool?) ?? (wasAmoled || legacyAmoled);
+
+    String font = (j['appFont'] as String?) ?? 'default';
+    if (!_validFonts.contains(font)) font = 'default';
 
     return AppSettings(
-      currency:    (j['currency']    as String?) ?? 'EGP',
-      themeSeed:   seed,
-      themeMode:   mode,
-      weekStart:   (j['weekStart']   as String?) ?? 'monday',
-      hideBalance: (j['hideBalance'] as bool?)   ?? false,
-      userName:    (j['userName']    as String?) ?? '',
-      onboarded:   (j['onboarded']   as bool?)   ?? false,
+      currency:       (j['currency']    as String?) ?? 'EGP',
+      themeSeed:      seed,
+      themeMode:      mode,
+      weekStart:      (j['weekStart']   as String?) ?? 'monday',
+      hideBalance:    (j['hideBalance'] as bool?)   ?? false,
+      userName:       (j['userName']    as String?) ?? '',
+      onboarded:      (j['onboarded']   as bool?)   ?? false,
+      appFont:        font,
+      amoledSurfaces: amoled,
     );
   }
 }
 
 class AppProvider extends ChangeNotifier {
   AppSettings settings = AppSettings();
-  List<Account>          accounts     = [];
-  List<AppCategory>      categories   = [];
-  List<AppTransaction>   transactions = [];
-  List<RecurringPayment> recurring    = [];
-  List<WishlistItem>     wishlist     = [];
-  List<LendedMoney>      lended       = [];
-  List<AssetItem>        assets       = [];
+  List<Account>               accounts     = [];
+  List<AppCategory>           categories   = [];
+  List<AppTransaction>        transactions = [];
+  List<RecurringPayment>      recurring    = [];
+  List<WishlistItem>          wishlist     = [];
+  List<LendedMoney>           lended       = [];
+  List<AssetItem>             assets       = [];
+  List<Budget>                budgets      = [];
 
   // ── Exchange rates ────────────────────────────────────────────────────
   Map<String, double> exchangeRates = {};
   bool ratesLoaded    = false;
   bool ratesFetching  = false;
   DateTime? ratesLastFetched;
+
+  // ── Recurring history (lazy cache) ────────────────────────────────────
+  final Map<String, List<RecurringHistoryEntry>> _historyCache = {};
 
   final _erService = ExchangeRateService();
   final _notif     = NotificationService();
@@ -113,6 +136,7 @@ class AppProvider extends ChangeNotifier {
     wishlist     = await DBHelper.getWishlist();
     lended       = await DBHelper.getLended();
     assets       = await DBHelper.getAssets();
+    budgets      = await DBHelper.getBudgets();
     _loaded = true;
     notifyListeners();
 
@@ -123,43 +147,78 @@ class AppProvider extends ChangeNotifier {
     ratesFetching = true;
     notifyListeners();
 
-    Map<String, double> rates;
     if (forceNetwork) {
-      rates = await _erService.forceRefresh() ?? exchangeRates;
+      // Full blocking refresh — fetch main rates + gold, then update UI once.
+      final fresh = await _erService.forceRefresh();
+      Map<String, double> rates = fresh ?? exchangeRates;
+      final hasXau = rates.containsKey('XAU') && (rates['XAU'] ?? 0) > 0;
+      if (!hasXau) {
+        final xauRate = await _erService.fetchGoldRate();
+        if (xauRate != null) {
+          rates = Map.from(rates)..['XAU'] = xauRate;
+          await _erService.patchCachedXau(xauRate);
+        }
+      }
+      exchangeRates    = rates;
+      ratesLoaded      = true;
+      ratesFetching    = false;
+      ratesLastFetched = await _erService.lastFetchedAt();
+      notifyListeners();
+      await _refreshGoldBalances();
     } else {
-      rates = await _erService.getRates();
-    }
+      // 1. Serve cached rates immediately so the UI is not blocked.
+      final cached = await _erService.getCached();
+      if (cached != null && cached.isNotEmpty) {
+        var rates = cached;
+        final hasXauCached = rates.containsKey('XAU') && (rates['XAU'] ?? 0) > 0;
+        if (!hasXauCached) {
+          final xauRate = await _erService.fetchGoldRate();
+          if (xauRate != null) {
+            rates = Map.from(rates)..['XAU'] = xauRate;
+            await _erService.patchCachedXau(xauRate);
+          }
+        }
+        exchangeRates    = rates;
+        ratesLoaded      = true;
+        ratesFetching    = false;
+        ratesLastFetched = await _erService.lastFetchedAt();
+        notifyListeners();
+        await _refreshGoldBalances();
+      }
 
-    // open.er-api.com free tier does not return XAU.
-    // If it's missing (first launch, old cache, or API gap), fetch gold
-    // price synchronously now so the UI gets a complete rates map.
-    final hasXau = rates.containsKey('XAU') && (rates['XAU'] ?? 0) > 0;
-    if (!hasXau) {
-      final xauRate = await _erService.fetchGoldRate();
-      if (xauRate != null) {
-        rates = Map.from(rates)..['XAU'] = xauRate;
-        // Persist so the next cache hit already has XAU.
-        await _erService.patchCachedXau(xauRate);
+      // 2. If cache is stale (or empty), fetch fresh in the background and
+      //    update the provider when done — this is what was missing before.
+      final isStale = !(await _erService.isFresh());
+      if (isStale) {
+        // Re-set fetching flag so UI shows spinner during background fetch.
+        ratesFetching = true;
+        notifyListeners();
+        final fresh = await _erService.forceRefresh();
+        if (fresh != null && fresh.isNotEmpty) {
+          var rates = fresh;
+          final hasXau = rates.containsKey('XAU') && (rates['XAU'] ?? 0) > 0;
+          if (!hasXau) {
+            final xauRate = await _erService.fetchGoldRate();
+            if (xauRate != null) {
+              rates = Map.from(rates)..['XAU'] = xauRate;
+              await _erService.patchCachedXau(xauRate);
+            }
+          }
+          exchangeRates    = rates;
+          ratesLoaded      = true;
+          ratesLastFetched = await _erService.lastFetchedAt();
+        }
+        ratesFetching = false;
+        notifyListeners();
+        await _refreshGoldBalances();
       }
     }
-
-    exchangeRates    = rates;
-    ratesLoaded      = true;
-    ratesFetching    = false;
-    ratesLastFetched = await _erService.lastFetchedAt();
-    notifyListeners();
-
-    // Recalculate gold account balances with the freshly loaded rates.
-    await _refreshGoldBalances();
   }
 
   Future<void> refreshRates() => _loadRates(forceNetwork: true);
 
-  /// Recomputes the balance of every gold account from current exchange rates
-  /// and persists any changes. Does nothing when rates are unavailable.
   Future<void> _refreshGoldBalances() async {
     if (exchangeRates.isEmpty) return;
-    // XAU must be present in the rates map (open.er-api.com includes it).
     if (!exchangeRates.containsKey('XAU')) return;
 
     bool changed = false;
@@ -170,14 +229,11 @@ class AppProvider extends ChangeNotifier {
       final karat = acc.goldKarat;
       if (grams == null || grams <= 0 || karat == null) continue;
 
-      // Convert weight to troy ounces of pure gold, then to the account currency.
-      // 1 troy oz = 31.1035 g; XAU = 1 troy oz of gold.
       final xauAmount = grams * (karat / 24) / 31.1035;
       final newBalance =
           _erService.convert(xauAmount, 'XAU', acc.currency, exchangeRates)
           ?? acc.balance;
 
-      // Skip if the change is negligible (avoid unnecessary DB writes).
       if ((newBalance - acc.balance).abs() < 0.001) continue;
 
       final updated = acc.copyWith(balance: newBalance);
@@ -196,12 +252,14 @@ class AppProvider extends ChangeNotifier {
 
   void updateSetting(String key, dynamic value) {
     switch (key) {
-      case 'currency':    settings.currency    = value as String; break;
-      case 'themeSeed':   settings.themeSeed   = value as String; break;
-      case 'themeMode':   settings.themeMode   = value as String; break;
-      case 'weekStart':   settings.weekStart   = value as String; break;
-      case 'hideBalance': settings.hideBalance = value as bool;   break;
-      case 'userName':    settings.userName    = value as String; break;
+      case 'currency':       settings.currency       = value as String; break;
+      case 'themeSeed':      settings.themeSeed      = value as String; break;
+      case 'themeMode':      settings.themeMode      = value as String; break;
+      case 'weekStart':      settings.weekStart      = value as String; break;
+      case 'hideBalance':    settings.hideBalance    = value as bool;   break;
+      case 'userName':       settings.userName       = value as String; break;
+      case 'appFont':        settings.appFont        = value as String; break;
+      case 'amoledSurfaces': settings.amoledSurfaces = value as bool;  break;
     }
     _saveSettings();
   }
@@ -231,8 +289,6 @@ class AppProvider extends ChangeNotifier {
                 absBalance);
       });
 
-  /// Sum of ALL accounts including those marked "exclude from total".
-  /// Used by the Accounts tab so nothing is hidden there.
   double get totalBalanceAll => accounts
       .fold(0.0, (sum, a) {
         final absBalance = a.balance.abs();
@@ -254,8 +310,6 @@ class AppProvider extends ChangeNotifier {
         amount;
   }
 
-  /// Convert [amount] between any two currencies using exchange rates.
-  /// Returns null when rates are unavailable.
   double? convertBetween(double amount, String from, String to) {
     if (from == to) return amount;
     if (exchangeRates.isEmpty) return null;
@@ -269,23 +323,16 @@ class AppProvider extends ChangeNotifier {
       exchangeRates.containsKey(account.currency) &&
       exchangeRates.containsKey(settings.currency);
 
-  /// True once XAU is present in the loaded rates and gold value
-  /// calculations will succeed.
   bool get goldRatesAvailable =>
       ratesLoaded &&
       exchangeRates.containsKey('XAU') &&
       (exchangeRates['XAU'] ?? 0) > 0;
 
-  /// Returns the current gold price per gram (24k) in [currency],
-  /// or null when XAU rates are not loaded.
   double? goldPricePerGram(String currency) {
     if (exchangeRates.isEmpty || !exchangeRates.containsKey('XAU')) return null;
-    // 1 XAU = 1 troy oz = 31.1035 g of pure (24k) gold
     return _erService.convert(1 / 31.1035, 'XAU', currency, exchangeRates);
   }
 
-  /// Computes the current market value for [grams] of gold at [karat] purity
-  /// in [currency]. Returns null when rates are unavailable.
   double? computeGoldValue({
     required double grams,
     required int karat,
@@ -296,9 +343,9 @@ class AppProvider extends ChangeNotifier {
     return _erService.convert(xauAmount, 'XAU', currency, exchangeRates);
   }
 
-  Account?        accountById(String id)  =>
+  Account?     accountById(String id)  =>
       accounts.where((a) => a.id == id).firstOrNull;
-  AppCategory?    categoryById(String id) =>
+  AppCategory? categoryById(String id) =>
       categories.where((c) => c.id == id).firstOrNull;
 
   // ── Accounts ─────────────────────────────────────────────────────────
@@ -324,8 +371,6 @@ class AppProvider extends ChangeNotifier {
   Future<void> _updateAccountBalance(String id, double delta) async {
     final acc = accountById(id);
     if (acc == null) return;
-    // Never manually update the balance of a gold account; it is always
-    // derived from the gold price.  Silently skip any delta attempts.
     if (acc.isGold) return;
     await DBHelper.updateAccount(acc.copyWith(balance: acc.balance + delta));
     accounts = await DBHelper.getAccounts();
@@ -464,6 +509,8 @@ class AppProvider extends ChangeNotifier {
   Future<void> deleteRecurring(String id) async {
     await _notif.cancelReminder(id);
     await DBHelper.deleteRecurring(id);
+    await DBHelper.deleteRecurringHistoryFor(id);
+    _historyCache.remove(id);
     recurring = await DBHelper.getRecurring();
     notifyListeners();
   }
@@ -476,6 +523,8 @@ class AppProvider extends ChangeNotifier {
       date: DateTime.now(),
     );
     await addTransaction(t);
+    await _recordHistory(r, 'paid');
+
     final updated = RecurringPayment(
       id: r.id, name: r.name, accountId: r.accountId,
       categoryId: r.categoryId, amount: r.amount,
@@ -495,6 +544,8 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> skipNextRecurring(RecurringPayment r) async {
+    await _recordHistory(r, 'skipped');
+
     final updated = RecurringPayment(
       id: r.id, name: r.name, accountId: r.accountId,
       categoryId: r.categoryId, amount: r.amount,
@@ -511,6 +562,33 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
     await _notif.cancelReminder(r.id);
     await _notif.scheduleReminder(updated, settings.currency);
+  }
+
+  // ── Recurring History ─────────────────────────────────────────────────
+
+  Future<void> _recordHistory(RecurringPayment r, String action) async {
+    final acct = accountById(r.accountId);
+    final entry = RecurringHistoryEntry(
+      id: newId(),
+      recurringId: r.id,
+      action: action,
+      date: DateTime.now(),
+      amount: r.amount,
+      currency: acct?.currency ?? settings.currency,
+    );
+    await DBHelper.insertRecurringHistory(entry);
+    _historyCache.remove(r.id); // invalidate cache for this payment
+  }
+
+  /// Loads history for [recurringId] from DB, caching in memory.
+  /// Returns immediately if already cached.
+  Future<List<RecurringHistoryEntry>> getHistoryFor(String recurringId) async {
+    if (_historyCache.containsKey(recurringId)) {
+      return _historyCache[recurringId]!;
+    }
+    final entries = await DBHelper.getRecurringHistory(recurringId);
+    _historyCache[recurringId] = entries;
+    return entries;
   }
 
   // ── Wishlist ──────────────────────────────────────────────────────────
@@ -542,6 +620,9 @@ class AppProvider extends ChangeNotifier {
     lended   = await DBHelper.getLended();
     accounts = await DBHelper.getAccounts();
     notifyListeners();
+    if (l.reminderEnabled && l.dueDate != null) {
+      await _notif.scheduleLendedReminder(l, settings.currency);
+    }
   }
 
   Future<void> updateLended(LendedMoney updated, LendedMoney original) async {
@@ -557,6 +638,11 @@ class AppProvider extends ChangeNotifier {
     lended   = await DBHelper.getLended();
     accounts = await DBHelper.getAccounts();
     notifyListeners();
+    // Always cancel old reminder, then reschedule if still enabled
+    await _notif.cancelLendedReminder(original.id);
+    if (updated.reminderEnabled && updated.dueDate != null && !updated.isSettled) {
+      await _notif.scheduleLendedReminder(updated, settings.currency);
+    }
   }
 
   Future<void> settleLended(LendedMoney l) async {
@@ -569,9 +655,11 @@ class AppProvider extends ChangeNotifier {
     lended   = await DBHelper.getLended();
     accounts = await DBHelper.getAccounts();
     notifyListeners();
+    await _notif.cancelLendedReminder(l.id); // no reminder needed after settlement
   }
 
   Future<void> deleteLended(String id) async {
+    await _notif.cancelLendedReminder(id);
     await DBHelper.deleteLended(id);
     lended = await DBHelper.getLended();
     notifyListeners();
@@ -604,6 +692,63 @@ class AppProvider extends ChangeNotifier {
         (_erService.convert(a.value, a.currency, settings.currency, exchangeRates)
             ?? a.value);
   });
+
+  // ── Budgets ───────────────────────────────────────────────────────────
+  Future<void> addBudget(Budget b) async {
+    await DBHelper.insertBudget(b);
+    budgets = await DBHelper.getBudgets();
+    notifyListeners();
+  }
+
+  Future<void> updateBudget(Budget b) async {
+    await DBHelper.updateBudget(b);
+    budgets = await DBHelper.getBudgets();
+    notifyListeners();
+  }
+
+  Future<void> deleteBudget(String id) async {
+    await DBHelper.deleteBudget(id);
+    budgets = await DBHelper.getBudgets();
+    notifyListeners();
+  }
+
+  Budget? budgetForCategory(String categoryId) =>
+      budgets.where((b) => b.categoryId == categoryId).firstOrNull;
+
+  /// Sum of all expenses for [budget]'s category in the current period,
+  /// converted to the main currency.
+  double budgetSpent(Budget budget) {
+    final now = DateTime.now();
+    final DateTime periodStart;
+    if (budget.period == 'weekly') {
+      final dow = now.weekday; // 1=Mon, 7=Sun
+      final offset = settings.weekStart == 'monday' ? (dow - 1) : (dow % 7);
+      periodStart = DateTime(now.year, now.month, now.day - offset);
+    } else {
+      periodStart = DateTime(now.year, now.month, 1);
+    }
+
+    return transactions
+        .where((t) =>
+            t.type == 'expense' &&
+            t.categoryId == budget.categoryId &&
+            !t.date.isBefore(periodStart))
+        .fold(0.0, (sum, t) {
+      final acct = accountById(t.accountId);
+      final txCur = t.currency.isNotEmpty
+          ? t.currency
+          : (acct?.currency ?? settings.currency);
+      return sum + convertToMain(t.amount, txCur);
+    });
+  }
+
+  double budgetRemaining(Budget b) =>
+      (b.amount - budgetSpent(b)).clamp(0.0, double.infinity);
+
+  double budgetProgress(Budget b) =>
+      (budgetSpent(b) / b.amount).clamp(0.0, 1.0);
+
+  bool budgetExceeded(Budget b) => budgetSpent(b) > b.amount;
 
   // ── Export ────────────────────────────────────────────────────────────
   Future<String?> exportTransactionsExcel({
@@ -709,7 +854,8 @@ class AppProvider extends ChangeNotifier {
 
     const knownKeys = {
       'accounts', 'categories', 'transactions', 'recurring_payments',
-      'wishlist', 'lended_money', 'assets', 'version', 'settings',
+      'wishlist', 'lended_money', 'assets', 'budgets',
+      'recurring_history', 'version', 'settings',
     };
     if (!data.keys.any(knownKeys.contains)) {
       throw const FormatException(
@@ -724,8 +870,9 @@ class AppProvider extends ChangeNotifier {
       await _saveSettings();
     }
 
+    _historyCache.clear();
     await load();
-    await _notif.rescheduleAll(recurring, settings.currency);
+    await _notif.rescheduleAll(recurring, settings.currency, lended: lended);
 
     return (data['_originalVersion'] as int?) ?? (data['version'] as int?) ?? 1;
   }

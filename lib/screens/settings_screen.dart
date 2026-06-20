@@ -38,32 +38,44 @@ class SettingsScreen extends StatelessWidget {
                       fontWeight: FontWeight.w700, fontSize: 14)),
                 ]),
                 const SizedBox(height: 10),
-                GridView.count(
-                  crossAxisCount: 2, shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisSpacing: 8, mainAxisSpacing: 8,
-                  childAspectRatio: 3.2,
-                  children: [
-                    _ThemeCard(icon: Icons.brightness_auto_outlined,
-                        label: 'Follow System', value: 'system',
-                        selected: s.themeMode, cs: cs,
-                        onTap: () => app.updateSetting('themeMode', 'system')),
-                    _ThemeCard(icon: Icons.light_mode_outlined,
-                        label: 'Light Mode', value: 'light',
-                        selected: s.themeMode, cs: cs,
-                        onTap: () => app.updateSetting('themeMode', 'light')),
-                    _ThemeCard(icon: Icons.dark_mode_outlined,
-                        label: 'Dark Mode', value: 'dark',
-                        selected: s.themeMode, cs: cs,
-                        onTap: () => app.updateSetting('themeMode', 'dark')),
-                    _ThemeCard(icon: Icons.contrast_outlined,
-                        label: 'Black AMOLED', value: 'amoled',
-                        selected: s.themeMode, cs: cs,
-                        onTap: () => app.updateSetting('themeMode', 'amoled')),
-                  ],
-                ),
+                // 3-option row: System | Light | Dark
+                Row(children: [
+                  Expanded(child: _ThemeCard(
+                    icon: Icons.brightness_auto_outlined,
+                    label: 'System', value: 'system',
+                    selected: s.themeMode, cs: cs,
+                    onTap: () => app.updateSetting('themeMode', 'system'))),
+                  const SizedBox(width: 8),
+                  Expanded(child: _ThemeCard(
+                    icon: Icons.light_mode_outlined,
+                    label: 'Light', value: 'light',
+                    selected: s.themeMode, cs: cs,
+                    onTap: () => app.updateSetting('themeMode', 'light'))),
+                  const SizedBox(width: 8),
+                  Expanded(child: _ThemeCard(
+                    icon: Icons.dark_mode_outlined,
+                    label: 'Dark', value: 'dark',
+                    selected: s.themeMode, cs: cs,
+                    onTap: () => app.updateSetting('themeMode', 'dark'))),
+                ]),
               ]),
             ),
+
+            // AMOLED toggle — hidden in light-only mode
+            if (s.themeMode != 'light') ...[
+              const Divider(height: 1, indent: 16, endIndent: 16),
+              SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                secondary: Icon(Icons.contrast_outlined, color: cs.primary, size: 20),
+                title: const Text('Pure Black (AMOLED)',
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                subtitle: Text('Forces black backgrounds in dark mode',
+                    style: TextStyle(fontSize: 12,
+                        color: cs.onSurface.withValues(alpha: 0.55))),
+                value: s.amoledSurfaces,
+                onChanged: (v) => app.updateSetting('amoledSurfaces', v),
+              ),
+            ],
 
             const Divider(height: 1, indent: 16, endIndent: 16),
 
@@ -89,7 +101,7 @@ class SettingsScreen extends StatelessWidget {
                       return GestureDetector(
                         onTap: () => app.updateSetting('themeSeed', e.key),
                         child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 140),
+                          duration: const Duration(milliseconds: 100),
                           width: 32, height: 32,
                           decoration: BoxDecoration(
                             color: e.value, shape: BoxShape.circle,
@@ -106,6 +118,54 @@ class SettingsScreen extends StatelessWidget {
               ]),
             ),
           ])),
+
+          // ── App Font ──────────────────────────────────────────────────
+          const SectionHeader(title: 'App Font'),
+          Card(margin: const EdgeInsets.only(bottom: 8), child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [
+                Icon(Icons.text_fields_rounded, color: cs.primary, size: 20),
+                const SizedBox(width: 10),
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  const Text('App Font', style: TextStyle(
+                      fontWeight: FontWeight.w700, fontSize: 14)),
+                  Text(kFonts[s.appFont] ?? 'System Default',
+                      style: TextStyle(fontSize: 12,
+                          color: cs.onSurface.withValues(alpha: 0.55))),
+                ]),
+              ]),
+              const SizedBox(height: 12),
+              Wrap(spacing: 8, runSpacing: 8,
+                  children: kFonts.entries.map((e) {
+                    final sel = s.appFont == e.key;
+                    return GestureDetector(
+                      onTap: () => app.updateSetting('appFont', e.key),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 100),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: sel
+                              ? cs.primary
+                              : cs.surfaceContainerHigh,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(e.value,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: sel
+                                  ? FontWeight.w700
+                                  : FontWeight.w400,
+                              color: sel
+                                  ? cs.onPrimary
+                                  : cs.onSurface,
+                            )),
+                      ),
+                    );
+                  }).toList()),
+            ]),
+          )),
 
           // ── Currency ──────────────────────────────────────────────────
           const SectionHeader(title: 'Currency'),
@@ -185,7 +245,7 @@ class SettingsScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(color: cs.primaryContainer,
                     borderRadius: BorderRadius.circular(20)),
-                child: Text('v1.0.4', style: TextStyle(
+                child: Text('v1.0.5', style: TextStyle(
                     fontSize: 12, fontWeight: FontWeight.w700, color: cs.primary)),
               ),
             ),
@@ -269,15 +329,21 @@ class _ThemeCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 140),
+        duration: const Duration(milliseconds: 150),
+        height: 68,
         decoration: BoxDecoration(
           color: sel ? cs.primary : cs.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(12)),
-        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Icon(icon, size: 16,
-              color: sel ? Colors.white : cs.onSurface.withValues(alpha: 0.7)),
-          const SizedBox(width: 6),
-          Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: sel ? cs.primary : cs.outlineVariant,
+            width: sel ? 0 : 1,
+          ),
+        ),
+        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          Icon(icon, size: 22,
+              color: sel ? Colors.white : cs.onSurface.withValues(alpha: 0.65)),
+          const SizedBox(height: 5),
+          Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700,
               color: sel ? Colors.white : cs.onSurface)),
         ]),
       ),

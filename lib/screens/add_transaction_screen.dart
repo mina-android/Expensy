@@ -149,7 +149,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             Expanded(child: GestureDetector(
               onTap: () => _setType('expense'),
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 140),
+                duration: const Duration(milliseconds: 100),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
                   color: _type == 'expense'
@@ -165,7 +165,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             Expanded(child: GestureDetector(
               onTap: () => _setType('income'),
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 140),
+                duration: const Duration(milliseconds: 100),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
                   color: _type == 'income'

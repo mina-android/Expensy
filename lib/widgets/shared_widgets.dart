@@ -54,7 +54,16 @@ class CategoryDot extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs    = Theme.of(context).colorScheme;
     final color = category != null ? Color(category!.colorValue) : cs.primary;
-    final icon  = _catIcon(category?.name ?? '');
+    // iconCodePoint actually stores a 1-based index into kCategoryIconOptions.
+    // 0 means "auto" (use name heuristic). This avoids non-constant IconData()
+    // calls that break Flutter's icon tree-shaking in release builds.
+    final IconData icon;
+    final storedIndex = category?.iconCodePoint ?? 0;
+    if (storedIndex > 0 && storedIndex <= kCategoryIconOptions.length) {
+      icon = kCategoryIconOptions[storedIndex - 1].icon; // const IconData ✓
+    } else {
+      icon = _catIcon(category?.name ?? '');
+    }
     return Container(
       width: size, height: size,
       decoration: BoxDecoration(
@@ -184,7 +193,7 @@ class AccountCardPicker extends StatelessWidget {
           return GestureDetector(
             onTap: () => onSelected(acc.id),
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 140),
+              duration: const Duration(milliseconds: 100),
               width: 125,
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
@@ -230,7 +239,7 @@ class _NoneCard extends StatelessWidget {
   Widget build(BuildContext context) => GestureDetector(
         onTap: onTap,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 140),
+          duration: const Duration(milliseconds: 100),
           width: 90,
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           decoration: BoxDecoration(
@@ -271,7 +280,7 @@ class CategoryChipPicker extends StatelessWidget {
           return GestureDetector(
             onTap: () => onSelected(cat.id),
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 140),
+              duration: const Duration(milliseconds: 100),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
               decoration: BoxDecoration(
                 color: sel ? color : color.withValues(alpha: 0.10),
@@ -295,6 +304,87 @@ class CategoryChipPicker extends StatelessWidget {
         }).toList(),
       );
 }
+
+// ── Category icon catalogue ───────────────────────────────────────────────────
+//
+// IMPORTANT: iconCodePoint in AppCategory stores a 1-BASED INDEX into this
+// list (0 = auto / name-based heuristic). Never call IconData(variable, ...)
+// at runtime — that breaks Flutter's release-mode icon tree-shaking.
+// Always resolve via kCategoryIconOptions[index - 1].icon.
+
+class CategoryIconOption {
+  final IconData icon;
+  final String   label;
+  const CategoryIconOption(this.icon, this.label);
+}
+
+const List<CategoryIconOption> kCategoryIconOptions = [
+  // ── Finance ──────────────────────────────────────────────────────────
+  CategoryIconOption(Icons.account_balance_outlined,       'Bank'),
+  CategoryIconOption(Icons.payments_outlined,              'Cash'),
+  CategoryIconOption(Icons.credit_card_outlined,           'Card'),
+  CategoryIconOption(Icons.savings_outlined,               'Savings'),
+  CategoryIconOption(Icons.trending_up_outlined,           'Investment'),
+  CategoryIconOption(Icons.currency_exchange_rounded,      'Exchange'),
+  CategoryIconOption(Icons.wallet_outlined,                'Wallet'),
+  CategoryIconOption(Icons.monetization_on_outlined,       'Money'),
+  CategoryIconOption(Icons.receipt_outlined,               'Receipt'),
+  CategoryIconOption(Icons.receipt_long_outlined,          'Bill'),
+  CategoryIconOption(Icons.attach_money_rounded,           'Dollar'),
+  CategoryIconOption(Icons.card_giftcard_outlined,         'Gift'),
+  // ── Food & Home ──────────────────────────────────────────────────────
+  CategoryIconOption(Icons.restaurant_outlined,            'Food'),
+  CategoryIconOption(Icons.local_cafe_outlined,            'Coffee'),
+  CategoryIconOption(Icons.fastfood_outlined,              'Fast Food'),
+  CategoryIconOption(Icons.local_grocery_store_outlined,   'Grocery'),
+  CategoryIconOption(Icons.home_outlined,                  'Home'),
+  CategoryIconOption(Icons.house_outlined,                 'House'),
+  CategoryIconOption(Icons.electrical_services_outlined,   'Electricity'),
+  CategoryIconOption(Icons.water_drop_outlined,            'Water'),
+  CategoryIconOption(Icons.wifi_outlined,                  'Internet'),
+  CategoryIconOption(Icons.local_gas_station_outlined,     'Gas'),
+  // ── Transport ─────────────────────────────────────────────────────────
+  CategoryIconOption(Icons.directions_car_outlined,        'Car'),
+  CategoryIconOption(Icons.directions_bus_outlined,        'Bus'),
+  CategoryIconOption(Icons.flight_outlined,                'Flight'),
+  CategoryIconOption(Icons.local_taxi_outlined,            'Taxi'),
+  CategoryIconOption(Icons.pedal_bike_outlined,            'Bike'),
+  CategoryIconOption(Icons.train_outlined,                 'Train'),
+  // ── Shopping ──────────────────────────────────────────────────────────
+  CategoryIconOption(Icons.shopping_bag_outlined,          'Shopping'),
+  CategoryIconOption(Icons.shopping_cart_outlined,         'Cart'),
+  CategoryIconOption(Icons.checkroom_outlined,             'Clothes'),
+  CategoryIconOption(Icons.devices_outlined,               'Electronics'),
+  // ── Health ────────────────────────────────────────────────────────────
+  CategoryIconOption(Icons.favorite_outline,               'Health'),
+  CategoryIconOption(Icons.medical_services_outlined,      'Medical'),
+  CategoryIconOption(Icons.local_hospital_outlined,        'Hospital'),
+  CategoryIconOption(Icons.fitness_center_outlined,        'Gym'),
+  CategoryIconOption(Icons.spa_outlined,                   'Spa'),
+  // ── Entertainment & Education ─────────────────────────────────────────
+  CategoryIconOption(Icons.movie_outlined,                 'Movie'),
+  CategoryIconOption(Icons.sports_esports_outlined,        'Gaming'),
+  CategoryIconOption(Icons.music_note_outlined,            'Music'),
+  CategoryIconOption(Icons.book_outlined,                  'Book'),
+  CategoryIconOption(Icons.school_outlined,                'School'),
+  CategoryIconOption(Icons.sports_soccer_outlined,         'Sports'),
+  CategoryIconOption(Icons.travel_explore_outlined,        'Travel'),
+  // ── Work & Business ───────────────────────────────────────────────────
+  CategoryIconOption(Icons.work_outline,                   'Work'),
+  CategoryIconOption(Icons.business_outlined,              'Business'),
+  CategoryIconOption(Icons.laptop_outlined,                'Laptop'),
+  CategoryIconOption(Icons.people_outline,                 'People'),
+  CategoryIconOption(Icons.handshake_outlined,             'Handshake'),
+  // ── Misc ──────────────────────────────────────────────────────────────
+  CategoryIconOption(Icons.label_outline_rounded,          'Label'),
+  CategoryIconOption(Icons.star_outline_rounded,           'Star'),
+  CategoryIconOption(Icons.emoji_events_outlined,          'Trophy'),
+  CategoryIconOption(Icons.category_outlined,              'Category'),
+  CategoryIconOption(Icons.pets_outlined,                  'Pets'),
+  CategoryIconOption(Icons.child_care_outlined,            'Child'),
+  CategoryIconOption(Icons.phone_outlined,                 'Phone'),
+  CategoryIconOption(Icons.subscriptions_outlined,         'Subscription'),
+];
 
 // ── Searchable currency dialog ────────────────────────────────────────────────
 Future<String?> showCurrencyPicker(BuildContext context,

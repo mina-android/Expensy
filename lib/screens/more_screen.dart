@@ -2,7 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
+import '../theme/app_theme.dart';
 import 'statistics_screen.dart';
+import 'insights_screen.dart';
+import 'currency_converter_screen.dart';
 import 'wishlist_screen.dart';
 import 'lended_screen.dart';
 import 'assets_screen.dart';
@@ -23,6 +26,13 @@ class MoreScreen extends StatelessWidget {
       const _Item(icon: Icons.bar_chart_outlined, label: 'Statistics',
           sub: 'Charts & monthly summary', color: Color(0xFF1565C0),
           screen: StatisticsScreen()),
+      const _Item(icon: Icons.insights_outlined, label: 'Insights',
+          sub: 'Trends, averages & category analysis', color: Color(0xFF00838F),
+          screen: InsightsScreen()),
+
+      const _Item(icon: Icons.currency_exchange_rounded, label: 'Currency Converter',
+          sub: 'Convert between currencies instantly', color: Color(0xFF6750A4),
+          screen: CurrencyConverterScreen()),
       _Item(icon: Icons.star_outline_rounded, label: 'Wishlist',
           sub: '${app.wishlist.where((w) => !w.isPurchased).length} items',
           color: const Color(0xFF7D5260), screen: const WishlistScreen()),
@@ -73,7 +83,7 @@ class MoreScreen extends StatelessWidget {
                     color: cs.onSurface.withValues(alpha: 0.55))),
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => Navigator.push(context,
-                MaterialPageRoute(builder: (_) => item.screen)),
+                ExpensyRoute(builder: (_) => item.screen)),
           ));
         },
       ),

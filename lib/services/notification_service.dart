@@ -141,14 +141,86 @@ class NotificationService {
   /// Cancel all pending notifications and reschedule only the enabled ones.
   Future<void> rescheduleAll(
     List<RecurringPayment> payments,
-    String mainCurrency,
-  ) async {
+    String mainCurrency, {
+    List<LendedMoney> lended = const [],
+  }) async {
     await _ensureInit();
     await _plugin.cancelAll();
     for (final r in payments.where((p) => p.reminderEnabled)) {
       await scheduleReminder(r, mainCurrency);
     }
+    for (final l in lended.where((l) => l.reminderEnabled && !l.isSettled && l.dueDate != null)) {
+      await scheduleLendedReminder(l, mainCurrency);
+    }
   }
+
+  // ── Lended Money Reminders ───────────────────────────────────────────────
+
+  static const _lendedChannelId   = 'expensy_lended';
+  static const _lendedChannelName = 'Lent & Borrowed Reminders';
+  static const _lendedChannelDesc = 'Reminders for lent and borrowed money due dates';
+
+  /// Schedule a reminder for a lended/borrowed record on its due date.
+  /// Fires at [l.reminderTime] on [l.dueDate]. Does nothing when there is
+  /// no due date, reminder is disabled, or the record is already settled.
+  Future<void> scheduleLendedReminder(
+    LendedMoney l,
+    String mainCurrency,
+  ) async {
+    if (!l.reminderEnabled || l.isSettled || l.dueDate == null) return;
+    await _ensureInit();
+
+    final parts  = l.reminderTime.split(':');
+    final hour   = int.tryParse(parts[0]) ?? 9;
+    final minute = parts.length > 1 ? (int.tryParse(parts[1]) ?? 0) : 0;
+
+    final emoji  = l.type == 'lent' ? '\u{1F4B8}' : '\u{1F4B0}';
+    final amount = formatAmount(l.amount, mainCurrency);
+
+    final tzDate = _toUtcTZDate(l.dueDate!, hour, minute);
+    if (tzDate == null) return; // due date already passed
+
+    final body = l.type == 'lent'
+        ? '$amount you lent to ${l.personName} is due today'
+        : '$amount you borrowed from ${l.personName} is due today';
+
+    final details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        _lendedChannelId,
+        _lendedChannelName,
+        channelDescription: _lendedChannelDesc,
+        importance: Importance.high,
+        priority: Priority.high,
+        category: AndroidNotificationCategory.reminder,
+        playSound: true,
+        enableVibration: true,
+        styleInformation: const BigTextStyleInformation(''),
+      ),
+    );
+
+    await _plugin.zonedSchedule(
+      _lendedNotifId(l.id),
+      '$emoji Due: ${l.personName}',
+      body,
+      tzDate,
+      details,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      payload: l.id,
+    );
+  }
+
+  /// Cancel the lended reminder for [lendedId].
+  Future<void> cancelLendedReminder(String lendedId) async {
+    await _ensureInit();
+    await _plugin.cancel(_lendedNotifId(lendedId));
+  }
+
+  /// Stable positive int ID for lended notifications.
+  /// Uses a 'lended_' prefix to guarantee it never collides with recurring IDs.
+  int _lendedNotifId(String lendedId) =>
+      'lended_$lendedId'.hashCode & 0x7FFFFFFF;
 
   // ── Helpers ─────────────────────────────────────────────────────────────
 

@@ -115,7 +115,7 @@ class _TransferScreenState extends State<TransferScreen> {
                     _amtCtrl.clear();
                   }),
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 140),
+                    duration: const Duration(milliseconds: 100),
                     width: 125,
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                     decoration: BoxDecoration(

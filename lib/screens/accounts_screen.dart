@@ -537,7 +537,7 @@ class _AccountSheetState extends State<_AccountSheet> {
                 }
               }),
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 140),
+                duration: const Duration(milliseconds: 100),
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
                 decoration: BoxDecoration(
                   color: sel
@@ -599,7 +599,7 @@ class _AccountSheetState extends State<_AccountSheet> {
                 return GestureDetector(
                   onTap: () => setState(() => _goldKarat = k),
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 140),
+                    duration: const Duration(milliseconds: 100),
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
                     decoration: BoxDecoration(
                       color: sel
@@ -697,7 +697,7 @@ class _AccountSheetState extends State<_AccountSheet> {
               child: Row(children: _kColors.map((col) => GestureDetector(
                 onTap: () => setState(() => _color = col),
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 80),
+                  duration: const Duration(milliseconds: 60),
                   width: 34, height: 34,
                   margin: const EdgeInsets.only(right: 8),
                   decoration: BoxDecoration(

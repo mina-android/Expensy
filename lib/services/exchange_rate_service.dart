@@ -34,18 +34,11 @@ class ExchangeRateService {
 
   // ── Public API ──────────────────────────────────────────────────────────
 
-  /// Returns the cached rates map immediately (may be stale or empty).
-  /// If the cache is older than 24 h, kicks off a background refresh.
-  ///
-  /// Returns an empty map when no cache exists yet (first launch / offline).
+  /// Returns the cached rates map (may be stale or empty).
+  /// AppProvider now controls when fresh fetches happen; this is kept
+  /// for backward compatibility with any direct callers.
   Future<Map<String, double>> getRates() async {
-    final cached = await _loadCached();
-    final fresh  = await _isFresh();
-    if (!fresh) {
-      // Background refresh — not awaited so UI stays responsive.
-      _fetchAndCache();
-    }
-    return cached ?? {};
+    return await _loadCached() ?? {};
   }
 
   /// Explicitly fetches new rates (main + gold) and caches them.
@@ -165,6 +158,14 @@ class ExchangeRateService {
     }
     return null; // both endpoints failed
   }
+
+  /// Returns cached rates from SharedPreferences without triggering a network
+  /// fetch. Used by AppProvider to serve cached data immediately on startup.
+  Future<Map<String, double>?> getCached() => _loadCached();
+
+  /// Returns true when the cache exists and is younger than 24 hours.
+  /// Public so AppProvider can decide whether to trigger a background refresh.
+  Future<bool> isFresh() => _isFresh();
 
   Future<Map<String, double>?> _loadCached() async {
     final prefs = await SharedPreferences.getInstance();

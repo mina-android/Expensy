@@ -208,7 +208,7 @@ class _WishSheetState extends State<_WishSheet> {
               child: GestureDetector(
                 onTap: () => setState(() => _priority = p.$1),
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 140),
+                  duration: const Duration(milliseconds: 100),
                   padding: const EdgeInsets.symmetric(vertical: 9),
                   decoration: BoxDecoration(
                     color: _priority == p.$1

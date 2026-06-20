@@ -5,7 +5,7 @@ import '../models/models.dart';
 
 class DBHelper {
   static Database? _db;
-  static const int _version = 7;
+  static const int _version = 9;
 
   static Future<Database> get database async {
     _db ??= await _open();
@@ -19,32 +19,16 @@ class DBHelper {
   }
 
   static Future<void> _onUpgrade(Database db, int oldV, int newV) async {
-    // v1 → v2
     if (oldV < 2) {
-      try {
-        await db.execute(
-            'ALTER TABLE accounts ADD COLUMN exclude_from_total INTEGER NOT NULL DEFAULT 0');
-      } catch (_) {}
-      try {
-        await db.execute(
-            "ALTER TABLE recurring_payments ADD COLUMN payment_type TEXT NOT NULL DEFAULT 'expense'");
-      } catch (_) {}
+      try { await db.execute('ALTER TABLE accounts ADD COLUMN exclude_from_total INTEGER NOT NULL DEFAULT 0'); } catch (_) {}
+      try { await db.execute("ALTER TABLE recurring_payments ADD COLUMN payment_type TEXT NOT NULL DEFAULT 'expense'"); } catch (_) {}
     }
-    // v2 → v3: add reminder_time column
     if (oldV < 3) {
-      try {
-        await db.execute(
-            "ALTER TABLE recurring_payments ADD COLUMN reminder_time TEXT NOT NULL DEFAULT '09:00'");
-      } catch (_) {}
+      try { await db.execute("ALTER TABLE recurring_payments ADD COLUMN reminder_time TEXT NOT NULL DEFAULT '09:00'"); } catch (_) {}
     }
-    // v3 → v4: add currency column to transactions
     if (oldV < 4) {
-      try {
-        await db.execute(
-            "ALTER TABLE transactions ADD COLUMN currency TEXT NOT NULL DEFAULT ''");
-      } catch (_) {}
+      try { await db.execute("ALTER TABLE transactions ADD COLUMN currency TEXT NOT NULL DEFAULT ''"); } catch (_) {}
     }
-    // v4 → v5: add assets table
     if (oldV < 5) {
       try {
         await db.execute('''
@@ -55,22 +39,53 @@ class DBHelper {
           )''');
       } catch (_) {}
     }
-    // v5 → v6: add gold fields to accounts
     if (oldV < 6) {
+      try { await db.execute('ALTER TABLE accounts ADD COLUMN gold_karat INTEGER'); } catch (_) {}
+      try { await db.execute('ALTER TABLE accounts ADD COLUMN gold_grams REAL'); } catch (_) {}
+    }
+    if (oldV < 7) {
+      try { await db.execute('ALTER TABLE recurring_payments ADD COLUMN early_reminder_enabled INTEGER NOT NULL DEFAULT 0'); } catch (_) {}
+    }
+    if (oldV < 8) {
       try {
-        await db.execute(
-            'ALTER TABLE accounts ADD COLUMN gold_karat INTEGER');
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS budgets (
+            id TEXT PRIMARY KEY,
+            category_id TEXT NOT NULL,
+            amount REAL NOT NULL,
+            period TEXT NOT NULL DEFAULT 'monthly',
+            created_at TEXT NOT NULL
+          )''');
+      } catch (_) {}
+      try {
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS recurring_history (
+            id TEXT PRIMARY KEY,
+            recurring_id TEXT NOT NULL,
+            action TEXT NOT NULL,
+            date TEXT NOT NULL,
+            amount REAL NOT NULL,
+            currency TEXT NOT NULL
+          )''');
       } catch (_) {}
       try {
         await db.execute(
-            'ALTER TABLE accounts ADD COLUMN gold_grams REAL');
+            'CREATE INDEX IF NOT EXISTS idx_rh_recurring_id ON recurring_history(recurring_id)');
       } catch (_) {}
     }
-    // v6 → v7: add early_reminder_enabled to recurring_payments
-    if (oldV < 7) {
+    // v8 → v9: category icon + lended_money reminders
+    if (oldV < 9) {
       try {
         await db.execute(
-            'ALTER TABLE recurring_payments ADD COLUMN early_reminder_enabled INTEGER NOT NULL DEFAULT 0');
+            'ALTER TABLE categories ADD COLUMN icon_code_point INTEGER NOT NULL DEFAULT 0');
+      } catch (_) {}
+      try {
+        await db.execute(
+            'ALTER TABLE lended_money ADD COLUMN reminder_enabled INTEGER NOT NULL DEFAULT 0');
+      } catch (_) {}
+      try {
+        await db.execute(
+            "ALTER TABLE lended_money ADD COLUMN reminder_time TEXT NOT NULL DEFAULT '09:00'");
       } catch (_) {}
     }
   }
@@ -88,7 +103,8 @@ class DBHelper {
     await db.execute('''
       CREATE TABLE categories (
         id TEXT PRIMARY KEY, name TEXT NOT NULL,
-        type TEXT NOT NULL, color_value INTEGER NOT NULL
+        type TEXT NOT NULL, color_value INTEGER NOT NULL,
+        icon_code_point INTEGER NOT NULL DEFAULT 0
       )''');
     await db.execute('''
       CREATE TABLE transactions (
@@ -121,7 +137,9 @@ class DBHelper {
       CREATE TABLE lended_money (
         id TEXT PRIMARY KEY, person_name TEXT NOT NULL, amount REAL NOT NULL,
         type TEXT NOT NULL, account_id TEXT, is_settled INTEGER NOT NULL DEFAULT 0,
-        date TEXT NOT NULL, due_date TEXT, notes TEXT NOT NULL DEFAULT ''
+        date TEXT NOT NULL, due_date TEXT, notes TEXT NOT NULL DEFAULT '',
+        reminder_enabled INTEGER NOT NULL DEFAULT 0,
+        reminder_time TEXT NOT NULL DEFAULT '09:00'
       )''');
     await db.execute('''
       CREATE TABLE assets (
@@ -129,6 +147,25 @@ class DBHelper {
         currency TEXT NOT NULL DEFAULT 'EGP',
         notes TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL
       )''');
+    await db.execute('''
+      CREATE TABLE budgets (
+        id TEXT PRIMARY KEY,
+        category_id TEXT NOT NULL,
+        amount REAL NOT NULL,
+        period TEXT NOT NULL DEFAULT 'monthly',
+        created_at TEXT NOT NULL
+      )''');
+    await db.execute('''
+      CREATE TABLE recurring_history (
+        id TEXT PRIMARY KEY,
+        recurring_id TEXT NOT NULL,
+        action TEXT NOT NULL,
+        date TEXT NOT NULL,
+        amount REAL NOT NULL,
+        currency TEXT NOT NULL
+      )''');
+    await db.execute(
+        'CREATE INDEX idx_rh_recurring_id ON recurring_history(recurring_id)');
 
     await _insertDefaults(db);
   }
@@ -258,6 +295,45 @@ class DBHelper {
   static Future<void> deleteAsset(String id) async =>
       (await database).delete('assets', where: 'id=?', whereArgs: [id]);
 
+  // ── Budgets ───────────────────────────────────────────────────────────
+  static Future<List<Budget>> getBudgets() async {
+    final db = await database;
+    final rows = await db.query('budgets', orderBy: 'created_at ASC');
+    return rows.map(Budget.fromMap).toList();
+  }
+  static Future<void> insertBudget(Budget b) async =>
+      (await database).insert('budgets', b.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace);
+  static Future<void> updateBudget(Budget b) async =>
+      (await database).update('budgets', b.toMap(), where: 'id=?', whereArgs: [b.id]);
+  static Future<void> deleteBudget(String id) async =>
+      (await database).delete('budgets', where: 'id=?', whereArgs: [id]);
+
+  // ── Recurring History ─────────────────────────────────────────────────
+  static Future<List<RecurringHistoryEntry>> getRecurringHistory(
+      String recurringId) async {
+    final db = await database;
+    final rows = await db.query('recurring_history',
+        where: 'recurring_id = ?',
+        whereArgs: [recurringId],
+        orderBy: 'date DESC');
+    return rows.map(RecurringHistoryEntry.fromMap).toList();
+  }
+
+  static Future<List<RecurringHistoryEntry>> getAllRecurringHistory() async {
+    final db = await database;
+    final rows = await db.query('recurring_history', orderBy: 'date DESC');
+    return rows.map(RecurringHistoryEntry.fromMap).toList();
+  }
+
+  static Future<void> insertRecurringHistory(RecurringHistoryEntry e) async =>
+      (await database).insert('recurring_history', e.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace);
+
+  static Future<void> deleteRecurringHistoryFor(String recurringId) async =>
+      (await database).delete('recurring_history',
+          where: 'recurring_id = ?', whereArgs: [recurringId]);
+
   // ── Backup / Restore ──────────────────────────────────────────────────
   static Future<Map<String, dynamic>> exportAll() async {
     final db = await database;
@@ -269,20 +345,21 @@ class DBHelper {
       'wishlist':            await db.query('wishlist'),
       'lended_money':        await db.query('lended_money'),
       'assets':              await db.query('assets'),
+      'budgets':             await db.query('budgets'),
+      'recurring_history':   await db.query('recurring_history'),
       'version':             _version,
     };
   }
 
   static Future<void> importAll(Map<String, dynamic> data) async {
     final db = await database;
-
-    // ── Normalise backup data before touching the DB ─────────────────
     _normaliseBackup(data);
 
     await db.transaction((txn) async {
       for (final table in [
         'accounts', 'categories', 'transactions',
         'recurring_payments', 'wishlist', 'lended_money', 'assets',
+        'budgets', 'recurring_history',
       ]) {
         await txn.delete(table);
         final rows =
@@ -296,35 +373,28 @@ class DBHelper {
     });
   }
 
-  /// Mutates [data] in-place so every row in every table has all columns
-  /// the current schema expects.  Handles every backup version (1 → 6).
   static void _normaliseBackup(Map<String, dynamic> data) {
     final backupVersion = (data['version'] as int?) ?? 1;
 
-    // ── accounts ──────────────────────────────────────────────────────
     for (final row in _rows(data, 'accounts')) {
-      row.putIfAbsent('exclude_from_total', () => 0); // v1→v2
+      row.putIfAbsent('exclude_from_total', () => 0);
       row.putIfAbsent('currency', () => 'EGP');
-      // v5→v6: gold fields — nullable, so we only add if absent
       if (!row.containsKey('gold_karat')) row['gold_karat'] = null;
       if (!row.containsKey('gold_grams')) row['gold_grams'] = null;
     }
 
-    // ── transactions ──────────────────────────────────────────────────
     for (final row in _rows(data, 'transactions')) {
       row.putIfAbsent('note', () => '');
-      row.putIfAbsent('currency', () => '');   // v3→v4
+      row.putIfAbsent('currency', () => '');
     }
 
-    // ── recurring_payments ────────────────────────────────────────────
     for (final row in _rows(data, 'recurring_payments')) {
-      row.putIfAbsent('payment_type',            () => 'expense'); // v1→v2
+      row.putIfAbsent('payment_type',            () => 'expense');
       row.putIfAbsent('reminder_enabled',        () => 0);
-      row.putIfAbsent('reminder_time',           () => '09:00');   // v2→v3
-      row.putIfAbsent('early_reminder_enabled',  () => 0);         // v6→v7
+      row.putIfAbsent('reminder_time',           () => '09:00');
+      row.putIfAbsent('early_reminder_enabled',  () => 0);
       row.putIfAbsent('notes',                   () => '');
-      row.putIfAbsent('paid_payments',     () => 0);
-      // Rename legacy field names if present
+      row.putIfAbsent('paid_payments',           () => 0);
       if (row.containsKey('freq_unit')) {
         final u = row['freq_unit'] as String? ?? 'months';
         const map = {
@@ -334,33 +404,42 @@ class DBHelper {
       }
     }
 
-    // ── wishlist ──────────────────────────────────────────────────────
     for (final row in _rows(data, 'wishlist')) {
       row.putIfAbsent('is_purchased', () => 0);
       row.putIfAbsent('notes',        () => '');
       row.putIfAbsent('priority',     () => 'low');
     }
 
-    // ── lended_money ──────────────────────────────────────────────────
     for (final row in _rows(data, 'lended_money')) {
-      row.putIfAbsent('is_settled', () => 0);
-      row.putIfAbsent('notes',      () => '');
-      row.putIfAbsent('due_date',   () => null);
-      row.putIfAbsent('account_id', () => null);
+      row.putIfAbsent('is_settled',       () => 0);
+      row.putIfAbsent('notes',            () => '');
+      row.putIfAbsent('due_date',         () => null);
+      row.putIfAbsent('account_id',       () => null);
+      row.putIfAbsent('reminder_enabled', () => 0);    // v8→v9
+      row.putIfAbsent('reminder_time',    () => '09:00'); // v8→v9
     }
 
-    // ── assets (new in v5) ────────────────────────────────────────────
     data.putIfAbsent('assets', () => <dynamic>[]);
     for (final row in _rows(data, 'assets')) {
       row.putIfAbsent('currency', () => 'EGP');
       row.putIfAbsent('notes',    () => '');
     }
 
-    // Stamp the normalised version so callers can log it
+    // v9: category icon
+    for (final row in _rows(data, 'categories')) {
+      row.putIfAbsent('icon_code_point', () => 0);
+    }
+
+    // v8: budgets and recurring_history
+    data.putIfAbsent('budgets', () => <dynamic>[]);
+    for (final row in _rows(data, 'budgets')) {
+      row.putIfAbsent('period', () => 'monthly');
+    }
+    data.putIfAbsent('recurring_history', () => <dynamic>[]);
+
     data['_originalVersion'] = backupVersion;
   }
 
-  /// Safe helper: returns a mutable list of row maps for [table].
   static List<Map<String, dynamic>> _rows(
       Map<String, dynamic> data, String table) {
     final raw = data[table];

@@ -78,7 +78,7 @@ class HomeScreen extends StatelessWidget {
                 IconButton(
                   icon: Icon(Icons.swap_horiz_rounded, color: cs.onPrimary),
                   onPressed: () => Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => const TransferScreen())),
+                      ExpensyRoute(builder: (_) => const TransferScreen())),
                 ),
               ],
             ),
@@ -240,7 +240,7 @@ class HomeScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton.extended(
         heroTag: null,
         onPressed: () => Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const AddTransactionScreen())),
+            ExpensyRoute(builder: (_) => const AddTransactionScreen())),
         icon: const Icon(Icons.add),
         label: const Text('Add'),
       ),
