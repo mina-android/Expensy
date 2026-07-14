@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android 12+ themed variant: uses the system's wallpaper-derived dynamic
+  colour tokens instead of a hardcoded hex, so the widget tile matches the
+  user's Material You palette the same way in-app DynamicColorBuilder
+  theming does (CLAUDE.md §8). system_accent1_600 is the same "primary"-ish
+  step of the accent ramp Android itself uses for filled tonal surfaces.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="@android:color/system_accent1_600" />
+</shape>

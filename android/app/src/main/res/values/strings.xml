@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="quick_add_widget_description">Add Transaction</string>
+    <string name="quick_add_widget_label">Quick Add</string>
+</resources>

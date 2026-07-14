@@ -34,6 +34,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final _pageCtrl = PageController();
   int _page = 0;
 
+  static const int _totalPages = 4; // 0: welcome/restore, 1-3: existing setup steps
+
+  bool _restoring = false;
+  String? _restoreError;
+
   // Step 1 — Name
   final _nameCtrl = TextEditingController();
 
@@ -57,12 +62,48 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _next() {
-    if (_page == 0 && _nameCtrl.text.trim().isEmpty) return;
-    if (_page < 2) {
+    if (_page == 1 && _nameCtrl.text.trim().isEmpty) return;
+    if (_page < _totalPages - 1) {
       _pageCtrl.nextPage(duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut);
     } else {
       _finish();
+    }
+  }
+
+  /// Lets the user pick a backup JSON file right at the start, restoring it
+  /// before they ever fill in a name/currency/account — avoids the old flow
+  /// where restoring meant first clicking through the entire setup wizard
+  /// with throwaway data just to overwrite it seconds later from Settings.
+  Future<void> _restoreFromWelcome() async {
+    setState(() { _restoring = true; _restoreError = null; });
+    try {
+      final app = context.read<AppProvider>();
+      final originalVersion = await app.restoreBackup();
+      if (originalVersion == 0) {
+        // User cancelled the file picker — stay on this page, no error.
+        if (mounted) setState(() => _restoring = false);
+        return;
+      }
+      // A restored backup should always take the user straight into the
+      // app rather than back through setup — force onboarded=true in case
+      // an old/hand-edited backup file didn't carry that flag correctly.
+      if (!app.settings.onboarded) {
+        await app.completeOnboarding(
+            name: app.settings.userName, currency: app.settings.currency);
+      }
+      if (mounted) {
+        Navigator.pushReplacement(context,
+            ExpensyRoute(builder: (_) => const MainShell()));
+      }
+    } on FormatException catch (e) {
+      if (mounted) setState(() { _restoring = false; _restoreError = e.message; });
+    } catch (_) {
+      if (mounted) setState(() {
+        _restoring = false;
+        _restoreError =
+            'Restore failed: the file may be corrupted or not an Expensy backup.';
+      });
     }
   }
 
@@ -99,10 +140,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           // Progress
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-            child: Row(children: List.generate(3, (i) => Expanded(
+            child: Row(children: List.generate(_totalPages, (i) => Expanded(
               child: Container(
                 height: 4,
-                margin: EdgeInsets.only(right: i < 2 ? 6 : 0),
+                margin: EdgeInsets.only(right: i < _totalPages - 1 ? 6 : 0),
                 decoration: BoxDecoration(
                   color: i <= _page ? cs.primary : cs.surfaceContainerHigh,
                   borderRadius: BorderRadius.circular(2),
@@ -117,6 +158,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               physics: const NeverScrollableScrollPhysics(),
               onPageChanged: (i) => setState(() => _page = i),
               children: [
+                _PageWelcome(
+                  restoring: _restoring,
+                  error: _restoreError,
+                  onRestore: _restoreFromWelcome,
+                  onStartFresh: _next,
+                ),
                 _PageOne(nameCtrl: _nameCtrl),
                 _PageTwo(currency: _currency,
                     onChanged: (v) => setState(() { _currency = v; _accCur = v; })),
@@ -131,11 +178,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
           ),
 
-          // Navigation buttons
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-            child: Row(children: [
-              if (_page > 0)
+          // Navigation buttons — hidden on the welcome page, which has its
+          // own inline actions (Restore Backup / Start Fresh).
+          if (_page > 0)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+              child: Row(children: [
                 Expanded(
                   flex: 1,
                   child: OutlinedButton(
@@ -149,22 +197,148 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     child: const Text('Back'),
                   ),
                 ),
-              if (_page > 0) const SizedBox(width: 10),
-              Expanded(
-                flex: 2,
-                child: FilledButton(
-                  onPressed: _next,
-                  style: FilledButton.styleFrom(
-                      minimumSize: const Size.fromHeight(50),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(28))),
-                  child: Text(_page < 2 ? 'Continue' : 'Get Started'),
+                const SizedBox(width: 10),
+                Expanded(
+                  flex: 2,
+                  child: FilledButton(
+                    onPressed: _next,
+                    style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(50),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(28))),
+                    child: Text(_page < _totalPages - 1 ? 'Continue' : 'Get Started'),
+                  ),
                 ),
-              ),
-            ]),
-          ),
+              ]),
+            ),
         ]),
       ),
+    );
+  }
+}
+
+// ── Page 0: Welcome / Restore backup ──────────────────────────────────────────
+class _PageWelcome extends StatelessWidget {
+  final bool restoring;
+  final String? error;
+  final VoidCallback onRestore;
+  final VoidCallback onStartFresh;
+  const _PageWelcome({
+    required this.restoring,
+    required this.error,
+    required this.onRestore,
+    required this.onStartFresh,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const SizedBox(height: 24),
+        Container(
+          width: 64, height: 64,
+          decoration: BoxDecoration(
+              color: cs.primaryContainer,
+              borderRadius: BorderRadius.circular(20)),
+          child: Icon(Icons.account_balance_wallet_outlined,
+              color: cs.primary, size: 32),
+        ),
+        const SizedBox(height: 20),
+        Text('Welcome to Expensy!',
+            style: Theme.of(context).textTheme.headlineSmall
+                ?.copyWith(fontWeight: FontWeight.w800)),
+        const SizedBox(height: 8),
+        Text(
+          'Your personal, 100% offline finance tracker.\n'
+          'Already have a backup from another device or a previous install?',
+          style: TextStyle(fontSize: 15,
+              color: cs.onSurface.withValues(alpha: 0.6)),
+        ),
+        const SizedBox(height: 32),
+
+        // Restore card
+        Card(
+          margin: EdgeInsets.zero,
+          child: Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [
+                Container(width: 44, height: 44,
+                    decoration: BoxDecoration(
+                        color: cs.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12)),
+                    child: Icon(Icons.restore_outlined, color: cs.primary)),
+                const SizedBox(width: 14),
+                Expanded(child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Restore a Backup', style: TextStyle(
+                        fontWeight: FontWeight.w800, fontSize: 15)),
+                    Text('Load a previously saved Expensy JSON file',
+                        style: TextStyle(fontSize: 12,
+                            color: cs.onSurface.withValues(alpha: 0.6))),
+                  ],
+                )),
+              ]),
+              const SizedBox(height: 14),
+              FilledButton.icon(
+                onPressed: restoring ? null : onRestore,
+                icon: restoring
+                    ? const SizedBox(width: 16, height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2,
+                            color: Colors.white))
+                    : const Icon(Icons.upload_file_outlined),
+                label: Text(restoring ? 'Restoring...' : 'Choose Backup File'),
+                style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24))),
+              ),
+              if (error != null) ...[
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                      color: cs.errorContainer,
+                      borderRadius: BorderRadius.circular(10)),
+                  child: Row(crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                    Icon(Icons.error_outline, color: cs.error, size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(error!,
+                        style: TextStyle(fontSize: 12,
+                            color: cs.onErrorContainer))),
+                  ]),
+                ),
+              ],
+            ]),
+          ),
+        ),
+
+        const SizedBox(height: 16),
+        Row(children: [
+          Expanded(child: Divider(color: cs.outlineVariant)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Text('or', style: TextStyle(fontSize: 12,
+                color: cs.onSurface.withValues(alpha: 0.5))),
+          ),
+          Expanded(child: Divider(color: cs.outlineVariant)),
+        ]),
+        const SizedBox(height: 16),
+
+        OutlinedButton.icon(
+          onPressed: restoring ? null : onStartFresh,
+          icon: const Icon(Icons.add_circle_outline),
+          label: const Text('Start Fresh'),
+          style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(48),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24))),
+        ),
+      ]),
     );
   }
 }
@@ -189,11 +363,11 @@ class _PageOne extends StatelessWidget {
           child: Icon(Icons.waving_hand_outlined, color: cs.primary, size: 32),
         ),
         const SizedBox(height: 20),
-        Text('Welcome to Expensy!',
+        Text('Let\'s get you set up',
             style: Theme.of(context).textTheme.headlineSmall
                 ?.copyWith(fontWeight: FontWeight.w800)),
         const SizedBox(height: 8),
-        Text('Your personal, 100% offline finance tracker.\nLet\'s get you set up.',
+        Text('First, what should we call you?',
             style: TextStyle(fontSize: 15,
                 color: cs.onSurface.withValues(alpha: 0.6))),
         const SizedBox(height: 32),

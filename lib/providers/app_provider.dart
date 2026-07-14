@@ -11,6 +11,7 @@ import '../models/models.dart';
 import '../database/db_helper.dart';
 import '../services/exchange_rate_service.dart';
 import '../services/notification_service.dart';
+import '../services/lended_notification_service.dart';
 
 class AppSettings {
   String currency;
@@ -100,9 +101,15 @@ class AppProvider extends ChangeNotifier {
   List<AppTransaction>        transactions = [];
   List<RecurringPayment>      recurring    = [];
   List<WishlistItem>          wishlist     = [];
+  List<LendedPerson>          lendedPeople = [];
   List<LendedMoney>           lended       = [];
   List<AssetItem>             assets       = [];
   List<Budget>                budgets      = [];
+
+  /// Total row count in `recurring_history` — kept for display purposes
+  /// (e.g. the Backup screen's "what's included" list) without needing to
+  /// load every history row for every recurring payment into memory.
+  int recurringHistoryCount = 0;
 
   // ── Exchange rates ────────────────────────────────────────────────────
   Map<String, double> exchangeRates = {};
@@ -114,7 +121,8 @@ class AppProvider extends ChangeNotifier {
   final Map<String, List<RecurringHistoryEntry>> _historyCache = {};
 
   final _erService = ExchangeRateService();
-  final _notif     = NotificationService();
+  final _notif       = NotificationService();
+  final _lendedNotif = LendedNotificationService();
 
   bool _loaded = false;
   bool get loaded => _loaded;
@@ -134,9 +142,11 @@ class AppProvider extends ChangeNotifier {
     transactions = await DBHelper.getTransactions();
     recurring    = await DBHelper.getRecurring();
     wishlist     = await DBHelper.getWishlist();
+    lendedPeople = await DBHelper.getLendedPeople();
     lended       = await DBHelper.getLended();
     assets       = await DBHelper.getAssets();
     budgets      = await DBHelper.getBudgets();
+    recurringHistoryCount = await DBHelper.getRecurringHistoryCount();
     _loaded = true;
     notifyListeners();
 
@@ -347,6 +357,8 @@ class AppProvider extends ChangeNotifier {
       accounts.where((a) => a.id == id).firstOrNull;
   AppCategory? categoryById(String id) =>
       categories.where((c) => c.id == id).firstOrNull;
+  LendedPerson? personById(String id) =>
+      lendedPeople.where((p) => p.id == id).firstOrNull;
 
   // ── Accounts ─────────────────────────────────────────────────────────
   Future<void> addAccount(Account a) async {
@@ -512,6 +524,7 @@ class AppProvider extends ChangeNotifier {
     await DBHelper.deleteRecurringHistoryFor(id);
     _historyCache.remove(id);
     recurring = await DBHelper.getRecurring();
+    recurringHistoryCount = await DBHelper.getRecurringHistoryCount();
     notifyListeners();
   }
 
@@ -578,6 +591,7 @@ class AppProvider extends ChangeNotifier {
     );
     await DBHelper.insertRecurringHistory(entry);
     _historyCache.remove(r.id); // invalidate cache for this payment
+    recurringHistoryCount = await DBHelper.getRecurringHistoryCount();
   }
 
   /// Loads history for [recurringId] from DB, caching in memory.
@@ -610,7 +624,55 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ── Lended Money ──────────────────────────────────────────────────────
+  // ── Lended People (per-person ledger "accounts") ────────────────────────
+  Future<void> addLendedPerson(LendedPerson p) async {
+    await DBHelper.insertLendedPerson(p);
+    lendedPeople = await DBHelper.getLendedPeople();
+    notifyListeners();
+  }
+
+  Future<void> updateLendedPerson(LendedPerson p) async {
+    await DBHelper.updateLendedPerson(p);
+    lendedPeople = await DBHelper.getLendedPeople();
+    notifyListeners();
+  }
+
+  /// Deletes a person along with every lended-money entry that belongs to
+  /// them, cancelling any pending reminders first.
+  Future<void> deleteLendedPerson(String id) async {
+    for (final l in lended.where((l) => l.personId == id)) {
+      await _lendedNotif.cancelLendedReminder(l.id);
+    }
+    await DBHelper.deleteLendedForPerson(id);
+    await DBHelper.deleteLendedPerson(id);
+    lended       = await DBHelper.getLended();
+    lendedPeople = await DBHelper.getLendedPeople();
+    notifyListeners();
+  }
+
+  /// All ledger entries belonging to [personId], most recent first.
+  List<LendedMoney> lendedFor(String personId) =>
+      lended.where((l) => l.personId == personId).toList()
+        ..sort((a, b) => b.date.compareTo(a.date));
+
+  /// Net balance for a person: positive = they owe the user money,
+  /// negative = the user owes them. Only unsettled entries count, mirroring
+  /// how an [Account.balance] only reflects committed state.
+  double personBalance(String personId) => lended
+      .where((l) => l.personId == personId && !l.isSettled)
+      .fold(0.0, (sum, l) => sum + (l.type == 'lent' ? l.amount : -l.amount));
+
+  bool personHasOverdue(String personId) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return lended.any((l) =>
+        l.personId == personId &&
+        !l.isSettled &&
+        l.dueDate != null &&
+        l.dueDate!.isBefore(today));
+  }
+
+  // ── Lended Money (ledger entries) ───────────────────────────────────────
   Future<void> addLended(LendedMoney l) async {
     await DBHelper.insertLended(l);
     if (l.accountId != null) {
@@ -621,7 +683,8 @@ class AppProvider extends ChangeNotifier {
     accounts = await DBHelper.getAccounts();
     notifyListeners();
     if (l.reminderEnabled && l.dueDate != null) {
-      await _notif.scheduleLendedReminder(l, settings.currency);
+      await _lendedNotif.scheduleLendedReminder(l, settings.currency,
+          personName: personById(l.personId)?.name ?? '');
     }
   }
 
@@ -639,9 +702,10 @@ class AppProvider extends ChangeNotifier {
     accounts = await DBHelper.getAccounts();
     notifyListeners();
     // Always cancel old reminder, then reschedule if still enabled
-    await _notif.cancelLendedReminder(original.id);
+    await _lendedNotif.cancelLendedReminder(original.id);
     if (updated.reminderEnabled && updated.dueDate != null && !updated.isSettled) {
-      await _notif.scheduleLendedReminder(updated, settings.currency);
+      await _lendedNotif.scheduleLendedReminder(updated, settings.currency,
+          personName: personById(updated.personId)?.name ?? '');
     }
   }
 
@@ -655,11 +719,11 @@ class AppProvider extends ChangeNotifier {
     lended   = await DBHelper.getLended();
     accounts = await DBHelper.getAccounts();
     notifyListeners();
-    await _notif.cancelLendedReminder(l.id); // no reminder needed after settlement
+    await _lendedNotif.cancelLendedReminder(l.id); // no reminder needed after settlement
   }
 
   Future<void> deleteLended(String id) async {
-    await _notif.cancelLendedReminder(id);
+    await _lendedNotif.cancelLendedReminder(id);
     await DBHelper.deleteLended(id);
     lended = await DBHelper.getLended();
     notifyListeners();
@@ -854,7 +918,7 @@ class AppProvider extends ChangeNotifier {
 
     const knownKeys = {
       'accounts', 'categories', 'transactions', 'recurring_payments',
-      'wishlist', 'lended_money', 'assets', 'budgets',
+      'wishlist', 'lended_people', 'lended_money', 'assets', 'budgets',
       'recurring_history', 'version', 'settings',
     };
     if (!data.keys.any(knownKeys.contains)) {
@@ -872,7 +936,12 @@ class AppProvider extends ChangeNotifier {
 
     _historyCache.clear();
     await load();
-    await _notif.rescheduleAll(recurring, settings.currency, lended: lended);
+    // Re-register every recurring and lent/borrowed reminder from the
+    // restored data — same call the original (pre-account-based-lending)
+    // codebase made here.
+    await _notif.rescheduleAll(recurring, settings.currency);
+    await _lendedNotif.rescheduleAllLended(lended, settings.currency,
+        personNameOf: (id) => personById(id)?.name ?? '');
 
     return (data['_originalVersion'] as int?) ?? (data['version'] as int?) ?? 1;
   }

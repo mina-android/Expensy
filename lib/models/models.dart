@@ -320,9 +320,53 @@ class WishlistItem {
   );
 }
 
+/// A person with whom the user lends/borrows money. Acts like a lightweight
+/// "account" that owns a history of [LendedMoney] entries. Not a real
+/// [Account] — excluded from net-worth totals, transfer pickers, etc.
+class LendedPerson {
+  final String id;
+  String name;
+  int    colorValue;
+  String notes;
+  DateTime createdAt;
+
+  LendedPerson({
+    required this.id,
+    required this.name,
+    required this.colorValue,
+    this.notes = '',
+    DateTime? createdAt,
+  }) : createdAt = createdAt ?? DateTime.now();
+
+  Map<String, dynamic> toMap() => {
+    'id': id, 'name': name, 'color_value': colorValue,
+    'notes': notes, 'created_at': createdAt.toIso8601String(),
+  };
+
+  static LendedPerson fromMap(Map<String, dynamic> m) => LendedPerson(
+    id: m['id'] as String,
+    name: m['name'] as String,
+    colorValue: (m['color_value'] as int?) ?? 0xFF6750A4,
+    notes: (m['notes'] as String?) ?? '',
+    createdAt: DateTime.parse(m['created_at'] as String),
+  );
+
+  LendedPerson copyWith({String? name, int? colorValue, String? notes}) =>
+      LendedPerson(
+        id: id,
+        name: name ?? this.name,
+        colorValue: colorValue ?? this.colorValue,
+        notes: notes ?? this.notes,
+        createdAt: createdAt,
+      );
+}
+
+/// A single lend/borrow entry belonging to a [LendedPerson]. Multiple entries
+/// per person form that person's ledger history, the same way [AppTransaction]
+/// rows form an [Account]'s history.
 class LendedMoney {
   final String id;
-  String personName;
+  String personId;
   double amount;
   String type;         // lent|borrowed
   String? accountId;
@@ -335,7 +379,7 @@ class LendedMoney {
   String reminderTime;
 
   LendedMoney({
-    required this.id, required this.personName, required this.amount,
+    required this.id, required this.personId, required this.amount,
     required this.type, this.accountId, this.isSettled = false,
     required this.date, this.dueDate, this.notes = '',
     this.reminderEnabled = false,
@@ -343,7 +387,7 @@ class LendedMoney {
   });
 
   Map<String, dynamic> toMap() => {
-    'id': id, 'person_name': personName, 'amount': amount, 'type': type,
+    'id': id, 'person_id': personId, 'amount': amount, 'type': type,
     'account_id': accountId, 'is_settled': isSettled ? 1 : 0,
     'date': date.toIso8601String(),
     'due_date': dueDate?.toIso8601String(),
@@ -353,7 +397,7 @@ class LendedMoney {
   };
 
   static LendedMoney fromMap(Map<String, dynamic> m) => LendedMoney(
-    id: m['id'] as String, personName: m['person_name'] as String,
+    id: m['id'] as String, personId: m['person_id'] as String,
     amount: (m['amount'] as num).toDouble(), type: m['type'] as String,
     accountId: m['account_id'] as String?,
     isSettled: (m['is_settled'] as int? ?? 0) == 1,
@@ -366,16 +410,18 @@ class LendedMoney {
   );
 
   LendedMoney copyWith({
-    String? personName, double? amount, String? type,
+    String? personId, double? amount, String? type,
     String? accountId, bool? isSettled, DateTime? dueDate, String? notes,
     bool clearAccount = false,
+    bool clearDueDate = false,
     bool? reminderEnabled, String? reminderTime,
   }) => LendedMoney(
-    id: id, personName: personName ?? this.personName,
+    id: id, personId: personId ?? this.personId,
     amount: amount ?? this.amount, type: type ?? this.type,
     accountId: clearAccount ? null : (accountId ?? this.accountId),
     isSettled: isSettled ?? this.isSettled,
-    date: date, dueDate: dueDate ?? this.dueDate,
+    date: date,
+    dueDate: clearDueDate ? null : (dueDate ?? this.dueDate),
     notes: notes ?? this.notes,
     reminderEnabled: reminderEnabled ?? this.reminderEnabled,
     reminderTime: reminderTime ?? this.reminderTime,

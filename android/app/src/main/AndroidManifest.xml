@@ -80,6 +80,22 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
+        <!-- Quick Add Transaction home screen widget (App Widget, see
+             HOMESCREEN_WIDGET.md). Only ever invoked by the launcher/OS via
+             the standard APPWIDGET_UPDATE broadcast, never by another app
+             directly, so exported="false" is correct and safe here. -->
+        <receiver
+            android:name=".QuickAddWidgetProvider"
+            android:exported="false"
+            android:label="@string/quick_add_widget_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/quick_add_widget_info" />
+        </receiver>
+
         <!-- FileProvider for share_plus -->
         <provider
             android:name="androidx.core.content.FileProvider"

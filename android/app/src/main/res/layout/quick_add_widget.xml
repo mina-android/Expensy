@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  1x1 circular tap target.
+
+  android:id="@android:id/background" on the root is required by Android 12+
+  launchers to recognise this FrameLayout as the widget's actual themed
+  background surface — see "Enhance your widget" (Android Developers):
+  without this id, the launcher can't hook the widget into its own
+  dynamic-colour/tinting and smooth-launch-transition handling, and several
+  launchers fall back to rendering an untinted flat placeholder instead of
+  applying the system accent colour. This was the actual cause of the
+  widget rendering gray instead of matching the system palette — the
+  drawable-v31/ system_accent1_600 background alone isn't picked up
+  reliably without this id.
+
+  widget_background.xml is an oval (not a rounded-rect), and both it and
+  ic_widget_add.xml resolve to their drawable-v31/ themed variants
+  automatically on Android 12+ via normal resource-qualifier matching — no
+  separate layout-v31 needed.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/background"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background"
+    android:padding="10dp">
+
+    <ImageView
+        android:id="@+id/quick_add_icon"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_gravity="center"
+        android:src="@drawable/ic_widget_add"
+        android:contentDescription="@string/quick_add_widget_description" />
+</FrameLayout>

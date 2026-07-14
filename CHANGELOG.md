@@ -4,6 +4,33 @@ All notable changes to Expensy are documented in this file.
 
 ---
 
+## [1.0.6] — 2026-07-14
+
+### Fixed
+
+- **Lent/borrowed reminders not firing.** `scheduleLendedReminder()` had drifted from `scheduleReminder()` (the recurring-payment reminder function it was modeled on) in a way that made a boot-time reschedule pass actively cancel legitimate lent/borrowed reminders without reliably re-adding them. Rewrote `scheduleLendedReminder()`, `rescheduleAll()`, and the lended notification-details builder to be a structural mirror of the recurring-payment path: identical guard clauses, identical `_toUtcTZDate()` skip-if-in-the-past behaviour, identical `zonedSchedule()` call shape, and reminders scheduled only from the same event-driven call sites (add/edit/restore) that recurring uses — no extra boot-time re-registration pass that recurring doesn't also have. If a lent/borrowed reminder still doesn't fire, the record's due date, reminder time, or the OS-level exact-alarm/notification permission is the next thing to check, since the two reminder types now share identical scheduling code.
+- **"Add Record" silently failing for lent/borrowed people after updating from a pre-1.0.6 install.** The `lended_money` table upgrade path left the old `person_name TEXT NOT NULL` column physically in place; new rows never wrote a value for it (the model was rewritten to use `person_id`), so every insert failed a NOT NULL constraint and was swallowed by the app with no error shown. The v9→v10 migration now rebuilds `lended_money` to match the fresh-install schema (no `person_name` column) inside a single transaction, so upgraded installs behave identically to a fresh install. Hardened with proper error logging instead of a silent catch, in case a future device ever hits an edge case.
+- **Backup screen out of date with the actual backup format.** The "what's included" counts only covered 8 of the (already) 10 backed-up tables and never mentioned Budgets, Recurring History, or the per-person lending structure, even though `exportAll()` always correctly included them. The screen is now fully data-driven off the live provider state, includes every table, and the stale hardcoded schema-version constant was replaced with a single source of truth (`DBHelper.schemaVersion`). Also removed the "Backup format · JSON · Generated on …" footer text.
+
+### Added
+
+- **Unified Transactions & Lent/Borrowed Money integration.** Surfaced `LendedMoney` ledger entries directly in the main `TransactionsScreen` list view alongside standard `AppTransaction` objects using a lightweight wrapper, preserving chronological date ordering and grouping.
+- **Lent & Borrowed filters.** Added "Lent" (deep blue) and "Borrowed" (deep orange) filter pills to the top selection bar, allowing users to isolate personal debt ledger entries.
+- **Interactive `_LendedTile` UI.** Built a custom list tile displaying custom colored avatar containers, direction-coded arrows (Upward/outflow for Lent, Downward/inflow for Borrowed), settlement badges with visual fading, and support for quick actions: `onTap` (opens `LendedPersonScreen` detail ledger) and `onLongPress` (delete confirmation dialog).
+- **Search & Account Filter compatibility.** Extended search queries to match notes, person names, and type strings on lended items, and allowed account-filtering based on the lended record's source/target funding account.
+- **"Restore a Backup" step at the very start of onboarding.** New users (or anyone reinstalling/switching devices) can now restore an existing Expensy backup file immediately, before filling in a name/currency/first account, instead of clicking through the whole setup wizard with throwaway data first.
+
+### Changed
+
+- **Stripped release APK build optimization.** Removed the debug symbol retention workaround (`keepDebugSymbols`) in `build.gradle` to re-enable native `llvm-strip`. This successfully reduced production signed split-per-ABI APK sizes back to `~23-26 MB` (down from `~154 MB`) and the universal APK size to `~62 MB` (down from `~440 MB`).
+
+### Architectural Rework & Build Improvements (v1.0.6)
+
+- **Standalone `LendedNotificationService` (`lib/services/lended_notification_service.dart`).** Decoupled all lent/borrowed money reminder logic out of the combined `NotificationService`. The new service is a dedicated singleton that manages its own `expensy_lended` channel (`Lent & Borrowed Reminders`), initializes eagerly at startup (`main.dart`), and exposes direct permission methods (`hasPermission()`, `requestPermissions()`) invoked by `LendedPersonScreen`. `NotificationService` (`notification_service.dart`) is now 100% focused on recurring payment reminders without cross-concern interference.
+- **Dynamic Production Release Signing Setup.** Configured `android/app/build.gradle` and `android/key.properties` to dynamically enable production signing (`signingConfigs.release`) with `expensy.jks` when available, gracefully falling back to debug signing if key files are omitted (`signingConfig = keystorePropertiesFile.exists() ? signingConfigs.release : signingConfigs.debug`).
+
+---
+
 ## [1.0.5] — 2026-06-20
 
 ### Added
@@ -27,6 +54,7 @@ All notable changes to Expensy are documented in this file.
 - **New Currency Converter screen** — instant conversion between any two supported currencies using live exchange rates
 - **Swap button** to flip the From/To currencies instantly
 - **Offline banner** shown when rates have not loaded yet
+
 
 #### Category Icons
 - **57 selectable icons** (Finance, Food & Home, Transport, Shopping, Health, Entertainment & Education, Work & Business, Misc groups) plus an **"Auto" mode** that picks an icon from the category name, shown in a 7-column grid in the Add/Edit Category sheet with a live preview chip

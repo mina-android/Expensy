@@ -1,10 +1,14 @@
 // lib/services/notification_service.dart
 //
-// Singleton notification service. Uses Dart's built-in DateTime.timeZoneOffset
-// to compute the correct UTC moment without needing flutter_timezone (which has
-// a Kotlin 2.x incompatibility). On Android, AlarmManager stores absolute epoch
-// milliseconds, so a correctly-computed TZDateTime.utc(...) fires at the right
-// local wall-clock time regardless of the IANA location name.
+// Singleton notification service for RECURRING PAYMENT reminders only.
+// Lent/borrowed money reminders are handled by the separate
+// LendedNotificationService (lended_notification_service.dart).
+//
+// Uses Dart's built-in DateTime.timeZoneOffset to compute the correct UTC
+// moment without needing flutter_timezone (which has a Kotlin 2.x
+// incompatibility). On Android, AlarmManager stores absolute epoch
+// milliseconds, so a correctly-computed TZDateTime.utc(...) fires at the
+// right local wall-clock time regardless of the IANA location name.
 
 import 'dart:io';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -39,6 +43,22 @@ class NotificationService {
     const androidSettings = AndroidInitializationSettings('@drawable/ic_notification');
     await _plugin.initialize(const InitializationSettings(android: androidSettings));
     _initialized = true;
+
+    // Eagerly register the recurring payment notification channel so it's
+    // visible in system settings from the very first app launch.
+    // The lended channel is registered by LendedNotificationService.initialize().
+    final android = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (android != null) {
+      await android.createNotificationChannel(const AndroidNotificationChannel(
+        _channelId,
+        _channelName,
+        description: _channelDesc,
+        importance: Importance.high,
+        playSound: true,
+        enableVibration: true,
+      ));
+    }
   }
 
   // ── Permissions ─────────────────────────────────────────────────────────
@@ -138,89 +158,21 @@ class NotificationService {
     await _plugin.cancel(_advanceId(paymentId));   // safe even when not scheduled
   }
 
-  /// Cancel all pending notifications and reschedule only the enabled ones.
+  /// Cancel all pending recurring payment notifications and reschedule only
+  /// the enabled ones. Used after a backup restore.
+  ///
+  /// NOTE: This only handles recurring payments. Lent/borrowed reminders
+  /// are rescheduled separately by LendedNotificationService.rescheduleAllLended().
   Future<void> rescheduleAll(
     List<RecurringPayment> payments,
-    String mainCurrency, {
-    List<LendedMoney> lended = const [],
-  }) async {
+    String mainCurrency,
+  ) async {
     await _ensureInit();
     await _plugin.cancelAll();
     for (final r in payments.where((p) => p.reminderEnabled)) {
       await scheduleReminder(r, mainCurrency);
     }
-    for (final l in lended.where((l) => l.reminderEnabled && !l.isSettled && l.dueDate != null)) {
-      await scheduleLendedReminder(l, mainCurrency);
-    }
   }
-
-  // ── Lended Money Reminders ───────────────────────────────────────────────
-
-  static const _lendedChannelId   = 'expensy_lended';
-  static const _lendedChannelName = 'Lent & Borrowed Reminders';
-  static const _lendedChannelDesc = 'Reminders for lent and borrowed money due dates';
-
-  /// Schedule a reminder for a lended/borrowed record on its due date.
-  /// Fires at [l.reminderTime] on [l.dueDate]. Does nothing when there is
-  /// no due date, reminder is disabled, or the record is already settled.
-  Future<void> scheduleLendedReminder(
-    LendedMoney l,
-    String mainCurrency,
-  ) async {
-    if (!l.reminderEnabled || l.isSettled || l.dueDate == null) return;
-    await _ensureInit();
-
-    final parts  = l.reminderTime.split(':');
-    final hour   = int.tryParse(parts[0]) ?? 9;
-    final minute = parts.length > 1 ? (int.tryParse(parts[1]) ?? 0) : 0;
-
-    final emoji  = l.type == 'lent' ? '\u{1F4B8}' : '\u{1F4B0}';
-    final amount = formatAmount(l.amount, mainCurrency);
-
-    final tzDate = _toUtcTZDate(l.dueDate!, hour, minute);
-    if (tzDate == null) return; // due date already passed
-
-    final body = l.type == 'lent'
-        ? '$amount you lent to ${l.personName} is due today'
-        : '$amount you borrowed from ${l.personName} is due today';
-
-    final details = NotificationDetails(
-      android: AndroidNotificationDetails(
-        _lendedChannelId,
-        _lendedChannelName,
-        channelDescription: _lendedChannelDesc,
-        importance: Importance.high,
-        priority: Priority.high,
-        category: AndroidNotificationCategory.reminder,
-        playSound: true,
-        enableVibration: true,
-        styleInformation: const BigTextStyleInformation(''),
-      ),
-    );
-
-    await _plugin.zonedSchedule(
-      _lendedNotifId(l.id),
-      '$emoji Due: ${l.personName}',
-      body,
-      tzDate,
-      details,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-      payload: l.id,
-    );
-  }
-
-  /// Cancel the lended reminder for [lendedId].
-  Future<void> cancelLendedReminder(String lendedId) async {
-    await _ensureInit();
-    await _plugin.cancel(_lendedNotifId(lendedId));
-  }
-
-  /// Stable positive int ID for lended notifications.
-  /// Uses a 'lended_' prefix to guarantee it never collides with recurring IDs.
-  int _lendedNotifId(String lendedId) =>
-      'lended_$lendedId'.hashCode & 0x7FFFFFFF;
 
   // ── Helpers ─────────────────────────────────────────────────────────────
 
@@ -254,7 +206,7 @@ class NotificationService {
   int _advanceId(String paymentId) =>
       ('${paymentId}_adv').hashCode & 0x7FFFFFFF;
 
-  /// Builds the shared [NotificationDetails] for all Expensy reminders.
+  /// Builds the shared [NotificationDetails] for recurring payment reminders.
   NotificationDetails _buildDetails() => NotificationDetails(
         android: AndroidNotificationDetails(
           _channelId,

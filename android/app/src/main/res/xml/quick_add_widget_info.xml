@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Quick Add Transaction — 1x1 circular tap-target widget.
+
+  minWidth/minHeight="40dp" (rather than 60dp) is the standard single-cell
+  size on most launcher grids, keeping this a true 1x1 rather than the
+  slightly-oversized 60dp used by some 1x1 icon widgets. targetCellWidth/
+  targetCellHeight (API 31+) pin it to exactly one cell on launchers that
+  read the new cell-based sizing API instead of raw dp mins.
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="40dp"
+    android:minHeight="40dp"
+    android:targetCellWidth="1"
+    android:targetCellHeight="1"
+    android:updatePeriodMillis="0"
+    android:initialLayout="@layout/quick_add_widget"
+    android:resizeMode="none"
+    android:widgetCategory="home_screen"
+    android:previewLayout="@layout/quick_add_widget"
+    android:previewImage="@mipmap/ic_launcher" />

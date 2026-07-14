@@ -245,7 +245,7 @@ class SettingsScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(color: cs.primaryContainer,
                     borderRadius: BorderRadius.circular(20)),
-                child: Text('v1.0.5', style: TextStyle(
+                child: Text('v1.0.6', style: TextStyle(
                     fontSize: 12, fontWeight: FontWeight.w700, color: cs.primary)),
               ),
             ),

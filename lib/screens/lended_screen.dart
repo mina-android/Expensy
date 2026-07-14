@@ -1,12 +1,20 @@
 // lib/screens/lended_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import '../providers/app_provider.dart';
 import '../models/models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
-import '../services/notification_service.dart';
+import 'lended_person_screen.dart';
+
+/// Colour palette for [LendedPerson] avatars — same 10-colour rotation used
+/// to auto-assign colours during the v9→v10 legacy backfill migration, kept
+/// here too so newly-created people can pick from the same set.
+const List<int> kLendedPersonColors = [
+  0xFF6750A4, 0xFF1565C0, 0xFF2E7D32, 0xFFC62828, 0xFFE65100,
+  0xFF00838F, 0xFF6A1B9A, 0xFF37474F, 0xFFAD1457, 0xFF827717,
+  0xFF283593, 0xFF00695C, 0xFFEF6C00, 0xFF4527A0, 0xFF00838F,
+];
 
 class LendedScreen extends StatelessWidget {
   const LendedScreen({super.key});
@@ -17,12 +25,25 @@ class LendedScreen extends StatelessWidget {
     final cs  = Theme.of(context).colorScheme;
     String fmt(double v) => formatAmount(v, app.settings.currency);
 
-    final active   = app.lended.where((l) => !l.isSettled).toList();
-    final settled  = app.lended.where((l) =>  l.isSettled).toList();
-    final theyOwe  = active.where((l) => l.type == 'lent')
-        .fold(0.0, (s, l) => s + l.amount);
-    final iOwe     = active.where((l) => l.type == 'borrowed')
-        .fold(0.0, (s, l) => s + l.amount);
+    // Net balances across all people (mirrors the old flat-list totals).
+    double theyOwe = 0, iOwe = 0;
+    for (final p in app.lendedPeople) {
+      final bal = app.personBalance(p.id);
+      if (bal > 0) theyOwe += bal; else iOwe += -bal;
+    }
+
+    // Sort: people with an overdue balance first, then by |balance| desc,
+    // then alphabetically for settled/zero-balance people.
+    final people = [...app.lendedPeople];
+    people.sort((a, b) {
+      final overdueA = app.personHasOverdue(a.id);
+      final overdueB = app.personHasOverdue(b.id);
+      if (overdueA != overdueB) return overdueA ? -1 : 1;
+      final balA = app.personBalance(a.id).abs();
+      final balB = app.personBalance(b.id).abs();
+      if (balA != balB) return balB.compareTo(balA);
+      return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+    });
 
     return Scaffold(
       appBar: AppBar(
@@ -31,8 +52,7 @@ class LendedScreen extends StatelessWidget {
         backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
       ),
       body: Column(children: [
-        // Summary bar
-        if (app.lended.isNotEmpty)
+        if (app.lendedPeople.isNotEmpty)
           Container(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             color: cs.primary,
@@ -51,42 +71,33 @@ class LendedScreen extends StatelessWidget {
                   labelColor: cs.onPrimary.withValues(alpha: 0.65))),
             ]),
           ),
-        Expanded(child: app.lended.isEmpty
+        Expanded(child: people.isEmpty
           ? const EmptyState(icon: Icons.handshake_outlined,
-              message: 'No records',
-              subMessage: 'Tap + to track lent or borrowed money')
-          : ListView(
+              message: 'No one yet',
+              subMessage: 'Tap + to add a person you lend to or borrow from')
+          : ListView.builder(
               padding: const EdgeInsets.fromLTRB(14, 14, 14, 100),
-              children: [
-                if (active.isNotEmpty) ...[
-                  const SectionHeader(title: 'Active'),
-                  ...active.map((l) => _LendedCard(l: l, fmt: fmt)),
-                ],
-                if (settled.isNotEmpty) ...[
-                  const SectionHeader(title: 'Settled'),
-                  ...settled.map((l) => _LendedCard(l: l, fmt: fmt)),
-                ],
-              ],
+              itemCount: people.length,
+              itemBuilder: (_, i) => _PersonCard(person: people[i], fmt: fmt),
             )),
       ]),
       floatingActionButton: FloatingActionButton(
         heroTag: null,
-        onPressed: () => _openSheet(context),
-        child: const Icon(Icons.add),
+        onPressed: () => _openPersonSheet(context),
+        child: const Icon(Icons.person_add_alt_1_rounded),
       ),
     );
   }
 
-  static void openSheetFromExternal(BuildContext ctx,
-      {LendedMoney? existing}) =>
-      _openSheet(ctx, existing: existing);
+  static void openPersonSheetFromExternal(BuildContext ctx) =>
+      _openPersonSheet(ctx);
 
-  static void _openSheet(BuildContext ctx, {LendedMoney? existing}) {
+  static void _openPersonSheet(BuildContext ctx, {LendedPerson? existing}) {
     showModalBottomSheet(
       context: ctx, isScrollControlled: true, useSafeArea: true,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (_) => _LendedSheet(existing: existing),
+      builder: (_) => _PersonSheet(existing: existing),
     );
   }
 }
@@ -109,262 +120,140 @@ class _SumCol extends StatelessWidget {
   ]);
 }
 
-// ── Card ──────────────────────────────────────────────────────────────────────
-class _LendedCard extends StatelessWidget {
-  final LendedMoney l;
+// ── Person card ────────────────────────────────────────────────────────────────
+class _PersonCard extends StatelessWidget {
+  final LendedPerson person;
   final String Function(double) fmt;
-  const _LendedCard({required this.l, required this.fmt});
+  const _PersonCard({required this.person, required this.fmt});
 
   @override
   Widget build(BuildContext context) {
-    final cs     = Theme.of(context).colorScheme;
-    final isLent = l.type == 'lent';
-    final color  = isLent
-        ? const Color(0xFF2E7D32)
-        : const Color(0xFFC62828);
+    final app     = context.watch<AppProvider>();
+    final cs      = Theme.of(context).colorScheme;
+    final color   = Color(person.colorValue);
+    final balance = app.personBalance(person.id);
+    final entries = app.lendedFor(person.id);
+    final activeCount = entries.where((l) => !l.isSettled).length;
+    final overdue = app.personHasOverdue(person.id);
 
-    final now    = DateTime.now();
-    final isOverdue = l.dueDate != null &&
-        !l.isSettled &&
-        l.dueDate!.isBefore(DateTime(now.year, now.month, now.day));
+    final balColor = balance > 0
+        ? const Color(0xFF2E7D32)
+        : balance < 0
+            ? const Color(0xFFC62828)
+            : cs.onSurface.withValues(alpha: 0.5);
+    final balLabel = balance > 0
+        ? 'Owes you'
+        : balance < 0
+            ? 'You owe'
+            : 'Settled up';
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [
-            Container(width: 42, height: 42,
-                decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12)),
-                child: Icon(
-                    isLent
-                        ? Icons.arrow_upward_rounded
-                        : Icons.arrow_downward_rounded,
-                    color: color)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => Navigator.push(context,
+            ExpensyRoute(builder: (_) => LendedPersonScreen(person: person))),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(children: [
+            Container(
+              width: 46, height: 46,
+              decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(23)),
+              child: Center(child: Text(
+                person.name.isNotEmpty ? person.name[0].toUpperCase() : '?',
+                style: TextStyle(fontWeight: FontWeight.w800,
+                    fontSize: 18, color: color),
+              )),
+            ),
             const SizedBox(width: 12),
             Expanded(child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(l.personName, style: const TextStyle(
-                  fontWeight: FontWeight.w700, fontSize: 15)),
-              Text(isLent ? 'Lent to' : 'Borrowed from',
-                  style: TextStyle(fontSize: 11,
-                      color: cs.onSurface.withValues(alpha: 0.5))),
+              Row(children: [
+                Flexible(child: Text(person.name, overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w700, fontSize: 15))),
+                if (overdue) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                        color: cs.errorContainer,
+                        borderRadius: BorderRadius.circular(6)),
+                    child: Text('OVERDUE', style: TextStyle(fontSize: 9,
+                        fontWeight: FontWeight.w700, color: cs.onErrorContainer)),
+                  ),
+                ],
+              ]),
+              const SizedBox(height: 2),
+              Text(
+                activeCount == 0
+                    ? 'No active records'
+                    : '$activeCount active record${activeCount == 1 ? '' : 's'}',
+                style: TextStyle(fontSize: 11,
+                    color: cs.onSurface.withValues(alpha: 0.5)),
+              ),
             ])),
             Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-              Text(fmt(l.amount), style: TextStyle(fontSize: 16,
-                  fontWeight: FontWeight.w800, color: color)),
-              if (l.dueDate != null)
-                Text(
-                  isOverdue
-                      ? 'Overdue!'
-                      : 'Due ${DateFormat('d MMM yy').format(l.dueDate!)}',
-                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600,
-                      color: isOverdue ? cs.error
-                          : cs.onSurface.withValues(alpha: 0.5)),
-                ),
+              Text(fmt(balance.abs()), style: TextStyle(fontSize: 16,
+                  fontWeight: FontWeight.w800, color: balColor)),
+              Text(balLabel, style: TextStyle(fontSize: 10,
+                  fontWeight: FontWeight.w600, color: balColor)),
             ]),
+            const Icon(Icons.chevron_right_rounded),
           ]),
-
-          if (l.notes.isNotEmpty) ...[
-            const SizedBox(height: 6),
-            Text(l.notes, style: TextStyle(fontSize: 12,
-                color: cs.onSurface.withValues(alpha: 0.6))),
-          ],
-
-          // Reminder badge
-          if (l.reminderEnabled && l.dueDate != null && !l.isSettled) ...[
-            const SizedBox(height: 6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                  color: cs.primaryContainer,
-                  borderRadius: BorderRadius.circular(8)),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Icon(Icons.notifications_active_outlined,
-                    size: 11, color: cs.primary),
-                const SizedBox(width: 4),
-                Text(
-                  'Reminder at ${l.reminderTime}',
-                  style: TextStyle(fontSize: 10,
-                      fontWeight: FontWeight.w600, color: cs.primary),
-                ),
-              ]),
-            ),
-          ],
-
-          const SizedBox(height: 8),
-          Row(children: [
-            if (l.isSettled)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                    color: const Color(0xFFE8F5E9),
-                    borderRadius: BorderRadius.circular(8)),
-                child: const Text('SETTLED', style: TextStyle(fontSize: 10,
-                    fontWeight: FontWeight.w700, color: Color(0xFF2E7D32))),
-              )
-            else
-              TextButton.icon(
-                icon: const Icon(Icons.check_circle_outline, size: 16),
-                label: const Text('Settle', style: TextStyle(fontSize: 12)),
-                onPressed: () =>
-                    context.read<AppProvider>().settleLended(l),
-              ),
-            const Spacer(),
-            IconButton(
-                icon: const Icon(Icons.edit_outlined, size: 18),
-                onPressed: () =>
-                    LendedScreen._openSheet(context, existing: l)),
-            IconButton(
-                icon: Icon(Icons.delete_outline_rounded,
-                    size: 18, color: cs.error),
-                onPressed: () async {
-                  if (await showDeleteConfirm(context, l.personName) &&
-                      context.mounted) {
-                    context.read<AppProvider>().deleteLended(l.id);
-                  }
-                }),
-          ]),
-        ]),
+        ),
       ),
     );
   }
 }
 
-// ── Sheet ─────────────────────────────────────────────────────────────────────
-class _LendedSheet extends StatefulWidget {
-  final LendedMoney? existing;
-  const _LendedSheet({this.existing});
+// ── Add/Edit person sheet ────────────────────────────────────────────────────
+class _PersonSheet extends StatefulWidget {
+  final LendedPerson? existing;
+  const _PersonSheet({this.existing});
   @override
-  State<_LendedSheet> createState() => _LendedSheetState();
+  State<_PersonSheet> createState() => _PersonSheetState();
 }
 
-class _LendedSheetState extends State<_LendedSheet> {
-  final _personCtrl = TextEditingController();
-  final _amtCtrl    = TextEditingController();
-  final _notesCtrl  = TextEditingController();
-
-  String    _type             = 'lent';
-  String?   _accountId;
-  DateTime? _dueDate;
-  bool      _reminderEnabled  = false;
-  TimeOfDay _reminderTime     = const TimeOfDay(hour: 9, minute: 0);
+class _PersonSheetState extends State<_PersonSheet> {
+  final _nameCtrl  = TextEditingController();
+  final _notesCtrl = TextEditingController();
+  int _color = kLendedPersonColors.first;
 
   bool get isEdit => widget.existing != null;
-
-  String get _reminderTimeStr =>
-      '${_reminderTime.hour.toString().padLeft(2, '0')}:'
-      '${_reminderTime.minute.toString().padLeft(2, '0')}';
-
-  static TimeOfDay _parseTime(String s) {
-    final parts = s.split(':');
-    return TimeOfDay(
-      hour:   int.tryParse(parts[0]) ?? 9,
-      minute: parts.length > 1 ? (int.tryParse(parts[1]) ?? 0) : 0,
-    );
-  }
 
   @override
   void initState() {
     super.initState();
     final e = widget.existing;
     if (e != null) {
-      _personCtrl.text  = e.personName;
-      _amtCtrl.text     = e.amount.toStringAsFixed(2);
-      _notesCtrl.text   = e.notes;
-      _type             = e.type;
-      _accountId        = e.accountId;
-      _dueDate          = e.dueDate;
-      _reminderEnabled  = e.reminderEnabled;
-      _reminderTime     = _parseTime(e.reminderTime);
+      _nameCtrl.text  = e.name;
+      _notesCtrl.text = e.notes;
+      _color          = e.colorValue;
     }
   }
 
   @override
   void dispose() {
-    _personCtrl.dispose(); _amtCtrl.dispose(); _notesCtrl.dispose();
+    _nameCtrl.dispose(); _notesCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _toggleReminder(bool value) async {
-    if (!value) {
-      setState(() => _reminderEnabled = false);
-      return;
-    }
-    // Reminder requires a due date
-    if (_dueDate == null) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Set a due date first to enable reminders.'),
-          duration: Duration(seconds: 3),
-        ));
-      }
-      return;
-    }
-    final hasPermission = await NotificationService().hasPermission();
-    if (!hasPermission) {
-      final granted = await NotificationService().requestPermissions();
-      if (!granted) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text(
-              'Notification permission denied. '
-              'Enable it in Settings → Apps → Expensy → Notifications.',
-            ),
-            duration: Duration(seconds: 4),
-          ));
-        }
-        return;
-      }
-    }
-    setState(() => _reminderEnabled = true);
-  }
-
-  Future<void> _pickTime() async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: _reminderTime,
-      helpText: 'Remind me at',
-    );
-    if (picked != null) setState(() => _reminderTime = picked);
-  }
-
   Future<void> _submit() async {
-    if (_personCtrl.text.trim().isEmpty) return;
-    final amount = double.tryParse(_amtCtrl.text);
-    if (amount == null || amount <= 0) return;
+    final name = _nameCtrl.text.trim();
+    if (name.isEmpty) return;
     final app = context.read<AppProvider>();
 
-    // If reminder is on but no due date, disable it
-    final effectiveReminder = _reminderEnabled && _dueDate != null;
-
     if (isEdit) {
-      final updated = widget.existing!.copyWith(
-        personName:      _personCtrl.text.trim(),
-        amount:          amount,
-        type:            _type,
-        accountId:       _accountId,
-        dueDate:         _dueDate,
-        notes:           _notesCtrl.text.trim(),
-        clearAccount:    _accountId == null,
-        reminderEnabled: effectiveReminder,
-        reminderTime:    _reminderTimeStr,
-      );
-      await app.updateLended(updated, widget.existing!);
+      await app.updateLendedPerson(widget.existing!.copyWith(
+        name: name, colorValue: _color, notes: _notesCtrl.text.trim(),
+      ));
     } else {
-      await app.addLended(LendedMoney(
-        id:              app.newId(),
-        personName:      _personCtrl.text.trim(),
-        amount:          amount,
-        type:            _type,
-        accountId:       _accountId,
-        date:            DateTime.now(),
-        dueDate:         _dueDate,
-        notes:           _notesCtrl.text.trim(),
-        reminderEnabled: effectiveReminder,
-        reminderTime:    _reminderTimeStr,
+      await app.addLendedPerson(LendedPerson(
+        id: app.newId(), name: name, colorValue: _color,
+        notes: _notesCtrl.text.trim(),
       ));
     }
     if (mounted) Navigator.pop(context);
@@ -372,10 +261,7 @@ class _LendedSheetState extends State<_LendedSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final app = context.watch<AppProvider>();
-    final cs  = Theme.of(context).colorScheme;
-    final sym = currencyInfo(app.settings.currency).symbol;
-
+    final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom + 16,
@@ -384,167 +270,39 @@ class _LendedSheetState extends State<_LendedSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(isEdit ? 'Edit Record' : 'Add Record',
+          Text(isEdit ? 'Edit Person' : 'Add Person',
               style: Theme.of(context).textTheme.titleLarge
                   ?.copyWith(fontWeight: FontWeight.w800)),
           const SizedBox(height: 12),
-
-          // Type toggle
-          Row(children: [
-            Expanded(child: GestureDetector(
-              onTap: () => setState(() => _type = 'lent'),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 120),
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: BoxDecoration(
-                  color: _type == 'lent'
-                      ? const Color(0xFF2E7D32) : const Color(0xFFE8F5E9),
-                  borderRadius: BorderRadius.circular(12)),
-                child: Center(child: Text('I Lent',
-                    style: TextStyle(fontWeight: FontWeight.w700,
-                        color: _type == 'lent'
-                            ? Colors.white : const Color(0xFF2E7D32)))),
-              ),
-            )),
-            const SizedBox(width: 10),
-            Expanded(child: GestureDetector(
-              onTap: () => setState(() => _type = 'borrowed'),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 120),
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: BoxDecoration(
-                  color: _type == 'borrowed'
-                      ? const Color(0xFFC62828) : const Color(0xFFFFEBEE),
-                  borderRadius: BorderRadius.circular(12)),
-                child: Center(child: Text('I Borrowed',
-                    style: TextStyle(fontWeight: FontWeight.w700,
-                        color: _type == 'borrowed'
-                            ? Colors.white : const Color(0xFFC62828)))),
-              ),
-            )),
-          ]),
-          const SizedBox(height: 12),
-
-          TextField(controller: _personCtrl,
+          TextField(controller: _nameCtrl,
+              autofocus: !isEdit,
               decoration: const InputDecoration(
-                  labelText: 'Person\'s Name',
+                  labelText: 'Name',
                   prefixIcon: Icon(Icons.person_outline_rounded))),
-          const SizedBox(height: 12),
-          TextField(controller: _amtCtrl,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                  labelText: 'Amount', prefixText: '$sym ')),
           const SizedBox(height: 14),
-
-          Text('Account (optional)',
-              style: Theme.of(context).textTheme.labelMedium
-                  ?.copyWith(letterSpacing: 1)),
+          Text('Colour', style: Theme.of(context).textTheme.labelMedium
+              ?.copyWith(letterSpacing: 1)),
           const SizedBox(height: 8),
-          AccountCardPicker(
-            accounts: app.accounts.where((a) => !a.isGold).toList(),
-            selectedId: _accountId, allowNone: true,
-            onSelected: (id) => setState(() => _accountId = id),
-          ),
-          const SizedBox(height: 12),
-
-          // Due date picker
-          ListTile(contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.event_outlined),
-            title: Text(_dueDate != null
-                ? 'Due: ${DateFormat('d MMM yyyy').format(_dueDate!)}'
-                : 'No due date',
-                style: const TextStyle(fontWeight: FontWeight.w600)),
-            trailing: _dueDate != null
-                ? IconButton(icon: const Icon(Icons.clear),
-                    onPressed: () => setState(() {
-                      _dueDate = null;
-                      _reminderEnabled = false;
-                    }))
-                : null,
-            onTap: () async {
-              final p = await showDatePicker(context: context,
-                  initialDate: _dueDate ??
-                      DateTime.now().add(const Duration(days: 30)),
-                  firstDate: DateTime.now(),
-                  lastDate: DateTime(2100));
-              if (p != null) setState(() => _dueDate = p);
-            },
-          ),
-
-          // ── Reminder section (only when due date is set) ────────────
-          const Divider(height: 20),
-          SwitchListTile.adaptive(
-            contentPadding: EdgeInsets.zero,
-            secondary: Icon(
-              _reminderEnabled
-                  ? Icons.notifications_active_outlined
-                  : Icons.notifications_none_outlined,
-              color: _reminderEnabled ? cs.primary : null,
-            ),
-            title: Text(
-              'Due Date Reminder',
-              style: TextStyle(fontWeight: FontWeight.w600,
-                  color: _reminderEnabled ? cs.primary : null),
-            ),
-            subtitle: Text(
-              _dueDate == null
-                  ? 'Set a due date first'
-                  : _reminderEnabled
-                      ? 'You\'ll be notified on the due date'
-                      : 'Get notified when this is due',
-              style: TextStyle(fontSize: 12,
-                  color: cs.onSurface.withValues(alpha: 0.5)),
-            ),
-            value: _reminderEnabled,
-            onChanged: _dueDate == null ? null : _toggleReminder,
-          ),
-
-          // Time picker — only when reminder is enabled
-          if (_reminderEnabled && _dueDate != null) ...[
-            const SizedBox(height: 4),
-            InkWell(
-              onTap: _pickTime,
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 12),
+          Wrap(spacing: 10, runSpacing: 10, children: kLendedPersonColors.map((col) {
+            final sel = _color == col;
+            return GestureDetector(
+              onTap: () => setState(() => _color = col),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 100),
+                width: 36, height: 36,
                 decoration: BoxDecoration(
-                  color: cs.primaryContainer.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                      color: cs.primary.withValues(alpha: 0.35)),
+                  color: Color(col), shape: BoxShape.circle,
+                  border: sel
+                      ? Border.all(color: cs.onSurface, width: 2.5)
+                      : null,
                 ),
-                child: Row(children: [
-                  Icon(Icons.access_time_rounded, size: 20,
-                      color: cs.primary),
-                  const SizedBox(width: 12),
-                  Expanded(child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                    Text('Remind me at',
-                        style: TextStyle(fontSize: 11,
-                            color: cs.onSurface.withValues(alpha: 0.55))),
-                    Text(_reminderTime.format(context),
-                        style: TextStyle(fontSize: 16,
-                            fontWeight: FontWeight.w700, color: cs.primary)),
-                  ])),
-                  Icon(Icons.chevron_right_rounded, color: cs.primary),
-                ]),
+                child: sel
+                    ? const Icon(Icons.check, color: Colors.white, size: 18)
+                    : null,
               ),
-            ),
-            const SizedBox(height: 4),
-            Padding(
-              padding: const EdgeInsets.only(left: 2),
-              child: Text(
-                'Notification fires on ${DateFormat('d MMM yyyy').format(_dueDate!)} at ${_reminderTime.format(context)}.',
-                style: TextStyle(fontSize: 11,
-                    color: cs.onSurface.withValues(alpha: 0.4)),
-              ),
-            ),
-          ],
-
-          const SizedBox(height: 12),
+            );
+          }).toList()),
+          const SizedBox(height: 14),
           TextField(controller: _notesCtrl, maxLines: 2,
               decoration: const InputDecoration(
                   labelText: 'Notes (optional)',
@@ -556,7 +314,7 @@ class _LendedSheetState extends State<_LendedSheet> {
                 minimumSize: const Size.fromHeight(50),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(28))),
-            child: Text(isEdit ? 'Save Changes' : 'Add Record'),
+            child: Text(isEdit ? 'Save Changes' : 'Add Person'),
           ),
         ],
       )),

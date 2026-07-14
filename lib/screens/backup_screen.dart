@@ -1,8 +1,8 @@
 // lib/screens/backup_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import '../providers/app_provider.dart';
+import '../database/db_helper.dart';
 
 class BackupScreen extends StatefulWidget {
   const BackupScreen({super.key});
@@ -64,8 +64,8 @@ class _BackupScreenState extends State<BackupScreen> {
         if (originalVersion == 0) {
           // User cancelled the file picker — say nothing
         } else {
-          final vLabel = originalVersion < _kBackupVersion
-              ? ' (upgraded from v$originalVersion → v$_kBackupVersion)'
+          final vLabel = originalVersion < DBHelper.schemaVersion
+              ? ' (upgraded from v$originalVersion → v${DBHelper.schemaVersion})'
               : '';
           _setMsg('Data restored successfully!$vLabel');
         }
@@ -86,16 +86,24 @@ class _BackupScreenState extends State<BackupScreen> {
     final app = context.watch<AppProvider>();
     final cs  = Theme.of(context).colorScheme;
 
-    // Live counts for the "what's included" breakdown
+    // Live counts for the "what's included" breakdown. This list is kept in
+    // sync with everything DBHelper.exportAll() actually writes to the
+    // backup JSON — previously it only covered 8 of the (now) 10 backed-up
+    // tables and never mentioned Budgets, Recurring History, or the
+    // per-person lending structure, even though all of that data was always
+    // correctly included in the file.
     final counts = [
-      _CountRow(Icons.account_balance_wallet_outlined,  'Accounts',        app.accounts.length),
-      _CountRow(Icons.receipt_long_outlined,            'Transactions',    app.transactions.length),
-      _CountRow(Icons.repeat_rounded,                   'Recurring',       app.recurring.length),
-      _CountRow(Icons.star_outline_rounded,             'Wishlist',        app.wishlist.length),
-      _CountRow(Icons.handshake_outlined,               'Lent & Borrowed', app.lended.length),
-      _CountRow(Icons.inventory_2_outlined,             'Assets',          app.assets.length),
-      _CountRow(Icons.label_outline_rounded,            'Categories',      app.categories.length),
-      _CountRow(Icons.settings_outlined,                'Settings',        -1), // -1 = 'included'
+      _CountRow(Icons.account_balance_wallet_outlined,  'Accounts',           app.accounts.length),
+      _CountRow(Icons.receipt_long_outlined,             'Transactions',       app.transactions.length),
+      _CountRow(Icons.repeat_rounded,                    'Recurring Payments', app.recurring.length),
+      _CountRow(Icons.history_rounded,                   'Recurring History',  app.recurringHistoryCount),
+      _CountRow(Icons.pie_chart_outline_rounded,         'Budgets',            app.budgets.length),
+      _CountRow(Icons.star_outline_rounded,               'Wishlist',           app.wishlist.length),
+      _CountRow(Icons.people_alt_outlined,                'Lent/Borrowed — People',  app.lendedPeople.length),
+      _CountRow(Icons.handshake_outlined,                 'Lent/Borrowed — Records', app.lended.length),
+      _CountRow(Icons.inventory_2_outlined,               'Assets',             app.assets.length),
+      _CountRow(Icons.label_outline_rounded,              'Categories',         app.categories.length),
+      _CountRow(Icons.settings_outlined,                  'Settings',           -1), // -1 = 'included'
     ];
 
     return Scaffold(
@@ -109,10 +117,15 @@ class _BackupScreenState extends State<BackupScreen> {
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
 
           // ── What's included ────────────────────────────────────────────
-          Text('What\'s included',
-              style: Theme.of(context).textTheme.labelMedium
-                  ?.copyWith(letterSpacing: 1,
-                      color: cs.onSurface.withValues(alpha: 0.6))),
+          Row(children: [
+            Expanded(child: Text('What\'s included',
+                style: Theme.of(context).textTheme.labelMedium
+                    ?.copyWith(letterSpacing: 1,
+                        color: cs.onSurface.withValues(alpha: 0.6)))),
+            Text('Everything, always',
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700,
+                    color: cs.primary)),
+          ]),
           const SizedBox(height: 8),
           Card(
             child: Padding(
@@ -135,7 +148,7 @@ class _BackupScreenState extends State<BackupScreen> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        r.count < 0 ? 'included' : '${r.count}',
+                        r.count == -1 ? 'included' : '${r.count}',
                         style: TextStyle(
                             fontSize: 11, fontWeight: FontWeight.w700,
                             color: cs.onPrimaryContainer),
@@ -144,6 +157,18 @@ class _BackupScreenState extends State<BackupScreen> {
                   ]),
                 )).toList(),
               ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Text(
+              'Every backup includes all of your data — accounts, '
+              'transactions, recurring payments and their pay/skip history, '
+              'budgets, wishlist items, lent & borrowed people and records, '
+              'assets, categories, and app settings.',
+              style: TextStyle(fontSize: 11.5,
+                  color: cs.onSurface.withValues(alpha: 0.55)),
             ),
           ),
           const SizedBox(height: 20),
@@ -169,7 +194,7 @@ class _BackupScreenState extends State<BackupScreen> {
                   children: [
                     Text('Save as JSON', style: TextStyle(
                         fontWeight: FontWeight.w800, fontSize: 15)),
-                    Text('Exports all data to a portable file',
+                    Text('Exports ALL app data to a portable file',
                         style: TextStyle(fontSize: 12)),
                   ],
                 )),
@@ -294,16 +319,6 @@ class _BackupScreenState extends State<BackupScreen> {
               ]),
             ),
           ],
-
-          const SizedBox(height: 24),
-          // ── Format note ───────────────────────────────────────────────
-          Center(child: Text(
-            'Backup format v$_kBackupVersion  ·  JSON  ·  '
-            'Generated on ${DateFormat('d MMM yyyy').format(DateTime.now())}',
-            style: TextStyle(fontSize: 11,
-                color: cs.onSurface.withValues(alpha: 0.35)),
-            textAlign: TextAlign.center,
-          )),
         ]),
       ),
     );
@@ -312,13 +327,10 @@ class _BackupScreenState extends State<BackupScreen> {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-/// Must match DBHelper._version so the label is always accurate.
-const int _kBackupVersion = 6;
-
 class _CountRow {
   final IconData icon;
   final String   label;
-  /// Negative means "show 'included' instead of a number."
+  /// Negative sentinel values render as "included" instead of a raw number.
   final int      count;
   const _CountRow(this.icon, this.label, this.count);
 }

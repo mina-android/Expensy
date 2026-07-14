@@ -5,7 +5,13 @@ import '../models/models.dart';
 
 class DBHelper {
   static Database? _db;
-  static const int _version = 9;
+  static const int _version = 10;
+
+  /// Public accessor for the current DB/backup schema version, so UI code
+  /// (e.g. the Backup screen) never has to hardcode a copy that can drift
+  /// out of sync with the real schema version.
+  static int get schemaVersion => _version;
+
 
   static Future<Database> get database async {
     _db ??= await _open();
@@ -88,6 +94,126 @@ class DBHelper {
             "ALTER TABLE lended_money ADD COLUMN reminder_time TEXT NOT NULL DEFAULT '09:00'");
       } catch (_) {}
     }
+    // v9 → v10: lended money becomes account-based (per-person ledger)
+    if (oldV < 10) {
+      try {
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS lended_people (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            color_value INTEGER NOT NULL,
+            notes TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL
+          )''');
+      } catch (_) {}
+      try {
+        await db.execute('ALTER TABLE lended_money ADD COLUMN person_id TEXT');
+      } catch (_) {}
+      // Backfill: create one LendedPerson per distinct legacy person_name,
+      // then point every lended_money row at the matching person_id.
+      try {
+        final rows = await db.rawQuery(
+            'SELECT DISTINCT person_name FROM lended_money WHERE person_id IS NULL');
+        final nameToId = <String, String>{};
+        var colorIdx = 0;
+        const palette = [
+          0xFF6750A4, 0xFF1565C0, 0xFF2E7D32, 0xFFC62828, 0xFFE65100,
+          0xFF00838F, 0xFF6A1B9A, 0xFF37474F, 0xFFAD1457, 0xFF827717,
+        ];
+        for (final row in rows) {
+          final name = row['person_name'] as String?;
+          if (name == null || name.trim().isEmpty) continue;
+          if (nameToId.containsKey(name)) continue;
+          final id = 'legacy_${DateTime.now().microsecondsSinceEpoch}_$colorIdx';
+          nameToId[name] = id;
+          await db.insert('lended_people', {
+            'id': id,
+            'name': name,
+            'color_value': palette[colorIdx % palette.length],
+            'notes': '',
+            'created_at': DateTime.now().toIso8601String(),
+          });
+          colorIdx++;
+        }
+        for (final entry in nameToId.entries) {
+          await db.update('lended_money', {'person_id': entry.value},
+              where: 'person_name = ? AND person_id IS NULL',
+              whereArgs: [entry.key]);
+        }
+      } catch (_) {}
+
+      // Catch-all: any row that still has no person_id (e.g. a null/blank
+      // legacy person_name) gets bucketed into a single "Unknown" person
+      // instead of being silently dropped by the table rebuild below.
+      try {
+        final orphans = await db.rawQuery(
+            'SELECT COUNT(*) AS c FROM lended_money WHERE person_id IS NULL');
+        final orphanCount = (orphans.first['c'] as int?) ?? 0;
+        if (orphanCount > 0) {
+          final unknownId =
+              'legacy_unknown_${DateTime.now().microsecondsSinceEpoch}';
+          await db.insert('lended_people', {
+            'id': unknownId,
+            'name': 'Unknown',
+            'color_value': 0xFF757575,
+            'notes': '',
+            'created_at': DateTime.now().toIso8601String(),
+          });
+          await db.update('lended_money', {'person_id': unknownId},
+              where: 'person_id IS NULL');
+        }
+      } catch (_) {}
+
+      // The upgraded `lended_money` table still physically carries the old
+      // `person_name TEXT NOT NULL` column (SQLite can't drop a NOT NULL
+      // constraint via ALTER TABLE). LendedMoney.toMap() no longer writes
+      // person_name at all, so every new insert on an upgraded DB was
+      // failing the NOT NULL check and throwing silently — "Add Record"
+      // looked like it did nothing. Rebuild the table to match the fresh-
+      // install schema exactly (no person_name column) and copy rows over.
+      //
+      // Run as one transaction so a failure partway through (e.g. device
+      // killed mid-migration) can't leave the DB with `lended_money` dropped
+      // but `lended_money_new` not yet renamed — either the whole rebuild
+      // commits, or none of it does and the original table survives intact
+      // for the next launch to retry.
+      try {
+        final cols = await db.rawQuery('PRAGMA table_info(lended_money)');
+        final hasPersonName =
+            cols.any((c) => c['name'] == 'person_name');
+        if (hasPersonName) {
+          await db.transaction((txn) async {
+            await txn.execute('''
+              CREATE TABLE lended_money_new (
+                id TEXT PRIMARY KEY, person_id TEXT NOT NULL, amount REAL NOT NULL,
+                type TEXT NOT NULL, account_id TEXT, is_settled INTEGER NOT NULL DEFAULT 0,
+                date TEXT NOT NULL, due_date TEXT, notes TEXT NOT NULL DEFAULT '',
+                reminder_enabled INTEGER NOT NULL DEFAULT 0,
+                reminder_time TEXT NOT NULL DEFAULT '09:00'
+              )''');
+            await txn.execute('''
+              INSERT INTO lended_money_new
+                (id, person_id, amount, type, account_id, is_settled, date,
+                 due_date, notes, reminder_enabled, reminder_time)
+              SELECT id, person_id, amount, type, account_id, is_settled, date,
+                     due_date, notes, reminder_enabled, reminder_time
+              FROM lended_money
+              WHERE person_id IS NOT NULL
+            ''');
+            await txn.execute('DROP TABLE lended_money');
+            await txn.execute(
+                'ALTER TABLE lended_money_new RENAME TO lended_money');
+          });
+        }
+      } catch (e) {
+        // If this ever fails, the old person_name-carrying table survives
+        // untouched (transaction rolled back) and inserts will keep failing
+        // until it's retried on a future launch. Surface it loudly in debug
+        // builds instead of failing completely silently.
+        // ignore: avoid_print
+        print('Expensy DB migration warning: lended_money rebuild failed: $e');
+      }
+    }
   }
 
   static Future<void> _onCreate(Database db, int version) async {
@@ -134,8 +260,14 @@ class DBHelper {
         notes TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL
       )''');
     await db.execute('''
+      CREATE TABLE lended_people (
+        id TEXT PRIMARY KEY, name TEXT NOT NULL,
+        color_value INTEGER NOT NULL,
+        notes TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL
+      )''');
+    await db.execute('''
       CREATE TABLE lended_money (
-        id TEXT PRIMARY KEY, person_name TEXT NOT NULL, amount REAL NOT NULL,
+        id TEXT PRIMARY KEY, person_id TEXT NOT NULL, amount REAL NOT NULL,
         type TEXT NOT NULL, account_id TEXT, is_settled INTEGER NOT NULL DEFAULT 0,
         date TEXT NOT NULL, due_date TEXT, notes TEXT NOT NULL DEFAULT '',
         reminder_enabled INTEGER NOT NULL DEFAULT 0,
@@ -267,10 +399,30 @@ class DBHelper {
   static Future<void> deleteWishlist(String id) async =>
       (await database).delete('wishlist', where: 'id=?', whereArgs: [id]);
 
-  // ── Lended Money ─────────────────────────────────────────────────────
+  // ── Lended People ────────────────────────────────────────────────────
+  static Future<List<LendedPerson>> getLendedPeople() async {
+    final db = await database;
+    final rows = await db.query('lended_people', orderBy: 'created_at ASC');
+    return rows.map(LendedPerson.fromMap).toList();
+  }
+  static Future<void> insertLendedPerson(LendedPerson p) async =>
+      (await database).insert('lended_people', p.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace);
+  static Future<void> updateLendedPerson(LendedPerson p) async =>
+      (await database).update('lended_people', p.toMap(), where: 'id=?', whereArgs: [p.id]);
+  static Future<void> deleteLendedPerson(String id) async =>
+      (await database).delete('lended_people', where: 'id=?', whereArgs: [id]);
+
+  // ── Lended Money (per-person ledger entries) ────────────────────────────
   static Future<List<LendedMoney>> getLended() async {
     final db = await database;
     final rows = await db.query('lended_money', orderBy: 'date DESC');
+    return rows.map(LendedMoney.fromMap).toList();
+  }
+  static Future<List<LendedMoney>> getLendedForPerson(String personId) async {
+    final db = await database;
+    final rows = await db.query('lended_money',
+        where: 'person_id = ?', whereArgs: [personId], orderBy: 'date DESC');
     return rows.map(LendedMoney.fromMap).toList();
   }
   static Future<void> insertLended(LendedMoney l) async =>
@@ -280,6 +432,8 @@ class DBHelper {
       (await database).update('lended_money', l.toMap(), where: 'id=?', whereArgs: [l.id]);
   static Future<void> deleteLended(String id) async =>
       (await database).delete('lended_money', where: 'id=?', whereArgs: [id]);
+  static Future<void> deleteLendedForPerson(String personId) async =>
+      (await database).delete('lended_money', where: 'person_id=?', whereArgs: [personId]);
 
   // ── Assets ────────────────────────────────────────────────────────────
   static Future<List<AssetItem>> getAssets() async {
@@ -326,6 +480,16 @@ class DBHelper {
     return rows.map(RecurringHistoryEntry.fromMap).toList();
   }
 
+  /// Lightweight total row count for `recurring_history` — used by the
+  /// Backup screen's "what's included" list so it can show an accurate
+  /// number without loading every history row into memory.
+  static Future<int> getRecurringHistoryCount() async {
+    final db = await database;
+    final rows =
+        await db.rawQuery('SELECT COUNT(*) AS c FROM recurring_history');
+    return (rows.first['c'] as int?) ?? 0;
+  }
+
   static Future<void> insertRecurringHistory(RecurringHistoryEntry e) async =>
       (await database).insert('recurring_history', e.toMap(),
           conflictAlgorithm: ConflictAlgorithm.replace);
@@ -343,6 +507,7 @@ class DBHelper {
       'transactions':        await db.query('transactions'),
       'recurring_payments':  await db.query('recurring_payments'),
       'wishlist':            await db.query('wishlist'),
+      'lended_people':       await db.query('lended_people'),
       'lended_money':        await db.query('lended_money'),
       'assets':              await db.query('assets'),
       'budgets':             await db.query('budgets'),
@@ -358,8 +523,8 @@ class DBHelper {
     await db.transaction((txn) async {
       for (final table in [
         'accounts', 'categories', 'transactions',
-        'recurring_payments', 'wishlist', 'lended_money', 'assets',
-        'budgets', 'recurring_history',
+        'recurring_payments', 'wishlist', 'lended_people', 'lended_money',
+        'assets', 'budgets', 'recurring_history',
       ]) {
         await txn.delete(table);
         final rows =
@@ -417,6 +582,62 @@ class DBHelper {
       row.putIfAbsent('account_id',       () => null);
       row.putIfAbsent('reminder_enabled', () => 0);    // v8→v9
       row.putIfAbsent('reminder_time',    () => '09:00'); // v8→v9
+    }
+
+    // v9 → v10: lended money becomes account-based (per-person ledger).
+    // Old backups have `person_name` on each lended_money row and no
+    // `lended_people` table at all. Synthesize a LendedPerson per distinct
+    // name and rewrite each row to carry `person_id` instead.
+    data.putIfAbsent('lended_people', () => <dynamic>[]);
+    final peopleRows = _rows(data, 'lended_people');
+    final lendedRows = _rows(data, 'lended_money');
+    final needsBackfill = lendedRows.isNotEmpty &&
+        lendedRows.any((r) => r['person_id'] == null);
+    if (needsBackfill) {
+      final nameToId = <String, String>{};
+      for (final p in peopleRows) {
+        final nm = p['name'] as String?;
+        final id = p['id'] as String?;
+        if (nm != null && id != null) nameToId[nm] = id;
+      }
+      const palette = [
+        0xFF6750A4, 0xFF1565C0, 0xFF2E7D32, 0xFFC62828, 0xFFE65100,
+        0xFF00838F, 0xFF6A1B9A, 0xFF37474F, 0xFFAD1457, 0xFF827717,
+      ];
+      var colorIdx = peopleRows.length;
+      var seq = 0;
+      for (final row in lendedRows) {
+        if (row['person_id'] != null) continue;
+        final name = (row['person_name'] as String?)?.trim();
+        final key = (name == null || name.isEmpty) ? 'Unknown' : name;
+        var id = nameToId[key];
+        if (id == null) {
+          id = 'restored_${DateTime.now().microsecondsSinceEpoch}_${seq++}';
+          nameToId[key] = id;
+          peopleRows.add({
+            'id': id,
+            'name': key,
+            'color_value': palette[colorIdx % palette.length],
+            'notes': '',
+            'created_at': DateTime.now().toIso8601String(),
+          });
+          colorIdx++;
+        }
+        row['person_id'] = id;
+      }
+      data['lended_people'] = peopleRows;
+      data['lended_money'] = lendedRows;
+    }
+    // The legacy `person_name` key (if present) must never reach the raw
+    // `txn.insert()` in importAll() — the live `lended_money` table (v10+)
+    // has no such column, and sqflite would throw "no such column:
+    // person_name" for every restored row, aborting the whole restore.
+    for (final row in _rows(data, 'lended_money')) {
+      row.remove('person_name');
+    }
+    for (final row in _rows(data, 'lended_people')) {
+      row.putIfAbsent('color_value', () => 0xFF6750A4);
+      row.putIfAbsent('notes', () => '');
     }
 
     data.putIfAbsent('assets', () => <dynamic>[]);

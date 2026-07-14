@@ -7,7 +7,7 @@ import '../models/models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
 import 'add_transaction_screen.dart';
-import 'lended_screen.dart';
+import 'lended_person_screen.dart';
 
 class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({super.key});
@@ -17,7 +17,7 @@ class TransactionsScreen extends StatefulWidget {
 
 class _TransactionsScreenState extends State<TransactionsScreen> {
   String  _search    = '';
-  String  _filter    = 'all';   // all|income|expense|lent
+  String  _filter    = 'all';   // all|income|expense
   String? _accFilter;
 
   @override
@@ -25,16 +25,11 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     final app = context.watch<AppProvider>();
     final cs  = Theme.of(context).colorScheme;
 
-    // ── Build unified item list ─────────────────────────────────────────
-    // Each list item is either an AppTransaction or a LendedMoney wrapped
-    // in a common class so they can be sorted together.
-    final List<_ListItem> allItems = [];
+    // ── Build item list ─────────────────────────────────────────────────
+    final List<_TxItem> allItems = [];
 
-    final showLent = _filter == 'lent';
-    final showTx   = _filter != 'lent';
-
-    // Add transactions when not in lent view
-    if (showTx) {
+    // 1. Add matching regular transactions
+    if (_filter == 'all' || _filter == 'income' || _filter == 'expense') {
       for (final t in app.transactions) {
         if (_filter != 'all' && t.type != _filter) continue;
         if (_accFilter != null && t.accountId != _accFilter) continue;
@@ -45,19 +40,28 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           if (!t.description.toLowerCase().contains(q) &&
               !cat.contains(q) && !acc.contains(q)) continue;
         }
-        allItems.add(_ListItem.transaction(t));
+        allItems.add(_TxItem.fromTx(t));
       }
     }
 
-    // Add lended when in lent view
-    if (showLent) {
+    // 2. Add matching lent & borrowed records
+    if (_filter == 'all' || _filter == 'lent' || _filter == 'borrowed') {
       for (final l in app.lended) {
+        if (_filter != 'all' && l.type != _filter) continue;
+        if (_accFilter != null && l.accountId != _accFilter) continue;
         if (_search.isNotEmpty) {
-          final q = _search.toLowerCase();
-          if (!l.personName.toLowerCase().contains(q) &&
-              !l.notes.toLowerCase().contains(q)) continue;
+          final q      = _search.toLowerCase();
+          final person = app.personById(l.personId)?.name.toLowerCase() ?? '';
+          final acc    = l.accountId != null
+              ? (app.accountById(l.accountId!)?.name.toLowerCase() ?? '')
+              : '';
+          final typeStr = l.type.toLowerCase();
+          if (!l.notes.toLowerCase().contains(q) &&
+              !person.contains(q) &&
+              !acc.contains(q) &&
+              !typeStr.contains(q)) continue;
         }
-        allItems.add(_ListItem.lended(l));
+        allItems.add(_TxItem.fromLended(l));
       }
     }
 
@@ -65,7 +69,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     allItems.sort((a, b) => b.date.compareTo(a.date));
 
     // Group by date
-    final groups = <String, List<_ListItem>>{};
+    final groups = <String, List<_TxItem>>{};
     for (final item in allItems) {
       final key = DateFormat('yyyy-MM-dd').format(item.date);
       (groups[key] ??= []).add(item);
@@ -84,9 +88,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
           child: TextField(
             decoration: InputDecoration(
-              hintText: showLent
-                  ? 'Search lent & borrowed...'
-                  : 'Search transactions...',
+              hintText: 'Search transactions...',
               prefixIcon: const Icon(Icons.search),
               suffixIcon: _search.isNotEmpty
                   ? IconButton(icon: const Icon(Icons.clear),
@@ -115,10 +117,11 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             children: [
               for (final f in const [
-                ('all',     'All',              0xFF6750A4),
-                ('income',  'Income',           0xFF2E7D32),
-                ('expense', 'Expenses',         0xFFC62828),
-                ('lent',    'Lent & Borrowed',  0xFF0077B6),
+                ('all',      'All',              0xFF6750A4),
+                ('income',   'Income',           0xFF2E7D32),
+                ('expense',  'Expenses',         0xFFC62828),
+                ('lent',     'Lent',             0xFF1565C0),
+                ('borrowed', 'Borrowed',         0xFFE65100),
               ])
                 Padding(
                   padding: const EdgeInsets.only(right: 6),
@@ -126,14 +129,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     label: f.$2,
                     color: Color(f.$3),
                     selected: _filter == f.$1,
-                    onTap: () => setState(() {
-                      _filter = f.$1;
-                      if (f.$1 == 'lent') _accFilter = null;
-                    }),
+                    onTap: () => setState(() => _filter = f.$1),
                   ),
                 ),
-              // Account filters only when not in lent view
-              if (!showLent && app.accounts.isNotEmpty)
+              if (app.accounts.isNotEmpty)
                 for (final acc in app.accounts)
                   Padding(
                     padding: const EdgeInsets.only(right: 6),
@@ -152,14 +151,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         // ── List ────────────────────────────────────────────────────────
         Expanded(
           child: allItems.isEmpty
-              ? EmptyState(
-                  icon: showLent
-                      ? Icons.handshake_outlined
-                      : Icons.receipt_long_outlined,
-                  message: showLent ? 'No lent / borrowed records' : 'No transactions',
-                  subMessage: showLent
-                      ? 'Go to More → Lent Money to add records'
-                      : 'Tap + to add one',
+              ? const EmptyState(
+                  icon: Icons.receipt_long_outlined,
+                  message: 'No transactions',
+                  subMessage: 'Tap + to add one',
                 )
               : ListView.builder(
                   padding: const EdgeInsets.fromLTRB(14, 4, 14, 100),
@@ -188,10 +183,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                               color: cs.primary)),
                         ),
                         for (final item in items)
-                          if (item.transaction != null)
-                            _TxTile(t: item.transaction!, app: app)
-                          else
-                            _LentTile(l: item.lended!, app: app),
+                          item.isTx
+                              ? _TxTile(t: item.tx!, app: app)
+                              : _LendedTile(l: item.lended!, app: app),
                       ],
                     );
                   },
@@ -208,19 +202,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   }
 }
 
-// ── Unified list item ─────────────────────────────────────────────────────────
-class _ListItem {
-  final AppTransaction? transaction;
-  final LendedMoney?    lended;
-  final DateTime        date;
-
-  _ListItem.transaction(AppTransaction t)
-      : transaction = t, lended = null, date = t.date;
-  _ListItem.lended(LendedMoney l)
-      : lended = l, transaction = null, date = l.date;
-}
-
-// ── Transaction tile (unchanged from before) ──────────────────────────────────
+// ── Transaction tile ────────────────────────────────────────────────────────
 class _TxTile extends StatelessWidget {
   final AppTransaction t;
   final AppProvider    app;
@@ -282,95 +264,6 @@ class _TxTile extends StatelessWidget {
   }
 }
 
-// ── Lent / Borrowed tile ──────────────────────────────────────────────────────
-class _LentTile extends StatelessWidget {
-  final LendedMoney l;
-  final AppProvider app;
-  const _LentTile({required this.l, required this.app});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs     = Theme.of(context).colorScheme;
-    final isLent = l.type == 'lent';
-    final color  = isLent
-        ? const Color(0xFF2E7D32)
-        : const Color(0xFFC62828);
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 6),
-      child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        leading: Container(
-          width: 40, height: 40,
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.10),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(
-              isLent
-                  ? Icons.arrow_upward_rounded
-                  : Icons.arrow_downward_rounded,
-              color: color, size: 20),
-        ),
-        title: Text(l.personName,
-            style: const TextStyle(
-                fontWeight: FontWeight.w600, fontSize: 14)),
-        subtitle: Row(children: [
-          // Lent / Borrowed badge
-          Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(6)),
-            child: Text(isLent ? 'LENT' : 'BORROWED',
-                style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w800,
-                    color: color)),
-          ),
-          if (l.isSettled) ...[
-            const SizedBox(width: 6),
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                  color: const Color(0xFFE8F5E9),
-                  borderRadius: BorderRadius.circular(6)),
-              child: const Text('SETTLED',
-                  style: TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF2E7D32))),
-            ),
-          ],
-          if (l.dueDate != null) ...[
-            const SizedBox(width: 6),
-            Text(
-              'Due ${DateFormat('d MMM').format(l.dueDate!)}',
-              style: TextStyle(
-                  fontSize: 10,
-                  color: cs.onSurface.withValues(alpha: 0.5)),
-            ),
-          ],
-        ]),
-        trailing: Text(
-          '${isLent ? '+' : '-'}${formatAmount(l.amount, app.settings.currency)}',
-          style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: color),
-        ),
-        onTap: () {
-          // Navigate to lended screen to view / edit
-          LendedScreen.openSheetFromExternal(context, existing: l);
-        },
-      ),
-    );
-  }
-}
-
 // ── Colored filter pill ───────────────────────────────────────────────────────
 class _FilterPill extends StatelessWidget {
   final String label;
@@ -413,4 +306,134 @@ class _FilterPill extends StatelessWidget {
       ),
     );
   }
+}
+
+// ── Lent / Borrowed tile ────────────────────────────────────────────────────
+class _LendedTile extends StatelessWidget {
+  final LendedMoney l;
+  final AppProvider app;
+  const _LendedTile({required this.l, required this.app});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final person = app.personById(l.personId);
+    final isLent = l.type == 'lent';
+    final acc = l.accountId != null ? app.accountById(l.accountId!) : null;
+    final accCurrency = acc?.currency ?? app.settings.currency;
+    final displayCurrency = accCurrency;
+
+    final personColor = Color(
+        person?.colorValue ?? (isLent ? 0xFF1565C0 : 0xFFE65100));
+    final amountColor = isLent ? const Color(0xFF1565C0) : const Color(0xFFE65100);
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 6),
+      child: ListTile(
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: personColor.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            isLent ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+            color: personColor,
+            size: 22,
+          ),
+        ),
+        title: Text(
+          l.notes.isNotEmpty
+              ? l.notes
+              : '${isLent ? 'Lent to' : 'Borrowed from'} ${person?.name ?? 'Unknown'}',
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+        ),
+        subtitle: Text(
+          [
+            if (l.notes.isNotEmpty)
+              '${isLent ? 'Lent to' : 'Borrowed from'} ${person?.name ?? 'Unknown'}',
+            if (acc != null) acc.name,
+            isLent ? 'Lent' : 'Borrowed',
+            l.isSettled
+                ? 'Settled'
+                : (l.dueDate != null
+                    ? 'Due ${DateFormat('d MMM yyyy').format(l.dueDate!)}'
+                    : 'Unsettled'),
+          ].join('  ·  '),
+          style: TextStyle(
+            fontSize: 11,
+            color: cs.onSurface.withValues(alpha: 0.5),
+          ),
+        ),
+        trailing: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              '${isLent ? '-' : '+'}${formatAmount(l.amount, displayCurrency)}',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: l.isSettled
+                    ? cs.onSurface.withValues(alpha: 0.4)
+                    : amountColor,
+              ),
+            ),
+            if (l.isSettled)
+              Text(
+                'Settled',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: cs.onSurface.withValues(alpha: 0.4),
+                ),
+              )
+            else if (l.notes.isNotEmpty)
+              Icon(
+                Icons.sticky_note_2_outlined,
+                size: 12,
+                color: cs.onSurface.withValues(alpha: 0.4),
+              ),
+          ],
+        ),
+        onTap: () {
+          if (person != null) {
+            Navigator.push(
+              context,
+              ExpensyRoute(
+                builder: (_) => LendedPersonScreen(person: person),
+              ),
+            );
+          }
+        },
+        onLongPress: () async {
+          if (await showDeleteConfirm(
+                context,
+                l.notes.isNotEmpty
+                    ? l.notes
+                    : '${isLent ? 'Lent to' : 'Borrowed from'} ${person?.name ?? 'Unknown'}',
+              ) &&
+              context.mounted) {
+            context.read<AppProvider>().deleteLended(l.id);
+          }
+        },
+      ),
+    );
+  }
+}
+
+// ── Unified display item wrapper ────────────────────────────────────────────
+class _TxItem {
+  final AppTransaction? tx;
+  final LendedMoney? lended;
+  final DateTime date;
+
+  _TxItem.fromTx(this.tx) : lended = null, date = tx!.date;
+  _TxItem.fromLended(this.lended) : tx = null, date = lended!.date;
+
+  bool get isTx => tx != null;
+  bool get isLended => lended != null;
 }
