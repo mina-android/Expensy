@@ -44,13 +44,13 @@ Most finance apps want you to sign up, sync to the cloud, or watch ads. Expensy 
 
 ## 📸 Screenshots
 
-| Home | Transactions | Recurring |
-|------|-------------|-----------|
-| ![Home](screenshots/home.png) | ![Transactions](screenshots/transactions.png) | ![Recurring](screenshots/recurring.png) |
+![Home](screenshots/home.png)
+![Transactions](screenshots/transactions.png)
+![Recurring](screenshots/recurring.png)
 
-| Accounts | Budgets | Statistics |
-|----------|---------|-----------|
-| ![Accounts](screenshots/accounts.png) | ![Budgets](screenshots/budgets.png) | ![Statistics](screenshots/statistics.png) |
+![Accounts](screenshots/accounts.png)
+![Budgets](screenshots/budgets.png)
+![Statistics](screenshots/statistics.png)
 
 ---
 
