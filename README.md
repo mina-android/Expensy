@@ -8,7 +8,7 @@
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.3%2B-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Android](https://img.shields.io/badge/Android-5.0%2B-3DDC84?logo=android&logoColor=white)](https://android.com)
-[![Version](https://img.shields.io/badge/Version-1.0.6-brightgreen)](https://github.com/mina-android/Expensy/releases)
+[![Version](https://img.shields.io/badge/Version-1.0.7-brightgreen)](https://github.com/mina-android/Expensy/releases)
 [![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
 
 No accounts. No cloud. No ads. Your data stays on your device — always.
@@ -112,11 +112,21 @@ Production builds automatically detect `android/key.properties` and sign with `e
 
 ---
 
+## 🌍 Localization & Translation
+
+Expensy natively supports English (100% base). The following languages are supported:
+- **Arabic (ar):** 72.5% translated
+- **French (fr):** 72.5% translated
+- **German (de):** 72.5% translated
+- **Hindi (hi):** 72.5% translated
+
+---
+
 ## 🗺 Roadmap
 
 - [ ] iOS support
 - [ ] Home screen widget
-- [ ] Multiple languages
+- [x] Multiple languages
 - [ ] Recurring payment auto-pay
 - [x] Budgets per category
 - [x] Push notifications for recurring & lent/borrowed reminders

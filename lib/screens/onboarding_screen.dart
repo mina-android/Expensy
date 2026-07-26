@@ -1,5 +1,6 @@
 // lib/screens/onboarding_screen.dart
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../models/models.dart';
@@ -34,7 +35,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final _pageCtrl = PageController();
   int _page = 0;
 
-  static const int _totalPages = 4; // 0: welcome/restore, 1-3: existing setup steps
+  static const int _totalPages = 5; // 0: language, 1: welcome/restore, 2-4: existing setup steps
 
   bool _restoring = false;
   String? _restoreError;
@@ -62,7 +63,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _next() {
-    if (_page == 1 && _nameCtrl.text.trim().isEmpty) return;
+    if (_page == 2 && _nameCtrl.text.trim().isEmpty) return;
     if (_page < _totalPages - 1) {
       _pageCtrl.nextPage(duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut);
@@ -76,6 +77,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   /// where restoring meant first clicking through the entire setup wizard
   /// with throwaway data just to overwrite it seconds later from Settings.
   Future<void> _restoreFromWelcome() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() { _restoring = true; _restoreError = null; });
     try {
       final app = context.read<AppProvider>();
@@ -102,7 +104,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       if (mounted) setState(() {
         _restoring = false;
         _restoreError =
-            'Restore failed: the file may be corrupted or not an Expensy backup.';
+            l10n.onboarding_restoreFailed;
       });
     }
   }
@@ -132,6 +134,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -158,6 +161,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               physics: const NeverScrollableScrollPhysics(),
               onPageChanged: (i) => setState(() => _page = i),
               children: [
+                _PageLanguage(onNext: _next),
                 _PageWelcome(
                   restoring: _restoring,
                   error: _restoreError,
@@ -180,21 +184,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
           // Navigation buttons — hidden on the welcome page, which has its
           // own inline actions (Restore Backup / Start Fresh).
-          if (_page > 0)
+          if (_page != 1)
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
               child: Row(children: [
                 Expanded(
                   flex: 1,
                   child: OutlinedButton(
-                    onPressed: () => _pageCtrl.previousPage(
+                    onPressed: _page == 0 ? null : () => _pageCtrl.previousPage(
                         duration: const Duration(milliseconds: 300),
                         curve: Curves.easeInOut),
                     style: OutlinedButton.styleFrom(
                         minimumSize: const Size.fromHeight(50),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(28))),
-                    child: const Text('Back'),
+                    child: Text(l10n.onboarding_back),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -206,7 +210,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         minimumSize: const Size.fromHeight(50),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(28))),
-                    child: Text(_page < _totalPages - 1 ? 'Continue' : 'Get Started'),
+                    child: Text(_page < _totalPages - 1 ? l10n.onboarding_continue : l10n.onboarding_getStarted),
                   ),
                 ),
               ]),
@@ -232,6 +236,7 @@ class _PageWelcome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.all(24),
@@ -246,13 +251,12 @@ class _PageWelcome extends StatelessWidget {
               color: cs.primary, size: 32),
         ),
         const SizedBox(height: 20),
-        Text('Welcome to Expensy!',
+        Text(l10n.onboarding_welcomeToExpensy,
             style: Theme.of(context).textTheme.headlineSmall
                 ?.copyWith(fontWeight: FontWeight.w800)),
         const SizedBox(height: 8),
         Text(
-          'Your personal, 100% offline finance tracker.\n'
-          'Already have a backup from another device or a previous install?',
+          l10n.onboarding_yourPersonalTracker,
           style: TextStyle(fontSize: 15,
               color: cs.onSurface.withValues(alpha: 0.6)),
         ),
@@ -274,9 +278,9 @@ class _PageWelcome extends StatelessWidget {
                 Expanded(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Restore a Backup', style: TextStyle(
+                    Text(l10n.onboarding_restoreABackup, style: TextStyle(
                         fontWeight: FontWeight.w800, fontSize: 15)),
-                    Text('Load a previously saved Expensy JSON file',
+                    Text(l10n.onboarding_loadAPreviouslySaved,
                         style: TextStyle(fontSize: 12,
                             color: cs.onSurface.withValues(alpha: 0.6))),
                   ],
@@ -290,7 +294,7 @@ class _PageWelcome extends StatelessWidget {
                         child: CircularProgressIndicator(strokeWidth: 2,
                             color: Colors.white))
                     : const Icon(Icons.upload_file_outlined),
-                label: Text(restoring ? 'Restoring...' : 'Choose Backup File'),
+                label: Text(restoring ? l10n.onboarding_restoring : l10n.onboarding_chooseBackupFile),
                 style: FilledButton.styleFrom(
                     minimumSize: const Size.fromHeight(48),
                     shape: RoundedRectangleBorder(
@@ -322,7 +326,7 @@ class _PageWelcome extends StatelessWidget {
           Expanded(child: Divider(color: cs.outlineVariant)),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Text('or', style: TextStyle(fontSize: 12,
+            child: Text(l10n.onboarding_or, style: TextStyle(fontSize: 12,
                 color: cs.onSurface.withValues(alpha: 0.5))),
           ),
           Expanded(child: Divider(color: cs.outlineVariant)),
@@ -332,7 +336,7 @@ class _PageWelcome extends StatelessWidget {
         OutlinedButton.icon(
           onPressed: restoring ? null : onStartFresh,
           icon: const Icon(Icons.add_circle_outline),
-          label: const Text('Start Fresh'),
+          label: Text(l10n.onboarding_startFresh),
           style: OutlinedButton.styleFrom(
               minimumSize: const Size.fromHeight(48),
               shape: RoundedRectangleBorder(
@@ -350,6 +354,7 @@ class _PageOne extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.all(24),
@@ -363,19 +368,19 @@ class _PageOne extends StatelessWidget {
           child: Icon(Icons.waving_hand_outlined, color: cs.primary, size: 32),
         ),
         const SizedBox(height: 20),
-        Text('Let\'s get you set up',
+        Text(l10n.onboarding_letsGetYouSetUp,
             style: Theme.of(context).textTheme.headlineSmall
                 ?.copyWith(fontWeight: FontWeight.w800)),
         const SizedBox(height: 8),
-        Text('First, what should we call you?',
+        Text(l10n.onboarding_firstWhatShouldWeCal,
             style: TextStyle(fontSize: 15,
                 color: cs.onSurface.withValues(alpha: 0.6))),
         const SizedBox(height: 32),
         TextField(
           controller: nameCtrl,
           autofocus: true,
-          decoration: const InputDecoration(
-              labelText: 'Your name', prefixIcon: Icon(Icons.person_outline)),
+          decoration: InputDecoration(
+              labelText: l10n.onboarding_yourName, prefixIcon: const Icon(Icons.person_outline)),
           textCapitalization: TextCapitalization.words,
         ),
       ]),
@@ -391,6 +396,7 @@ class _PageTwo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.all(24),
@@ -405,11 +411,11 @@ class _PageTwo extends StatelessWidget {
               color: cs.secondary, size: 32),
         ),
         const SizedBox(height: 20),
-        Text('Default Currency',
+        Text(l10n.onboarding_defaultCurrency,
             style: Theme.of(context).textTheme.headlineSmall
                 ?.copyWith(fontWeight: FontWeight.w800)),
         const SizedBox(height: 8),
-        Text('This will be used across the app.\nYou can change it later in Settings.',
+        Text(l10n.onboarding_thisWillBeUsedAcross,
             style: TextStyle(fontSize: 15,
                 color: cs.onSurface.withValues(alpha: 0.6))),
         const SizedBox(height: 24),
@@ -453,7 +459,7 @@ class _PageTwo extends StatelessWidget {
             if (picked != null) onChanged(picked);
           },
           icon: const Icon(Icons.search),
-          label: const Text('Search all currencies'),
+          label: Text(l10n.onboarding_searchAllCurrencies),
         ),
       ]),
     );
@@ -476,6 +482,7 @@ class _PageThree extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs  = Theme.of(context).colorScheme;
     final sym = currencyInfo(currency).symbol;
 
@@ -492,36 +499,36 @@ class _PageThree extends StatelessWidget {
               color: cs.tertiary, size: 32),
         ),
         const SizedBox(height: 20),
-        Text('Your First Account',
+        Text(l10n.onboarding_yourFirstAccount,
             style: Theme.of(context).textTheme.headlineSmall
                 ?.copyWith(fontWeight: FontWeight.w800)),
         const SizedBox(height: 8),
-        Text('Set up your main account to start tracking.',
+        Text(l10n.onboarding_setUpYourMainAccount,
             style: TextStyle(fontSize: 15,
                 color: cs.onSurface.withValues(alpha: 0.6))),
         const SizedBox(height: 24),
 
         TextField(
           controller: nameCtrl,
-          decoration: const InputDecoration(
-              labelText: 'Account Name',
-              prefixIcon: Icon(Icons.label_outline)),
+          decoration: InputDecoration(
+              labelText: l10n.onboarding_accountName,
+              prefixIcon: const Icon(Icons.label_outline)),
         ),
         const SizedBox(height: 14),
 
         // Type cards
-        Text('Account Type', style: Theme.of(context).textTheme.labelMedium
+        Text(l10n.onboarding_accountType, style: Theme.of(context).textTheme.labelMedium
             ?.copyWith(letterSpacing: 1)),
         const SizedBox(height: 8),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(children: [
-            for (final opt in const [
-              ('bank',    'Bank',   'account_balance'),
-              ('cash',    'Cash',   'payments'),
-              ('savings', 'Savings','savings'),
-              ('credit',  'Credit', 'credit_card'),
-              ('wallet',  'Wallet', 'account_balance_wallet'),
+            for (final opt in [
+              ('bank',    l10n.onboarding_bank,   'account_balance'),
+              ('cash',    l10n.onboarding_cash,   'payments'),
+              ('savings', l10n.onboarding_savings,'savings'),
+              ('credit',  l10n.onboarding_credit, 'credit_card'),
+              ('wallet',  l10n.onboarding_wallet, 'account_balance_wallet'),
             ])
               GestureDetector(
                 onTap: () => onType(opt.$1),
@@ -548,7 +555,7 @@ class _PageThree extends StatelessWidget {
         const SizedBox(height: 14),
 
         // Currency
-        Text('Currency', style: Theme.of(context).textTheme.labelMedium
+        Text(l10n.onboarding_currency, style: Theme.of(context).textTheme.labelMedium
             ?.copyWith(letterSpacing: 1)),
         const SizedBox(height: 8),
         GestureDetector(
@@ -578,13 +585,13 @@ class _PageThree extends StatelessWidget {
           controller: balCtrl,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           decoration: InputDecoration(
-              labelText: 'Starting Balance',
+              labelText: l10n.onboarding_startingBalance,
               prefixText: '$sym '),
         ),
         const SizedBox(height: 14),
 
         // Colour
-        Text('Colour', style: Theme.of(context).textTheme.labelMedium
+        Text(l10n.onboarding_colour, style: Theme.of(context).textTheme.labelMedium
             ?.copyWith(letterSpacing: 1)),
         const SizedBox(height: 8),
         SizedBox(
@@ -612,6 +619,73 @@ class _PageThree extends StatelessWidget {
         ),
         const SizedBox(height: 20),
       ]),
+    );
+  }
+}
+
+// ── Page 0: Language ─────────────────────────────────────────────────────────
+class _PageLanguage extends StatelessWidget {
+  final VoidCallback onNext;
+  const _PageLanguage({required this.onNext});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
+    final s = context.watch<AppProvider>().settings;
+
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const SizedBox(height: 24),
+        Container(
+          width: 64, height: 64,
+          decoration: BoxDecoration(
+              color: cs.primaryContainer,
+              borderRadius: BorderRadius.circular(20)),
+          child: Icon(Icons.language_outlined, color: cs.primary, size: 32),
+        ),
+        const SizedBox(height: 20),
+        Text(l10n.onboarding_chooseLanguage,
+            style: Theme.of(context).textTheme.headlineSmall
+                ?.copyWith(fontWeight: FontWeight.w800)),
+        const SizedBox(height: 24),
+        Expanded(
+          child: ListView(
+            children: [
+              _langTile('system', l10n.settings_systemDefault, s.languageCode, context),
+              _langTile('en', 'English', s.languageCode, context),
+              _langTile('ar', 'العربية', s.languageCode, context),
+              _langTile('fr', 'Français', s.languageCode, context),
+              _langTile('de', 'Deutsch', s.languageCode, context),
+              _langTile('hi', 'हिन्दी', s.languageCode, context),
+            ],
+          ),
+        ),
+      ]),
+    );
+  }
+
+  Widget _langTile(String code, String name, String current, BuildContext context) {
+    final sel = code == current;
+    final cs = Theme.of(context).colorScheme;
+    return Card(
+      elevation: sel ? 2 : 0,
+      color: sel ? cs.primaryContainer : cs.surfaceContainerLow,
+      margin: const EdgeInsets.only(bottom: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: sel ? BorderSide(color: cs.primary, width: 2) : BorderSide.none,
+      ),
+      child: ListTile(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(name, style: TextStyle(fontWeight: sel ? FontWeight.w700 : FontWeight.w500)),
+        trailing: sel ? Icon(Icons.check_circle_rounded, color: cs.primary) : null,
+        onTap: () {
+          context.read<AppProvider>().updateSetting('languageCode', code);
+          Future.delayed(const Duration(milliseconds: 300), onNext);
+        },
+      ),
     );
   }
 }

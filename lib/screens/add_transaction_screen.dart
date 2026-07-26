@@ -1,5 +1,6 @@
 // lib/screens/add_transaction_screen.dart
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/app_provider.dart';
@@ -117,6 +118,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final app  = context.watch<AppProvider>();
     final cs   = Theme.of(context).colorScheme;
     final cats = app.categories.where((c) => c.type == _type).toList();
@@ -137,7 +139,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEdit ? 'Edit Transaction' : 'Add Transaction',
+        title: Text(isEdit ? l10n.add_transaction_editTransaction : l10n.add_transaction_addTransaction,
             style: const TextStyle(fontWeight: FontWeight.w800)),
         backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
       ),
@@ -155,7 +157,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   color: _type == 'expense'
                       ? const Color(0xFFC62828) : const Color(0xFFFFEBEE),
                   borderRadius: BorderRadius.circular(12)),
-                child: Center(child: Text('Expense',
+                child: Center(child: Text(l10n.add_transaction_expense,
                     style: TextStyle(fontWeight: FontWeight.w700,
                         color: _type == 'expense'
                             ? Colors.white : const Color(0xFFC62828)))),
@@ -171,7 +173,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   color: _type == 'income'
                       ? const Color(0xFF2E7D32) : const Color(0xFFE8F5E9),
                   borderRadius: BorderRadius.circular(12)),
-                child: Center(child: Text('Income',
+                child: Center(child: Text(l10n.add_transaction_income,
                     style: TextStyle(fontWeight: FontWeight.w700,
                         color: _type == 'income'
                             ? Colors.white : const Color(0xFF2E7D32)))),
@@ -188,7 +190,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 controller: _amtCtrl,
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
-                decoration: InputDecoration(labelText: 'Amount',
+                decoration: InputDecoration(labelText: l10n.add_transaction_amount,
                     prefixText: '$sym '),
                 style: const TextStyle(
                     fontSize: 20, fontWeight: FontWeight.w700),
@@ -240,8 +242,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 Icon(Icons.swap_horiz_rounded, size: 16, color: cs.primary),
                 const SizedBox(width: 6),
                 Text(
-                  '≈ ${formatAmount(convertedPreview, accCurrency)} '
-                  'will be deducted from ${acc?.name ?? 'account'}',
+                  l10n.add_transaction_conversionPreview(
+                    formatAmount(convertedPreview, accCurrency),
+                    acc?.name ?? l10n.add_transaction_accountFallback
+                  ),
                   style: TextStyle(fontSize: 12, color: cs.onPrimaryContainer,
                       fontWeight: FontWeight.w600),
                 ),
@@ -253,14 +257,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           // ── Description ───────────────────────────────────────────────
           TextField(
             controller: _descCtrl,
-            decoration: const InputDecoration(
-                labelText: 'Description (optional)',
-                prefixIcon: Icon(Icons.notes_outlined)),
+            decoration: InputDecoration(
+                labelText: l10n.add_transaction_descriptionOptional,
+                prefixIcon: const Icon(Icons.notes_outlined)),
           ),
           const SizedBox(height: 16),
 
           // ── Account ───────────────────────────────────────────────────
-          Text('Account', style: Theme.of(context).textTheme.labelMedium
+          Text(l10n.add_transaction_account, style: Theme.of(context).textTheme.labelMedium
               ?.copyWith(letterSpacing: 1)),
           const SizedBox(height: 8),
           AccountCardPicker(
@@ -271,7 +275,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           const SizedBox(height: 16),
 
           // ── Category ──────────────────────────────────────────────────
-          Text('Category', style: Theme.of(context).textTheme.labelMedium
+          Text(l10n.add_transaction_category, style: Theme.of(context).textTheme.labelMedium
               ?.copyWith(letterSpacing: 1)),
           const SizedBox(height: 8),
           CategoryChipPicker(
@@ -298,16 +302,16 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           TextField(
             controller: _noteCtrl,
             maxLines: 2,
-            decoration: const InputDecoration(
-                labelText: 'Note (optional)',
-                prefixIcon: Icon(Icons.sticky_note_2_outlined)),
+            decoration: InputDecoration(
+                labelText: l10n.add_transaction_noteOptional,
+                prefixIcon: const Icon(Icons.sticky_note_2_outlined)),
           ),
           const SizedBox(height: 24),
 
           FilledButton.icon(
             onPressed: _submit,
             icon: Icon(isEdit ? Icons.save_outlined : Icons.add),
-            label: Text(isEdit ? 'Save Changes' : 'Add Transaction'),
+            label: Text(isEdit ? l10n.add_transaction_saveChanges : l10n.add_transaction_addTransaction),
             style: FilledButton.styleFrom(
               minimumSize: const Size.fromHeight(52),
               shape: RoundedRectangleBorder(

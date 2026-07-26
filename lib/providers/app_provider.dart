@@ -23,6 +23,7 @@ class AppSettings {
   bool   onboarded;
   String appFont;     // key into kFonts; 'default' = system/Roboto
   bool   amoledSurfaces; // pure-black surfaces when dark — decoupled from themeMode
+  String languageCode; // 'system'|'en'|'ar'|'fr'|'de'|'hi'
 
   AppSettings({
     this.currency      = 'EGP',
@@ -34,6 +35,7 @@ class AppSettings {
     this.onboarded     = false,
     this.appFont       = 'default',
     this.amoledSurfaces = false,
+    this.languageCode  = 'system',
   });
 
   Map<String, dynamic> toJson() => {
@@ -41,6 +43,7 @@ class AppSettings {
     'weekStart': weekStart, 'hideBalance': hideBalance,
     'userName': userName, 'onboarded': onboarded,
     'appFont': appFont, 'amoledSurfaces': amoledSurfaces,
+    'languageCode': languageCode,
   };
 
   static const _validThemeModes = {'system', 'light', 'dark'};
@@ -55,6 +58,7 @@ class AppSettings {
     'default','plus_jakarta_sans','dm_sans','inter','nunito_sans',
     'space_grotesk','outfit','sora','poppins','nunito',
   };
+  static const _validLanguages = {'system', 'en', 'ar', 'fr', 'de', 'hi'};
 
   static AppSettings fromJson(Map<String, dynamic> j) {
     String seed = (j['themeSeed'] as String?) ?? 'violet';
@@ -80,6 +84,9 @@ class AppSettings {
     String font = (j['appFont'] as String?) ?? 'default';
     if (!_validFonts.contains(font)) font = 'default';
 
+    String lang = (j['languageCode'] as String?) ?? 'system';
+    if (!_validLanguages.contains(lang)) lang = 'system';
+
     return AppSettings(
       currency:       (j['currency']    as String?) ?? 'EGP',
       themeSeed:      seed,
@@ -90,6 +97,7 @@ class AppSettings {
       onboarded:      (j['onboarded']   as bool?)   ?? false,
       appFont:        font,
       amoledSurfaces: amoled,
+      languageCode:   lang,
     );
   }
 }
@@ -270,6 +278,7 @@ class AppProvider extends ChangeNotifier {
       case 'userName':       settings.userName       = value as String; break;
       case 'appFont':        settings.appFont        = value as String; break;
       case 'amoledSurfaces': settings.amoledSurfaces = value as bool;  break;
+      case 'languageCode':   settings.languageCode   = value as String; break;
     }
     _saveSettings();
   }

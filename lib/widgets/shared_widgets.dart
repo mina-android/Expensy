@@ -1,5 +1,6 @@
 // lib/widgets/shared_widgets.dart
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import '../models/models.dart';
 import '../theme/app_theme.dart';
 
@@ -13,6 +14,7 @@ class EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
       Icon(icon, size: 64, color: cs.onSurface.withValues(alpha: 0.2)),
@@ -52,6 +54,7 @@ class CategoryDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs    = Theme.of(context).colorScheme;
     final color = category != null ? Color(category!.colorValue) : cs.primary;
     // iconCodePoint actually stores a 1-based index into kCategoryIconOptions.
@@ -137,19 +140,20 @@ class LinearProgressCard extends StatelessWidget {
 
 // ── Delete confirm ────────────────────────────────────────────────────────────
 Future<bool> showDeleteConfirm(BuildContext context, String name) async {
+  final l10n = AppLocalizations.of(context)!;
   final ok = await showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: const Text('Delete?'),
-      content: Text('Delete "$name"? This cannot be undone.'),
+      title: Text(l10n.shared_widgets_delete),
+      content: Text(l10n.shared_widgets_deleteConfirm(name)),
       actions: [
         TextButton(onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel')),
+            child: Text(l10n.shared_widgets_cancel)),
         FilledButton(
           style: FilledButton.styleFrom(
               backgroundColor: Theme.of(ctx).colorScheme.error),
           onPressed: () => Navigator.pop(ctx, true),
-          child: const Text('Delete'),
+          child: Text(l10n.shared_widgets_delete_),
         ),
       ],
     ),
@@ -171,6 +175,7 @@ class AccountCardPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     final items = allowNone
         ? [null, ...accounts.map((a) => a as Account?)]
@@ -236,7 +241,9 @@ class _NoneCard extends StatelessWidget {
   const _NoneCard({required this.sel, required this.cs, required this.onTap});
 
   @override
-  Widget build(BuildContext context) => GestureDetector(
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return GestureDetector(
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 100),
@@ -253,11 +260,12 @@ class _NoneCard extends StatelessWidget {
             Icon(Icons.block_outlined, size: 16,
                 color: sel ? cs.primary : cs.onSurface.withValues(alpha: 0.5)),
             const SizedBox(height: 4),
-            Text('None', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600,
+            Text(l10n.shared_widgets_none, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600,
                 color: sel ? cs.primary : cs.onSurface.withValues(alpha: 0.6))),
           ]),
         ),
       );
+  }
 }
 
 // ── Category chip picker ──────────────────────────────────────────────────────
@@ -389,21 +397,22 @@ const List<CategoryIconOption> kCategoryIconOptions = [
 // ── Searchable currency dialog ────────────────────────────────────────────────
 Future<String?> showCurrencyPicker(BuildContext context,
     {String? current}) async {
+  final l10n = AppLocalizations.of(context)!;
   final ctrl  = TextEditingController();
   String query = '';
   return showDialog<String>(
     context: context,
     builder: (ctx) => StatefulBuilder(
       builder: (ctx, setS) => AlertDialog(
-        title: const Text('Select Currency'),
+        title: Text(l10n.shared_widgets_selectCurrency),
         contentPadding: const EdgeInsets.fromLTRB(12, 16, 12, 0),
         content: SizedBox(
           width: double.maxFinite,
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             TextField(
               controller: ctrl, autofocus: true,
-              decoration: const InputDecoration(
-                  hintText: 'Search by code or name...',
+              decoration: InputDecoration(
+                  hintText: l10n.shared_widgets_searchByCode,
                   prefixIcon: Icon(Icons.search), isDense: true),
               onChanged: (v) => setS(() => query = v.toLowerCase()),
             ),
@@ -433,7 +442,7 @@ Future<String?> showCurrencyPicker(BuildContext context,
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel')),
+              child: Text(l10n.shared_widgets_cancel)),
         ],
       ),
     ),

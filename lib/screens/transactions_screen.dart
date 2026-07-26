@@ -1,5 +1,6 @@
 // lib/screens/transactions_screen.dart
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/app_provider.dart';
@@ -22,6 +23,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
     final cs  = Theme.of(context).colorScheme;
 
@@ -78,7 +80,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Transactions',
+        title: Text(l10n.transactions_transactions,
             style: TextStyle(fontWeight: FontWeight.w800)),
         backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
       ),
@@ -88,7 +90,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
           child: TextField(
             decoration: InputDecoration(
-              hintText: 'Search transactions...',
+              hintText: l10n.transactions_searchTransactions,
               prefixIcon: const Icon(Icons.search),
               suffixIcon: _search.isNotEmpty
                   ? IconButton(icon: const Icon(Icons.clear),
@@ -116,12 +118,12 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             children: [
-              for (final f in const [
-                ('all',      'All',              0xFF6750A4),
-                ('income',   'Income',           0xFF2E7D32),
-                ('expense',  'Expenses',         0xFFC62828),
-                ('lent',     'Lent',             0xFF1565C0),
-                ('borrowed', 'Borrowed',         0xFFE65100),
+              for (final f in [
+                ('all',      l10n.transactions_all,              0xFF6750A4),
+                ('income',   l10n.transactions_income,           0xFF2E7D32),
+                ('expense',  l10n.transactions_expenses,         0xFFC62828),
+                ('lent',     l10n.transactions_lent,             0xFF1565C0),
+                ('borrowed', l10n.transactions_borrowed,         0xFFE65100),
               ])
                 Padding(
                   padding: const EdgeInsets.only(right: 6),
@@ -151,10 +153,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         // ── List ────────────────────────────────────────────────────────
         Expanded(
           child: allItems.isEmpty
-              ? const EmptyState(
+              ? EmptyState(
                   icon: Icons.receipt_long_outlined,
-                  message: 'No transactions',
-                  subMessage: 'Tap + to add one',
+                  message: l10n.transactions_noTransactions,
+                  subMessage: l10n.transactions_tapPlusToAddOne,
                 )
               : ListView.builder(
                   padding: const EdgeInsets.fromLTRB(14, 4, 14, 100),
@@ -166,10 +168,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     final now   = DateTime.now();
                     String label;
                     if (DateFormat('yyyy-MM-dd').format(now) == key) {
-                      label = 'Today';
+                      label = l10n.transactions_today;
                     } else if (DateFormat('yyyy-MM-dd').format(
                         now.subtract(const Duration(days: 1))) == key) {
-                      label = 'Yesterday';
+                      label = l10n.transactions_yesterday;
                     } else {
                       label = DateFormat('d MMMM yyyy').format(date);
                     }
@@ -210,6 +212,7 @@ class _TxTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs    = Theme.of(context).colorScheme;
     final cat   = app.categoryById(t.categoryId);
     final isInc = t.type == 'income';
@@ -280,6 +283,7 @@ class _FilterPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -316,6 +320,7 @@ class _LendedTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     final person = app.personById(l.personId);
     final isLent = l.type == 'lent';
@@ -348,20 +353,20 @@ class _LendedTile extends StatelessWidget {
         title: Text(
           l.notes.isNotEmpty
               ? l.notes
-              : '${isLent ? 'Lent to' : 'Borrowed from'} ${person?.name ?? 'Unknown'}',
+              : (isLent ? l10n.transactions_lentTo(person?.name ?? l10n.transactions_unknown) : l10n.transactions_borrowedFrom(person?.name ?? l10n.transactions_unknown)),
           style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
         ),
         subtitle: Text(
           [
             if (l.notes.isNotEmpty)
-              '${isLent ? 'Lent to' : 'Borrowed from'} ${person?.name ?? 'Unknown'}',
+              (isLent ? l10n.transactions_lentTo(person?.name ?? l10n.transactions_unknown) : l10n.transactions_borrowedFrom(person?.name ?? l10n.transactions_unknown)),
             if (acc != null) acc.name,
-            isLent ? 'Lent' : 'Borrowed',
+            isLent ? l10n.transactions_lent : l10n.transactions_borrowed,
             l.isSettled
-                ? 'Settled'
+                ? l10n.transactions_settled
                 : (l.dueDate != null
-                    ? 'Due ${DateFormat('d MMM yyyy').format(l.dueDate!)}'
-                    : 'Unsettled'),
+                    ? l10n.transactions_due(DateFormat('d MMM yyyy').format(l.dueDate!))
+                    : l10n.transactions_unsettled),
           ].join('  ·  '),
           style: TextStyle(
             fontSize: 11,
@@ -383,8 +388,7 @@ class _LendedTile extends StatelessWidget {
               ),
             ),
             if (l.isSettled)
-              Text(
-                'Settled',
+              Text(l10n.transactions_settled,
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
@@ -414,7 +418,7 @@ class _LendedTile extends StatelessWidget {
                 context,
                 l.notes.isNotEmpty
                     ? l.notes
-                    : '${isLent ? 'Lent to' : 'Borrowed from'} ${person?.name ?? 'Unknown'}',
+                    : (isLent ? l10n.transactions_lentTo(person?.name ?? l10n.transactions_unknown) : l10n.transactions_borrowedFrom(person?.name ?? l10n.transactions_unknown)),
               ) &&
               context.mounted) {
             context.read<AppProvider>().deleteLended(l.id);

@@ -1,5 +1,6 @@
 // lib/screens/lended_person_screen.dart
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/app_provider.dart';
@@ -19,6 +20,7 @@ class LendedPersonScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
     final cs  = Theme.of(context).colorScheme;
     // Re-resolve in case the person was edited since this screen was pushed.
@@ -37,10 +39,10 @@ class LendedPersonScreen extends StatelessWidget {
             ? const Color(0xFFC62828)
             : cs.onPrimary;
     final balLabel = balance > 0
-        ? '${current.name} owes you'
+        ? l10n.lended_person_owesYou(current.name)
         : balance < 0
-            ? 'You owe ${current.name}'
-            : 'All settled up';
+            ? l10n.lended_person_youOwe(current.name)
+            : l10n.lended_person_allSettledUp;
 
     return Scaffold(
       appBar: AppBar(
@@ -63,10 +65,10 @@ class LendedPersonScreen extends StatelessWidget {
                 }
               }
             },
-            itemBuilder: (_) => const [
+            itemBuilder: (_) => [
               PopupMenuItem(value: 'delete', child: Row(children: [
-                Icon(Icons.delete_outline_rounded, size: 18, color: Colors.red),
-                SizedBox(width: 8), Text('Delete person'),
+                const Icon(Icons.delete_outline_rounded, size: 18, color: Colors.red),
+                const SizedBox(width: 8), Text(l10n.lended_person_deletePerson),
               ])),
             ],
           ),
@@ -104,18 +106,18 @@ class LendedPersonScreen extends StatelessWidget {
           ]),
         ),
         Expanded(child: entries.isEmpty
-          ? const EmptyState(icon: Icons.receipt_long_outlined,
-              message: 'No records yet',
-              subMessage: 'Tap + to log money lent or borrowed')
+          ? EmptyState(icon: Icons.receipt_long_outlined,
+              message: l10n.lended_person_noRecordsYet,
+              subMessage: l10n.lended_person_tapPlusToLog)
           : ListView(
               padding: const EdgeInsets.fromLTRB(14, 14, 14, 100),
               children: [
                 if (active.isNotEmpty) ...[
-                  const SectionHeader(title: 'Active'),
+                  SectionHeader(title: l10n.lended_person_active),
                   ...active.map((l) => _EntryCard(l: l, fmt: fmt)),
                 ],
                 if (settled.isNotEmpty) ...[
-                  const SectionHeader(title: 'Settled'),
+                  SectionHeader(title: l10n.lended_person_settled_),
                   ...settled.map((l) => _EntryCard(l: l, fmt: fmt)),
                 ],
               ],
@@ -189,6 +191,7 @@ class _EditPersonInlineSheetState extends State<_EditPersonInlineSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: EdgeInsets.only(
@@ -198,15 +201,15 @@ class _EditPersonInlineSheetState extends State<_EditPersonInlineSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Edit Person', style: Theme.of(context).textTheme.titleLarge
+          Text(l10n.lended_person_editPerson, style: Theme.of(context).textTheme.titleLarge
               ?.copyWith(fontWeight: FontWeight.w800)),
           const SizedBox(height: 12),
           TextField(controller: _nameCtrl,
-              decoration: const InputDecoration(
-                  labelText: 'Name',
-                  prefixIcon: Icon(Icons.person_outline_rounded))),
+              decoration: InputDecoration(
+                  labelText: l10n.lended_person_name,
+                  prefixIcon: const Icon(Icons.person_outline_rounded))),
           const SizedBox(height: 14),
-          Text('Colour', style: Theme.of(context).textTheme.labelMedium
+          Text(l10n.lended_person_colour, style: Theme.of(context).textTheme.labelMedium
               ?.copyWith(letterSpacing: 1)),
           const SizedBox(height: 8),
           Wrap(spacing: 10, runSpacing: 10, children: kLendedPersonColors.map((col) {
@@ -230,9 +233,9 @@ class _EditPersonInlineSheetState extends State<_EditPersonInlineSheet> {
           }).toList()),
           const SizedBox(height: 14),
           TextField(controller: _notesCtrl, maxLines: 2,
-              decoration: const InputDecoration(
-                  labelText: 'Notes (optional)',
-                  prefixIcon: Icon(Icons.sticky_note_2_outlined))),
+              decoration: InputDecoration(
+                  labelText: l10n.lended_person_notesOptional,
+                  prefixIcon: const Icon(Icons.sticky_note_2_outlined))),
           const SizedBox(height: 20),
           FilledButton(
             onPressed: _submit,
@@ -240,7 +243,7 @@ class _EditPersonInlineSheetState extends State<_EditPersonInlineSheet> {
                 minimumSize: const Size.fromHeight(50),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(28))),
-            child: const Text('Save Changes'),
+            child: Text(l10n.lended_person_saveChanges),
           ),
         ],
       )),
@@ -256,6 +259,7 @@ class _EntryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs     = Theme.of(context).colorScheme;
     final isLent = l.type == 'lent';
     final color  = isLent
@@ -285,7 +289,7 @@ class _EntryCard extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(isLent ? 'Lent' : 'Borrowed', style: const TextStyle(
+              Text(isLent ? l10n.lended_person_lent : l10n.lended_person_borrowed, style: const TextStyle(
                   fontWeight: FontWeight.w700, fontSize: 15)),
               Text(DateFormat('d MMM yyyy').format(l.date),
                   style: TextStyle(fontSize: 11,
@@ -297,8 +301,8 @@ class _EntryCard extends StatelessWidget {
               if (l.dueDate != null)
                 Text(
                   isOverdue
-                      ? 'Overdue!'
-                      : 'Due ${DateFormat('d MMM yy').format(l.dueDate!)}',
+                      ? l10n.lended_person_overdue
+                      : l10n.lended_person_due(DateFormat('d MMM yy').format(l.dueDate!)),
                   style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600,
                       color: isOverdue ? cs.error
                           : cs.onSurface.withValues(alpha: 0.5)),
@@ -324,7 +328,7 @@ class _EntryCard extends StatelessWidget {
                     size: 11, color: cs.primary),
                 const SizedBox(width: 4),
                 Text(
-                  'Reminder at ${l.reminderTime}',
+                  l10n.lended_person_reminderAt(l.reminderTime),
                   style: TextStyle(fontSize: 10,
                       fontWeight: FontWeight.w600, color: cs.primary),
                 ),
@@ -340,13 +344,13 @@ class _EntryCard extends StatelessWidget {
                 decoration: BoxDecoration(
                     color: const Color(0xFFE8F5E9),
                     borderRadius: BorderRadius.circular(8)),
-                child: const Text('SETTLED', style: TextStyle(fontSize: 10,
+                child: Text(l10n.lended_person_settled, style: TextStyle(fontSize: 10,
                     fontWeight: FontWeight.w700, color: Color(0xFF2E7D32))),
               )
             else
               TextButton.icon(
                 icon: const Icon(Icons.check_circle_outline, size: 16),
-                label: const Text('Settle', style: TextStyle(fontSize: 12)),
+                label: Text(l10n.lended_person_settle, style: TextStyle(fontSize: 12)),
                 onPressed: () =>
                     context.read<AppProvider>().settleLended(l),
               ),
@@ -451,16 +455,17 @@ class _EntrySheetState extends State<_EntrySheet> {
     super.dispose();
   }
 
-  Future<void> _toggleReminder(bool value) async {
-    if (!value) {
+  Future<void> _toggleReminder(bool enable) async {
+    if (!enable) {
       setState(() => _reminderEnabled = false);
       return;
     }
+    final l10n = AppLocalizations.of(context)!;
     if (_dueDate == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Set a due date first to enable reminders.'),
-          duration: Duration(seconds: 3),
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(l10n.lended_person_setADueDateFirstToEn),
+          duration: const Duration(seconds: 3),
         ));
       }
       return;
@@ -470,12 +475,9 @@ class _EntrySheetState extends State<_EntrySheet> {
       final granted = await LendedNotificationService().requestPermissions();
       if (!granted) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text(
-              'Notification permission denied. '
-              'Enable it in Settings → Apps → Expensy → Notifications.',
-            ),
-            duration: Duration(seconds: 4),
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(l10n.lended_person_notificationPermissionDenied),
+            duration: const Duration(seconds: 4),
           ));
         }
         return;
@@ -485,10 +487,11 @@ class _EntrySheetState extends State<_EntrySheet> {
   }
 
   Future<void> _pickTime() async {
+    final l10n = AppLocalizations.of(context)!;
     final picked = await showTimePicker(
       context: context,
       initialTime: _reminderTime,
-      helpText: 'Remind me at',
+      helpText: l10n.lended_person_remindMeAtPrompt,
     );
     if (picked != null) setState(() => _reminderTime = picked);
   }
@@ -532,6 +535,7 @@ class _EntrySheetState extends State<_EntrySheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
     final cs  = Theme.of(context).colorScheme;
     final sym = currencyInfo(app.settings.currency).symbol;
@@ -544,7 +548,7 @@ class _EntrySheetState extends State<_EntrySheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(isEdit ? 'Edit Record' : 'Add Record',
+          Text(isEdit ? l10n.lended_person_editRecord : l10n.lended_person_addRecord,
               style: Theme.of(context).textTheme.titleLarge
                   ?.copyWith(fontWeight: FontWeight.w800)),
           Text(widget.person.name, style: TextStyle(fontSize: 13,
@@ -563,7 +567,7 @@ class _EntrySheetState extends State<_EntrySheet> {
                   color: _type == 'lent'
                       ? const Color(0xFF2E7D32) : const Color(0xFFE8F5E9),
                   borderRadius: BorderRadius.circular(12)),
-                child: Center(child: Text('I Lent',
+                child: Center(child: Text(l10n.lended_person_iLent,
                     style: TextStyle(fontWeight: FontWeight.w700,
                         color: _type == 'lent'
                             ? Colors.white : const Color(0xFF2E7D32)))),
@@ -579,7 +583,7 @@ class _EntrySheetState extends State<_EntrySheet> {
                   color: _type == 'borrowed'
                       ? const Color(0xFFC62828) : const Color(0xFFFFEBEE),
                   borderRadius: BorderRadius.circular(12)),
-                child: Center(child: Text('I Borrowed',
+                child: Center(child: Text(l10n.lended_person_iBorrowed,
                     style: TextStyle(fontWeight: FontWeight.w700,
                         color: _type == 'borrowed'
                             ? Colors.white : const Color(0xFFC62828)))),
@@ -593,10 +597,10 @@ class _EntrySheetState extends State<_EntrySheet> {
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
               decoration: InputDecoration(
-                  labelText: 'Amount', prefixText: '$sym ')),
+                  labelText: l10n.lended_person_amount, prefixText: '$sym ')),
           const SizedBox(height: 14),
 
-          Text('Account (optional)',
+          Text(l10n.lended_person_accountOptional,
               style: Theme.of(context).textTheme.labelMedium
                   ?.copyWith(letterSpacing: 1)),
           const SizedBox(height: 8),
@@ -611,8 +615,8 @@ class _EntrySheetState extends State<_EntrySheet> {
           ListTile(contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.event_outlined),
             title: Text(_dueDate != null
-                ? 'Due: ${DateFormat('d MMM yyyy').format(_dueDate!)}'
-                : 'No due date',
+                ? l10n.lended_person_dueColon(DateFormat('d MMM yyyy').format(_dueDate!))
+                : l10n.lended_person_noDueDate,
                 style: const TextStyle(fontWeight: FontWeight.w600)),
             trailing: _dueDate != null
                 ? IconButton(icon: const Icon(Icons.clear),
@@ -640,17 +644,16 @@ class _EntrySheetState extends State<_EntrySheet> {
                   : Icons.notifications_none_outlined,
               color: _reminderEnabled ? cs.primary : null,
             ),
-            title: Text(
-              'Due Date Reminder',
+            title: Text(l10n.lended_person_dueDateReminder,
               style: TextStyle(fontWeight: FontWeight.w600,
                   color: _reminderEnabled ? cs.primary : null),
             ),
             subtitle: Text(
               _dueDate == null
-                  ? 'Set a due date first'
+                  ? l10n.lended_person_setDueFirst
                   : _reminderEnabled
-                      ? 'You\'ll be notified on the due date'
-                      : 'Get notified when this is due',
+                      ? l10n.lended_person_notifiedOnDue
+                      : l10n.lended_person_getNotifiedWhenDue,
               style: TextStyle(fontSize: 12,
                   color: cs.onSurface.withValues(alpha: 0.5)),
             ),
@@ -679,7 +682,7 @@ class _EntrySheetState extends State<_EntrySheet> {
                   Expanded(child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                    Text('Remind me at',
+                    Text(l10n.lended_person_remindMeAt,
                         style: TextStyle(fontSize: 11,
                             color: cs.onSurface.withValues(alpha: 0.55))),
                     Text(_reminderTime.format(context),
@@ -695,11 +698,8 @@ class _EntrySheetState extends State<_EntrySheet> {
               padding: const EdgeInsets.only(left: 2),
               child: Text(
                 _reminderTimeAlreadyPassedToday
-                    ? "That time today has already passed — you'll be "
-                        'notified shortly instead.'
-                    : 'Notification fires on '
-                        '${DateFormat('d MMM yyyy').format(_dueDate!)} '
-                        'at ${_reminderTime.format(context)}.',
+                    ? l10n.lended_person_thatTimePassed
+                    : l10n.lended_person_notificationFiresOn(DateFormat('d MMM yyyy').format(_dueDate!), _reminderTime.format(context)),
                 style: TextStyle(fontSize: 11,
                     color: cs.onSurface.withValues(alpha: 0.4)),
               ),
@@ -708,9 +708,9 @@ class _EntrySheetState extends State<_EntrySheet> {
 
           const SizedBox(height: 12),
           TextField(controller: _notesCtrl, maxLines: 2,
-              decoration: const InputDecoration(
-                  labelText: 'Notes (optional)',
-                  prefixIcon: Icon(Icons.sticky_note_2_outlined))),
+              decoration: InputDecoration(
+                  labelText: l10n.lended_person_notesOptional,
+                  prefixIcon: const Icon(Icons.sticky_note_2_outlined))),
           const SizedBox(height: 20),
           FilledButton(
             onPressed: _submit,
@@ -718,7 +718,7 @@ class _EntrySheetState extends State<_EntrySheet> {
                 minimumSize: const Size.fromHeight(50),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(28))),
-            child: Text(isEdit ? 'Save Changes' : 'Add Record'),
+            child: Text(isEdit ? l10n.lended_person_saveChangesBtn : l10n.lended_person_addRecordBtn),
           ),
         ],
       )),

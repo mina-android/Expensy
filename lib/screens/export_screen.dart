@@ -1,5 +1,6 @@
 // lib/screens/export_screen.dart
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 
@@ -28,12 +29,12 @@ class _ExportScreenState extends State<ExportScreen> {
     if (p != null) setState(() => _to = p);
   }
 
-  Future<void> _export() async {
+  Future<void> _export(AppLocalizations l10n) async {
     setState(() { _busy = true; _ok = null; _err = null; });
     try {
       final path = await context.read<AppProvider>()
           .exportTransactionsExcel(from: _from, to: _to);
-      setState(() => _ok = path ?? 'Export complete');
+      setState(() => _ok = path ?? l10n.export_complete);
     } catch (e) {
       setState(() => _err = e.toString());
     } finally {
@@ -43,6 +44,7 @@ class _ExportScreenState extends State<ExportScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final app   = context.watch<AppProvider>();
     final cs    = Theme.of(context).colorScheme;
     final start = DateTime(_from.year, _from.month, _from.day);
@@ -52,22 +54,22 @@ class _ExportScreenState extends State<ExportScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Export Transactions',
+        title: Text(l10n.export_exportTransactions,
             style: TextStyle(fontWeight: FontWeight.w800)),
         backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Date Range', style: Theme.of(context).textTheme.labelMedium
+          Text(l10n.export_dateRange, style: Theme.of(context).textTheme.labelMedium
               ?.copyWith(letterSpacing: 1)),
           const SizedBox(height: 10),
           Row(children: [
-            Expanded(child: _DateCard(label: 'From', date: _from, onTap: _pickFrom)),
+            Expanded(child: _DateCard(label: l10n.export_from, date: _from, onTap: _pickFrom)),
             Padding(padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: Icon(Icons.arrow_forward_rounded,
                     color: cs.onSurface.withValues(alpha: 0.4))),
-            Expanded(child: _DateCard(label: 'To', date: _to, onTap: _pickTo)),
+            Expanded(child: _DateCard(label: l10n.export_to, date: _to, onTap: _pickTo)),
           ]),
           const SizedBox(height: 16),
           Container(
@@ -80,9 +82,9 @@ class _ExportScreenState extends State<ExportScreen> {
               Expanded(child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('$count transactions in range',
+                  Text(l10n.export_txCount(count),
                       style: TextStyle(fontWeight: FontWeight.w700, color: cs.primary)),
-                  Text('Format: Excel (.xlsx)',
+                  Text(l10n.export_formatExcelXlsx,
                       style: TextStyle(fontSize: 12,
                           color: cs.onPrimaryContainer.withValues(alpha: 0.6))),
                 ],
@@ -90,16 +92,16 @@ class _ExportScreenState extends State<ExportScreen> {
             ]),
           ),
           const SizedBox(height: 16),
-          if (_ok != null) _Banner(ok: true, msg: 'Saved: $_ok'),
+          if (_ok != null) _Banner(ok: true, msg: l10n.export_saved(_ok!)),
           if (_err != null) _Banner(ok: false, msg: _err!),
           const Spacer(),
           FilledButton.icon(
-            onPressed: count == 0 || _busy ? null : _export,
+            onPressed: count == 0 || _busy ? null : () => _export(l10n),
             icon: _busy
                 ? const SizedBox(width: 18, height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                 : const Icon(Icons.save_alt_rounded),
-            label: Text(_busy ? 'Exporting...' : 'Export as Excel'),
+            label: Text(_busy ? l10n.export_exporting : l10n.export_exportAsExcel),
             style: FilledButton.styleFrom(
               minimumSize: const Size.fromHeight(52),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28))),
@@ -118,6 +120,7 @@ class _DateCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: onTap,

@@ -1,0 +1,443 @@
+{
+  "@@locale": "hi",
+  "appTitle": "Expensy",
+  "settings_title": "सेटिंग्स",
+  "settings_appearance": "प्रकटन",
+  "settings_theme": "थीम",
+  "settings_system": "सिस्टम",
+  "settings_light": "हल्का",
+  "settings_dark": "गहरा",
+  "settings_amoledTitle": "प्योर ब्लैक (AMOLED)",
+  "settings_amoledSubtitle": "डार्क मोड में काली पृष्ठभूमि को लागू करता है",
+  "settings_accentColor": "एक्सेंट रंग",
+  "settings_appFont": "ऐप फ़ॉन्ट",
+  "settings_systemDefault": "सिस्टम डिफ़ॉल्ट",
+  "settings_currency": "मुद्रा",
+  "settings_defaultCurrency": "डिफ़ॉल्ट मुद्रा",
+  "settings_preferences": "प्राथमिकताएं",
+  "settings_weekStartsOn": "सप्ताह शुरू होता है",
+  "settings_monday": "सोमवार",
+  "settings_sunday": "रविवार",
+  "settings_hideBalance": "बैलेंस छुपाएं",
+  "settings_hideBalanceSubtitle": "राशियों के बजाय ••••• दिखाएं",
+  "settings_language": "भाषा",
+  "settings_profile": "प्रोफ़ाइल",
+  "settings_displayName": "प्रदर्शित नाम",
+  "settings_notSet": "सेट नहीं किया गया",
+  "settings_about": "के बारे में",
+  "settings_version": "संस्करण",
+  "settings_privacy": "गोपनीयता",
+  "settings_privacySubtitle": "सभी डेटा स्थानीय रूप से संग्रहीत — 100% ऑफ़लाइन",
+  "settings_github": "GitHub",
+  "settings_githubSubtitle": "स्रोत कोड देखें",
+  "settings_developer": "डेवलपर",
+  "settings_developerSubtitle": "Mina Android द्वारा और प्रोजेक्ट्स खोजें",
+  "settings_githubProfile": "GitHub प्रोफ़ाइल",
+  "settings_developerWebsite": "डेवलपर वेबसाइट",
+  "settings_close": "बंद करें",
+  "settings_yourName": "आपका नाम",
+  "settings_cancel": "रद्द करें",
+  "settings_save": "सहेजें",
+  "recurring_expenses": "खर्च ({count})",
+  "@recurring_expenses": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "recurring_incomeList": "आय ({count})",
+  "@recurring_incomeList": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "recurring_monthly": "मासिक",
+  "recurring_weekly": "साप्ताहिक",
+  "recurring_noRecurringExpenses": "कोई आवर्ती खर्च नहीं",
+  "recurring_noRecurringIncome": "कोई आवर्ती आय नहीं",
+  "recurring_addExpense": "खर्च जोड़ें",
+  "recurring_addIncome": "आय जोड़ें",
+  "recurring_tapPlusToAddOne": "जोड़ने के लिए + टैप करें",
+  "recurring_fromOngoing": "{date} से · जारी",
+  "@recurring_fromOngoing": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "recurring_paidPayments": "{total} में से {paid} का भुगतान किया गया",
+  "@recurring_paidPayments": {
+    "placeholders": {
+      "paid": {},
+      "total": {}
+    }
+  },
+  "recurring_totalAmount": "कुल: {amount}",
+  "@recurring_totalAmount": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "recurring_overdue": "अतिदेय!",
+  "recurring_dueToday": "आज देय",
+  "recurring_dueInDays": "{days} दिन में देय",
+  "@recurring_dueInDays": {
+    "placeholders": {
+      "days": {}
+    }
+  },
+  "recurring_edit": "संपादित करें",
+  "recurring_skipBtn": "छोड़ें",
+  "recurring_nextDate": "अगला: {date}",
+  "@recurring_nextDate": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "recurring_pay": "भुगतान करें",
+  "recurring_del": "हटाएं",
+  "recurring_historyCount": "इतिहास ({count})",
+  "@recurring_historyCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "recurring_paymentHistory": "भुगतान इतिहास",
+  "recurring_notificationPermissionDenied": "सूचना की अनुमति अस्वीकृत। इसे सेटिंग्स → ऐप्स → Expensy → सूचनाएँ में सक्षम करें।",
+  "recurring_remindMeAt": "मुझे याद दिलाएं",
+  "recurring_editRecurring": "आवर्ती संपादित करें",
+  "recurring_addRecurring": "आवर्ती भुगतान जोड़ें",
+  "recurring_name": "नाम",
+  "recurring_amountPerPayment": "प्रति भुगतान राशि",
+  "recurring_firstDate": "प्रथम: {date}",
+  "@recurring_firstDate": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "recurring_lastDate": "अंतिम: {date}",
+  "@recurring_lastDate": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "recurring_noLastPaymentOngoing": "कोई अंतिम भुगतान नहीं (जारी)",
+  "accounts_refreshExchangeRates": "विनिमय दरें रीफ़्रेश करें",
+  "accounts_noAccounts": "कोई खाते नहीं",
+  "accounts_tapPlusToAddYourFirst": "अपना पहला खाता जोड़ने के लिए + टैप करें",
+  "accounts_fetchingExchangeRates": "विनिमय दरें प्राप्त की जा रही हैं…",
+  "accounts_exchangeRatesUnavailable": "विनिमय दरें अनुपलब्ध (ऑफ़लाइन)। शेष राशि मूल मुद्रा में दिखाई गई है।",
+  "accounts_unknown": "अज्ञात",
+  "accounts_ratesUpdated": "दरें {timeStr} अपडेट की गईं · रीफ़्रेश करने के लिए ↺ टैप करें",
+  "@accounts_ratesUpdated": {
+    "placeholders": {
+      "timeStr": {}
+    }
+  },
+  "accounts_goldCaps": "स्वर्ण",
+  "accounts_balance": "शेष राशि",
+  "accounts_income": "आय",
+  "accounts_expense": "खर्च",
+  "accounts_txs": "लेन-देन",
+  "accounts_value": "मूल्य",
+  "accounts_karat": "कैरेट",
+  "accounts_pure": "{percentage}% शुद्ध",
+  "@accounts_pure": {
+    "placeholders": {
+      "percentage": {}
+    }
+  },
+  "accounts_weightLabel": "वजन",
+  "accounts_perGram": "प्रति ग्राम",
+  "accounts_bank": "बैंक",
+  "accounts_cash": "नकद",
+  "accounts_savings": "बचत",
+  "accounts_creditCard": "क्रेडिट कार्ड",
+  "accounts_eWallet": "ई-वॉलेट",
+  "accounts_gold": "स्वर्ण",
+  "accounts_editAccount": "खाता संपादित करें",
+  "accounts_addAccount": "नया खाता जोड़ें",
+  "accounts_accountName": "खाता नाम",
+  "accounts_weightInGrams": "ग्राम में वजन",
+  "accounts_initialBalance": "प्रारंभिक शेष",
+  "accounts_wontCountTowardYourHome": "आपकी होम स्क्रीन के कुल योग में नहीं गिना जाएगा",
+  "accounts_saveChanges": "परिवर्तन सहेजें",
+  "accounts_addAccountBtn": "खाता जोड़ें",
+  "accounts_fetchingGoldPrice": "सोने की कीमत प्राप्त की जा रही है…",
+  "accounts_goldPriceUnavailable": "सोने की कीमत अनुपलब्ध — अपना कनेक्शन जांचें",
+  "lended_person_owesYou": "{name} आप पर बकाया है",
+  "@lended_person_owesYou": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "lended_person_youOwe": "आप {name} पर बकाया हैं",
+  "@lended_person_youOwe": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "lended_person_allSettledUp": "सब चुकता हो गया",
+  "lended_person_noRecordsYet": "अभी कोई रिकॉर्ड नहीं",
+  "lended_person_tapPlusToLog": "उधार दिए गए या लिए गए पैसे लॉग करने के लिए + टैप करें",
+  "lended_person_name": "नाम",
+  "lended_person_notesOptional": "नोट्स (वैकल्पिक)",
+  "lended_person_lent": "उधार दिया",
+  "lended_person_borrowed": "उधार लिया",
+  "lended_person_overdue": "अतिदेय!",
+  "lended_person_due": "{date} को देय",
+  "@lended_person_due": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "lended_person_reminderAt": "{time} पर अनुस्मारक",
+  "@lended_person_reminderAt": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "lended_person_notificationPermissionDenied": "सूचना की अनुमति अस्वीकृत। इसे सेटिंग्स → ऐप्स → Expensy → सूचनाएँ में सक्षम करें।",
+  "lended_person_remindMeAtPrompt": "मुझे याद दिलाएं",
+  "lended_person_editRecord": "रिकॉर्ड संपादित करें",
+  "lended_person_addRecord": "रिकॉर्ड जोड़ें",
+  "lended_person_amount": "राशि",
+  "lended_person_dueColon": "देय: {date}",
+  "@lended_person_dueColon": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "lended_person_noDueDate": "कोई देय तिथि नहीं",
+  "lended_person_setDueFirst": "पहले देय तिथि सेट करें",
+  "lended_person_notifiedOnDue": "आपको देय तिथि पर सूचित किया जाएगा",
+  "lended_person_getNotifiedWhenDue": "यह देय होने पर सूचना प्राप्त करें",
+  "lended_person_thatTimePassed": "आज वह समय बीत चुका है — आपको इसके बजाय शीघ्र ही सूचित किया जाएगा।",
+  "lended_person_notificationFiresOn": "सूचना {date} को {time} पर आएगी।",
+  "@lended_person_notificationFiresOn": {
+    "placeholders": {
+      "date": {},
+      "time": {}
+    }
+  },
+  "lended_person_saveChangesBtn": "परिवर्तन सहेजें",
+  "lended_person_addRecordBtn": "रिकॉर्ड जोड़ें",
+  "transactions_searchTransactions": "लेन-देन खोजें...",
+  "transactions_all": "सभी",
+  "transactions_income": "आय",
+  "transactions_expenses": "खर्च",
+  "transactions_lent": "उधार दिया",
+  "transactions_borrowed": "उधार लिया",
+  "transactions_noTransactions": "कोई लेन-देन नहीं",
+  "transactions_tapPlusToAddOne": "एक जोड़ने के लिए + टैप करें",
+  "transactions_today": "आज",
+  "transactions_yesterday": "कल",
+  "transactions_lentTo": "{name} को उधार दिया",
+  "@transactions_lentTo": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "transactions_borrowedFrom": "{name} से उधार लिया",
+  "@transactions_borrowedFrom": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "transactions_unknown": "अज्ञात",
+  "transactions_due": "{date} को देय",
+  "@transactions_due": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "transactions_unsettled": "अनिर्णीत",
+  "onboarding_restoreFailed": "पुनर्स्थापना विफल: फ़ाइल दूषित हो सकती है या Expensy बैकअप नहीं हो सकती है।",
+  "onboarding_continue": "जारी रखें",
+  "onboarding_getStarted": "शुरू करें",
+  "onboarding_yourPersonalTracker": "आपका व्यक्तिगत, 100% ऑफ़लाइन वित्त ट्रैकर।\nक्या आपके पास पहले से किसी अन्य डिवाइस या पिछले इंस्टॉल से बैकअप है?",
+  "onboarding_restoring": "पुनर्स्थापित किया जा रहा है...",
+  "onboarding_chooseBackupFile": "बैकअप फ़ाइल चुनें",
+  "onboarding_letsGetYouSetUp": "आइए आपका सेटअप करें",
+  "onboarding_yourName": "आपका नाम",
+  "onboarding_accountName": "खाता नाम",
+  "onboarding_bank": "बैंक",
+  "onboarding_cash": "नकद",
+  "onboarding_savings": "बचत",
+  "onboarding_credit": "क्रेडिट",
+  "onboarding_wallet": "वॉलेट",
+  "onboarding_startingBalance": "प्रारंभिक शेष",
+  "backup_replaceDataWarning": "यह आपके सभी वर्तमान डेटा को बैकअप से बदल देगा।\nइसे पूर्ववत नहीं किया जा सकता है।",
+  "backup_whatsIncluded": "क्या शामिल है",
+  "backup_backupDescription": "हर बैकअप में आपका सारा डेटा शामिल है — खाते, लेन-देन, आवर्ती भुगतान और उनका भुगतान/छोड़ने का इतिहास, बजट, विशलिस्ट आइटम, उधार दिए गए और लिए गए व्यक्ति और रिकॉर्ड, संपत्तियां, श्रेणियां और ऐप सेटिंग्स।",
+  "backup_saving": "सहेजा जा रहा है...",
+  "backup_saveBackup": "बैकअप सहेजें",
+  "backup_restoring": "पुनर्स्थापित किया जा रहा है...",
+  "backup_restoreBackupBtn": "बैकअप पुनर्स्थापित करें",
+  "backup_restoreWarningText": "किसी भी ऐप संस्करण के बैकअप के साथ संगत। गुम फ़ील्ड सुरक्षित डिफ़ॉल्ट से भरे गए हैं।",
+  "backup_included": "शामिल",
+  "backup_accounts": "खाते",
+  "backup_transactions": "लेन-देन",
+  "backup_recurringPayments": "आवर्ती भुगतान",
+  "backup_recurringHistory": "आवर्ती इतिहास",
+  "backup_budgets": "बजट",
+  "backup_wishlist": "विशलिस्ट",
+  "backup_lentPeople": "उधार दिया/लिया — लोग",
+  "backup_lentRecords": "उधार दिया/लिया — रिकॉर्ड",
+  "backup_assets": "संपत्तियां",
+  "backup_categories": "श्रेणियां",
+  "backup_settings": "सेटिंग्स",
+  "backup_backupSavedSuccessfully": "बैकअप सफलतापूर्वक सहेजा गया:\n{savedPath}",
+  "backup_backupFailed": "बैकअप विफल: {error}",
+  "backup_upgradedFrom": " (v{originalVersion} से v{schemaVersion} में अपग्रेड किया गया)",
+  "backup_dataRestoredSuccessfully": "डेटा सफलतापूर्वक पुनर्स्थापित किया गया!{vLabel}",
+  "backup_restoreFailed": "पुनर्स्थापना विफल: {error}",
+  "backup_restoreFailedCorrupted": "पुनर्स्थापना विफल: फ़ाइल दूषित हो सकती है या Expensy बैकअप नहीं हो सकती है।",
+  "budget_noBudgetsYet": "अभी तक कोई बजट नहीं",
+  "budget_tapToAddBudget": "प्रति श्रेणी खर्च सीमा निर्धारित करने के लिए + टैप करें",
+  "budget_budgeted": "बजट में रखा गया",
+  "budget_spent": "खर्च किया गया",
+  "budget_overLimit": "सीमा से अधिक",
+  "budget_unknown": "अज्ञात",
+  "budget_weeklyLabel": "साप्ताहिक",
+  "budget_monthlyLabel": "मासिक",
+  "budget_overAmount": "{amount} अधिक",
+  "budget_leftAmount": "{amount} शेष",
+  "budget_percentUsed": "{percent}% उपयोग किया गया",
+  "budget_editBudget": "बजट संपादित करें",
+  "budget_setBudget": "नया बजट जोड़ें",
+  "budget_budgetAmount": "बजट राशि",
+  "budget_previewFor": "\"{catName}\" के लिए पूर्वावलोकन",
+  "budget_spentAmount": "खर्च: {amount}",
+  "budget_ofAmount": "{amount} में से",
+  "budget_saveChanges": "परिवर्तन सहेजें",
+  "budget_budget": "बजट",
+  "insights_other": "अन्य",
+  "insights_noDataYet": "अभी कोई डेटा नहीं",
+  "insights_addSomeTransactions": "इनसाइट देखने के लिए कुछ लेन-देन जोड़ें",
+  "insights_thisMonthVsLastMonth": "इस महीने बनाम पिछले महीने",
+  "insights_dailyAverage": "दैनिक औसत",
+  "insights_perDayBasedOn": "प्रति दिन · इस महीने के {days} दिनों के आधार पर",
+  "insights_incomeVsExpenses": "आय बनाम खर्च",
+  "insights_incomeAmount": "आय {amount}",
+  "insights_expensesAmount": "खर्च {amount}",
+  "insights_percentSaved": "इस महीने {percent}% बचाया गया",
+  "insights_topSpendingCategories": "शीर्ष खर्च श्रेणियां",
+  "insights_percentOfTotal": "कुल का {percent}%",
+  "insights_biggestExpenseThisMonth": "इस महीने का सबसे बड़ा खर्च",
+  "insights_categoryTrends": "श्रेणी रुझान (पिछले महीने की तुलना में)",
+  "insights_12MonthTrend": "12-महीने का रुझान",
+  "insights_incomeLabel": "आय",
+  "insights_expensesLabel": "खर्च",
+  "categories_expenseLabel": "खर्च",
+  "categories_incomeLabel": "आय",
+  "categories_editCategory": "श्रेणी संपादित करें",
+  "categories_addCategory": "श्रेणी जोड़ें",
+  "categories_categoryName": "श्रेणी का नाम",
+  "categories_saveChanges": "परिवर्तन सहेजें",
+  "statistics_other": "अन्य",
+  "statistics_allAccounts": "सभी खाते",
+  "statistics_income": "आय",
+  "statistics_expenses": "खर्च",
+  "statistics_expense": "खर्च",
+  "statistics_net": "शुद्ध",
+  "statistics_6MonthOverviewAccount": "6-महीने का अवलोकन · {accountName}",
+  "statistics_6MonthOverview": "6-महीने का अवलोकन",
+  "statistics_percentOfBudget": "बजट का {percent}%",
+  "add_transaction_editTransaction": "लेन-देन संपादित करें",
+  "add_transaction_addTransaction": "लेन-देन दर्ज करें",
+  "add_transaction_amount": "राशि",
+  "add_transaction_conversionPreview": "≈ {amount} {accountName} से काटे जाएंगे",
+  "add_transaction_accountFallback": "खाता",
+  "add_transaction_descriptionOptional": "विवरण (वैकल्पिक)",
+  "add_transaction_noteOptional": "नोट (वैकल्पिक)",
+  "add_transaction_saveChanges": "परिवर्तन सहेजें",
+  "more_statistics": "आँकड़े",
+  "more_statisticsSub": "चार्ट और मासिक सारांश",
+  "more_insights": "इनसाइट",
+  "more_insightsSub": "रुझान, औसत और श्रेणी विश्लेषण",
+  "more_currencyConverter": "मुद्रा परिवर्तक",
+  "more_currencyConverterSub": "तुरंत मुद्राओं के बीच कनवर्ट करें",
+  "more_wishlist": "विशलिस्ट",
+  "more_wishlistSub": "{count, plural, =1{1 आइटम} other{{count} आइटम}}",
+  "more_lentMoney": "उधार दिया गया पैसा",
+  "more_lentMoneySub": "{count} बकाया",
+  "more_assets": "संपत्तियां",
+  "more_assetsSub": "{count, plural, =1{1 आइटम} other{{count} आइटम}}",
+  "more_categories": "श्रेणियां",
+  "more_categoriesSub": "{count, plural, =1{1 श्रेणी} other{{count} श्रेणियां}}",
+  "more_exportTransactions": "लेन-देन निर्यात करें",
+  "more_exportTransactionsSub": "एक्सेल (.xlsx) के रूप में सहेजें",
+  "more_backupRestore": "बैकअप और पुनर्स्थापना",
+  "more_backupRestoreSub": "अपना डेटा सहेजें या लोड करें",
+  "more_settings": "सेटिंग्स",
+  "more_settingsSub": "थीम, मुद्रा और प्राथमिकताएं",
+  "home_greeting": "नमस्ते, {name} 👋",
+  "home_there": "वहाँ",
+  "home_income": "आय",
+  "home_expenses": "खर्च",
+  "home_net": "शुद्ध",
+  "wishlist_noItems": "कोई विशलिस्ट आइटम नहीं",
+  "wishlist_noItemsSub": "आप जिन चीज़ों के लिए बचत कर रहे हैं उन्हें जोड़ने के लिए + टैप करें",
+  "wishlist_editItem": "आइटम संपादित करें",
+  "wishlist_addWishlistItem": "विशलिस्ट आइटम जोड़ें",
+  "wishlist_itemName": "आइटम का नाम",
+  "wishlist_targetPrice": "लक्ष्य मूल्य",
+  "wishlist_priorityLow": "कम",
+  "wishlist_priorityMedium": "मध्यम",
+  "wishlist_priorityHigh": "उच्च",
+  "wishlist_notesOptional": "नोट्स (वैकल्पिक)",
+  "wishlist_saveChanges": "परिवर्तन सहेजें",
+  "wishlist_addItem": "आइटम जोड़ें",
+  "lended_theyOweMe": "उन पर मेरा बकाया है",
+  "lended_iOweThem": "मुझ पर उनका बकाया है",
+  "lended_net": "शुद्ध",
+  "lended_noOneYet": "अभी कोई नहीं",
+  "lended_noOneYetSub": "उधार देने या लेने वाले व्यक्ति को जोड़ने के लिए + टैप करें",
+  "lended_owesYou": "आप पर बकाया है",
+  "lended_youOwe": "आप बकाया हैं",
+  "lended_settledUp": "चुकता हो गया",
+  "lended_noActiveRecords": "कोई सक्रिय रिकॉर्ड नहीं",
+  "lended_activeRecords": "{count, plural, =1{1 सक्रिय रिकॉर्ड} other{{count} सक्रिय रिकॉर्ड}}",
+  "lended_editPerson": "व्यक्ति को संपादित करें",
+  "lended_addPerson": "व्यक्ति जोड़ें",
+  "lended_name": "नाम",
+  "lended_notesOptional": "नोट्स (वैकल्पिक)",
+  "lended_saveChanges": "परिवर्तन सहेजें",
+  "assets_totalAssets": "कुल संपत्तियां",
+  "assets_items": "आइटम",
+  "assets_noAssetsYet": "अभी कोई संपत्तियां नहीं",
+  "assets_noAssetsYetSub": "उत्पाद या संपत्ति जोड़ने के लिए + टैप करें",
+  "assets_editAsset": "संपत्ति संपादित करें",
+  "assets_addAsset": "संपत्ति जोड़ें",
+  "assets_productAssetName": "उत्पाद / संपत्ति का नाम",
+  "assets_value": "मूल्य",
+  "assets_notesOptional": "नोट्स (वैकल्पिक)",
+  "assets_saveChanges": "परिवर्तन सहेजें",
+  "currency_converter_loadingRates": "विनिमय दरें लोड की जा रही हैं…",
+  "currency_converter_ratesUnavailable": "विनिमय दरें अनुपलब्ध। इंटरनेट से कनेक्ट करें और सिंक करें।",
+  "currency_converter_rateAgeJustNow": "अभी-अभी",
+  "currency_converter_rateAgeMins": "{minutes} मिनट पहले",
+  "currency_converter_rateAgeHours": "{hours} घंटे पहले",
+  "currency_converter_rateAgeDays": "{days} दिन पहले",
+  "currency_converter_commonConversions": "{fromCurrency} से सामान्य रूपांतरण",
+  "transfer_fromAcc": "से ({currency})",
+  "transfer_toAcc": "में ({currency})",
+  "transfer_exchangeRatesNotLoaded": "विनिमय दरें लोड नहीं हुईं — राशि को ज्यों का त्यों स्थानांतरित किया जाएगा",
+  "transfer_amount": "राशि",
+  "transfer_noteOptional": "नोट (वैकल्पिक)",
+  "export_from": "से",
+  "export_to": "तक",
+  "export_txCount": "{count, plural, =1{रेंज में 1 लेन-देन} other{रेंज में {count} लेन-देन}}",
+  "export_saved": "सहेजा गया: {path}",
+  "export_complete": "निर्यात पूरा हुआ",
+  "export_exporting": "निर्यात किया जा रहा है...",
+  "export_exportAsExcel": "एक्सेल के रूप में निर्यात करें",
+  "shared_widgets_deleteConfirm": "\"{name}\" को हटाएं? इसे पूर्ववत नहीं किया जा सकता।",
+  "shared_widgets_searchByCode": "कोड या नाम से खोजें...",
+  "main_home": "होम",
+  "main_transactions": "लेन-देन",
+  "main_recurring": "आवर्ती",
+  "main_accounts": "खाते",
+  "main_budgets": "बजट",
+  "main_more": "अधिक",
+  "onboarding_chooseLanguage": "भाषा चुनें"
+}

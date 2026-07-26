@@ -1,5 +1,6 @@
 // lib/screens/categories_screen.dart
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../models/models.dart';
@@ -10,6 +11,7 @@ class CategoriesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
     final cs  = Theme.of(context).colorScheme;
     final expenses = app.categories.where((c) => c.type == 'expense').toList();
@@ -17,16 +19,16 @@ class CategoriesScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Categories',
+        title: Text(l10n.categories_categories,
             style: TextStyle(fontWeight: FontWeight.w800)),
         backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(14, 14, 14, 100),
         children: [
-          const SectionHeader(title: 'Expense Categories'),
+          SectionHeader(title: l10n.categories_expenseCategories),
           ...expenses.map((c) => _CatTile(cat: c)),
-          const SectionHeader(title: 'Income Categories'),
+          SectionHeader(title: l10n.categories_incomeCategories),
           ...incomes.map((c) => _CatTile(cat: c)),
         ],
       ),
@@ -54,6 +56,7 @@ class _CatTile extends StatelessWidget {
   const _CatTile({required this.cat});
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     return Card(
       margin: const EdgeInsets.only(bottom: 6),
@@ -61,7 +64,7 @@ class _CatTile extends StatelessWidget {
         leading: CategoryDot(category: cat, size: 36),
         title: Text(cat.name,
             style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Text(cat.type == 'expense' ? 'Expense' : 'Income',
+        subtitle: Text(cat.type == 'expense' ? l10n.categories_expenseLabel : l10n.categories_incomeLabel,
             style: TextStyle(fontSize: 11,
                 color: cs.onSurface.withValues(alpha: 0.5))),
         trailing: Row(mainAxisSize: MainAxisSize.min, children: [
@@ -169,6 +172,7 @@ class _CategorySheetState extends State<_CategorySheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
 
     return Padding(
@@ -182,7 +186,7 @@ class _CategorySheetState extends State<_CategorySheet> {
           // ── Title + live preview ────────────────────────────────────
           Row(children: [
             Expanded(
-              child: Text(isEdit ? 'Edit Category' : 'Add Category',
+              child: Text(isEdit ? l10n.categories_editCategory : l10n.categories_addCategory,
                   style: Theme.of(context).textTheme.titleLarge
                       ?.copyWith(fontWeight: FontWeight.w800)),
             ),
@@ -211,9 +215,9 @@ class _CategorySheetState extends State<_CategorySheet> {
           TextField(
             controller: _nameCtrl,
             onChanged: (_) => setState(() {}),
-            decoration: const InputDecoration(
-                labelText: 'Category Name',
-                prefixIcon: Icon(Icons.label_outline_rounded)),
+            decoration: InputDecoration(
+                labelText: l10n.categories_categoryName,
+                prefixIcon: const Icon(Icons.label_outline_rounded)),
           ),
           const SizedBox(height: 14),
 
@@ -229,7 +233,7 @@ class _CategorySheetState extends State<_CategorySheet> {
                     color: _type == 'expense'
                         ? const Color(0xFFC62828) : const Color(0xFFFFEBEE),
                     borderRadius: BorderRadius.circular(12)),
-                  child: Center(child: Text('Expense',
+                  child: Center(child: Text(l10n.categories_expense,
                       style: TextStyle(fontWeight: FontWeight.w700,
                           color: _type == 'expense'
                               ? Colors.white : const Color(0xFFC62828)))),
@@ -245,7 +249,7 @@ class _CategorySheetState extends State<_CategorySheet> {
                     color: _type == 'income'
                         ? const Color(0xFF2E7D32) : const Color(0xFFE8F5E9),
                     borderRadius: BorderRadius.circular(12)),
-                  child: Center(child: Text('Income',
+                  child: Center(child: Text(l10n.categories_income,
                       style: TextStyle(fontWeight: FontWeight.w700,
                           color: _type == 'income'
                               ? Colors.white : const Color(0xFF2E7D32)))),
@@ -256,7 +260,7 @@ class _CategorySheetState extends State<_CategorySheet> {
           const SizedBox(height: 14),
 
           // ── Colour ─────────────────────────────────────────────────
-          Text('Colour',
+          Text(l10n.categories_colour,
               style: Theme.of(context).textTheme.labelMedium
                   ?.copyWith(letterSpacing: 1)),
           const SizedBox(height: 8),
@@ -279,7 +283,7 @@ class _CategorySheetState extends State<_CategorySheet> {
           const SizedBox(height: 16),
 
           // ── Icon picker ─────────────────────────────────────────────
-          Text('Icon',
+          Text(l10n.categories_icon,
               style: Theme.of(context).textTheme.labelMedium
                   ?.copyWith(letterSpacing: 1)),
           const SizedBox(height: 8),
@@ -309,7 +313,7 @@ class _CategorySheetState extends State<_CategorySheet> {
                         ? cs.primary
                         : cs.onSurface.withValues(alpha: 0.5)),
                 const SizedBox(width: 8),
-                Text('Auto (based on name)',
+                Text(l10n.categories_autoBasedOnName,
                     style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -371,7 +375,7 @@ class _CategorySheetState extends State<_CategorySheet> {
                 minimumSize: const Size.fromHeight(50),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(28))),
-            child: Text(isEdit ? 'Save Changes' : 'Add Category'),
+            child: Text(isEdit ? l10n.categories_saveChanges : l10n.categories_addCategory),
           ),
         ]),
       ),

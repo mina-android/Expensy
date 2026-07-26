@@ -1,5 +1,6 @@
 // lib/screens/backup_screen.dart
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../database/db_helper.dart';
@@ -20,15 +21,16 @@ class _BackupScreenState extends State<BackupScreen> {
       setState(() { _msg = m; _msgOk = ok; });
 
   Future<void> _backup() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() { _backingUp = true; _msg = null; });
     try {
       final savedPath = await context.read<AppProvider>().createBackup();
       if (savedPath != null) {
-        _setMsg('Backup saved successfully:\n$savedPath');
+        _setMsg(l10n.backup_backupSavedSuccessfully(savedPath));
       }
       // null = user cancelled file picker — show nothing
     } catch (e) {
-      _setMsg('Backup failed: $e', ok: false);
+      _setMsg(l10n.backup_backupFailed(e.toString()), ok: false);
     } finally {
       if (mounted) setState(() => _backingUp = false);
     }
@@ -36,21 +38,20 @@ class _BackupScreenState extends State<BackupScreen> {
 
   Future<void> _restore() async {
     if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Restore Backup?'),
-        content: const Text(
-            'This will replace ALL your current data with the backup.\n'
-            'This cannot be undone.'),
+        title: Text(l10n.backup_restoreBackup),
+        content: Text(l10n.backup_replaceDataWarning),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel')),
+              child: Text(l10n.backup_cancel)),
           FilledButton(
             style: FilledButton.styleFrom(
                 backgroundColor: Theme.of(ctx).colorScheme.error),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Replace Data'),
+            child: Text(l10n.backup_replaceData),
           ),
         ],
       ),
@@ -65,16 +66,16 @@ class _BackupScreenState extends State<BackupScreen> {
           // User cancelled the file picker — say nothing
         } else {
           final vLabel = originalVersion < DBHelper.schemaVersion
-              ? ' (upgraded from v$originalVersion → v${DBHelper.schemaVersion})'
+              ? l10n.backup_upgradedFrom(originalVersion.toString(), DBHelper.schemaVersion.toString())
               : '';
-          _setMsg('Data restored successfully!$vLabel');
+          _setMsg(l10n.backup_dataRestoredSuccessfully(vLabel));
         }
       }
     } on FormatException catch (e) {
-      if (mounted) _setMsg('Restore failed: ${e.message}', ok: false);
+      if (mounted) _setMsg(l10n.backup_restoreFailed(e.message), ok: false);
     } catch (e) {
       if (mounted) _setMsg(
-          'Restore failed: the file may be corrupted or not an Expensy backup.',
+          l10n.backup_restoreFailedCorrupted,
           ok: false);
     } finally {
       if (mounted) setState(() => _restoring = false);
@@ -83,6 +84,7 @@ class _BackupScreenState extends State<BackupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
     final cs  = Theme.of(context).colorScheme;
 
@@ -93,22 +95,22 @@ class _BackupScreenState extends State<BackupScreen> {
     // per-person lending structure, even though all of that data was always
     // correctly included in the file.
     final counts = [
-      _CountRow(Icons.account_balance_wallet_outlined,  'Accounts',           app.accounts.length),
-      _CountRow(Icons.receipt_long_outlined,             'Transactions',       app.transactions.length),
-      _CountRow(Icons.repeat_rounded,                    'Recurring Payments', app.recurring.length),
-      _CountRow(Icons.history_rounded,                   'Recurring History',  app.recurringHistoryCount),
-      _CountRow(Icons.pie_chart_outline_rounded,         'Budgets',            app.budgets.length),
-      _CountRow(Icons.star_outline_rounded,               'Wishlist',           app.wishlist.length),
-      _CountRow(Icons.people_alt_outlined,                'Lent/Borrowed — People',  app.lendedPeople.length),
-      _CountRow(Icons.handshake_outlined,                 'Lent/Borrowed — Records', app.lended.length),
-      _CountRow(Icons.inventory_2_outlined,               'Assets',             app.assets.length),
-      _CountRow(Icons.label_outline_rounded,              'Categories',         app.categories.length),
-      _CountRow(Icons.settings_outlined,                  'Settings',           -1), // -1 = 'included'
+      _CountRow(Icons.account_balance_wallet_outlined,  l10n.backup_accounts,           app.accounts.length),
+      _CountRow(Icons.receipt_long_outlined,             l10n.backup_transactions,       app.transactions.length),
+      _CountRow(Icons.repeat_rounded,                    l10n.backup_recurringPayments, app.recurring.length),
+      _CountRow(Icons.history_rounded,                   l10n.backup_recurringHistory,  app.recurringHistoryCount),
+      _CountRow(Icons.pie_chart_outline_rounded,         l10n.backup_budgets,            app.budgets.length),
+      _CountRow(Icons.star_outline_rounded,               l10n.backup_wishlist,           app.wishlist.length),
+      _CountRow(Icons.people_alt_outlined,                l10n.backup_lentPeople,  app.lendedPeople.length),
+      _CountRow(Icons.handshake_outlined,                 l10n.backup_lentRecords, app.lended.length),
+      _CountRow(Icons.inventory_2_outlined,               l10n.backup_assets,             app.assets.length),
+      _CountRow(Icons.label_outline_rounded,              l10n.backup_categories,         app.categories.length),
+      _CountRow(Icons.settings_outlined,                  l10n.backup_settings,           -1), // -1 = 'included'
     ];
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Backup & Restore',
+        title: Text(l10n.backup_backupRestore,
             style: TextStyle(fontWeight: FontWeight.w800)),
         backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
       ),
@@ -118,11 +120,11 @@ class _BackupScreenState extends State<BackupScreen> {
 
           // ── What's included ────────────────────────────────────────────
           Row(children: [
-            Expanded(child: Text('What\'s included',
+            Expanded(child: Text(l10n.backup_whatsIncluded,
                 style: Theme.of(context).textTheme.labelMedium
                     ?.copyWith(letterSpacing: 1,
                         color: cs.onSurface.withValues(alpha: 0.6)))),
-            Text('Everything, always',
+            Text(l10n.backup_everythingAlways,
                 style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700,
                     color: cs.primary)),
           ]),
@@ -148,7 +150,7 @@ class _BackupScreenState extends State<BackupScreen> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        r.count == -1 ? 'included' : '${r.count}',
+                        r.count == -1 ? l10n.backup_included : '${r.count}',
                         style: TextStyle(
                             fontSize: 11, fontWeight: FontWeight.w700,
                             color: cs.onPrimaryContainer),
@@ -163,10 +165,7 @@ class _BackupScreenState extends State<BackupScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Text(
-              'Every backup includes all of your data — accounts, '
-              'transactions, recurring payments and their pay/skip history, '
-              'budgets, wishlist items, lent & borrowed people and records, '
-              'assets, categories, and app settings.',
+              l10n.backup_backupDescription,
               style: TextStyle(fontSize: 11.5,
                   color: cs.onSurface.withValues(alpha: 0.55)),
             ),
@@ -174,7 +173,7 @@ class _BackupScreenState extends State<BackupScreen> {
           const SizedBox(height: 20),
 
           // ── Create backup ──────────────────────────────────────────────
-          Text('Create Backup',
+          Text(l10n.backup_createBackup,
               style: Theme.of(context).textTheme.labelMedium
                   ?.copyWith(letterSpacing: 1,
                       color: cs.onSurface.withValues(alpha: 0.6))),
@@ -189,12 +188,12 @@ class _BackupScreenState extends State<BackupScreen> {
                         borderRadius: BorderRadius.circular(12)),
                     child: Icon(Icons.backup_outlined, color: cs.primary)),
                 const SizedBox(width: 14),
-                const Expanded(child: Column(
+                Expanded(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Save as JSON', style: TextStyle(
+                    Text(l10n.backup_saveAsJson, style: TextStyle(
                         fontWeight: FontWeight.w800, fontSize: 15)),
-                    Text('Exports ALL app data to a portable file',
+                    Text(l10n.backup_exportsAllAppDataToA,
                         style: TextStyle(fontSize: 12)),
                   ],
                 )),
@@ -207,7 +206,7 @@ class _BackupScreenState extends State<BackupScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2,
                             color: Colors.white))
                     : const Icon(Icons.save_outlined),
-                label: Text(_backingUp ? 'Saving...' : 'Save Backup'),
+                label: Text(_backingUp ? l10n.backup_saving : l10n.backup_saveBackup),
                 style: FilledButton.styleFrom(
                     minimumSize: const Size.fromHeight(44),
                     shape: RoundedRectangleBorder(
@@ -218,7 +217,7 @@ class _BackupScreenState extends State<BackupScreen> {
           const SizedBox(height: 12),
 
           // ── Restore backup ─────────────────────────────────────────────
-          Text('Restore Backup',
+          Text(l10n.backup_restoreBackup_,
               style: Theme.of(context).textTheme.labelMedium
                   ?.copyWith(letterSpacing: 1,
                       color: cs.onSurface.withValues(alpha: 0.6))),
@@ -236,9 +235,9 @@ class _BackupScreenState extends State<BackupScreen> {
                 Expanded(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Load from JSON', style: TextStyle(
+                    Text(l10n.backup_loadFromJson, style: TextStyle(
                         fontWeight: FontWeight.w800, fontSize: 15)),
-                    Text('Picks a backup file and restores it',
+                    Text(l10n.backup_picksABackupFileAndR,
                         style: TextStyle(fontSize: 12,
                             color: cs.onSurface.withValues(alpha: 0.6))),
                   ],
@@ -258,14 +257,13 @@ class _BackupScreenState extends State<BackupScreen> {
                   Expanded(child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('This overwrites ALL current data.',
+                      Text(l10n.backup_thisOverwritesAllCur,
                           style: TextStyle(fontSize: 12,
                               fontWeight: FontWeight.w700,
                               color: cs.onErrorContainer)),
                       const SizedBox(height: 2),
                       Text(
-                        'Compatible with backups from any app version. '
-                        'Missing fields are filled with safe defaults.',
+                        l10n.backup_restoreWarningText,
                         style: TextStyle(fontSize: 11,
                             color: cs.onErrorContainer
                                 .withValues(alpha: 0.75)),
@@ -281,7 +279,7 @@ class _BackupScreenState extends State<BackupScreen> {
                     ? const SizedBox(width: 16, height: 16,
                         child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.upload_file_outlined),
-                label: Text(_restoring ? 'Restoring...' : 'Restore Backup'),
+                label: Text(_restoring ? l10n.backup_restoring : l10n.backup_restoreBackupBtn),
                 style: OutlinedButton.styleFrom(
                     minimumSize: const Size.fromHeight(44),
                     foregroundColor: cs.error,

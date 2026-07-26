@@ -1,5 +1,6 @@
 // lib/screens/more_screen.dart
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
@@ -19,46 +20,47 @@ class MoreScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
     final cs  = Theme.of(context).colorScheme;
 
     final items = [
-      const _Item(icon: Icons.bar_chart_outlined, label: 'Statistics',
-          sub: 'Charts & monthly summary', color: Color(0xFF1565C0),
-          screen: StatisticsScreen()),
-      const _Item(icon: Icons.insights_outlined, label: 'Insights',
-          sub: 'Trends, averages & category analysis', color: Color(0xFF00838F),
-          screen: InsightsScreen()),
+      _Item(icon: Icons.bar_chart_outlined, label: l10n.more_statistics,
+          sub: l10n.more_statisticsSub, color: const Color(0xFF1565C0),
+          screen: const StatisticsScreen()),
+      _Item(icon: Icons.insights_outlined, label: l10n.more_insights,
+          sub: l10n.more_insightsSub, color: const Color(0xFF00838F),
+          screen: const InsightsScreen()),
 
-      const _Item(icon: Icons.currency_exchange_rounded, label: 'Currency Converter',
-          sub: 'Convert between currencies instantly', color: Color(0xFF6750A4),
-          screen: CurrencyConverterScreen()),
-      _Item(icon: Icons.star_outline_rounded, label: 'Wishlist',
-          sub: '${app.wishlist.where((w) => !w.isPurchased).length} items',
+      _Item(icon: Icons.currency_exchange_rounded, label: l10n.more_currencyConverter,
+          sub: l10n.more_currencyConverterSub, color: const Color(0xFF6750A4),
+          screen: const CurrencyConverterScreen()),
+      _Item(icon: Icons.star_outline_rounded, label: l10n.more_wishlist,
+          sub: l10n.more_wishlistSub(app.wishlist.where((w) => !w.isPurchased).length),
           color: const Color(0xFF7D5260), screen: const WishlistScreen()),
-      _Item(icon: Icons.handshake_outlined, label: 'Lent Money',
-          sub: '${app.lended.where((l) => !l.isSettled).length} outstanding',
+      _Item(icon: Icons.handshake_outlined, label: l10n.more_lentMoney,
+          sub: l10n.more_lentMoneySub(app.lended.where((l) => !l.isSettled).length),
           color: const Color(0xFFE65100), screen: const LendedScreen()),
-      _Item(icon: Icons.inventory_2_outlined, label: 'Assets',
-          sub: '${app.assets.length} item${app.assets.length == 1 ? '' : 's'}',
+      _Item(icon: Icons.inventory_2_outlined, label: l10n.more_assets,
+          sub: l10n.more_assetsSub(app.assets.length),
           color: const Color(0xFF1565C0), screen: const AssetsScreen()),
-      _Item(icon: Icons.label_outline_rounded, label: 'Categories',
-          sub: '${app.categories.length} categories',
+      _Item(icon: Icons.label_outline_rounded, label: l10n.more_categories,
+          sub: l10n.more_categoriesSub(app.categories.length),
           color: const Color(0xFF00897B), screen: const CategoriesScreen()),
-      const _Item(icon: Icons.save_alt_outlined, label: 'Export Transactions',
-          sub: 'Save as Excel (.xlsx)',
-          color: Color(0xFF00838F), screen: ExportScreen()),
-      const _Item(icon: Icons.backup_outlined, label: 'Backup & Restore',
-          sub: 'Save or load your data',
-          color: Color(0xFF37474F), screen: BackupScreen()),
-      const _Item(icon: Icons.settings_outlined, label: 'Settings',
-          sub: 'Theme, currency & preferences',
-          color: Color(0xFF4A148C), screen: SettingsScreen()),
+      _Item(icon: Icons.save_alt_outlined, label: l10n.more_exportTransactions,
+          sub: l10n.more_exportTransactionsSub,
+          color: const Color(0xFF00838F), screen: const ExportScreen()),
+      _Item(icon: Icons.backup_outlined, label: l10n.more_backupRestore,
+          sub: l10n.more_backupRestoreSub,
+          color: const Color(0xFF37474F), screen: const BackupScreen()),
+      _Item(icon: Icons.settings_outlined, label: l10n.more_settings,
+          sub: l10n.more_settingsSub,
+          color: const Color(0xFF4A148C), screen: const SettingsScreen()),
     ];
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('More', style: TextStyle(fontWeight: FontWeight.w800)),
+        title: Text(l10n.more_more, style: TextStyle(fontWeight: FontWeight.w800)),
         backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
       ),
       body: ListView.separated(

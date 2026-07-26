@@ -1,5 +1,6 @@
 // lib/screens/lended_screen.dart
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../models/models.dart';
@@ -21,6 +22,7 @@ class LendedScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
     final cs  = Theme.of(context).colorScheme;
     String fmt(double v) => formatAmount(v, app.settings.currency);
@@ -47,7 +49,7 @@ class LendedScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Lent Money',
+        title: Text(l10n.lended_lentMoney,
             style: TextStyle(fontWeight: FontWeight.w800)),
         backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
       ),
@@ -58,23 +60,23 @@ class LendedScreen extends StatelessWidget {
             color: cs.primary,
             child: Row(children: [
               Expanded(child: _SumCol(
-                  label: 'They Owe Me', value: fmt(theyOwe),
+                  label: l10n.lended_theyOweMe, value: fmt(theyOwe),
                   color: cs.onPrimary.withValues(alpha: 0.9),
                   labelColor: cs.onPrimary.withValues(alpha: 0.65))),
               Expanded(child: _SumCol(
-                  label: 'I Owe Them', value: fmt(iOwe),
+                  label: l10n.lended_iOweThem, value: fmt(iOwe),
                   color: cs.onPrimary.withValues(alpha: 0.9),
                   labelColor: cs.onPrimary.withValues(alpha: 0.65))),
               Expanded(child: _SumCol(
-                  label: 'Net', value: fmt(theyOwe - iOwe),
+                  label: l10n.lended_net, value: fmt(theyOwe - iOwe),
                   color: cs.onPrimary,
                   labelColor: cs.onPrimary.withValues(alpha: 0.65))),
             ]),
           ),
         Expanded(child: people.isEmpty
-          ? const EmptyState(icon: Icons.handshake_outlined,
-              message: 'No one yet',
-              subMessage: 'Tap + to add a person you lend to or borrow from')
+          ? EmptyState(icon: Icons.handshake_outlined,
+              message: l10n.lended_noOneYet,
+              subMessage: l10n.lended_noOneYetSub)
           : ListView.builder(
               padding: const EdgeInsets.fromLTRB(14, 14, 14, 100),
               itemCount: people.length,
@@ -128,6 +130,7 @@ class _PersonCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final app     = context.watch<AppProvider>();
     final cs      = Theme.of(context).colorScheme;
     final color   = Color(person.colorValue);
@@ -142,10 +145,10 @@ class _PersonCard extends StatelessWidget {
             ? const Color(0xFFC62828)
             : cs.onSurface.withValues(alpha: 0.5);
     final balLabel = balance > 0
-        ? 'Owes you'
+        ? l10n.lended_owesYou
         : balance < 0
-            ? 'You owe'
-            : 'Settled up';
+            ? l10n.lended_youOwe
+            : l10n.lended_settledUp;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -181,7 +184,7 @@ class _PersonCard extends StatelessWidget {
                     decoration: BoxDecoration(
                         color: cs.errorContainer,
                         borderRadius: BorderRadius.circular(6)),
-                    child: Text('OVERDUE', style: TextStyle(fontSize: 9,
+                    child: Text(l10n.lended_overdue, style: TextStyle(fontSize: 9,
                         fontWeight: FontWeight.w700, color: cs.onErrorContainer)),
                   ),
                 ],
@@ -189,8 +192,8 @@ class _PersonCard extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 activeCount == 0
-                    ? 'No active records'
-                    : '$activeCount active record${activeCount == 1 ? '' : 's'}',
+                    ? l10n.lended_noActiveRecords
+                    : l10n.lended_activeRecords(activeCount),
                 style: TextStyle(fontSize: 11,
                     color: cs.onSurface.withValues(alpha: 0.5)),
               ),
@@ -261,6 +264,7 @@ class _PersonSheetState extends State<_PersonSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: EdgeInsets.only(
@@ -270,17 +274,17 @@ class _PersonSheetState extends State<_PersonSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(isEdit ? 'Edit Person' : 'Add Person',
+          Text(isEdit ? l10n.lended_editPerson : l10n.lended_addPerson,
               style: Theme.of(context).textTheme.titleLarge
                   ?.copyWith(fontWeight: FontWeight.w800)),
           const SizedBox(height: 12),
           TextField(controller: _nameCtrl,
               autofocus: !isEdit,
-              decoration: const InputDecoration(
-                  labelText: 'Name',
-                  prefixIcon: Icon(Icons.person_outline_rounded))),
+              decoration: InputDecoration(
+                  labelText: l10n.lended_name,
+                  prefixIcon: const Icon(Icons.person_outline_rounded))),
           const SizedBox(height: 14),
-          Text('Colour', style: Theme.of(context).textTheme.labelMedium
+          Text(l10n.lended_colour, style: Theme.of(context).textTheme.labelMedium
               ?.copyWith(letterSpacing: 1)),
           const SizedBox(height: 8),
           Wrap(spacing: 10, runSpacing: 10, children: kLendedPersonColors.map((col) {
@@ -304,9 +308,9 @@ class _PersonSheetState extends State<_PersonSheet> {
           }).toList()),
           const SizedBox(height: 14),
           TextField(controller: _notesCtrl, maxLines: 2,
-              decoration: const InputDecoration(
-                  labelText: 'Notes (optional)',
-                  prefixIcon: Icon(Icons.sticky_note_2_outlined))),
+              decoration: InputDecoration(
+                  labelText: l10n.lended_notesOptional,
+                  prefixIcon: const Icon(Icons.sticky_note_2_outlined))),
           const SizedBox(height: 20),
           FilledButton(
             onPressed: _submit,
@@ -314,7 +318,7 @@ class _PersonSheetState extends State<_PersonSheet> {
                 minimumSize: const Size.fromHeight(50),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(28))),
-            child: Text(isEdit ? 'Save Changes' : 'Add Person'),
+            child: Text(isEdit ? l10n.lended_saveChanges : l10n.lended_addPerson),
           ),
         ],
       )),

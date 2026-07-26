@@ -1,0 +1,9 @@
+### Added
+- **Localization Support** — Fully localized the app into 4 new languages: Arabic (ar), French (fr), German (de), and Hindi (hi). Translated over 450 UI strings and configured dynamic language switching.
+- **Onboarding Language Selector** — Added a new Language Selection page to the start of the onboarding flow to immediately adapt the app to the user's preferred language.
+- **Developer Links Dialog** — The "Developer" tile in Settings now opens a dialog offering links to both the GitHub Profile and the Developer Website (portfolio.minaashraf285.workers.dev).
+
+### Changed
+- **Bottom Navigation Bar** — Localized the `NavigationBar` labels (`Home`, `Transactions`, `Recurring`, etc.) which were previously hardcoded.
+- **Refined English Text** — Polished English headers across several creation screens ("Enter Transaction", "Add a Recurring Payment", "Add New Account", "Add New Budget") for better clarity.
+- **Back Navigation** — Pressing the back button from any tab now returns to the Home tab (Dashboard) instead of immediately exiting the app.

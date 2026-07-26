@@ -1,5 +1,6 @@
 // lib/screens/main_shell.dart
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import 'home_screen.dart';
 import 'transactions_screen.dart';
 import 'recurring_screen.dart';
@@ -26,38 +27,48 @@ class _MainShellState extends State<MainShell> {
   ];
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return PopScope(
+      canPop: _index == 0,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        setState(() => _index = 0);
+      },
+      child: Scaffold(
         body: IndexedStack(index: _index, children: _screens),
         bottomNavigationBar: NavigationBar(
           selectedIndex: _index,
           animationDuration: const Duration(milliseconds: 120),
           onDestinationSelected: (i) => setState(() => _index = i),
-          destinations: const [
+          destinations: [
             NavigationDestination(
-                icon: Icon(Icons.home_outlined),
-                selectedIcon: Icon(Icons.home),
-                label: 'Home'),
+                icon: const Icon(Icons.home_outlined),
+                selectedIcon: const Icon(Icons.home),
+                label: l10n.main_home),
             NavigationDestination(
-                icon: Icon(Icons.receipt_long_outlined),
-                selectedIcon: Icon(Icons.receipt_long),
-                label: 'Transactions'),
+                icon: const Icon(Icons.receipt_long_outlined),
+                selectedIcon: const Icon(Icons.receipt_long),
+                label: l10n.main_transactions),
             NavigationDestination(
-                icon: Icon(Icons.repeat_rounded),
-                selectedIcon: Icon(Icons.repeat_rounded),
-                label: 'Recurring'),
+                icon: const Icon(Icons.repeat_rounded),
+                selectedIcon: const Icon(Icons.repeat_rounded),
+                label: l10n.main_recurring),
             NavigationDestination(
-                icon: Icon(Icons.account_balance_wallet_outlined),
-                selectedIcon: Icon(Icons.account_balance_wallet),
-                label: 'Accounts'),
+                icon: const Icon(Icons.account_balance_wallet_outlined),
+                selectedIcon: const Icon(Icons.account_balance_wallet),
+                label: l10n.main_accounts),
             NavigationDestination(
-                icon: Icon(Icons.pie_chart_outline_rounded),
-                selectedIcon: Icon(Icons.pie_chart_rounded),
-                label: 'Budgets'),
+                icon: const Icon(Icons.pie_chart_outline_rounded),
+                selectedIcon: const Icon(Icons.pie_chart_rounded),
+                label: l10n.main_budgets),
             NavigationDestination(
-                icon: Icon(Icons.more_horiz_outlined),
-                selectedIcon: Icon(Icons.more_horiz),
-                label: 'More'),
+                icon: const Icon(Icons.more_horiz_outlined),
+                selectedIcon: const Icon(Icons.more_horiz),
+                label: l10n.main_more),
           ],
         ),
-      );
+      ),
+    );
+  }
 }

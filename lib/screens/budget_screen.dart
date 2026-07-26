@@ -1,5 +1,6 @@
 // lib/screens/budget_screen.dart
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../models/models.dart';
@@ -11,6 +12,7 @@ class BudgetScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
     final cs  = Theme.of(context).colorScheme;
     final cur = app.settings.currency;
@@ -21,14 +23,14 @@ class BudgetScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Budgets', style: TextStyle(fontWeight: FontWeight.w800)),
+        title: Text(l10n.budget_budgets, style: TextStyle(fontWeight: FontWeight.w800)),
         backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
       ),
       body: app.budgets.isEmpty
-          ? const EmptyState(
+          ? EmptyState(
               icon: Icons.account_balance_wallet_outlined,
-              message: 'No budgets yet',
-              subMessage: 'Tap + to set a spending limit per category')
+              message: l10n.budget_noBudgetsYet,
+              subMessage: l10n.budget_tapToAddBudget)
           : Column(children: [
               // ── Summary strip ───────────────────────────────────────
               Container(
@@ -36,13 +38,13 @@ class BudgetScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 child: Row(children: [
                   _SumChip(
-                    label: 'Budgeted',
+                    label: l10n.budget_budgeted,
                     value: formatAmount(totalBudgeted, cur),
                     color: cs.primary,
                   ),
                   const SizedBox(width: 8),
                   _SumChip(
-                    label: 'Spent',
+                    label: l10n.budget_spent,
                     value: formatAmount(totalSpent, cur),
                     color: totalSpent > totalBudgeted
                         ? cs.error
@@ -51,7 +53,7 @@ class BudgetScreen extends StatelessWidget {
                   const SizedBox(width: 8),
                   if (overCount > 0)
                     _SumChip(
-                      label: 'Over limit',
+                      label: l10n.budget_overLimit,
                       value: '$overCount',
                       color: cs.error,
                     ),
@@ -132,6 +134,7 @@ class _BudgetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs       = Theme.of(context).colorScheme;
     final cat      = app.categoryById(budget.categoryId);
     final spent    = app.budgetSpent(budget);
@@ -146,7 +149,7 @@ class _BudgetCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         onTap: () => BudgetScreen._openSheet(context, existing: budget),
         onLongPress: () async {
-          if (await showDeleteConfirm(context, cat?.name ?? 'Budget') &&
+          if (await showDeleteConfirm(context, cat?.name ?? l10n.budget_budget) &&
               context.mounted) {
             context.read<AppProvider>().deleteBudget(budget.id);
           }
@@ -161,17 +164,17 @@ class _BudgetCard extends StatelessWidget {
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                  Text(cat?.name ?? 'Unknown',
+                  Text(cat?.name ?? l10n.budget_unknown,
                       style: const TextStyle(
                           fontWeight: FontWeight.w700, fontSize: 15)),
                   Row(children: [
                     Text(
-                      budget.period == 'weekly' ? 'Weekly' : 'Monthly',
+                      budget.period == 'weekly' ? l10n.budget_weeklyLabel : l10n.budget_monthlyLabel,
                       style: TextStyle(
                           fontSize: 11,
                           color: cs.onSurface.withValues(alpha: 0.5)),
                     ),
-                    Text(' · ',
+                    Text(l10n.budget_empty,
                         style: TextStyle(
                             color: cs.onSurface.withValues(alpha: 0.3))),
                     Text(
@@ -194,8 +197,8 @@ class _BudgetCard extends StatelessWidget {
                 ),
                 Text(
                   exceeded
-                      ? '${formatAmount(spent - budget.amount, cur)} over'
-                      : '${formatAmount(budget.amount - spent, cur)} left',
+                      ? l10n.budget_overAmount(formatAmount(spent - budget.amount, cur))
+                      : l10n.budget_leftAmount(formatAmount(budget.amount - spent, cur)),
                   style: TextStyle(
                       fontSize: 10,
                       color: exceeded
@@ -218,7 +221,7 @@ class _BudgetCard extends StatelessWidget {
             const SizedBox(height: 5),
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
               Text(
-                '${(progress * 100).toStringAsFixed(0)}% used',
+                l10n.budget_percentUsed((progress * 100).toStringAsFixed(0)),
                 style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
@@ -232,7 +235,7 @@ class _BudgetCard extends StatelessWidget {
                     color: cs.errorContainer,
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Text('Over budget',
+                  child: Text(l10n.budget_overBudget,
                       style: TextStyle(
                           fontSize: 9,
                           fontWeight: FontWeight.w800,
@@ -290,6 +293,7 @@ class _BudgetSheetState extends State<_BudgetSheet> {
     final amount = double.tryParse(_amtCtrl.text);
     if (amount == null || amount <= 0 || _categoryId == null) return;
     final app = context.read<AppProvider>();
+    final l10n = AppLocalizations.of(context)!;
 
     // Guard: if adding and category already has a budget, block it
     if (!isEdit) {
@@ -297,7 +301,7 @@ class _BudgetSheetState extends State<_BudgetSheet> {
       if (existing != null) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('This category already has a budget. Tap it to edit.')),
+          SnackBar(content: Text(l10n.budget_thisCategoryAlreadyH)),
         );
         return;
       }
@@ -321,6 +325,7 @@ class _BudgetSheetState extends State<_BudgetSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final app     = context.watch<AppProvider>();
     final cs      = Theme.of(context).colorScheme;
     final sym     = currencyInfo(app.settings.currency).symbol;
@@ -336,7 +341,7 @@ class _BudgetSheetState extends State<_BudgetSheet> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              isEdit ? 'Edit Budget' : 'Set Budget',
+              isEdit ? l10n.budget_editBudget : l10n.budget_setBudget,
               style: Theme.of(context)
                   .textTheme
                   .titleLarge
@@ -350,7 +355,7 @@ class _BudgetSheetState extends State<_BudgetSheet> {
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
               decoration: InputDecoration(
-                labelText: 'Budget amount',
+                labelText: l10n.budget_budgetAmount,
                 prefixText: '$sym ',
               ),
               onChanged: (_) => setState(() {}),
@@ -358,7 +363,7 @@ class _BudgetSheetState extends State<_BudgetSheet> {
             const SizedBox(height: 16),
 
             // Period selector
-            Text('Period',
+            Text(l10n.budget_period,
                 style: Theme.of(context)
                     .textTheme
                     .labelMedium
@@ -378,7 +383,7 @@ class _BudgetSheetState extends State<_BudgetSheet> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Center(
-                      child: Text('Monthly',
+                      child: Text(l10n.budget_monthly,
                           style: TextStyle(
                               fontWeight: FontWeight.w700,
                               color: _period == 'monthly'
@@ -402,7 +407,7 @@ class _BudgetSheetState extends State<_BudgetSheet> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Center(
-                      child: Text('Weekly',
+                      child: Text(l10n.budget_weekly,
                           style: TextStyle(
                               fontWeight: FontWeight.w700,
                               color: _period == 'weekly'
@@ -417,7 +422,7 @@ class _BudgetSheetState extends State<_BudgetSheet> {
 
             // Category
             if (expCats.isNotEmpty) ...[
-              Text('Category',
+              Text(l10n.budget_category,
                   style: Theme.of(context)
                       .textTheme
                       .labelMedium
@@ -455,7 +460,7 @@ class _BudgetSheetState extends State<_BudgetSheet> {
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                    Text('Preview for "$catName"',
+                    Text(l10n.budget_previewFor(catName),
                         style: TextStyle(
                             fontSize: 11,
                             color: cs.onSurface.withValues(alpha: 0.6))),
@@ -464,11 +469,11 @@ class _BudgetSheetState extends State<_BudgetSheet> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                       Text(
-                          'Spent: ${formatAmount(spent, app.settings.currency)}',
+                          l10n.budget_spentAmount(formatAmount(spent, app.settings.currency)),
                           style: const TextStyle(
                               fontSize: 13, fontWeight: FontWeight.w700)),
                       Text(
-                          'of ${formatAmount(budgetAmt, app.settings.currency)}',
+                          l10n.budget_ofAmount(formatAmount(budgetAmt, app.settings.currency)),
                           style: TextStyle(
                               fontSize: 12,
                               color: cs.onSurface.withValues(alpha: 0.5))),
@@ -498,7 +503,7 @@ class _BudgetSheetState extends State<_BudgetSheet> {
             FilledButton.icon(
               onPressed: _submit,
               icon: Icon(isEdit ? Icons.save_outlined : Icons.add),
-              label: Text(isEdit ? 'Save Changes' : 'Set Budget'),
+              label: Text(isEdit ? l10n.budget_saveChanges : l10n.budget_setBudget),
               style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(50),
                 shape: RoundedRectangleBorder(

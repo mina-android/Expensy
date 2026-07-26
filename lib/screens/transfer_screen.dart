@@ -1,5 +1,6 @@
 // lib/screens/transfer_screen.dart
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
@@ -47,6 +48,7 @@ class _TransferScreenState extends State<TransferScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final app  = context.watch<AppProvider>();
     final cs   = Theme.of(context).colorScheme;
     // Gold accounts update automatically — exclude from manual transfers.
@@ -70,14 +72,14 @@ class _TransferScreenState extends State<TransferScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Transfer', style: TextStyle(fontWeight: FontWeight.w800)),
+        title: Text(l10n.transfer_transfer, style: TextStyle(fontWeight: FontWeight.w800)),
         backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           // ── FROM row ──────────────────────────────────────────────────
-          Text('FROM', style: Theme.of(context).textTheme.labelMedium
+          Text(l10n.transfer_from, style: Theme.of(context).textTheme.labelMedium
               ?.copyWith(letterSpacing: 1)),
           const SizedBox(height: 8),
           AccountCardPicker(
@@ -92,7 +94,7 @@ class _TransferScreenState extends State<TransferScreen> {
 
           // ── TO row ────────────────────────────────────────────────────
           Row(children: [
-            Text('TO', style: Theme.of(context).textTheme.labelMedium
+            Text(l10n.transfer_to, style: Theme.of(context).textTheme.labelMedium
                 ?.copyWith(letterSpacing: 1)),
             const Spacer(),
             Icon(Icons.arrow_downward_rounded, size: 16, color: cs.primary),
@@ -166,11 +168,11 @@ class _TransferScreenState extends State<TransferScreen> {
                 Row(children: [
                   Expanded(child: _BalanceCol(name: from.name,
                       balance: formatAmount(from.balance, from.currency),
-                      label: 'From (${from.currency})')),
+                      label: l10n.transfer_fromAcc(from.currency))),
                   Icon(Icons.arrow_forward_rounded, color: cs.primary),
                   Expanded(child: _BalanceCol(name: to.name,
                       balance: formatAmount(to.balance, to.currency),
-                      label: 'To (${to.currency})',
+                      label: l10n.transfer_toAcc(to.currency),
                       align: CrossAxisAlignment.end)),
                 ]),
                 // Cross-currency conversion preview
@@ -190,15 +192,13 @@ class _TransferScreenState extends State<TransferScreen> {
                     ])
                   else if (app.exchangeRates.isEmpty)
                     Text(
-                      'Exchange rates not loaded — '
-                      'amount will be transferred as-is',
+                      l10n.transfer_exchangeRatesNotLoaded,
                       style: TextStyle(fontSize: 11,
                           color: cs.error, fontWeight: FontWeight.w500),
                       textAlign: TextAlign.center,
                     )
                   else
-                    Text(
-                      'Enter an amount to see the conversion',
+                    Text(l10n.transfer_enterAnAmountToSeeTh,
                       style: TextStyle(fontSize: 11,
                           color: cs.onPrimaryContainer.withValues(alpha: 0.6)),
                       textAlign: TextAlign.center,
@@ -213,7 +213,7 @@ class _TransferScreenState extends State<TransferScreen> {
             controller: _amtCtrl,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
-              labelText: 'Amount',
+              labelText: l10n.transfer_amount,
               prefixText: '$sym ',
               suffixText: fromCurrency,
             ),
@@ -223,16 +223,16 @@ class _TransferScreenState extends State<TransferScreen> {
           const SizedBox(height: 12),
 
           TextField(controller: _noteCtrl,
-              decoration: const InputDecoration(
-                  labelText: 'Note (optional)',
-                  prefixIcon: Icon(Icons.sticky_note_2_outlined))),
+              decoration: InputDecoration(
+                  labelText: l10n.transfer_noteOptional,
+                  prefixIcon: const Icon(Icons.sticky_note_2_outlined))),
           const SizedBox(height: 24),
 
           FilledButton.icon(
             onPressed: (_fromId != null && _toId != null && _fromId != _toId)
                 ? _submit : null,
             icon: const Icon(Icons.swap_horiz_rounded),
-            label: const Text('Transfer'),
+            label: Text(l10n.transfer_transfer),
             style: FilledButton.styleFrom(
               minimumSize: const Size.fromHeight(52),
               shape: RoundedRectangleBorder(
@@ -251,6 +251,7 @@ class _BalanceCol extends StatelessWidget {
       required this.label, this.align = CrossAxisAlignment.start});
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     return Column(crossAxisAlignment: align, children: [
       Text(label, style: TextStyle(fontSize: 10,

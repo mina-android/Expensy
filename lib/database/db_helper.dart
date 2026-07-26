@@ -659,6 +659,10 @@ class DBHelper {
     data.putIfAbsent('recurring_history', () => <dynamic>[]);
 
     data['_originalVersion'] = backupVersion;
+    if (data['settings'] is Map) {
+      final settings = data['settings'] as Map;
+      settings.putIfAbsent('languageCode', () => 'system');
+    }
   }
 
   static List<Map<String, dynamic>> _rows(

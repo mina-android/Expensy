@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'providers/app_provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'l10n/app_localizations.dart';
 import 'theme/app_theme.dart';
 import 'screens/main_shell.dart';
 import 'screens/onboarding_screen.dart';
@@ -108,6 +110,9 @@ class _ExpensyAppState extends State<ExpensyApp> {
           title: 'Expensy',
           navigatorKey: rootNavigatorKey,
           debugShowCheckedModeBanner: false,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: s.languageCode == 'system' ? null : Locale(s.languageCode),
           themeMode: resolveThemeMode(s.themeMode),
           theme: buildTheme(
             seed:          s.themeSeed,

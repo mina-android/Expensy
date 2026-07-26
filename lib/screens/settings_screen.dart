@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
+import '../l10n/app_localizations.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -14,10 +15,11 @@ class SettingsScreen extends StatelessWidget {
     final app = context.watch<AppProvider>();
     final cs  = Theme.of(context).colorScheme;
     final s   = app.settings;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings', style: TextStyle(fontWeight: FontWeight.w800)),
+        title: Text(l10n.settings_title, style: TextStyle(fontWeight: FontWeight.w800)),
         backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
       ),
       body: ListView(
@@ -25,7 +27,7 @@ class SettingsScreen extends StatelessWidget {
         children: [
 
           // ── Appearance ────────────────────────────────────────────────
-          const SectionHeader(title: 'Appearance'),
+          SectionHeader(title: l10n.settings_appearance),
           Card(margin: const EdgeInsets.only(bottom: 8), child: Column(children: [
             // Theme mode
             Padding(
@@ -34,7 +36,7 @@ class SettingsScreen extends StatelessWidget {
                 Row(children: [
                   Icon(Icons.brightness_6_outlined, color: cs.primary, size: 20),
                   const SizedBox(width: 10),
-                  const Text('Theme', style: TextStyle(
+                  Text(l10n.settings_theme, style: TextStyle(
                       fontWeight: FontWeight.w700, fontSize: 14)),
                 ]),
                 const SizedBox(height: 10),
@@ -42,19 +44,19 @@ class SettingsScreen extends StatelessWidget {
                 Row(children: [
                   Expanded(child: _ThemeCard(
                     icon: Icons.brightness_auto_outlined,
-                    label: 'System', value: 'system',
+                    label: l10n.settings_system, value: 'system',
                     selected: s.themeMode, cs: cs,
                     onTap: () => app.updateSetting('themeMode', 'system'))),
                   const SizedBox(width: 8),
                   Expanded(child: _ThemeCard(
                     icon: Icons.light_mode_outlined,
-                    label: 'Light', value: 'light',
+                    label: l10n.settings_light, value: 'light',
                     selected: s.themeMode, cs: cs,
                     onTap: () => app.updateSetting('themeMode', 'light'))),
                   const SizedBox(width: 8),
                   Expanded(child: _ThemeCard(
                     icon: Icons.dark_mode_outlined,
-                    label: 'Dark', value: 'dark',
+                    label: l10n.settings_dark, value: 'dark',
                     selected: s.themeMode, cs: cs,
                     onTap: () => app.updateSetting('themeMode', 'dark'))),
                 ]),
@@ -67,9 +69,9 @@ class SettingsScreen extends StatelessWidget {
               SwitchListTile(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
                 secondary: Icon(Icons.contrast_outlined, color: cs.primary, size: 20),
-                title: const Text('Pure Black (AMOLED)',
+                title: Text(l10n.settings_amoledTitle,
                     style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-                subtitle: Text('Forces black backgrounds in dark mode',
+                subtitle: Text(l10n.settings_amoledSubtitle,
                     style: TextStyle(fontSize: 12,
                         color: cs.onSurface.withValues(alpha: 0.55))),
                 value: s.amoledSurfaces,
@@ -87,7 +89,7 @@ class SettingsScreen extends StatelessWidget {
                   Icon(Icons.palette_outlined, color: cs.primary, size: 20),
                   const SizedBox(width: 10),
                   Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    const Text('Accent Colour', style: TextStyle(
+                    Text(l10n.settings_accentColor, style: TextStyle(
                         fontWeight: FontWeight.w700, fontSize: 14)),
                     Text(kSeedLabels[s.themeSeed] ?? s.themeSeed,
                         style: TextStyle(fontSize: 12,
@@ -120,7 +122,7 @@ class SettingsScreen extends StatelessWidget {
           ])),
 
           // ── App Font ──────────────────────────────────────────────────
-          const SectionHeader(title: 'App Font'),
+          SectionHeader(title: l10n.settings_appFont),
           Card(margin: const EdgeInsets.only(bottom: 8), child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -128,9 +130,9 @@ class SettingsScreen extends StatelessWidget {
                 Icon(Icons.text_fields_rounded, color: cs.primary, size: 20),
                 const SizedBox(width: 10),
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  const Text('App Font', style: TextStyle(
+                  Text(l10n.settings_appFont, style: TextStyle(
                       fontWeight: FontWeight.w700, fontSize: 14)),
-                  Text(kFonts[s.appFont] ?? 'System Default',
+                  Text(kFonts[s.appFont] ?? l10n.settings_systemDefault,
                       style: TextStyle(fontSize: 12,
                           color: cs.onSurface.withValues(alpha: 0.55))),
                 ]),
@@ -168,12 +170,12 @@ class SettingsScreen extends StatelessWidget {
           )),
 
           // ── Currency ──────────────────────────────────────────────────
-          const SectionHeader(title: 'Currency'),
+          SectionHeader(title: l10n.settings_currency),
           Card(margin: const EdgeInsets.only(bottom: 8),
               child: ListTile(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             leading: Icon(Icons.monetization_on_outlined, color: cs.primary),
-            title: const Text('Default Currency',
+            title: Text(l10n.settings_defaultCurrency,
                 style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
             subtitle: Text('${currencyInfo(s.currency).name} (${currencyInfo(s.currency).symbol})',
                 style: TextStyle(fontSize: 12,
@@ -188,21 +190,40 @@ class SettingsScreen extends StatelessWidget {
             },
           )),
 
+          // ── Language ──────────────────────────────────────────────────
+          SectionHeader(title: l10n.settings_language),
+          Card(margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            leading: Icon(Icons.language_outlined, color: cs.primary),
+            title: Text(l10n.settings_language,
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+            subtitle: Text(_langName(context, s.languageCode),
+                style: TextStyle(fontSize: 12,
+                    color: cs.onSurface.withValues(alpha: 0.55))),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () async {
+              final picked = await _showLanguagePicker(context, current: s.languageCode);
+              if (picked != null && context.mounted) {
+                context.read<AppProvider>().updateSetting('languageCode', picked);
+              }
+            },
+          )),
+
           // ── Preferences ───────────────────────────────────────────────
-          const SectionHeader(title: 'Preferences'),
+          SectionHeader(title: l10n.settings_preferences),
           Card(margin: const EdgeInsets.only(bottom: 8), child: Column(children: [
             ListTile(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               leading: Icon(Icons.date_range_outlined, color: cs.primary),
-              title: const Text('Week Starts On',
+              title: Text(l10n.settings_weekStartsOn,
                   style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
               trailing: DropdownButton<String>(
                 value: s.weekStart,
                 underline: const SizedBox(),
                 borderRadius: BorderRadius.circular(12),
-                items: const [
-                  DropdownMenuItem(value: 'monday', child: Text('Monday')),
-                  DropdownMenuItem(value: 'sunday', child: Text('Sunday')),
+                items: [DropdownMenuItem(value: 'monday', child: Text(l10n.settings_monday)),
+                  DropdownMenuItem(value: 'sunday', child: Text(l10n.settings_sunday)),
                 ],
                 onChanged: (v) {
                   if (v != null) app.updateSetting('weekStart', v);
@@ -212,23 +233,23 @@ class SettingsScreen extends StatelessWidget {
             const Divider(height: 1, indent: 56),
             SwitchListTile.adaptive(
               secondary: Icon(Icons.visibility_off_outlined, color: cs.primary),
-              title: const Text('Hide Balance',
+              title: Text(l10n.settings_hideBalance,
                   style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-              subtitle: const Text('Show ••••• instead of amounts'),
+              subtitle: Text(l10n.settings_hideBalanceSubtitle),
               value: s.hideBalance,
               onChanged: (v) => app.updateSetting('hideBalance', v),
             ),
           ])),
 
           // ── Profile ───────────────────────────────────────────────────
-          const SectionHeader(title: 'Profile'),
+          SectionHeader(title: l10n.settings_profile),
           Card(margin: const EdgeInsets.only(bottom: 8),
               child: ListTile(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             leading: Icon(Icons.person_outline_rounded, color: cs.primary),
-            title: const Text('Display Name',
+            title: Text(l10n.settings_displayName,
                 style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-            subtitle: Text(s.userName.isNotEmpty ? s.userName : 'Not set',
+            subtitle: Text(s.userName.isNotEmpty ? s.userName : l10n.settings_notSet,
                 style: TextStyle(fontSize: 12,
                     color: cs.onSurface.withValues(alpha: 0.55))),
             trailing: const Icon(Icons.chevron_right_rounded),
@@ -236,32 +257,32 @@ class SettingsScreen extends StatelessWidget {
           )),
 
           // ── About ──────────────────────────────────────────────────────
-          const SectionHeader(title: 'About'),
+          SectionHeader(title: l10n.settings_about),
           Card(margin: const EdgeInsets.only(bottom: 40), child: Column(children: [
             ListTile(
               leading: Icon(Icons.info_outline_rounded, color: cs.primary),
-              title: const Text('Version', style: TextStyle(fontWeight: FontWeight.w700)),
+              title: Text(l10n.settings_version, style: TextStyle(fontWeight: FontWeight.w700)),
               trailing: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(color: cs.primaryContainer,
                     borderRadius: BorderRadius.circular(20)),
-                child: Text('v1.0.6', style: TextStyle(
+                child: Text('v1.0.7', style: TextStyle(
                     fontSize: 12, fontWeight: FontWeight.w700, color: cs.primary)),
               ),
             ),
             const Divider(height: 1, indent: 56),
             ListTile(
               leading: Icon(Icons.shield_outlined, color: cs.primary),
-              title: const Text('Privacy', style: TextStyle(fontWeight: FontWeight.w700)),
-              subtitle: const Text('All data stored locally — 100% offline'),
+              title: Text(l10n.settings_privacy, style: TextStyle(fontWeight: FontWeight.w700)),
+              subtitle: Text(l10n.settings_privacySubtitle),
               trailing: const Icon(Icons.check_circle_outline,
                   color: Color(0xFF2E7D32)),
             ),
             const Divider(height: 1, indent: 56),
             ListTile(
               leading: Icon(Icons.code_rounded, color: cs.primary),
-              title: const Text('GitHub', style: TextStyle(fontWeight: FontWeight.w700)),
-              subtitle: const Text('View source code'),
+              title: Text(l10n.settings_github, style: TextStyle(fontWeight: FontWeight.w700)),
+              subtitle: Text(l10n.settings_githubSubtitle),
               trailing: Icon(Icons.open_in_new_rounded,
                   size: 18, color: cs.onSurface.withValues(alpha: 0.4)),
               onTap: () async {
@@ -274,15 +295,51 @@ class SettingsScreen extends StatelessWidget {
             const Divider(height: 1, indent: 56),
             ListTile(
               leading: Icon(Icons.person_outline_rounded, color: cs.primary),
-              title: const Text('Developer', style: TextStyle(fontWeight: FontWeight.w700)),
-              subtitle: const Text('Discover more projects by Mina Android'),
+              title: Text(l10n.settings_developer, style: TextStyle(fontWeight: FontWeight.w700)),
+              subtitle: Text(l10n.settings_developerSubtitle),
               trailing: Icon(Icons.open_in_new_rounded,
                   size: 18, color: cs.onSurface.withValues(alpha: 0.4)),
-              onTap: () async {
-                final uri = Uri.parse('https://github.com/mina-android');
-                if (await canLaunchUrl(uri)) {
-                  await launchUrl(uri, mode: LaunchMode.externalApplication);
-                }
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: Text(l10n.settings_developer, style: TextStyle(fontWeight: FontWeight.w700)),
+                    contentPadding: const EdgeInsets.only(top: 16, bottom: 8),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.code_rounded),
+                          title: Text(l10n.settings_githubProfile),
+                          onTap: () async {
+                            Navigator.pop(ctx);
+                            final uri = Uri.parse('https://github.com/mina-android');
+                            if (await canLaunchUrl(uri)) {
+                              await launchUrl(uri, mode: LaunchMode.externalApplication);
+                            }
+                          },
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.language_rounded),
+                          title: Text(l10n.settings_developerWebsite),
+                          onTap: () async {
+                            Navigator.pop(ctx);
+                            final uri = Uri.parse('https://portfolio.minaashraf285.workers.dev');
+                            if (await canLaunchUrl(uri)) {
+                              await launchUrl(uri, mode: LaunchMode.externalApplication);
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: Text(l10n.settings_close),
+                      ),
+                    ],
+                  ),
+                );
               },
             ),
           ])),
@@ -292,24 +349,69 @@ class SettingsScreen extends StatelessWidget {
   }
 
   void _editName(BuildContext context, AppProvider app) {
+    final l10n = AppLocalizations.of(context)!;
     final ctrl = TextEditingController(text: app.settings.userName);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Display Name'),
+        title: Text(l10n.settings_displayName),
         content: TextField(controller: ctrl, autofocus: true,
-            decoration: const InputDecoration(labelText: 'Your name')),
+            decoration: InputDecoration(labelText: l10n.settings_yourName)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.settings_cancel)),
           FilledButton(
             onPressed: () {
               app.updateSetting('userName', ctrl.text.trim());
               Navigator.pop(ctx);
             },
-            child: const Text('Save'),
+            child: Text(l10n.settings_save),
           ),
         ],
       ),
+    );
+  }
+
+  String _langName(BuildContext context, String code) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (code) {
+      case 'en': return 'English';
+      case 'ar': return 'العربية';
+      case 'fr': return 'Français';
+      case 'de': return 'Deutsch';
+      case 'hi': return 'हिन्दी';
+      default: return l10n.settings_systemDefault;
+    }
+  }
+
+  Future<String?> _showLanguagePicker(BuildContext context, {required String current}) {
+    final l10n = AppLocalizations.of(context)!;
+    return showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.settings_language),
+        contentPadding: const EdgeInsets.only(top: 16, bottom: 8),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _langTile(l10n.settings_systemDefault, 'system', current, ctx),
+            _langTile('English', 'en', current, ctx),
+            _langTile('العربية', 'ar', current, ctx),
+            _langTile('Français', 'fr', current, ctx),
+            _langTile('Deutsch', 'de', current, ctx),
+            _langTile('हिन्दी', 'hi', current, ctx),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _langTile(String label, String code, String current, BuildContext ctx) {
+    final sel = code == current;
+    final cs = Theme.of(ctx).colorScheme;
+    return ListTile(
+      leading: sel ? Icon(Icons.check, color: cs.primary) : const SizedBox(width: 24),
+      title: Text(label, style: TextStyle(fontWeight: sel ? FontWeight.bold : FontWeight.normal)),
+      onTap: () => Navigator.pop(ctx, code),
     );
   }
 }

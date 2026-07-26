@@ -1,5 +1,6 @@
 // lib/screens/statistics_screen.dart
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
@@ -18,6 +19,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
     final cs  = Theme.of(context).colorScheme;
     String fmt(double v) => formatAmount(v, app.settings.currency);
@@ -79,7 +81,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     final expBycatId = <String, String>{}; // catName → categoryId
     for (final t in mTxs.where((t) => t.type == 'expense')) {
       final cat = app.categoryById(t.categoryId);
-      final key = cat?.name ?? 'Other';
+      final key = cat?.name ?? l10n.statistics_other;
       expBycat[key] = (expBycat[key] ?? 0) + t.amount;
       if (cat != null) expBycatId[key] = cat.id;
     }
@@ -90,7 +92,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Statistics',
+        title: Text(l10n.statistics_statistics,
             style: TextStyle(fontWeight: FontWeight.w800)),
         backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
       ),
@@ -106,7 +108,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 scrollDirection: Axis.horizontal,
                 children: [
                   _FilterPill(
-                    label: 'All accounts',
+                    label: l10n.statistics_allAccounts,
                     color: const Color(0xFF6750A4),
                     selected: _filterAccountId == null,
                     onTap: () => setState(() => _filterAccountId = null),
@@ -143,14 +145,14 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
           // ── Summary cards ─────────────────────────────────────────────
           Row(children: [
-            Expanded(child: _StatCard(label: 'Income', value: fmt(income),
+            Expanded(child: _StatCard(label: l10n.statistics_income, value: fmt(income),
                 color: const Color(0xFF2E7D32))),
             const SizedBox(width: 8),
-            Expanded(child: _StatCard(label: 'Expenses', value: fmt(expense),
+            Expanded(child: _StatCard(label: l10n.statistics_expenses, value: fmt(expense),
                 color: const Color(0xFFC62828))),
             const SizedBox(width: 8),
             Expanded(child: _StatCard(
-                label: 'Net', value: fmt(income - expense),
+                label: l10n.statistics_net, value: fmt(income - expense),
                 color: income >= expense
                     ? const Color(0xFF1565C0)
                     : const Color(0xFF785900))),
@@ -164,15 +166,15 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 children: [
               Text(
                 _filterAccountId != null
-                    ? '6-Month Overview · ${app.accountById(_filterAccountId!)?.name ?? ''}'
-                    : '6-Month Overview',
+                    ? l10n.statistics_6MonthOverviewAccount(app.accountById(_filterAccountId!)?.name ?? '')
+                    : l10n.statistics_6MonthOverview,
                 style: const TextStyle(
                     fontWeight: FontWeight.w700, fontSize: 14)),
               const SizedBox(height: 4),
-              const Row(children: [
-                _Legend(color: Color(0xFF2E7D32), label: 'Income'),
-                SizedBox(width: 12),
-                _Legend(color: Color(0xFFC62828), label: 'Expense'),
+              Row(children: [
+                _Legend(color: const Color(0xFF2E7D32), label: l10n.statistics_income),
+                const SizedBox(width: 12),
+                _Legend(color: const Color(0xFFC62828), label: l10n.statistics_expense),
               ]),
               const SizedBox(height: 12),
               SizedBox(
@@ -218,7 +220,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                const Text('Expenses by Category',
+                Text(l10n.statistics_expensesByCategory,
                     style: TextStyle(
                         fontWeight: FontWeight.w700, fontSize: 14)),
                 const SizedBox(height: 12),
@@ -295,7 +297,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                         ),
                         if (budget != null)
                           Text(
-                            '${(progress! * 100).toStringAsFixed(0)}% of budget',
+                            l10n.statistics_percentOfBudget((progress! * 100).toStringAsFixed(0)),
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
@@ -402,6 +404,7 @@ class _FilterPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(

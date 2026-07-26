@@ -1,0 +1,443 @@
+{
+  "@@locale": "de",
+  "appTitle": "Expensy",
+  "settings_title": "Einstellungen",
+  "settings_appearance": "Erscheinungsbild",
+  "settings_theme": "Thema",
+  "settings_system": "System",
+  "settings_light": "Hell",
+  "settings_dark": "Dunkel",
+  "settings_amoledTitle": "Reines Schwarz (AMOLED)",
+  "settings_amoledSubtitle": "Erzwingt schwarze Hintergründe im dunklen Modus",
+  "settings_accentColor": "Akzentfarbe",
+  "settings_appFont": "App-Schriftart",
+  "settings_systemDefault": "Systemstandard",
+  "settings_currency": "Währung",
+  "settings_defaultCurrency": "Standardwährung",
+  "settings_preferences": "Präferenzen",
+  "settings_weekStartsOn": "Woche beginnt am",
+  "settings_monday": "Montag",
+  "settings_sunday": "Sonntag",
+  "settings_hideBalance": "Guthaben ausblenden",
+  "settings_hideBalanceSubtitle": "Zeige ••••• anstelle von Beträgen",
+  "settings_language": "Sprache",
+  "settings_profile": "Profil",
+  "settings_displayName": "Anzeigename",
+  "settings_notSet": "Nicht festgelegt",
+  "settings_about": "Über",
+  "settings_version": "Version",
+  "settings_privacy": "Datenschutz",
+  "settings_privacySubtitle": "Alle Daten werden lokal gespeichert — 100% offline",
+  "settings_github": "GitHub",
+  "settings_githubSubtitle": "Quellcode anzeigen",
+  "settings_developer": "Entwickler",
+  "settings_developerSubtitle": "Entdecken Sie weitere Projekte von Mina Android",
+  "settings_githubProfile": "GitHub-Profil",
+  "settings_developerWebsite": "Entwickler-Website",
+  "settings_close": "Schließen",
+  "settings_yourName": "Dein Name",
+  "settings_cancel": "Abbrechen",
+  "settings_save": "Speichern",
+  "recurring_expenses": "Ausgaben ({count})",
+  "@recurring_expenses": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "recurring_incomeList": "Einnahmen ({count})",
+  "@recurring_incomeList": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "recurring_monthly": "Monatlich",
+  "recurring_weekly": "Wöchentlich",
+  "recurring_noRecurringExpenses": "Keine wiederkehrenden Ausgaben",
+  "recurring_noRecurringIncome": "Keine wiederkehrenden Einnahmen",
+  "recurring_addExpense": "Ausgabe hinzufügen",
+  "recurring_addIncome": "Einnahme hinzufügen",
+  "recurring_tapPlusToAddOne": "Tippe auf +, um eine hinzuzufügen",
+  "recurring_fromOngoing": "Ab {date} · Laufend",
+  "@recurring_fromOngoing": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "recurring_paidPayments": "{paid}/{total} bezahlt",
+  "@recurring_paidPayments": {
+    "placeholders": {
+      "paid": {},
+      "total": {}
+    }
+  },
+  "recurring_totalAmount": "Gesamt: {amount}",
+  "@recurring_totalAmount": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "recurring_overdue": "Überfällig!",
+  "recurring_dueToday": "Heute fällig",
+  "recurring_dueInDays": "Fällig in {days} T",
+  "@recurring_dueInDays": {
+    "placeholders": {
+      "days": {}
+    }
+  },
+  "recurring_edit": "Bearbeiten",
+  "recurring_skipBtn": "Überspringen",
+  "recurring_nextDate": "Nächste: {date}",
+  "@recurring_nextDate": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "recurring_pay": "Bezahlen",
+  "recurring_del": "Löschen",
+  "recurring_historyCount": "Verlauf ({count})",
+  "@recurring_historyCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "recurring_paymentHistory": "Zahlungsverlauf",
+  "recurring_notificationPermissionDenied": "Benachrichtigungsberechtigung verweigert. Aktiviere sie unter Einstellungen → Apps → Expensy → Benachrichtigungen.",
+  "recurring_remindMeAt": "Erinnere mich um",
+  "recurring_editRecurring": "Wiederkehrende bearbeiten",
+  "recurring_addRecurring": "Wiederkehrende Zahlung",
+  "recurring_name": "Name",
+  "recurring_amountPerPayment": "Betrag pro Zahlung",
+  "recurring_firstDate": "Erste: {date}",
+  "@recurring_firstDate": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "recurring_lastDate": "Letzte: {date}",
+  "@recurring_lastDate": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "recurring_noLastPaymentOngoing": "Keine letzte Zahlung (laufend)",
+  "accounts_refreshExchangeRates": "Wechselkurse aktualisieren",
+  "accounts_noAccounts": "Keine Konten",
+  "accounts_tapPlusToAddYourFirst": "Tippe auf +, um dein erstes Konto hinzuzufügen",
+  "accounts_fetchingExchangeRates": "Wechselkurse werden abgerufen…",
+  "accounts_exchangeRatesUnavailable": "Wechselkurse nicht verfügbar (offline). Guthaben in Landeswährung angezeigt.",
+  "accounts_unknown": "Unbekannt",
+  "accounts_ratesUpdated": "Kurse aktualisiert {timeStr} · Tippe auf ↺ zum Aktualisieren",
+  "@accounts_ratesUpdated": {
+    "placeholders": {
+      "timeStr": {}
+    }
+  },
+  "accounts_goldCaps": "GOLD",
+  "accounts_balance": "Guthaben",
+  "accounts_income": "Einnahmen",
+  "accounts_expense": "Ausgaben",
+  "accounts_txs": "Transaktionen",
+  "accounts_value": "Wert",
+  "accounts_karat": "Karat",
+  "accounts_pure": "{percentage}% rein",
+  "@accounts_pure": {
+    "placeholders": {
+      "percentage": {}
+    }
+  },
+  "accounts_weightLabel": "Gewicht",
+  "accounts_perGram": "Pro Gramm",
+  "accounts_bank": "Bank",
+  "accounts_cash": "Bargeld",
+  "accounts_savings": "Ersparnisse",
+  "accounts_creditCard": "Kreditkarte",
+  "accounts_eWallet": "E-Wallet",
+  "accounts_gold": "Gold",
+  "accounts_editAccount": "Konto bearbeiten",
+  "accounts_addAccount": "Neues Konto hinzufügen",
+  "accounts_accountName": "Kontoname",
+  "accounts_weightInGrams": "Gewicht in Gramm",
+  "accounts_initialBalance": "Anfangssaldo",
+  "accounts_wontCountTowardYourHome": "Zählt nicht zur Startbildschirm-Gesamtsumme",
+  "accounts_saveChanges": "Änderungen speichern",
+  "accounts_addAccountBtn": "Konto hinzufügen",
+  "accounts_fetchingGoldPrice": "Goldpreis wird abgerufen…",
+  "accounts_goldPriceUnavailable": "Goldpreis nicht verfügbar — überprüfe deine Verbindung",
+  "lended_person_owesYou": "{name} schuldet dir",
+  "@lended_person_owesYou": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "lended_person_youOwe": "Du schuldest {name}",
+  "@lended_person_youOwe": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "lended_person_allSettledUp": "Alles beglichen",
+  "lended_person_noRecordsYet": "Noch keine Einträge",
+  "lended_person_tapPlusToLog": "Tippe auf +, um verliehenes oder geliehenes Geld zu protokollieren",
+  "lended_person_name": "Name",
+  "lended_person_notesOptional": "Notizen (optional)",
+  "lended_person_lent": "Verliehen",
+  "lended_person_borrowed": "Geliehen",
+  "lended_person_overdue": "Überfällig!",
+  "lended_person_due": "Fällig am {date}",
+  "@lended_person_due": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "lended_person_reminderAt": "Erinnerung um {time}",
+  "@lended_person_reminderAt": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "lended_person_notificationPermissionDenied": "Benachrichtigungsberechtigung verweigert. Aktiviere sie unter Einstellungen → Apps → Expensy → Benachrichtigungen.",
+  "lended_person_remindMeAtPrompt": "Erinnere mich um",
+  "lended_person_editRecord": "Eintrag bearbeiten",
+  "lended_person_addRecord": "Eintrag hinzufügen",
+  "lended_person_amount": "Betrag",
+  "lended_person_dueColon": "Fällig: {date}",
+  "@lended_person_dueColon": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "lended_person_noDueDate": "Kein Fälligkeitsdatum",
+  "lended_person_setDueFirst": "Lege zuerst ein Fälligkeitsdatum fest",
+  "lended_person_notifiedOnDue": "Du wirst am Fälligkeitsdatum benachrichtigt",
+  "lended_person_getNotifiedWhenDue": "Werde benachrichtigt, wenn dies fällig ist",
+  "lended_person_thatTimePassed": "Diese Zeit ist heute bereits vergangen — du wirst stattdessen in Kürze benachrichtigt.",
+  "lended_person_notificationFiresOn": "Benachrichtigung wird am {date} um {time} ausgelöst.",
+  "@lended_person_notificationFiresOn": {
+    "placeholders": {
+      "date": {},
+      "time": {}
+    }
+  },
+  "lended_person_saveChangesBtn": "Änderungen speichern",
+  "lended_person_addRecordBtn": "Eintrag hinzufügen",
+  "transactions_searchTransactions": "Transaktionen suchen...",
+  "transactions_all": "Alle",
+  "transactions_income": "Einnahmen",
+  "transactions_expenses": "Ausgaben",
+  "transactions_lent": "Verliehen",
+  "transactions_borrowed": "Geliehen",
+  "transactions_noTransactions": "Keine Transaktionen",
+  "transactions_tapPlusToAddOne": "Tippe auf +, um eine hinzuzufügen",
+  "transactions_today": "Heute",
+  "transactions_yesterday": "Gestern",
+  "transactions_lentTo": "Verliehen an {name}",
+  "@transactions_lentTo": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "transactions_borrowedFrom": "Geliehen von {name}",
+  "@transactions_borrowedFrom": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "transactions_unknown": "Unbekannt",
+  "transactions_due": "Fällig am {date}",
+  "@transactions_due": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "transactions_unsettled": "Offen",
+  "onboarding_restoreFailed": "Wiederherstellung fehlgeschlagen: Die Datei ist möglicherweise beschädigt oder kein Expensy-Backup.",
+  "onboarding_continue": "Weiter",
+  "onboarding_getStarted": "Loslegen",
+  "onboarding_yourPersonalTracker": "Dein persönlicher, 100% Offline-Finanztracker.\nHast du bereits ein Backup von einem anderen Gerät oder einer vorherigen Installation?",
+  "onboarding_restoring": "Wird wiederhergestellt...",
+  "onboarding_chooseBackupFile": "Backup-Datei auswählen",
+  "onboarding_letsGetYouSetUp": "Lass uns dich einrichten",
+  "onboarding_yourName": "Dein Name",
+  "onboarding_accountName": "Kontoname",
+  "onboarding_bank": "Bank",
+  "onboarding_cash": "Bargeld",
+  "onboarding_savings": "Ersparnisse",
+  "onboarding_credit": "Kredit",
+  "onboarding_wallet": "Geldbörse",
+  "onboarding_startingBalance": "Anfangssaldo",
+  "backup_replaceDataWarning": "Dies wird ALLE deine aktuellen Daten durch das Backup ersetzen.\nDies kann nicht rückgängig gemacht werden.",
+  "backup_whatsIncluded": "Was enthalten ist",
+  "backup_backupDescription": "Jedes Backup enthält all deine Daten — Konten, Transaktionen, wiederkehrende Zahlungen und deren Zahlungs-/Überspringungsverlauf, Budgets, Wunschlisten-Artikel, verliehene & geliehene Personen und Einträge, Vermögenswerte, Kategorien und App-Einstellungen.",
+  "backup_saving": "Wird gespeichert...",
+  "backup_saveBackup": "Backup speichern",
+  "backup_restoring": "Wird wiederhergestellt...",
+  "backup_restoreBackupBtn": "Backup wiederherstellen",
+  "backup_restoreWarningText": "Kompatibel mit Backups von jeder App-Version. Fehlende Felder werden mit sicheren Standardwerten gefüllt.",
+  "backup_included": "enthalten",
+  "backup_accounts": "Konten",
+  "backup_transactions": "Transaktionen",
+  "backup_recurringPayments": "Wiederkehrende Zahlungen",
+  "backup_recurringHistory": "Verlauf der wiederkehrenden Zahlungen",
+  "backup_budgets": "Budgets",
+  "backup_wishlist": "Wunschliste",
+  "backup_lentPeople": "Verliehen/Geliehen — Personen",
+  "backup_lentRecords": "Verliehen/Geliehen — Einträge",
+  "backup_assets": "Vermögenswerte",
+  "backup_categories": "Kategorien",
+  "backup_settings": "Einstellungen",
+  "backup_backupSavedSuccessfully": "Backup erfolgreich gespeichert:\n{savedPath}",
+  "backup_backupFailed": "Backup fehlgeschlagen: {error}",
+  "backup_upgradedFrom": " (aktualisiert von v{originalVersion} → v{schemaVersion})",
+  "backup_dataRestoredSuccessfully": "Daten erfolgreich wiederhergestellt!{vLabel}",
+  "backup_restoreFailed": "Wiederherstellung fehlgeschlagen: {error}",
+  "backup_restoreFailedCorrupted": "Wiederherstellung fehlgeschlagen: Die Datei ist möglicherweise beschädigt oder kein Expensy-Backup.",
+  "budget_noBudgetsYet": "Noch keine Budgets",
+  "budget_tapToAddBudget": "Tippe auf +, um ein Ausgabenlimit pro Kategorie festzulegen",
+  "budget_budgeted": "Budgetiert",
+  "budget_spent": "Ausgegeben",
+  "budget_overLimit": "Über dem Limit",
+  "budget_unknown": "Unbekannt",
+  "budget_weeklyLabel": "Wöchentlich",
+  "budget_monthlyLabel": "Monatlich",
+  "budget_overAmount": "{amount} darüber",
+  "budget_leftAmount": "{amount} übrig",
+  "budget_percentUsed": "{percent}% verbraucht",
+  "budget_editBudget": "Budget bearbeiten",
+  "budget_setBudget": "Neues Budget hinzufügen",
+  "budget_budgetAmount": "Budgetbetrag",
+  "budget_previewFor": "Vorschau für \"{catName}\"",
+  "budget_spentAmount": "Ausgegeben: {amount}",
+  "budget_ofAmount": "von {amount}",
+  "budget_saveChanges": "Änderungen speichern",
+  "budget_budget": "Budget",
+  "insights_other": "Andere",
+  "insights_noDataYet": "Noch keine Daten",
+  "insights_addSomeTransactions": "Füge einige Transaktionen hinzu, um Einblicke zu sehen",
+  "insights_thisMonthVsLastMonth": "Dieser Monat vs. Letzter Monat",
+  "insights_dailyAverage": "Tagesdurchschnitt",
+  "insights_perDayBasedOn": "pro Tag · basierend auf {days} Tagen diesen Monat",
+  "insights_incomeVsExpenses": "Einnahmen vs. Ausgaben",
+  "insights_incomeAmount": "Einnahmen {amount}",
+  "insights_expensesAmount": "Ausgaben {amount}",
+  "insights_percentSaved": "{percent}% diesen Monat gespart",
+  "insights_topSpendingCategories": "Top Ausgabenkategorien",
+  "insights_percentOfTotal": "{percent}% der Gesamtsumme",
+  "insights_biggestExpenseThisMonth": "Größte Ausgabe diesen Monat",
+  "insights_categoryTrends": "Kategorietrends (vs. Letzter Monat)",
+  "insights_12MonthTrend": "12-Monats-Trend",
+  "insights_incomeLabel": "Einnahmen",
+  "insights_expensesLabel": "Ausgaben",
+  "categories_expenseLabel": "Ausgabe",
+  "categories_incomeLabel": "Einnahme",
+  "categories_editCategory": "Kategorie bearbeiten",
+  "categories_addCategory": "Kategorie hinzufügen",
+  "categories_categoryName": "Kategoriename",
+  "categories_saveChanges": "Änderungen speichern",
+  "statistics_other": "Andere",
+  "statistics_allAccounts": "Alle Konten",
+  "statistics_income": "Einnahmen",
+  "statistics_expenses": "Ausgaben",
+  "statistics_expense": "Ausgabe",
+  "statistics_net": "Netto",
+  "statistics_6MonthOverviewAccount": "6-Monats-Übersicht · {accountName}",
+  "statistics_6MonthOverview": "6-Monats-Übersicht",
+  "statistics_percentOfBudget": "{percent}% des Budgets",
+  "add_transaction_editTransaction": "Transaktion bearbeiten",
+  "add_transaction_addTransaction": "Transaktion eingeben",
+  "add_transaction_amount": "Betrag",
+  "add_transaction_conversionPreview": "≈ {amount} wird von {accountName} abgezogen",
+  "add_transaction_accountFallback": "Konto",
+  "add_transaction_descriptionOptional": "Beschreibung (optional)",
+  "add_transaction_noteOptional": "Notiz (optional)",
+  "add_transaction_saveChanges": "Änderungen speichern",
+  "more_statistics": "Statistiken",
+  "more_statisticsSub": "Diagramme & monatliche Zusammenfassung",
+  "more_insights": "Einblicke",
+  "more_insightsSub": "Trends, Durchschnitte & Kategorieanalyse",
+  "more_currencyConverter": "Währungsrechner",
+  "more_currencyConverterSub": "Sofort zwischen Währungen umrechnen",
+  "more_wishlist": "Wunschliste",
+  "more_wishlistSub": "{count, plural, =1{1 Artikel} other{{count} Artikel}}",
+  "more_lentMoney": "Verliehenes Geld",
+  "more_lentMoneySub": "{count} ausstehend",
+  "more_assets": "Vermögenswerte",
+  "more_assetsSub": "{count, plural, =1{1 Artikel} other{{count} Artikel}}",
+  "more_categories": "Kategorien",
+  "more_categoriesSub": "{count, plural, =1{1 Kategorie} other{{count} Kategorien}}",
+  "more_exportTransactions": "Transaktionen exportieren",
+  "more_exportTransactionsSub": "Als Excel speichern (.xlsx)",
+  "more_backupRestore": "Backup & Wiederherstellen",
+  "more_backupRestoreSub": "Daten speichern oder laden",
+  "more_settings": "Einstellungen",
+  "more_settingsSub": "Thema, Währung & Präferenzen",
+  "home_greeting": "Hallo, {name} 👋",
+  "home_there": "da",
+  "home_income": "Einnahmen",
+  "home_expenses": "Ausgaben",
+  "home_net": "Netto",
+  "wishlist_noItems": "Keine Wunschlisten-Artikel",
+  "wishlist_noItemsSub": "Tippe auf +, um Artikel hinzuzufügen, für die du sparst",
+  "wishlist_editItem": "Artikel bearbeiten",
+  "wishlist_addWishlistItem": "Wunschlisten-Artikel hinzufügen",
+  "wishlist_itemName": "Artikelname",
+  "wishlist_targetPrice": "Zielpreis",
+  "wishlist_priorityLow": "Niedrig",
+  "wishlist_priorityMedium": "Mittel",
+  "wishlist_priorityHigh": "Hoch",
+  "wishlist_notesOptional": "Notizen (optional)",
+  "wishlist_saveChanges": "Änderungen speichern",
+  "wishlist_addItem": "Artikel hinzufügen",
+  "lended_theyOweMe": "Sie schulden mir",
+  "lended_iOweThem": "Ich schulde ihnen",
+  "lended_net": "Netto",
+  "lended_noOneYet": "Noch niemand",
+  "lended_noOneYetSub": "Tippe auf +, um eine Person hinzuzufügen, der du Geld leihst oder von der du Geld leihst",
+  "lended_owesYou": "Schuldet dir",
+  "lended_youOwe": "Du schuldest",
+  "lended_settledUp": "Beglichen",
+  "lended_noActiveRecords": "Keine aktiven Einträge",
+  "lended_activeRecords": "{count, plural, =1{1 aktiver Eintrag} other{{count} aktive Einträge}}",
+  "lended_editPerson": "Person bearbeiten",
+  "lended_addPerson": "Person hinzufügen",
+  "lended_name": "Name",
+  "lended_notesOptional": "Notizen (optional)",
+  "lended_saveChanges": "Änderungen speichern",
+  "assets_totalAssets": "Gesamtvermögen",
+  "assets_items": "Artikel",
+  "assets_noAssetsYet": "Noch keine Vermögenswerte",
+  "assets_noAssetsYetSub": "Tippe auf +, um ein Produkt oder einen Vermögenswert hinzuzufügen",
+  "assets_editAsset": "Vermögenswert bearbeiten",
+  "assets_addAsset": "Vermögenswert hinzufügen",
+  "assets_productAssetName": "Produkt- / Vermögenswertname",
+  "assets_value": "Wert",
+  "assets_notesOptional": "Notizen (optional)",
+  "assets_saveChanges": "Änderungen speichern",
+  "currency_converter_loadingRates": "Wechselkurse werden geladen…",
+  "currency_converter_ratesUnavailable": "Wechselkurse nicht verfügbar. Stelle eine Internetverbindung her und synchronisiere.",
+  "currency_converter_rateAgeJustNow": "Gerade eben",
+  "currency_converter_rateAgeMins": "Vor {minutes} Min",
+  "currency_converter_rateAgeHours": "Vor {hours} Std",
+  "currency_converter_rateAgeDays": "Vor {days} T",
+  "currency_converter_commonConversions": "Häufige Umrechnungen von {fromCurrency}",
+  "transfer_fromAcc": "Von ({currency})",
+  "transfer_toAcc": "Nach ({currency})",
+  "transfer_exchangeRatesNotLoaded": "Wechselkurse nicht geladen — Betrag wird unverändert überwiesen",
+  "transfer_amount": "Betrag",
+  "transfer_noteOptional": "Notiz (optional)",
+  "export_from": "Von",
+  "export_to": "Bis",
+  "export_txCount": "{count, plural, =1{1 Transaktion im Bereich} other{{count} Transaktionen im Bereich}}",
+  "export_saved": "Gespeichert: {path}",
+  "export_complete": "Export abgeschlossen",
+  "export_exporting": "Wird exportiert...",
+  "export_exportAsExcel": "Als Excel exportieren",
+  "shared_widgets_deleteConfirm": "\"{name}\" löschen? Dies kann nicht rückgängig gemacht werden.",
+  "shared_widgets_searchByCode": "Nach Code oder Name suchen...",
+  "main_home": "Start",
+  "main_transactions": "Transaktionen",
+  "main_recurring": "Wiederkehrend",
+  "main_accounts": "Konten",
+  "main_budgets": "Budgets",
+  "main_more": "Mehr",
+  "onboarding_chooseLanguage": "Sprache wählen"
+}

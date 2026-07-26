@@ -1,5 +1,6 @@
 // lib/screens/assets_screen.dart
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../models/models.dart';
@@ -11,6 +12,7 @@ class AssetsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
     final cs  = Theme.of(context).colorScheme;
 
@@ -18,7 +20,7 @@ class AssetsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Assets', style: TextStyle(fontWeight: FontWeight.w800)),
+        title: Text(l10n.assets_assets, style: TextStyle(fontWeight: FontWeight.w800)),
         backgroundColor: cs.primary,
         foregroundColor: cs.onPrimary,
       ),
@@ -29,13 +31,13 @@ class AssetsScreen extends StatelessWidget {
           color: cs.primary,
           child: Row(children: [
             Expanded(child: _SumCol(
-              label: 'Total Assets',
+              label: l10n.assets_totalAssets,
               value: formatAmount(total, app.settings.currency),
               color: cs.onPrimary,
               labelColor: cs.onPrimary.withValues(alpha: 0.65),
             )),
             Expanded(child: _SumCol(
-              label: 'Items',
+              label: l10n.assets_items,
               value: '${app.assets.length}',
               color: cs.onPrimary.withValues(alpha: 0.9),
               labelColor: cs.onPrimary.withValues(alpha: 0.65),
@@ -46,10 +48,10 @@ class AssetsScreen extends StatelessWidget {
         // ── Asset list ──────────────────────────────────────────────────
         Expanded(
           child: app.assets.isEmpty
-              ? const EmptyState(
+              ? EmptyState(
                   icon: Icons.inventory_2_outlined,
-                  message: 'No assets yet',
-                  subMessage: 'Tap + to add a product or asset',
+                  message: l10n.assets_noAssetsYet,
+                  subMessage: l10n.assets_noAssetsYetSub,
                 )
               : ListView.builder(
                   padding: const EdgeInsets.fromLTRB(14, 14, 14, 100),
@@ -117,6 +119,7 @@ class _AssetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     const assetColor = Color(0xFF1565C0);
 
@@ -258,6 +261,7 @@ class _AssetSheetState extends State<_AssetSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final sym = currencyInfo(_currency).symbol;
 
     return Padding(
@@ -269,7 +273,7 @@ class _AssetSheetState extends State<_AssetSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(isEdit ? 'Edit Asset' : 'Add Asset',
+            Text(isEdit ? l10n.assets_editAsset : l10n.assets_addAsset,
                 style: Theme.of(context).textTheme.titleLarge
                     ?.copyWith(fontWeight: FontWeight.w800)),
             const SizedBox(height: 16),
@@ -277,9 +281,9 @@ class _AssetSheetState extends State<_AssetSheet> {
             // Name
             TextField(
               controller: _nameCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Product / Asset Name',
-                prefixIcon: Icon(Icons.inventory_2_outlined),
+              decoration: InputDecoration(
+                labelText: l10n.assets_productAssetName,
+                prefixIcon: const Icon(Icons.inventory_2_outlined),
               ),
             ),
             const SizedBox(height: 12),
@@ -293,7 +297,7 @@ class _AssetSheetState extends State<_AssetSheet> {
                   keyboardType:
                       const TextInputType.numberWithOptions(decimal: true),
                   decoration: InputDecoration(
-                    labelText: 'Value',
+                    labelText: l10n.assets_value,
                     prefixText: '$sym ',
                   ),
                   style: const TextStyle(
@@ -337,9 +341,9 @@ class _AssetSheetState extends State<_AssetSheet> {
             TextField(
               controller: _notesCtrl,
               maxLines: 2,
-              decoration: const InputDecoration(
-                labelText: 'Notes (optional)',
-                prefixIcon: Icon(Icons.sticky_note_2_outlined),
+              decoration: InputDecoration(
+                labelText: l10n.assets_notesOptional,
+                prefixIcon: const Icon(Icons.sticky_note_2_outlined),
               ),
             ),
             const SizedBox(height: 24),
@@ -350,7 +354,7 @@ class _AssetSheetState extends State<_AssetSheet> {
                   minimumSize: const Size.fromHeight(50),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(28))),
-              child: Text(isEdit ? 'Save Changes' : 'Add Asset'),
+              child: Text(isEdit ? l10n.assets_saveChanges : l10n.assets_addAsset),
             ),
           ],
         ),

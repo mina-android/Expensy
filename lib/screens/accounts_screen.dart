@@ -1,5 +1,6 @@
 // lib/screens/accounts_screen.dart
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/app_provider.dart';
@@ -12,6 +13,7 @@ class AccountsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
     final cs  = Theme.of(context).colorScheme;
 
@@ -20,7 +22,7 @@ class AccountsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Accounts', style: TextStyle(fontWeight: FontWeight.w800)),
+        title: Text(l10n.accounts_accounts, style: TextStyle(fontWeight: FontWeight.w800)),
         backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
         actions: [
           if (hasMultiCurrency)
@@ -33,7 +35,7 @@ class AccountsScreen extends StatelessWidget {
                           color: cs.onPrimary),
                     )
                   : Icon(Icons.sync_rounded, color: cs.onPrimary),
-              tooltip: 'Refresh exchange rates',
+              tooltip: l10n.accounts_refreshExchangeRates,
               onPressed: app.ratesFetching
                   ? null
                   : () => context.read<AppProvider>().refreshRates(),
@@ -42,7 +44,7 @@ class AccountsScreen extends StatelessWidget {
             padding: const EdgeInsets.only(right: 16),
             child: Column(mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.end, children: [
-              Text('Total Balance', style: TextStyle(
+              Text(l10n.accounts_totalBalance, style: TextStyle(
                   fontSize: 10, color: cs.onPrimary.withValues(alpha: 0.7))),
               Text(formatAmount(app.totalBalanceAll, app.settings.currency),
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800,
@@ -52,8 +54,8 @@ class AccountsScreen extends StatelessWidget {
         ],
       ),
       body: app.accounts.isEmpty
-          ? const EmptyState(icon: Icons.account_balance_wallet_outlined,
-              message: 'No accounts', subMessage: 'Tap + to add your first account')
+          ? EmptyState(icon: Icons.account_balance_wallet_outlined,
+              message: l10n.accounts_noAccounts, subMessage: l10n.accounts_tapPlusToAddYourFirst)
           : Column(
               children: [
                 if (hasMultiCurrency)
@@ -92,6 +94,7 @@ class _RatesBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
 
     String label;
@@ -100,12 +103,12 @@ class _RatesBanner extends StatelessWidget {
     IconData icon;
 
     if (app.ratesFetching && !app.ratesLoaded) {
-      label   = 'Fetching exchange rates…';
+      label   = l10n.accounts_fetchingExchangeRates;
       bgColor = cs.surfaceContainerHigh;
       fgColor = cs.onSurface.withValues(alpha: 0.6);
       icon    = Icons.sync_rounded;
     } else if (app.exchangeRates.isEmpty) {
-      label   = 'Exchange rates unavailable (offline). Balances shown in native currency.';
+      label   = l10n.accounts_exchangeRatesUnavailable;
       bgColor = cs.errorContainer.withValues(alpha: 0.4);
       fgColor = cs.error;
       icon    = Icons.wifi_off_rounded;
@@ -113,8 +116,8 @@ class _RatesBanner extends StatelessWidget {
       final lastFetched = app.ratesLastFetched;
       final timeStr = lastFetched != null
           ? DateFormat('d MMM, HH:mm').format(lastFetched)
-          : 'Unknown';
-      label   = 'Rates updated $timeStr · Tap ↺ to refresh';
+          : l10n.accounts_unknown;
+      label   = l10n.accounts_ratesUpdated(timeStr);
       bgColor = cs.surfaceContainerHigh;
       fgColor = cs.onSurface.withValues(alpha: 0.5);
       icon    = Icons.currency_exchange_rounded;
@@ -141,6 +144,7 @@ class _AccountCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs    = Theme.of(context).colorScheme;
     final app   = context.watch<AppProvider>();
     final color = Color(acc.colorValue);
@@ -171,14 +175,14 @@ class _AccountCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(color: cs.errorContainer,
                           borderRadius: BorderRadius.circular(6)),
-                      child: Text('Excluded', style: TextStyle(fontSize: 9,
+                      child: Text(l10n.accounts_excluded, style: TextStyle(fontSize: 9,
                           color: cs.error, fontWeight: FontWeight.w700)),
                     ),
                   ],
                 ]),
                 // Type label row with optional gold badge
                 Row(children: [
-                  Text(acc.isGold ? 'GOLD' : acc.type.toUpperCase(),
+                  Text(acc.isGold ? l10n.accounts_goldCaps : acc.type.toUpperCase(),
                       style: TextStyle(
                           fontSize: 10, letterSpacing: 1,
                           color: color.withValues(alpha: 0.7))),
@@ -228,9 +232,10 @@ class _AccountCard extends StatelessWidget {
 
   Widget _regularStatsRow(BuildContext context, AppProvider app,
       ColorScheme cs, Color color, bool showConverted) {
+    final l10n = AppLocalizations.of(context)!;
     return Row(children: [
       _Stat(
-        label: 'Balance',
+        label: l10n.accounts_balance,
         value: formatAmount(acc.balance, acc.currency),
         subValue: showConverted
             ? '≈ ${formatAmount(app.convertToMain(acc.balance, acc.currency), app.settings.currency)}'
@@ -238,15 +243,15 @@ class _AccountCard extends StatelessWidget {
         color: color,
       ),
       _Divider(),
-      _Stat(label: 'Income',
+      _Stat(label: l10n.accounts_income,
           value: '+${formatAmount(_income(app, acc.id), acc.currency)}',
           color: const Color(0xFF2E7D32)),
       _Divider(),
-      _Stat(label: 'Expense',
+      _Stat(label: l10n.accounts_expense,
           value: '-${formatAmount(_expense(app, acc.id), acc.currency)}',
           color: const Color(0xFFC62828)),
       _Divider(),
-      _Stat(label: 'Txs',
+      _Stat(label: l10n.accounts_txs,
           value: '${_txCount(app, acc.id)}',
           color: cs.secondary),
     ]);
@@ -254,7 +259,7 @@ class _AccountCard extends StatelessWidget {
 
   Widget _goldStatsRow(BuildContext context, AppProvider app,
       ColorScheme cs, Color color, bool showConverted) {
-    // Price per gram of this specific karat gold in account currency
+    final l10n = AppLocalizations.of(context)!;
     final karat = acc.goldKarat ?? 24;
     final grams = acc.goldGrams ?? 0;
     final pricePerGram = grams > 0 && acc.balance > 0
@@ -265,7 +270,7 @@ class _AccountCard extends StatelessWidget {
 
     return Row(children: [
       _Stat(
-        label: 'Value',
+        label: l10n.accounts_value,
         value: formatAmount(acc.balance, acc.currency),
         subValue: showConverted
             ? '≈ ${formatAmount(app.convertToMain(acc.balance, acc.currency), app.settings.currency)}'
@@ -274,20 +279,20 @@ class _AccountCard extends StatelessWidget {
       ),
       _Divider(),
       _Stat(
-        label: 'Karat',
+        label: l10n.accounts_karat,
         value: '${karat}k',
-        subValue: '${(karat / 24 * 100).toStringAsFixed(1)}% pure',
+        subValue: l10n.accounts_pure((karat / 24 * 100).toStringAsFixed(1)),
         color: const Color(0xFFB8860B),
       ),
       _Divider(),
       _Stat(
-        label: 'Weight',
+        label: l10n.accounts_weightLabel,
         value: '${grams.toStringAsFixed(2)} g',
         color: color,
       ),
       _Divider(),
       _Stat(
-        label: 'Per gram',
+        label: l10n.accounts_perGram,
         value: pricePerGram != null
             ? formatAmount(pricePerGram, acc.currency)
             : '—',
@@ -337,14 +342,7 @@ class _Divider extends StatelessWidget {
 }
 
 // ── Account Sheet ─────────────────────────────────────────────────────────────
-const _kTypeOptions = <List<String>>[
-  ['bank',    'Bank'],
-  ['cash',    'Cash'],
-  ['savings', 'Savings'],
-  ['credit',  'Credit Card'],
-  ['wallet',  'E-Wallet'],
-  ['gold',    'Gold'],
-];
+// _kTypeOptions removed, initialized in build method instead
 
 // Supported gold karats
 const _kKarats = [24, 22, 21, 18, 14, 10, 9];
@@ -431,6 +429,7 @@ class _AccountSheetState extends State<_AccountSheet> {
   }
 
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
     final name = _nameCtrl.text.trim();
     if (name.isEmpty) return;
     final app = context.read<AppProvider>();
@@ -448,9 +447,8 @@ class _AccountSheetState extends State<_AccountSheet> {
       if (computedBalance == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                  'Gold price not yet loaded. Wait a moment and try again.'),
+            SnackBar(
+              content: Text(l10n.accounts_goldPriceNotYetLoade),
               duration: Duration(seconds: 3),
             ),
           );
@@ -495,6 +493,7 @@ class _AccountSheetState extends State<_AccountSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     // Watch so live gold preview rebuilds when rates arrive.
     final app = context.watch<AppProvider>();
     final cs  = Theme.of(context).colorScheme;
@@ -508,23 +507,30 @@ class _AccountSheetState extends State<_AccountSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(isEdit ? 'Edit Account' : 'Add Account',
+          Text(isEdit ? l10n.accounts_editAccount : l10n.accounts_addAccount,
               style: Theme.of(context).textTheme.titleLarge
                   ?.copyWith(fontWeight: FontWeight.w800)),
           const SizedBox(height: 16),
 
           TextField(
             controller: _nameCtrl,
-            decoration: const InputDecoration(labelText: 'Account Name',
-                prefixIcon: Icon(Icons.label_outline)),
+            decoration: InputDecoration(labelText: l10n.accounts_accountName,
+                prefixIcon: const Icon(Icons.label_outline)),
           ),
           const SizedBox(height: 14),
 
           // ── Type cards ──────────────────────────────────────────────
-          Text('Account Type', style: Theme.of(context).textTheme.labelMedium
+          Text(l10n.accounts_accountType, style: Theme.of(context).textTheme.labelMedium
               ?.copyWith(letterSpacing: 1)),
           const SizedBox(height: 8),
-          Wrap(spacing: 8, runSpacing: 8, children: _kTypeOptions.map((opt) {
+          Wrap(spacing: 8, runSpacing: 8, children: [
+            ['bank',    l10n.accounts_bank],
+            ['cash',    l10n.accounts_cash],
+            ['savings', l10n.accounts_savings],
+            ['credit',  l10n.accounts_creditCard],
+            ['wallet',  l10n.accounts_eWallet],
+            ['gold',    l10n.accounts_gold],
+          ].map((opt) {
             final val = opt[0];
             final lbl = opt[1];
             final sel = _type == val;
@@ -559,7 +565,7 @@ class _AccountSheetState extends State<_AccountSheet> {
           const SizedBox(height: 14),
 
           // ── Currency picker ─────────────────────────────────────────
-          Text('Currency', style: Theme.of(context).textTheme.labelMedium
+          Text(l10n.accounts_currency, style: Theme.of(context).textTheme.labelMedium
               ?.copyWith(letterSpacing: 1)),
           const SizedBox(height: 8),
           GestureDetector(
@@ -589,7 +595,7 @@ class _AccountSheetState extends State<_AccountSheet> {
           // ── Gold-specific fields ────────────────────────────────────
           if (isGold) ...[
             // Karat selector
-            Text('Gold Purity (Karat)', style: Theme.of(context).textTheme.labelMedium
+            Text(l10n.accounts_goldPurityKarat, style: Theme.of(context).textTheme.labelMedium
                 ?.copyWith(letterSpacing: 1)),
             const SizedBox(height: 8),
             Wrap(
@@ -629,15 +635,15 @@ class _AccountSheetState extends State<_AccountSheet> {
             const SizedBox(height: 14),
 
             // Weight field
-            Text('Weight', style: Theme.of(context).textTheme.labelMedium
+            Text(l10n.accounts_weight, style: Theme.of(context).textTheme.labelMedium
                 ?.copyWith(letterSpacing: 1)),
             const SizedBox(height: 8),
             TextField(
               controller: _gramsCtrl,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: 'Weight in grams',
-                prefixIcon: Icon(Icons.scale_outlined),
+              decoration: InputDecoration(
+                labelText: l10n.accounts_weightInGrams,
+                prefixIcon: const Icon(Icons.scale_outlined),
                 suffixText: 'g',
               ),
             ),
@@ -667,7 +673,7 @@ class _AccountSheetState extends State<_AccountSheet> {
               controller: _balCtrl,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               decoration: InputDecoration(
-                  labelText: isEdit ? 'Balance' : 'Initial Balance',
+                  labelText: isEdit ? l10n.accounts_balance : l10n.accounts_initialBalance,
                   prefixText: '${currencyInfo(_currency).symbol} '),
             ),
             const SizedBox(height: 6),
@@ -676,9 +682,9 @@ class _AccountSheetState extends State<_AccountSheet> {
           // ── Exclude from total ──────────────────────────────────────
           SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Exclude from Total Balance',
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-            subtitle: Text('Won\'t count toward your home screen total',
+            title: Text(l10n.accounts_excludeFromTotalBala,
+                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+            subtitle: Text(l10n.accounts_wontCountTowardYourHome,
                 style: TextStyle(fontSize: 12,
                     color: cs.onSurface.withValues(alpha: 0.5))),
             value: _excludeFromTotal,
@@ -687,7 +693,7 @@ class _AccountSheetState extends State<_AccountSheet> {
           const SizedBox(height: 6),
 
           // ── Colour picker ───────────────────────────────────────────
-          Text('Colour', style: Theme.of(context).textTheme.labelMedium
+          Text(l10n.accounts_colour, style: Theme.of(context).textTheme.labelMedium
               ?.copyWith(letterSpacing: 1)),
           const SizedBox(height: 8),
           SizedBox(
@@ -722,7 +728,7 @@ class _AccountSheetState extends State<_AccountSheet> {
                 backgroundColor: isGold ? const Color(0xFFB8860B) : null,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(28))),
-            child: Text(isEdit ? 'Save Changes' : 'Add Account'),
+            child: Text(isEdit ? l10n.accounts_saveChanges : l10n.accounts_addAccountBtn),
           ),
         ],
       )),
@@ -737,6 +743,7 @@ class _GoldRatesUnavailableBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
@@ -760,8 +767,8 @@ class _GoldRatesUnavailableBanner extends StatelessWidget {
         Expanded(
           child: Text(
             fetching
-                ? 'Fetching gold price…'
-                : 'Gold price unavailable — check your connection',
+                ? l10n.accounts_fetchingGoldPrice
+                : l10n.accounts_goldPriceUnavailable,
             style: TextStyle(
                 fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5)),
           ),
@@ -790,6 +797,7 @@ class _GoldPreviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     final goldColor = const Color(0xFFB8860B);
 
@@ -811,7 +819,7 @@ class _GoldPreviewCard extends StatelessWidget {
         Row(children: [
           Icon(Icons.diamond_outlined, size: 14, color: goldColor),
           const SizedBox(width: 6),
-          Text('Live Gold Value', style: TextStyle(
+          Text(l10n.accounts_liveGoldValue, style: TextStyle(
               fontSize: 11, fontWeight: FontWeight.w700,
               color: goldColor, letterSpacing: 0.5)),
         ]),
@@ -823,7 +831,7 @@ class _GoldPreviewCard extends StatelessWidget {
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800,
                   color: goldColor))
         else
-          Text('Enter weight above to see value',
+          Text(l10n.accounts_enterWeightAboveToSe,
               style: TextStyle(fontSize: 13,
                   color: cs.onSurface.withValues(alpha: 0.4))),
 

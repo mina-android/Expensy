@@ -1,5 +1,6 @@
 // lib/screens/wishlist_screen.dart
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../models/models.dart';
@@ -11,19 +12,20 @@ class WishlistScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
     final cs  = Theme.of(context).colorScheme;
     String fmt(double v) => formatAmount(v, app.settings.currency);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Wishlist', style: TextStyle(fontWeight: FontWeight.w800)),
+        title: Text(l10n.wishlist_wishlist, style: TextStyle(fontWeight: FontWeight.w800)),
         backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
       ),
       body: app.wishlist.isEmpty
-          ? const EmptyState(icon: Icons.star_outline_rounded,
-              message: 'No wishlist items',
-              subMessage: 'Tap + to add items you\'re saving for')
+          ? EmptyState(icon: Icons.star_outline_rounded,
+              message: l10n.wishlist_noItems,
+              subMessage: l10n.wishlist_noItemsSub)
           : ListView.builder(
               padding: const EdgeInsets.fromLTRB(14, 14, 14, 100),
               itemCount: app.wishlist.length,
@@ -54,6 +56,7 @@ class _WishCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     final pColor = _priorityColor(item.priority);
     return Card(
@@ -176,6 +179,7 @@ class _WishSheetState extends State<_WishSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
     final sym = currencyInfo(app.settings.currency).symbol;
     return Padding(
@@ -184,25 +188,25 @@ class _WishSheetState extends State<_WishSheet> {
           left: 20, right: 20, top: 20),
       child: Column(mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(isEdit ? 'Edit Item' : 'Add Wishlist Item',
+        Text(isEdit ? l10n.wishlist_editItem : l10n.wishlist_addWishlistItem,
             style: Theme.of(context).textTheme.titleLarge
                 ?.copyWith(fontWeight: FontWeight.w800)),
         const SizedBox(height: 16),
         TextField(controller: _nameCtrl,
-            decoration: const InputDecoration(labelText: 'Item Name',
-                prefixIcon: Icon(Icons.star_outline_rounded))),
+            decoration: InputDecoration(labelText: l10n.wishlist_itemName,
+                prefixIcon: const Icon(Icons.star_outline_rounded))),
         const SizedBox(height: 12),
         TextField(controller: _priceCtrl,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
-                labelText: 'Target Price', prefixText: '$sym ')),
+                labelText: l10n.wishlist_targetPrice, prefixText: '$sym ')),
         const SizedBox(height: 14),
-        Text('Priority', style: Theme.of(context).textTheme.labelMedium
+        Text(l10n.wishlist_priority, style: Theme.of(context).textTheme.labelMedium
             ?.copyWith(letterSpacing: 1)),
         const SizedBox(height: 8),
         Row(children: [
-          for (final p in const [('low','Low',0xFF2E7D32),
-              ('medium','Medium',0xFFE65100), ('high','High',0xFFC62828)])
+          for (final p in [('low',l10n.wishlist_priorityLow,0xFF2E7D32),
+              ('medium',l10n.wishlist_priorityMedium,0xFFE65100), ('high',l10n.wishlist_priorityHigh,0xFFC62828)])
             Expanded(child: Padding(
               padding: const EdgeInsets.only(right: 8),
               child: GestureDetector(
@@ -224,14 +228,14 @@ class _WishSheetState extends State<_WishSheet> {
         ]),
         const SizedBox(height: 12),
         TextField(controller: _notesCtrl, maxLines: 2,
-            decoration: const InputDecoration(labelText: 'Notes (optional)',
-                prefixIcon: Icon(Icons.sticky_note_2_outlined))),
+            decoration: InputDecoration(labelText: l10n.wishlist_notesOptional,
+                prefixIcon: const Icon(Icons.sticky_note_2_outlined))),
         const SizedBox(height: 20),
         FilledButton(
           onPressed: _submit,
           style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28))),
-          child: Text(isEdit ? 'Save Changes' : 'Add Item'),
+          child: Text(isEdit ? l10n.wishlist_saveChanges : l10n.wishlist_addItem),
         ),
       ]),
     );

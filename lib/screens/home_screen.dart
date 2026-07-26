@@ -1,5 +1,6 @@
 // lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/app_provider.dart';
@@ -13,6 +14,7 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
     final cs  = Theme.of(context).colorScheme;
     final s   = app.settings;
@@ -49,13 +51,13 @@ class HomeScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Hi, ${s.userName.isNotEmpty ? s.userName : 'there'} \u{1F44B}',
+                      l10n.home_greeting(s.userName.isNotEmpty ? s.userName : l10n.home_there),
                       style: TextStyle(
                           color: cs.onPrimary.withValues(alpha: 0.85),
                           fontSize: 20, fontWeight: FontWeight.w800),
                     ),
                     const SizedBox(height: 1),
-                    Text('Total Balance', style: TextStyle(
+                    Text(l10n.home_totalBalance, style: TextStyle(
                         color: cs.onPrimary.withValues(alpha: 0.6), fontSize: 12)),
                     Text(
                       s.hideBalance ? '• • • • • •' : fmt(app.totalBalance),
@@ -89,15 +91,15 @@ class HomeScreen extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
               child: Row(children: [
-                Expanded(child: _SummaryChip(label: 'Income',
+                Expanded(child: _SummaryChip(label: l10n.home_income,
                     amount: fmt(income), color: const Color(0xFF2E7D32),
                     icon: Icons.arrow_downward_rounded)),
                 const SizedBox(width: 8),
-                Expanded(child: _SummaryChip(label: 'Expenses',
+                Expanded(child: _SummaryChip(label: l10n.home_expenses,
                     amount: fmt(expense), color: const Color(0xFFC62828),
                     icon: Icons.arrow_upward_rounded)),
                 const SizedBox(width: 8),
-                Expanded(child: _SummaryChip(label: 'Net',
+                Expanded(child: _SummaryChip(label: l10n.home_net,
                     amount: fmt(income - expense),
                     color: income >= expense
                         ? const Color(0xFF1565C0) : const Color(0xFF785900),
@@ -107,10 +109,10 @@ class HomeScreen extends StatelessWidget {
 
             // Accounts
             if (app.accounts.isNotEmpty) ...[
-              const Padding(
-                padding: EdgeInsets.fromLTRB(16, 16, 16, 4),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
                 child: Row(children: [
-                  Text('Accounts', style: TextStyle(
+                  Text(l10n.home_accounts, style: const TextStyle(
                       fontWeight: FontWeight.w800, fontSize: 15)),
                 ]),
               ),
@@ -187,12 +189,12 @@ class HomeScreen extends StatelessWidget {
             ],
 
             // Recent transactions
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 16, 16, 4),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Recent Transactions',
+                  Text(l10n.home_recentTransactions,
                       style: TextStyle(
                           fontWeight: FontWeight.w800, fontSize: 15)),
                 ],
@@ -202,7 +204,7 @@ class HomeScreen extends StatelessWidget {
             if (recent.isEmpty)
               Padding(
                 padding: const EdgeInsets.all(20),
-                child: Text('No transactions yet',
+                child: Text(l10n.home_noTransactionsYet,
                     style: TextStyle(
                         color: cs.onSurface.withValues(alpha: 0.4))),
               )
@@ -242,7 +244,7 @@ class HomeScreen extends StatelessWidget {
         onPressed: () => Navigator.push(context,
             ExpensyRoute(builder: (_) => const AddTransactionScreen())),
         icon: const Icon(Icons.add),
-        label: const Text('Add'),
+        label: Text(l10n.home_add),
       ),
     );
   }

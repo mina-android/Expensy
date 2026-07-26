@@ -1,5 +1,6 @@
 // lib/screens/currency_converter_screen.dart
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
@@ -54,6 +55,7 @@ class _CurrencyConverterScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
     final cs  = Theme.of(context).colorScheme;
 
@@ -68,7 +70,7 @@ class _CurrencyConverterScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Currency Converter',
+        title: Text(l10n.currency_converter_currencyConverter,
             style: TextStyle(fontWeight: FontWeight.w800)),
         backgroundColor: cs.primary,
         foregroundColor: cs.onPrimary,
@@ -98,8 +100,8 @@ class _CurrencyConverterScreenState
                   Expanded(
                     child: Text(
                       app.ratesFetching
-                          ? 'Loading exchange rates…'
-                          : 'Exchange rates unavailable. Connect to the internet and sync.',
+                          ? l10n.currency_converter_loadingRates
+                          : l10n.currency_converter_ratesUnavailable,
                       style: TextStyle(
                           fontSize: 12, color: cs.onErrorContainer),
                     ),
@@ -117,7 +119,7 @@ class _CurrencyConverterScreenState
             ],
 
             // ── FROM field ───────────────────────────────────────────
-            Text('Amount', style: TextStyle(
+            Text(l10n.currency_converter_amount, style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0.8,
@@ -175,7 +177,7 @@ class _CurrencyConverterScreenState
             const SizedBox(height: 20),
 
             // ── TO result ────────────────────────────────────────────
-            Text('Converted to', style: TextStyle(
+            Text(l10n.currency_converter_convertedTo, style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0.8,
@@ -245,7 +247,7 @@ class _CurrencyConverterScreenState
                   if (app.ratesLastFetched != null) ...[
                     const Spacer(),
                     Text(
-                      _rateAge(app.ratesLastFetched!),
+                      _rateAge(app.ratesLastFetched!, l10n),
                       style: TextStyle(
                           fontSize: 10,
                           color: cs.onSurface.withValues(alpha: 0.4)),
@@ -257,7 +259,7 @@ class _CurrencyConverterScreenState
             // Quick common conversions
             if (rateAvail && _ctrl.text.isNotEmpty) ...[
               const SizedBox(height: 24),
-              Text('Common Conversions from $_from',
+              Text(l10n.currency_converter_commonConversions(_from),
                   style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
@@ -278,12 +280,12 @@ class _CurrencyConverterScreenState
     );
   }
 
-  String _rateAge(DateTime fetched) {
+  String _rateAge(DateTime fetched, AppLocalizations l10n) {
     final diff = DateTime.now().difference(fetched);
-    if (diff.inMinutes < 2) return 'Just now';
-    if (diff.inHours < 1) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    return '${diff.inDays}d ago';
+    if (diff.inMinutes < 2) return l10n.currency_converter_rateAgeJustNow;
+    if (diff.inHours < 1) return l10n.currency_converter_rateAgeMins(diff.inMinutes);
+    if (diff.inHours < 24) return l10n.currency_converter_rateAgeHours(diff.inHours);
+    return l10n.currency_converter_rateAgeDays(diff.inDays);
   }
 }
 
@@ -329,6 +331,7 @@ class _QuickConversions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     const popular = ['USD', 'EUR', 'GBP', 'SAR', 'AED', 'EGP', 'JPY', 'GBP'];
     final targets = popular
         .where((c) => c != from && c != excludeTo)

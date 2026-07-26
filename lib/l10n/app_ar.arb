@@ -1,0 +1,443 @@
+{
+  "@@locale": "ar",
+  "appTitle": "Expensy",
+  "settings_title": "الإعدادات",
+  "settings_appearance": "المظهر",
+  "settings_theme": "السمة",
+  "settings_system": "النظام",
+  "settings_light": "فاتح",
+  "settings_dark": "داكن",
+  "settings_amoledTitle": "أسود نقي (AMOLED)",
+  "settings_amoledSubtitle": "فرض خلفيات سوداء في الوضع الداكن",
+  "settings_accentColor": "لون التمييز",
+  "settings_appFont": "خط التطبيق",
+  "settings_systemDefault": "الافتراضي للنظام",
+  "settings_currency": "العملة",
+  "settings_defaultCurrency": "العملة الافتراضية",
+  "settings_preferences": "التفضيلات",
+  "settings_weekStartsOn": "يبدأ الأسبوع في",
+  "settings_monday": "الاثنين",
+  "settings_sunday": "الأحد",
+  "settings_hideBalance": "إخفاء الرصيد",
+  "settings_hideBalanceSubtitle": "إظهار ••••• بدلاً من المبالغ",
+  "settings_language": "اللغة",
+  "settings_profile": "الملف الشخصي",
+  "settings_displayName": "اسم العرض",
+  "settings_notSet": "لم يتم التعيين",
+  "settings_about": "حول",
+  "settings_version": "الإصدار",
+  "settings_privacy": "الخصوصية",
+  "settings_privacySubtitle": "يتم تخزين جميع البيانات محليًا — 100% بدون إنترنت",
+  "settings_github": "GitHub",
+  "settings_githubSubtitle": "عرض الكود المصدري",
+  "settings_developer": "المطور",
+  "settings_developerSubtitle": "اكتشف المزيد من المشاريع بواسطة Mina Android",
+  "settings_githubProfile": "ملف GitHub",
+  "settings_developerWebsite": "موقع المطور",
+  "settings_close": "إغلاق",
+  "settings_yourName": "اسمك",
+  "settings_cancel": "إلغاء",
+  "settings_save": "حفظ",
+  "recurring_expenses": "المصروفات ({count})",
+  "@recurring_expenses": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "recurring_incomeList": "الدخل ({count})",
+  "@recurring_incomeList": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "recurring_monthly": "شهرياً",
+  "recurring_weekly": "أسبوعياً",
+  "recurring_noRecurringExpenses": "لا توجد مصروفات متكررة",
+  "recurring_noRecurringIncome": "لا يوجد دخل متكرر",
+  "recurring_addExpense": "إضافة مصروف",
+  "recurring_addIncome": "إضافة دخل",
+  "recurring_tapPlusToAddOne": "انقر على + لإضافة واحد",
+  "recurring_fromOngoing": "من {date} · مستمر",
+  "@recurring_fromOngoing": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "recurring_paidPayments": "تَمَّ سداد {paid}/{total}",
+  "@recurring_paidPayments": {
+    "placeholders": {
+      "paid": {},
+      "total": {}
+    }
+  },
+  "recurring_totalAmount": "الإجمالي: {amount}",
+  "@recurring_totalAmount": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "recurring_overdue": "متأخر!",
+  "recurring_dueToday": "مستحق اليوم",
+  "recurring_dueInDays": "مستحق خلال {days} أيام",
+  "@recurring_dueInDays": {
+    "placeholders": {
+      "days": {}
+    }
+  },
+  "recurring_edit": "تعديل",
+  "recurring_skipBtn": "تخطي",
+  "recurring_nextDate": "التالي: {date}",
+  "@recurring_nextDate": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "recurring_pay": "دفع",
+  "recurring_del": "حذف",
+  "recurring_historyCount": "السجل ({count})",
+  "@recurring_historyCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "recurring_paymentHistory": "سجل الدفعات",
+  "recurring_notificationPermissionDenied": "تم رفض إذن الإشعارات. قم بتمكينه في الإعدادات → التطبيقات → Expensy → الإشعارات.",
+  "recurring_remindMeAt": "ذكرني في",
+  "recurring_editRecurring": "تعديل المتكرر",
+  "recurring_addRecurring": "إضافة دفعة متكررة",
+  "recurring_name": "الاسم",
+  "recurring_amountPerPayment": "المبلغ لكل دفعة",
+  "recurring_firstDate": "الأول: {date}",
+  "@recurring_firstDate": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "recurring_lastDate": "الأخير: {date}",
+  "@recurring_lastDate": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "recurring_noLastPaymentOngoing": "لا توجد دفعة أخيرة (مستمر)",
+  "accounts_refreshExchangeRates": "تحديث أسعار الصرف",
+  "accounts_noAccounts": "لا توجد حسابات",
+  "accounts_tapPlusToAddYourFirst": "انقر على + لإضافة حسابك الأول",
+  "accounts_fetchingExchangeRates": "جاري جلب أسعار الصرف...",
+  "accounts_exchangeRatesUnavailable": "أسعار الصرف غير متوفرة (غير متصل). تُعرض الأرصدة بالعملة المحلية.",
+  "accounts_unknown": "غير معروف",
+  "accounts_ratesUpdated": "تم تحديث الأسعار {timeStr} · انقر ↺ للتحديث",
+  "@accounts_ratesUpdated": {
+    "placeholders": {
+      "timeStr": {}
+    }
+  },
+  "accounts_goldCaps": "ذهب",
+  "accounts_balance": "الرصيد",
+  "accounts_income": "الدخل",
+  "accounts_expense": "المصروفات",
+  "accounts_txs": "المعاملات",
+  "accounts_value": "القيمة",
+  "accounts_karat": "عيار",
+  "accounts_pure": "نقي بنسبة {percentage}%",
+  "@accounts_pure": {
+    "placeholders": {
+      "percentage": {}
+    }
+  },
+  "accounts_weightLabel": "الوزن",
+  "accounts_perGram": "لكل جرام",
+  "accounts_bank": "بنك",
+  "accounts_cash": "نقدي",
+  "accounts_savings": "مدخرات",
+  "accounts_creditCard": "بطاقة ائتمان",
+  "accounts_eWallet": "محفظة إلكترونية",
+  "accounts_gold": "ذهب",
+  "accounts_editAccount": "تعديل الحساب",
+  "accounts_addAccount": "إضافة حساب جديد",
+  "accounts_accountName": "اسم الحساب",
+  "accounts_weightInGrams": "الوزن بالجرام",
+  "accounts_initialBalance": "الرصيد الافتتاحي",
+  "accounts_wontCountTowardYourHome": "لن يُحسب ضمن إجمالي الشاشة الرئيسية",
+  "accounts_saveChanges": "حفظ التغييرات",
+  "accounts_addAccountBtn": "إضافة حساب",
+  "accounts_fetchingGoldPrice": "جاري جلب سعر الذهب...",
+  "accounts_goldPriceUnavailable": "سعر الذهب غير متوفر — تحقق من اتصالك",
+  "lended_person_owesYou": "{name} مدين لك",
+  "@lended_person_owesYou": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "lended_person_youOwe": "أنت مدين لـ {name}",
+  "@lended_person_youOwe": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "lended_person_allSettledUp": "سُددت بالكامل",
+  "lended_person_noRecordsYet": "لا توجد سجلات بعد",
+  "lended_person_tapPlusToLog": "انقر على + لتسجيل الأموال التي أقرضتها أو اقترضتها",
+  "lended_person_name": "الاسم",
+  "lended_person_notesOptional": "ملاحظات (اختياري)",
+  "lended_person_lent": "أقرضت",
+  "lended_person_borrowed": "اقترضت",
+  "lended_person_overdue": "متأخر!",
+  "lended_person_due": "مستحق في {date}",
+  "@lended_person_due": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "lended_person_reminderAt": "تذكير في {time}",
+  "@lended_person_reminderAt": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "lended_person_notificationPermissionDenied": "تم رفض إذن الإشعارات. قم بتمكينه في الإعدادات → التطبيقات → Expensy → الإشعارات.",
+  "lended_person_remindMeAtPrompt": "ذكرني في",
+  "lended_person_editRecord": "تعديل السجل",
+  "lended_person_addRecord": "إضافة سجل",
+  "lended_person_amount": "المبلغ",
+  "lended_person_dueColon": "الاستحقاق: {date}",
+  "@lended_person_dueColon": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "lended_person_noDueDate": "لا يوجد تاريخ استحقاق",
+  "lended_person_setDueFirst": "قم بتعيين تاريخ استحقاق أولاً",
+  "lended_person_notifiedOnDue": "سيتم إعلامك في تاريخ الاستحقاق",
+  "lended_person_getNotifiedWhenDue": "احصل على إشعار عند الاستحقاق",
+  "lended_person_thatTimePassed": "لقد مر هذا الوقت اليوم — سيتم إعلامك قريبًا بدلاً من ذلك.",
+  "lended_person_notificationFiresOn": "يتم إطلاق الإشعار في {date} الساعة {time}.",
+  "@lended_person_notificationFiresOn": {
+    "placeholders": {
+      "date": {},
+      "time": {}
+    }
+  },
+  "lended_person_saveChangesBtn": "حفظ التغييرات",
+  "lended_person_addRecordBtn": "إضافة سجل",
+  "transactions_searchTransactions": "البحث في المعاملات...",
+  "transactions_all": "الكل",
+  "transactions_income": "الدخل",
+  "transactions_expenses": "المصروفات",
+  "transactions_lent": "أقرضت",
+  "transactions_borrowed": "اقترضت",
+  "transactions_noTransactions": "لا توجد معاملات",
+  "transactions_tapPlusToAddOne": "انقر على + لإضافة واحدة",
+  "transactions_today": "اليوم",
+  "transactions_yesterday": "أمس",
+  "transactions_lentTo": "أقرضت إلى {name}",
+  "@transactions_lentTo": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "transactions_borrowedFrom": "اقترضت من {name}",
+  "@transactions_borrowedFrom": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "transactions_unknown": "غير معروف",
+  "transactions_due": "مستحق في {date}",
+  "@transactions_due": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "transactions_unsettled": "غير مُسَوّى",
+  "onboarding_restoreFailed": "فشلت الاستعادة: قد يكون الملف تالفًا أو ليس نسخة احتياطية من Expensy.",
+  "onboarding_continue": "متابعة",
+  "onboarding_getStarted": "البدء",
+  "onboarding_yourPersonalTracker": "متتبع أموالك الشخصي وبدون إنترنت بنسبة 100%.\nهل لديك بالفعل نسخة احتياطية من جهاز آخر أو تثبيت سابق؟",
+  "onboarding_restoring": "جاري الاستعادة...",
+  "onboarding_chooseBackupFile": "اختيار ملف النسخ الاحتياطي",
+  "onboarding_letsGetYouSetUp": "لنقم بإعداد حسابك",
+  "onboarding_yourName": "اسمك",
+  "onboarding_accountName": "اسم الحساب",
+  "onboarding_bank": "بنك",
+  "onboarding_cash": "نقدي",
+  "onboarding_savings": "مدخرات",
+  "onboarding_credit": "ائتمان",
+  "onboarding_wallet": "محفظة",
+  "onboarding_startingBalance": "الرصيد الافتتاحي",
+  "backup_replaceDataWarning": "سيؤدي هذا إلى استبدال كافة بياناتك الحالية بالنسخة الاحتياطية.\nلا يمكن التراجع عن هذا الإجراء.",
+  "backup_whatsIncluded": "ما الذي يتضمنه",
+  "backup_backupDescription": "تتضمن كل نسخة احتياطية جميع بياناتك — الحسابات، المعاملات، الدفعات المتكررة وسجل الدفع/التخطي الخاص بها، الميزانيات، عناصر قائمة الرغبات، الأشخاص والسجلات الخاصة بالإقراض والاقتراض، الأصول، الفئات، وإعدادات التطبيق.",
+  "backup_saving": "جاري الحفظ...",
+  "backup_saveBackup": "حفظ نسخة احتياطية",
+  "backup_restoring": "جاري الاستعادة...",
+  "backup_restoreBackupBtn": "استعادة نسخة احتياطية",
+  "backup_restoreWarningText": "متوافق مع النسخ الاحتياطية من أي إصدار للتطبيق. يتم ملء الحقول المفقودة بالقيم الافتراضية الآمنة.",
+  "backup_included": "مشمول",
+  "backup_accounts": "الحسابات",
+  "backup_transactions": "المعاملات",
+  "backup_recurringPayments": "الدفعات المتكررة",
+  "backup_recurringHistory": "سجل التكرار",
+  "backup_budgets": "الميزانيات",
+  "backup_wishlist": "قائمة الرغبات",
+  "backup_lentPeople": "الأشخاص — الإقراض/الاقتراض",
+  "backup_lentRecords": "السجلات — الإقراض/الاقتراض",
+  "backup_assets": "الأصول",
+  "backup_categories": "الفئات",
+  "backup_settings": "الإعدادات",
+  "backup_backupSavedSuccessfully": "تم حفظ النسخة الاحتياطية بنجاح:\n{savedPath}",
+  "backup_backupFailed": "فشل النسخ الاحتياطي: {error}",
+  "backup_upgradedFrom": " (تم الترقية من v{originalVersion} → v{schemaVersion})",
+  "backup_dataRestoredSuccessfully": "تمت استعادة البيانات بنجاح!{vLabel}",
+  "backup_restoreFailed": "فشلت الاستعادة: {error}",
+  "backup_restoreFailedCorrupted": "فشلت الاستعادة: قد يكون الملف تالفًا أو ليس نسخة احتياطية من Expensy.",
+  "budget_noBudgetsYet": "لا توجد ميزانيات بعد",
+  "budget_tapToAddBudget": "انقر على + لتعيين حد للإنفاق لكل فئة",
+  "budget_budgeted": "الميزانية المحددة",
+  "budget_spent": "ما تم إنفاقه",
+  "budget_overLimit": "تجاوز الحد",
+  "budget_unknown": "غير معروف",
+  "budget_weeklyLabel": "أسبوعياً",
+  "budget_monthlyLabel": "شهرياً",
+  "budget_overAmount": "تجاوز بـ {amount}",
+  "budget_leftAmount": "متبقي {amount}",
+  "budget_percentUsed": "تم استخدام {percent}%",
+  "budget_editBudget": "تعديل الميزانية",
+  "budget_setBudget": "إضافة ميزانية جديدة",
+  "budget_budgetAmount": "مبلغ الميزانية",
+  "budget_previewFor": "معاينة لـ \"{catName}\"",
+  "budget_spentAmount": "المنفق: {amount}",
+  "budget_ofAmount": "من {amount}",
+  "budget_saveChanges": "حفظ التغييرات",
+  "budget_budget": "الميزانية",
+  "insights_other": "أخرى",
+  "insights_noDataYet": "لا توجد بيانات بعد",
+  "insights_addSomeTransactions": "أضف بعض المعاملات لرؤية الرؤى",
+  "insights_thisMonthVsLastMonth": "هذا الشهر مقابل الشهر الماضي",
+  "insights_dailyAverage": "المتوسط اليومي",
+  "insights_perDayBasedOn": "يوميًا · استنادًا إلى {days} يومًا هذا الشهر",
+  "insights_incomeVsExpenses": "الدخل مقابل المصروفات",
+  "insights_incomeAmount": "الدخل {amount}",
+  "insights_expensesAmount": "المصروفات {amount}",
+  "insights_percentSaved": "تم توفير {percent}% هذا الشهر",
+  "insights_topSpendingCategories": "أعلى فئات الإنفاق",
+  "insights_percentOfTotal": "{percent}% من الإجمالي",
+  "insights_biggestExpenseThisMonth": "أكبر مصروف هذا الشهر",
+  "insights_categoryTrends": "اتجاهات الفئات (مقابل الشهر الماضي)",
+  "insights_12MonthTrend": "اتجاه الـ 12 شهرًا",
+  "insights_incomeLabel": "الدخل",
+  "insights_expensesLabel": "المصروفات",
+  "categories_expenseLabel": "المصروفات",
+  "categories_incomeLabel": "الدخل",
+  "categories_editCategory": "تعديل الفئة",
+  "categories_addCategory": "إضافة فئة",
+  "categories_categoryName": "اسم الفئة",
+  "categories_saveChanges": "حفظ التغييرات",
+  "statistics_other": "أخرى",
+  "statistics_allAccounts": "جميع الحسابات",
+  "statistics_income": "الدخل",
+  "statistics_expenses": "المصروفات",
+  "statistics_expense": "المصروفات",
+  "statistics_net": "الصافي",
+  "statistics_6MonthOverviewAccount": "نظرة عامة على 6 أشهر · {accountName}",
+  "statistics_6MonthOverview": "نظرة عامة على 6 أشهر",
+  "statistics_percentOfBudget": "{percent}% من الميزانية",
+  "add_transaction_editTransaction": "تعديل المعاملة",
+  "add_transaction_addTransaction": "إدخال معاملة",
+  "add_transaction_amount": "المبلغ",
+  "add_transaction_conversionPreview": "≈ سيتم خصم {amount} من {accountName}",
+  "add_transaction_accountFallback": "الحساب",
+  "add_transaction_descriptionOptional": "الوصف (اختياري)",
+  "add_transaction_noteOptional": "ملاحظة (اختياري)",
+  "add_transaction_saveChanges": "حفظ التغييرات",
+  "more_statistics": "الإحصائيات",
+  "more_statisticsSub": "المخططات والملخص الشهري",
+  "more_insights": "الرؤى",
+  "more_insightsSub": "الاتجاهات والمتوسطات وتحليل الفئات",
+  "more_currencyConverter": "محول العملات",
+  "more_currencyConverterSub": "التحويل بين العملات على الفور",
+  "more_wishlist": "قائمة الرغبات",
+  "more_wishlistSub": "{count, plural, =1{عنصر واحد} other{{count} عناصر}}",
+  "more_lentMoney": "الأموال المقرضة",
+  "more_lentMoneySub": "{count} معلقة",
+  "more_assets": "الأصول",
+  "more_assetsSub": "{count, plural, =1{عنصر واحد} other{{count} عناصر}}",
+  "more_categories": "الفئات",
+  "more_categoriesSub": "{count, plural, =1{فئة واحدة} other{{count} فئات}}",
+  "more_exportTransactions": "تصدير المعاملات",
+  "more_exportTransactionsSub": "حفظ كـ Excel (.xlsx)",
+  "more_backupRestore": "النسخ الاحتياطي والاستعادة",
+  "more_backupRestoreSub": "حفظ أو تحميل بياناتك",
+  "more_settings": "الإعدادات",
+  "more_settingsSub": "السمة والعملة والتفضيلات",
+  "home_greeting": "مرحباً، {name} 👋",
+  "home_there": "بك",
+  "home_income": "الدخل",
+  "home_expenses": "المصروفات",
+  "home_net": "الصافي",
+  "wishlist_noItems": "لا توجد عناصر في قائمة الرغبات",
+  "wishlist_noItemsSub": "انقر على + لإضافة عناصر تدخر من أجلها",
+  "wishlist_editItem": "تعديل العنصر",
+  "wishlist_addWishlistItem": "إضافة عنصر لقائمة الرغبات",
+  "wishlist_itemName": "اسم العنصر",
+  "wishlist_targetPrice": "السعر المستهدف",
+  "wishlist_priorityLow": "منخفضة",
+  "wishlist_priorityMedium": "متوسطة",
+  "wishlist_priorityHigh": "عالية",
+  "wishlist_notesOptional": "ملاحظات (اختياري)",
+  "wishlist_saveChanges": "حفظ التغييرات",
+  "wishlist_addItem": "إضافة عنصر",
+  "lended_theyOweMe": "هم مدينون لي",
+  "lended_iOweThem": "أنا مدين لهم",
+  "lended_net": "الصافي",
+  "lended_noOneYet": "لا أحد بعد",
+  "lended_noOneYetSub": "انقر على + لإضافة شخص تقرضه أو تقترض منه",
+  "lended_owesYou": "مدين لك",
+  "lended_youOwe": "أنت مدين",
+  "lended_settledUp": "سُددت",
+  "lended_noActiveRecords": "لا توجد سجلات نشطة",
+  "lended_activeRecords": "{count, plural, =1{سجل نشط واحد} other{{count} سجلات نشطة}}",
+  "lended_editPerson": "تعديل الشخص",
+  "lended_addPerson": "إضافة شخص",
+  "lended_name": "الاسم",
+  "lended_notesOptional": "ملاحظات (اختياري)",
+  "lended_saveChanges": "حفظ التغييرات",
+  "assets_totalAssets": "إجمالي الأصول",
+  "assets_items": "العناصر",
+  "assets_noAssetsYet": "لا توجد أصول بعد",
+  "assets_noAssetsYetSub": "انقر على + لإضافة منتج أو أصل",
+  "assets_editAsset": "تعديل الأصل",
+  "assets_addAsset": "إضافة أصل",
+  "assets_productAssetName": "اسم المنتج / الأصل",
+  "assets_value": "القيمة",
+  "assets_notesOptional": "ملاحظات (اختياري)",
+  "assets_saveChanges": "حفظ التغييرات",
+  "currency_converter_loadingRates": "جاري تحميل أسعار الصرف...",
+  "currency_converter_ratesUnavailable": "أسعار الصرف غير متوفرة. اتصل بالإنترنت للمزامنة.",
+  "currency_converter_rateAgeJustNow": "الآن",
+  "currency_converter_rateAgeMins": "منذ {minutes} دقيقة",
+  "currency_converter_rateAgeHours": "منذ {hours} ساعة",
+  "currency_converter_rateAgeDays": "منذ {days} يوم",
+  "currency_converter_commonConversions": "التحويلات الشائعة من {fromCurrency}",
+  "transfer_fromAcc": "من ({currency})",
+  "transfer_toAcc": "إلى ({currency})",
+  "transfer_exchangeRatesNotLoaded": "لم يتم تحميل أسعار الصرف — سيتم تحويل المبلغ كما هو",
+  "transfer_amount": "المبلغ",
+  "transfer_noteOptional": "ملاحظة (اختياري)",
+  "export_from": "من",
+  "export_to": "إلى",
+  "export_txCount": "{count, plural, =1{معاملة واحدة في النطاق} other{{count} معاملات في النطاق}}",
+  "export_saved": "تم الحفظ: {path}",
+  "export_complete": "اكتمل التصدير",
+  "export_exporting": "جاري التصدير...",
+  "export_exportAsExcel": "تصدير كـ Excel",
+  "shared_widgets_deleteConfirm": "هل تريد حذف \"{name}\"؟ لا يمكن التراجع عن هذا الإجراء.",
+  "shared_widgets_searchByCode": "البحث بالرمز أو الاسم...",
+  "main_home": "الرئيسية",
+  "main_transactions": "المعاملات",
+  "main_recurring": "المتكررة",
+  "main_accounts": "الحسابات",
+  "main_budgets": "الميزانيات",
+  "main_more": "المزيد",
+  "onboarding_chooseLanguage": "اختر اللغة"
+}

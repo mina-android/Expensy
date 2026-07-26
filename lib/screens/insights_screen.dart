@@ -1,5 +1,6 @@
 // lib/screens/insights_screen.dart
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
@@ -33,10 +34,10 @@ class InsightsScreen extends StatelessWidget {
       txs.where((t) => t.type == type).fold(0.0, (s, t) => s + _converted(app, t));
 
   static Map<String, double> _byCategory(
-      AppProvider app, List<AppTransaction> txs, String type) {
+      AppProvider app, List<AppTransaction> txs, String type, String otherLabel) {
     final map = <String, double>{};
     for (final t in txs.where((t) => t.type == type)) {
-      final cat = app.categoryById(t.categoryId)?.name ?? 'Other';
+      final cat = app.categoryById(t.categoryId)?.name ?? otherLabel;
       map[cat] = (map[cat] ?? 0) + _converted(app, t);
     }
     return map;
@@ -44,6 +45,7 @@ class InsightsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
     final cs  = Theme.of(context).colorScheme;
     final cur = app.settings.currency;
@@ -52,14 +54,14 @@ class InsightsScreen extends StatelessWidget {
     if (app.transactions.isEmpty) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Insights',
+          title: Text(l10n.insights_insights,
               style: TextStyle(fontWeight: FontWeight.w800)),
           backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
         ),
-        body: const EmptyState(
+        body: EmptyState(
           icon: Icons.insights_outlined,
-          message: 'No data yet',
-          subMessage: 'Add some transactions to see insights',
+          message: l10n.insights_noDataYet,
+          subMessage: l10n.insights_addSomeTransactions,
         ),
       );
     }
@@ -78,8 +80,8 @@ class InsightsScreen extends StatelessWidget {
     final daysElapsed  = now.day.clamp(1, 31);
     final dailyAverage = thisExp / daysElapsed;
 
-    final thisCatMap = _byCategory(app, thisMonth, 'expense');
-    final lastCatMap = _byCategory(app, lastMonth, 'expense');
+    final thisCatMap = _byCategory(app, thisMonth, 'expense', l10n.insights_other);
+    final lastCatMap = _byCategory(app, lastMonth, 'expense', l10n.insights_other);
 
     final topCats = (thisCatMap.entries.toList()
           ..sort((a, b) => b.value.compareTo(a.value)))
@@ -106,7 +108,7 @@ class InsightsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Insights',
+        title: Text(l10n.insights_insights,
             style: TextStyle(fontWeight: FontWeight.w800)),
         backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
       ),
@@ -115,7 +117,7 @@ class InsightsScreen extends StatelessWidget {
         children: [
 
           // ── This vs Last month ──────────────────────────────────────
-          _SectionLabel(label: 'This Month vs Last Month'),
+          _SectionLabel(label: l10n.insights_thisMonthVsLastMonth),
           Card(child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(children: [
@@ -137,7 +139,7 @@ class InsightsScreen extends StatelessWidget {
           const SizedBox(height: 12),
 
           // ── Daily average ───────────────────────────────────────────
-          _SectionLabel(label: 'Daily Average'),
+          _SectionLabel(label: l10n.insights_dailyAverage),
           Card(child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(children: [
@@ -156,7 +158,7 @@ class InsightsScreen extends StatelessWidget {
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
                         color: cs.primary)),
-                Text('per day · based on $daysElapsed days this month',
+                Text(l10n.insights_perDayBasedOn(daysElapsed.toString()),
                     style: TextStyle(
                         fontSize: 11,
                         color: cs.onSurface.withValues(alpha: 0.5))),
@@ -167,7 +169,7 @@ class InsightsScreen extends StatelessWidget {
 
           // ── Income vs Expense ratio ─────────────────────────────────
           if (thisInc > 0 || thisExp > 0) ...[
-            _SectionLabel(label: 'Income vs Expenses'),
+            _SectionLabel(label: l10n.insights_incomeVsExpenses),
             Card(child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -176,14 +178,14 @@ class InsightsScreen extends StatelessWidget {
                 _RatioBar(income: thisInc, expense: thisExp, cs: cs),
                 const SizedBox(height: 10),
                 Row(children: [
-                  _DotLabel(color: const Color(0xFF2E7D32), label: 'Income ${fmt(thisInc)}'),
+                  _DotLabel(color: const Color(0xFF2E7D32), label: l10n.insights_incomeAmount(fmt(thisInc))),
                   const SizedBox(width: 14),
-                  _DotLabel(color: const Color(0xFFC62828), label: 'Expenses ${fmt(thisExp)}'),
+                  _DotLabel(color: const Color(0xFFC62828), label: l10n.insights_expensesAmount(fmt(thisExp))),
                 ]),
                 if (thisInc > 0 && thisInc > thisExp) ...[
                   const SizedBox(height: 6),
                   Text(
-                    '${((thisInc - thisExp) / thisInc * 100).toStringAsFixed(0)}% saved this month',
+                    l10n.insights_percentSaved(((thisInc - thisExp) / thisInc * 100).toStringAsFixed(0)),
                     style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
@@ -197,7 +199,7 @@ class InsightsScreen extends StatelessWidget {
 
           // ── Top 3 categories ────────────────────────────────────────
           if (topCats.isNotEmpty) ...[
-            _SectionLabel(label: 'Top Spending Categories'),
+            _SectionLabel(label: l10n.insights_topSpendingCategories),
             Card(child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -241,7 +243,7 @@ class InsightsScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                              '${(pct * 100).toStringAsFixed(1)}% of total',
+                              l10n.insights_percentOfTotal((pct * 100).toStringAsFixed(1)),
                               style: TextStyle(
                                   fontSize: 10,
                                   color:
@@ -258,7 +260,7 @@ class InsightsScreen extends StatelessWidget {
 
           // ── Biggest single expense ──────────────────────────────────
           if (biggestTx != null) ...[
-            _SectionLabel(label: 'Biggest Expense This Month'),
+            _SectionLabel(label: l10n.insights_biggestExpenseThisMonth),
             Card(child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(children: [
@@ -291,7 +293,7 @@ class InsightsScreen extends StatelessWidget {
 
           // ── Category trends ─────────────────────────────────────────
           if (thisCatMap.isNotEmpty || lastCatMap.isNotEmpty) ...[
-            _SectionLabel(label: 'Category Trends (vs Last Month)'),
+            _SectionLabel(label: l10n.insights_categoryTrends),
             Card(child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -302,7 +304,7 @@ class InsightsScreen extends StatelessWidget {
           ],
 
           // ── 12-month trend chart ─────────────────────────────────────
-          _SectionLabel(label: '12-Month Trend'),
+          _SectionLabel(label: l10n.insights_12MonthTrend),
           Card(child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -310,10 +312,10 @@ class InsightsScreen extends StatelessWidget {
                 children: [
               Row(children: [
                 _DotLabel(
-                    color: const Color(0xFF2E7D32), label: 'Income'),
+                    color: const Color(0xFF2E7D32), label: l10n.insights_incomeLabel),
                 const SizedBox(width: 12),
                 _DotLabel(
-                    color: const Color(0xFFC62828), label: 'Expenses'),
+                    color: const Color(0xFFC62828), label: l10n.insights_expensesLabel),
               ]),
               const SizedBox(height: 12),
               SizedBox(
@@ -502,6 +504,7 @@ class _TrendBadge extends StatelessWidget {
   const _TrendBadge({required this.pct});
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isUp = pct > 0;
     final isFlat = pct == 0;
     final color = isFlat
@@ -542,6 +545,7 @@ class _RatioBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final total = income + expense;
     if (total == 0) return const SizedBox();
     final incRatio = income / total;
