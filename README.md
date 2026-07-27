@@ -62,13 +62,15 @@ Most finance apps want you to sign up, sync to the cloud, or watch ads. Expensy 
 
 ## 🌍 Localization & Translation
 
-Expensy is available in multiple languages! We use native translation and professional finance terminology for a native feel.
+Expensy is being translated into multiple languages using native translation and professional finance terminology for a native feel. Translation is in progress — percentages reflect the share of strings currently translated relative to the English base:
 
 - 🇺🇸 **English** — 100%
-- 🇸🇦 **Arabic (العربية)** — 100% (with full RTL support)
-- 🇫🇷 **French (Français)** — 100%
-- 🇩🇪 **German (Deutsch)** — 100%
-- 🇮🇳 **Hindi (हिन्दी)** — 100%
+- 🇸🇦 **Arabic (العربية)** — 73% (RTL support included)
+- 🇫🇷 **French (Français)** — 73%
+- 🇩🇪 **German (Deutsch)** — 73%
+- 🇮🇳 **Hindi (हिन्दी)** — 73%
+
+Contributions to complete these translations are welcome — see [Contributing](#-contributing).
 
 ---
 
@@ -133,7 +135,7 @@ Production builds automatically detect `android/key.properties` and sign with `e
 
 - [ ] iOS support
 - [x] Home screen widget
-- [x] Multiple languages
+- [ ] Multiple languages (73% complete — AR/DE/FR/HI)
 - [ ] Recurring payment auto-pay
 - [x] Budgets per category
 - [x] Push notifications for recurring & lent/borrowed reminders
