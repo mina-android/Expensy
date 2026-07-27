@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
+import '../utils/haptics.dart';
 
 class TransferScreen extends StatefulWidget {
   const TransferScreen({super.key});
@@ -17,6 +18,7 @@ class _TransferScreenState extends State<TransferScreen> {
   final _noteCtrl = TextEditingController();
   String? _fromId;
   String? _toId;
+  bool _submitted = false;
 
   @override
   void initState() {
@@ -36,6 +38,7 @@ class _TransferScreenState extends State<TransferScreen> {
   void dispose() { _amtCtrl.dispose(); _noteCtrl.dispose(); super.dispose(); }
 
   Future<void> _submit() async {
+    setState(() => _submitted = true);
     if (_fromId == null || _toId == null || _fromId == _toId) return;
     final amount = double.tryParse(_amtCtrl.text);
     if (amount == null || amount <= 0) return;
@@ -216,6 +219,7 @@ class _TransferScreenState extends State<TransferScreen> {
               labelText: l10n.transfer_amount,
               prefixText: '$sym ',
               suffixText: fromCurrency,
+              errorText: _submitted && (double.tryParse(_amtCtrl.text) ?? 0) <= 0 ? l10n.error_required : null,
             ),
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
             onChanged: (_) => setState(() {}),
@@ -229,8 +233,7 @@ class _TransferScreenState extends State<TransferScreen> {
           const SizedBox(height: 24),
 
           FilledButton.icon(
-            onPressed: (_fromId != null && _toId != null && _fromId != _toId)
-                ? _submit : null,
+            onPressed: () { AppHaptics.tap(context, HapticStrength.light); _submit(); },
             icon: const Icon(Icons.swap_horiz_rounded),
             label: Text(l10n.transfer_transfer),
             style: FilledButton.styleFrom(

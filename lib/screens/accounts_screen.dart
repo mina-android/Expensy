@@ -7,6 +7,7 @@ import '../providers/app_provider.dart';
 import '../models/models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
+import '../utils/haptics.dart';
 
 class AccountsScreen extends StatelessWidget {
   const AccountsScreen({super.key});
@@ -71,7 +72,7 @@ class AccountsScreen extends StatelessWidget {
             ),
       floatingActionButton: FloatingActionButton(
         heroTag: null,
-        onPressed: () => _openSheet(context),
+        onPressed: () { AppHaptics.tap(context, HapticStrength.light); _openSheet(context); },
         child: const Icon(Icons.add),
       ),
     );
@@ -382,6 +383,7 @@ class _AccountSheetState extends State<_AccountSheet> {
   int    _color            = 0xFF6750A4;
   bool   _excludeFromTotal = false;
   int    _goldKarat        = 24;
+  bool   _submitted        = false;
 
   bool get isEdit => widget.existing != null;
   bool get isGold => _type == 'gold';
@@ -429,6 +431,7 @@ class _AccountSheetState extends State<_AccountSheet> {
   }
 
   Future<void> _submit() async {
+    setState(() => _submitted = true);
     final l10n = AppLocalizations.of(context)!;
     final name = _nameCtrl.text.trim();
     if (name.isEmpty) return;
@@ -514,8 +517,11 @@ class _AccountSheetState extends State<_AccountSheet> {
 
           TextField(
             controller: _nameCtrl,
-            decoration: InputDecoration(labelText: l10n.accounts_accountName,
-                prefixIcon: const Icon(Icons.label_outline)),
+            decoration: InputDecoration(
+              labelText: l10n.accounts_accountName,
+              prefixIcon: const Icon(Icons.label_outline),
+              errorText: _submitted && _nameCtrl.text.trim().isEmpty ? l10n.error_required : null,
+            ),
           ),
           const SizedBox(height: 14),
 
@@ -645,6 +651,7 @@ class _AccountSheetState extends State<_AccountSheet> {
                 labelText: l10n.accounts_weightInGrams,
                 prefixIcon: const Icon(Icons.scale_outlined),
                 suffixText: 'g',
+                errorText: _submitted && (double.tryParse(_gramsCtrl.text) ?? 0) <= 0 ? l10n.error_required : null,
               ),
             ),
             const SizedBox(height: 12),
@@ -722,7 +729,7 @@ class _AccountSheetState extends State<_AccountSheet> {
           const SizedBox(height: 20),
 
           FilledButton(
-            onPressed: _submit,
+            onPressed: () { AppHaptics.tap(context, HapticStrength.light); _submit(); },
             style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(50),
                 backgroundColor: isGold ? const Color(0xFFB8860B) : null,

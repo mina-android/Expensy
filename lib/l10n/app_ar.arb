@@ -439,5 +439,24 @@
   "main_accounts": "الحسابات",
   "main_budgets": "الميزانيات",
   "main_more": "المزيد",
-  "onboarding_chooseLanguage": "اختر اللغة"
-}
+  "onboarding_chooseLanguage": "اختر اللغة",
+  "error_required": "هذا الحقل مطلوب",
+  "recurring_subscriptions": "الاشتراكات ({count})",
+  "@recurring_subscriptions": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "recurring_installments": "الأقساط ({count})",
+  "@recurring_installments": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "recurring_recurringType": "نوع التكرار",
+  "recurring_subscription": "اشتراك",
+  "recurring_installment": "قسط",
+  "recurring_installmentsRequireEndDate": "يجب أن تحتوي الأقساط على تاريخ دفع نهائي.",
+  "backup_importFromOtherApps": "استيراد من تطبيقات أخرى",
+  "backup_importDescription": "استيراد البيانات من التطبيقات المدعومة",
+  "backup_importFromGreenStash": "استيراد من GreenStash (.json)"}

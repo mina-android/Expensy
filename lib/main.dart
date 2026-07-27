@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'providers/app_provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'services/budget_notification_service.dart';
+import 'services/daily_reminder_service.dart';
 import 'l10n/app_localizations.dart';
 import 'theme/app_theme.dart';
 import 'screens/main_shell.dart';
@@ -13,6 +15,7 @@ import 'screens/add_transaction_screen.dart';
 import 'services/notification_service.dart';
 import 'services/lended_notification_service.dart';
 import 'services/quick_add_service.dart';
+import 'services/auto_backup_service.dart';
 
 /// Root navigator key so the "Quick Add Transaction" home screen widget can
 /// push [AddTransactionScreen] on top of whatever's currently showing,
@@ -32,6 +35,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await NotificationService().initialize();
   await LendedNotificationService().initialize();
+  await BudgetNotificationService().initialize();
+  await DailyReminderService().initialize();
+  await AutoBackupService.initialize();
 
   final provider = AppProvider();
   await provider.load();   // DB reads finish before Flutter draws anything
@@ -84,7 +90,7 @@ class _ExpensyAppState extends State<ExpensyApp> {
     if (!app.settings.onboarded) return;
 
     rootNavigatorKey.currentState?.push(
-      ExpensyRoute(builder: (_) => const AddTransactionScreen()),
+      ExpensySlideUpRoute(builder: (_) => const AddTransactionScreen()),
     );
   }
 
@@ -104,7 +110,7 @@ class _ExpensyAppState extends State<ExpensyApp> {
         // Dynamic colour only when following the system — Android 12+ devices
         // provide a wallpaper-extracted palette; older devices return null and
         // fall back to the chosen seed colour automatically.
-        final usesDynamic = s.themeMode == 'system';
+        final usesDynamic = s.dynamicColorEnabled;
 
         return MaterialApp(
           title: 'Expensy',

@@ -439,5 +439,24 @@
   "main_accounts": "Konten",
   "main_budgets": "Budgets",
   "main_more": "Mehr",
-  "onboarding_chooseLanguage": "Sprache wählen"
-}
+  "onboarding_chooseLanguage": "Sprache wählen",
+  "error_required": "Dieses Feld ist erforderlich",
+  "recurring_subscriptions": "Abonnements ({count})",
+  "@recurring_subscriptions": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "recurring_installments": "Ratenzahlungen ({count})",
+  "@recurring_installments": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "recurring_recurringType": "Wiederholungsart",
+  "recurring_subscription": "Abonnement",
+  "recurring_installment": "Ratenzahlung",
+  "recurring_installmentsRequireEndDate": "Ratenzahlungen müssen ein endgültiges Zahlungsdatum haben.",
+  "backup_importFromOtherApps": "Aus anderen Apps importieren",
+  "backup_importDescription": "Daten aus unterstützten Apps importieren",
+  "backup_importFromGreenStash": "Aus GreenStash importieren (.json)"}

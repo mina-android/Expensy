@@ -6,6 +6,7 @@ import '../providers/app_provider.dart';
 import '../models/models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
+import '../utils/haptics.dart';
 
 class WishlistScreen extends StatelessWidget {
   const WishlistScreen({super.key});
@@ -33,7 +34,7 @@ class WishlistScreen extends StatelessWidget {
             ),
       floatingActionButton: FloatingActionButton(
         heroTag: null,
-        onPressed: () => _openSheet(context),
+        onPressed: () { AppHaptics.tap(context, HapticStrength.light); _openSheet(context); },
         child: const Icon(Icons.add),
       ),
     );
@@ -138,6 +139,8 @@ class _WishSheetState extends State<_WishSheet> {
   final _priceCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
   String _priority = 'medium';
+  bool _submitted = false;
+
   bool get isEdit => widget.existing != null;
 
   @override
@@ -159,6 +162,7 @@ class _WishSheetState extends State<_WishSheet> {
   }
 
   Future<void> _submit() async {
+    setState(() => _submitted = true);
     if (_nameCtrl.text.trim().isEmpty) return;
     final price = double.tryParse(_priceCtrl.text) ?? 0;
     final app = context.read<AppProvider>();
@@ -192,14 +196,24 @@ class _WishSheetState extends State<_WishSheet> {
             style: Theme.of(context).textTheme.titleLarge
                 ?.copyWith(fontWeight: FontWeight.w800)),
         const SizedBox(height: 16),
-        TextField(controller: _nameCtrl,
-            decoration: InputDecoration(labelText: l10n.wishlist_itemName,
-                prefixIcon: const Icon(Icons.star_outline_rounded))),
+        TextField(
+            controller: _nameCtrl,
+            decoration: InputDecoration(
+                labelText: l10n.wishlist_itemName,
+                prefixIcon: const Icon(Icons.star_outline_rounded),
+                errorText: _submitted && _nameCtrl.text.trim().isEmpty ? l10n.error_required : null,
+            ),
+        ),
         const SizedBox(height: 12),
-        TextField(controller: _priceCtrl,
+        TextField(
+            controller: _priceCtrl,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
-                labelText: l10n.wishlist_targetPrice, prefixText: '$sym ')),
+                labelText: l10n.wishlist_targetPrice,
+                prefixText: '$sym ',
+                errorText: _submitted && (double.tryParse(_priceCtrl.text) ?? 0) <= 0 ? l10n.error_required : null,
+            ),
+        ),
         const SizedBox(height: 14),
         Text(l10n.wishlist_priority, style: Theme.of(context).textTheme.labelMedium
             ?.copyWith(letterSpacing: 1)),
@@ -232,7 +246,7 @@ class _WishSheetState extends State<_WishSheet> {
                 prefixIcon: const Icon(Icons.sticky_note_2_outlined))),
         const SizedBox(height: 20),
         FilledButton(
-          onPressed: _submit,
+          onPressed: () { AppHaptics.tap(context, HapticStrength.light); _submit(); },
           style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28))),
           child: Text(isEdit ? l10n.wishlist_saveChanges : l10n.wishlist_addItem),

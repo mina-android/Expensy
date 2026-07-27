@@ -7,11 +7,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:excel/excel.dart' hide Border;
+import 'package:archive/archive.dart';
 import '../models/models.dart';
 import '../database/db_helper.dart';
 import '../services/exchange_rate_service.dart';
 import '../services/notification_service.dart';
 import '../services/lended_notification_service.dart';
+import '../services/budget_notification_service.dart';
+import '../services/daily_reminder_service.dart';
 
 class AppSettings {
   String currency;
@@ -22,8 +25,13 @@ class AppSettings {
   String userName;
   bool   onboarded;
   String appFont;     // key into kFonts; 'default' = system/Roboto
-  bool   amoledSurfaces; // pure-black surfaces when dark — decoupled from themeMode
+  bool   amoledSurfaces;
+  bool   dynamicColorEnabled; // pure-black surfaces when dark — decoupled from themeMode
   String languageCode; // 'system'|'en'|'ar'|'fr'|'de'|'hi'
+  bool   budgetAlertsEnabled;
+  bool   dailyReminderEnabled;
+  String dailyReminderTime;
+  bool   hapticsEnabled;
 
   AppSettings({
     this.currency      = 'EGP',
@@ -35,15 +43,24 @@ class AppSettings {
     this.onboarded     = false,
     this.appFont       = 'default',
     this.amoledSurfaces = false,
+    this.dynamicColorEnabled = false,
     this.languageCode  = 'system',
+    this.budgetAlertsEnabled = true,
+    this.dailyReminderEnabled = false,
+    this.dailyReminderTime = '22:00',
+    this.hapticsEnabled = true,
   });
 
   Map<String, dynamic> toJson() => {
     'currency': currency, 'themeSeed': themeSeed, 'themeMode': themeMode,
     'weekStart': weekStart, 'hideBalance': hideBalance,
     'userName': userName, 'onboarded': onboarded,
-    'appFont': appFont, 'amoledSurfaces': amoledSurfaces,
+    'appFont': appFont, 'amoledSurfaces': amoledSurfaces, 'dynamicColorEnabled': dynamicColorEnabled,
     'languageCode': languageCode,
+    'budgetAlertsEnabled': budgetAlertsEnabled,
+    'dailyReminderEnabled': dailyReminderEnabled,
+    'dailyReminderTime': dailyReminderTime,
+    'hapticsEnabled': hapticsEnabled,
   };
 
   static const _validThemeModes = {'system', 'light', 'dark'};
@@ -97,7 +114,12 @@ class AppSettings {
       onboarded:      (j['onboarded']   as bool?)   ?? false,
       appFont:        font,
       amoledSurfaces: amoled,
+      dynamicColorEnabled: (j['dynamicColorEnabled'] as bool?) ?? false,
       languageCode:   lang,
+      budgetAlertsEnabled: (j['budgetAlertsEnabled'] as bool?) ?? true,
+      dailyReminderEnabled: (j['dailyReminderEnabled'] as bool?) ?? false,
+      dailyReminderTime: (j['dailyReminderTime'] as String?) ?? '22:00',
+      hapticsEnabled: (j['hapticsEnabled'] as bool?) ?? true,
     );
   }
 }
@@ -113,6 +135,8 @@ class AppProvider extends ChangeNotifier {
   List<LendedMoney>           lended       = [];
   List<AssetItem>             assets       = [];
   List<Budget>                budgets      = [];
+  List<SavingsGoal>           savingsGoals = [];
+  List<SavingsContribution>   savingsContributions = [];
 
   /// Total row count in `recurring_history` — kept for display purposes
   /// (e.g. the Backup screen's "what's included" list) without needing to
@@ -131,6 +155,8 @@ class AppProvider extends ChangeNotifier {
   final _erService = ExchangeRateService();
   final _notif       = NotificationService();
   final _lendedNotif = LendedNotificationService();
+  final _budgetNotif = BudgetNotificationService();
+  final _dailyNotif  = DailyReminderService();
 
   bool _loaded = false;
   bool get loaded => _loaded;
@@ -154,9 +180,19 @@ class AppProvider extends ChangeNotifier {
     lended       = await DBHelper.getLended();
     assets       = await DBHelper.getAssets();
     budgets      = await DBHelper.getBudgets();
+    savingsGoals = await DBHelper.getSavingsGoals();
+    savingsContributions = await DBHelper.getAllSavingsContributions();
     recurringHistoryCount = await DBHelper.getRecurringHistoryCount();
     _loaded = true;
     notifyListeners();
+
+    _lendedNotif.rescheduleAllLended(lended, settings.currency);
+    _notif.rescheduleAll(recurring, settings.currency);
+    if (settings.dailyReminderEnabled) {
+      await _dailyNotif.scheduleDailyReminder(settings.dailyReminderTime);
+    } else {
+      await _dailyNotif.cancelDailyReminder();
+    }
 
     _loadRates();
   }
@@ -268,7 +304,11 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updateSetting(String key, dynamic value) {
+  void updateSetting(String key, dynamic value) async {
+    final oldDailyEnabled = settings.dailyReminderEnabled;
+    final oldDailyTime = settings.dailyReminderTime;
+    final oldLang = settings.languageCode;
+
     switch (key) {
       case 'currency':       settings.currency       = value as String; break;
       case 'themeSeed':      settings.themeSeed      = value as String; break;
@@ -278,9 +318,28 @@ class AppProvider extends ChangeNotifier {
       case 'userName':       settings.userName       = value as String; break;
       case 'appFont':        settings.appFont        = value as String; break;
       case 'amoledSurfaces': settings.amoledSurfaces = value as bool;  break;
+      case 'dynamicColorEnabled': settings.dynamicColorEnabled = value as bool;  break;
       case 'languageCode':   settings.languageCode   = value as String; break;
+      case 'budgetAlertsEnabled':  settings.budgetAlertsEnabled  = value as bool;   break;
+      case 'dailyReminderEnabled': settings.dailyReminderEnabled = value as bool;   break;
+      case 'dailyReminderTime':    settings.dailyReminderTime    = value as String; break;
+      case 'hapticsEnabled':       settings.hapticsEnabled       = value as bool;   break;
     }
-    _saveSettings();
+
+    await _saveSettings();
+    notifyListeners();
+
+    if (oldLang != settings.languageCode) {
+      // Handled in main by restarting or notifying.
+    }
+
+    if (oldDailyEnabled != settings.dailyReminderEnabled || oldDailyTime != settings.dailyReminderTime) {
+      if (settings.dailyReminderEnabled) {
+        await _dailyNotif.scheduleDailyReminder(settings.dailyReminderTime);
+      } else {
+        await _dailyNotif.cancelDailyReminder();
+      }
+    }
   }
 
   Future<void> completeOnboarding({
@@ -437,6 +496,7 @@ class AppProvider extends ChangeNotifier {
     await _updateAccountBalance(t.accountId, _txDelta(t));
     transactions = await DBHelper.getTransactions();
     notifyListeners();
+    await _checkBudgetAlert(t);
   }
 
   Future<void> updateTransaction(AppTransaction updated,
@@ -447,6 +507,20 @@ class AppProvider extends ChangeNotifier {
     transactions = await DBHelper.getTransactions();
     accounts     = await DBHelper.getAccounts();
     notifyListeners();
+    await _checkBudgetAlert(updated);
+  }
+
+  Future<void> _checkBudgetAlert(AppTransaction t) async {
+    if (!settings.budgetAlertsEnabled) return;
+    if (t.type != 'expense') return;
+    final b = budgetForCategory(t.categoryId);
+    if (b == null) return;
+    if (budgetExceeded(b)) {
+      final cat = categoryById(t.categoryId);
+      if (cat != null) {
+        await _budgetNotif.showBudgetExceeded(b, cat, budgetSpent(b));
+      }
+    }
   }
 
   Future<void> deleteTransaction(String id) async {
@@ -815,13 +889,136 @@ class AppProvider extends ChangeNotifier {
     });
   }
 
-  double budgetRemaining(Budget b) =>
-      (b.amount - budgetSpent(b)).clamp(0.0, double.infinity);
-
   double budgetProgress(Budget b) =>
       (budgetSpent(b) / b.amount).clamp(0.0, 1.0);
 
+  double budgetRemaining(Budget b) {
+    final rem = b.amount - budgetSpent(b);
+    return rem < 0 ? 0 : rem;
+  }
+
   bool budgetExceeded(Budget b) => budgetSpent(b) > b.amount;
+
+  // ── Savings Goals ──────────────────────────────────────────────────────────
+
+  double get totalSaved {
+    double sum = 0.0;
+    for (final g in savingsGoals) {
+      sum += convertToMain(g.currentAmount, g.currency);
+    }
+    return sum;
+  }
+
+  double goalProgress(SavingsGoal g) {
+    if (g.targetAmount <= 0) return 0.0;
+    return (g.currentAmount / g.targetAmount).clamp(0.0, 1.0);
+  }
+
+  Future<void> addSavingsGoal(SavingsGoal g) async {
+    await DBHelper.insertSavingsGoal(g);
+    savingsGoals = await DBHelper.getSavingsGoals();
+    notifyListeners();
+  }
+
+  Future<void> updateSavingsGoal(SavingsGoal g) async {
+    await DBHelper.updateSavingsGoal(g);
+    savingsGoals = await DBHelper.getSavingsGoals();
+    notifyListeners();
+  }
+
+  Future<void> deleteSavingsGoal(String id) async {
+    await DBHelper.deleteSavingsGoal(id);
+    savingsGoals = await DBHelper.getSavingsGoals();
+    notifyListeners();
+  }
+
+  Future<List<SavingsContribution>> contributionsFor(String goalId) async {
+    return savingsContributions.where((c) => c.goalId == goalId).toList();
+  }
+
+  Future<void> contributeToGoal({
+    required String goalId,
+    required String fromAccountId,
+    required double amount,
+    String note = '',
+  }) async {
+    final goal = savingsGoals.firstWhere((g) => g.id == goalId);
+    final fromAcc = accountById(fromAccountId);
+    if (fromAcc == null) return;
+    
+    // Amount is in the account's currency, we need to convert it to goal's currency.
+    final double goalAmount = convertBetween(amount, fromAcc.currency, goal.currency) ?? amount;
+    
+    final contrib = SavingsContribution(
+      id: newId(),
+      goalId: goalId,
+      amount: goalAmount,
+      accountId: fromAccountId,
+      type: 'contribution',
+      date: DateTime.now(),
+      note: note,
+    );
+
+    await DBHelper.insertSavingsContribution(contrib);
+    await _updateAccountBalance(fromAccountId, -amount);
+    
+    final wasCompleted = goal.isCompleted;
+    var updatedGoal = goal.copyWith(currentAmount: goal.currentAmount + goalAmount);
+    
+    if (!wasCompleted && updatedGoal.currentAmount >= updatedGoal.targetAmount) {
+      updatedGoal = updatedGoal.copyWith(isCompleted: true, completedAt: DateTime.now());
+      if (settings.budgetAlertsEnabled) {
+        await _budgetNotif.showGoalCompleted(updatedGoal);
+      }
+    }
+    
+    await DBHelper.updateSavingsGoal(updatedGoal);
+    savingsGoals = await DBHelper.getSavingsGoals();
+    savingsContributions = await DBHelper.getAllSavingsContributions();
+    accounts = await DBHelper.getAccounts();
+    notifyListeners();
+  }
+
+  Future<void> withdrawFromGoal({
+    required String goalId,
+    required String toAccountId,
+    required double amount, // amount in goal currency
+    String note = '',
+  }) async {
+    final goal = savingsGoals.firstWhere((g) => g.id == goalId);
+    final toAcc = accountById(toAccountId);
+    if (toAcc == null) return;
+    
+    // Cannot withdraw more than we have
+    if (amount > goal.currentAmount) return;
+
+    final double accountAmount = convertBetween(amount, goal.currency, toAcc.currency) ?? amount;
+    
+    final withdrawal = SavingsContribution(
+      id: newId(),
+      goalId: goalId,
+      amount: amount,
+      accountId: toAccountId,
+      type: 'withdrawal',
+      date: DateTime.now(),
+      note: note,
+    );
+
+    await DBHelper.insertSavingsContribution(withdrawal);
+    await _updateAccountBalance(toAccountId, accountAmount);
+    
+    var updatedGoal = goal.copyWith(currentAmount: goal.currentAmount - amount);
+    
+    if (updatedGoal.isCompleted && updatedGoal.currentAmount < updatedGoal.targetAmount) {
+      updatedGoal = updatedGoal.copyWith(isCompleted: false, clearCompletedAt: true);
+    }
+    
+    await DBHelper.updateSavingsGoal(updatedGoal);
+    savingsGoals = await DBHelper.getSavingsGoals();
+    savingsContributions = await DBHelper.getAllSavingsContributions();
+    accounts = await DBHelper.getAccounts();
+    notifyListeners();
+  }
 
   // ── Export ────────────────────────────────────────────────────────────
   Future<String?> exportTransactionsExcel({
@@ -902,11 +1099,14 @@ class AppProvider extends ChangeNotifier {
 
   Future<int> restoreBackup() async {
     final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['json'],
+      type: FileType.any,
       withData: true,
     );
     if (result == null || result.files.isEmpty) return 0;
+    final ext = result.files.first.extension?.toLowerCase();
+    if (ext != 'json') {
+      throw const FormatException('Please select a .json file.');
+    }
 
     final bytes = result.files.first.bytes;
     String jsonStr;
@@ -953,5 +1153,188 @@ class AppProvider extends ChangeNotifier {
         personNameOf: (id) => personById(id)?.name ?? '');
 
     return (data['_originalVersion'] as int?) ?? (data['version'] as int?) ?? 1;
+  }
+
+  // ── External Backups ──────────────────────────────────────────────────
+  Future<bool> restoreExternalBackup(String source) async {
+    final result = await FilePicker.platform.pickFiles(
+      type: source == 'greenstash' ? FileType.custom : FileType.any,
+      allowedExtensions: source == 'greenstash' ? ['json'] : null,
+    );
+    if (result == null || result.files.isEmpty) return false;
+
+    final ext = result.files.first.extension?.toLowerCase();
+    if (source == 'greenstash' && ext != 'json') {
+      throw const FormatException('Please select a .json file.');
+    }
+
+    final bytes = result.files.first.bytes;
+    if (bytes == null && result.files.first.path == null) return false;
+
+    String contentStr = bytes != null 
+        ? utf8.decode(bytes) 
+        : await File(result.files.first.path!).readAsString();
+
+    if (source == 'greenstash') {
+      await _restoreGreenStash(contentStr);
+    }
+    return true;
+  }
+
+
+  Future<void> _restoreGreenStash(String jsonStr) async {
+    final decoded = jsonDecode(jsonStr);
+    if (decoded is! Map || decoded['data'] is! List) {
+      throw const FormatException('Invalid GreenStash format.');
+    }
+
+    for (var item in decoded['data']) {
+      final goal = item['goal'];
+      if (goal == null) continue;
+
+      final sg = SavingsGoal(
+        id: newId(),
+        name: goal['title'] ?? 'GreenStash Goal',
+        targetAmount: (goal['targetAmount'] ?? 0).toDouble(),
+        currency: settings.currency,
+        colorValue: 0xFF386A1F, // Greenish
+        targetDate: goal['deadline'] != null && goal['deadline'] > 0
+            ? DateTime.fromMillisecondsSinceEpoch(goal['deadline'])
+            : null,
+      );
+      await addSavingsGoal(sg);
+
+      double currentAmount = 0.0;
+      if (item['transactions'] is List) {
+        for (var tx in item['transactions']) {
+          bool isDeposit = true;
+          if (tx['type'] == 1 || tx['type'] == 'withdrawal' || tx['type'] == 'Withdraw' || tx['isDeposit'] == false) {
+             isDeposit = false;
+          }
+          double amt = (tx['amount'] ?? 0).toDouble().abs();
+          
+          await DBHelper.insertSavingsContribution(SavingsContribution(
+            id: newId(),
+            goalId: sg.id,
+            amount: amt,
+            accountId: '', 
+            type: isDeposit ? 'contribution' : 'withdrawal',
+            date: DateTime.fromMillisecondsSinceEpoch(tx['timeStamp'] ?? DateTime.now().millisecondsSinceEpoch),
+            note: tx['notes'] ?? '',
+          ));
+          if (isDeposit) currentAmount += amt;
+          else currentAmount -= amt;
+        }
+      }
+      sg.currentAmount = currentAmount;
+      await DBHelper.updateSavingsGoal(sg);
+    }
+    await load();
+  }
+
+  Future<void> _restoreSay(String csvContent) async {
+    final lines = csvContent.split('\n');
+    // Say CSVs typically have a summary in the first ~9 lines, followed by empty line, then headers at line 10.
+    // We'll just look for the header row 'Date,Description,Amount,Currency,Account,Category,Type,Hint'
+    // or just assume data rows start after a certain point.
+    // A safer way is to find the header row, then parse the following rows.
+    int startIndex = -1;
+    for (int i = 0; i < lines.length; i++) {
+      if (lines[i].toLowerCase().startsWith('date,description,amount')) {
+        startIndex = i + 1;
+        break;
+      }
+    }
+    if (startIndex == -1) {
+      throw const FormatException('Invalid Say CSV format: Header row not found.');
+    }
+
+    for (int i = startIndex; i < lines.length; i++) {
+      final line = lines[i].trim();
+      if (line.isEmpty) continue;
+
+      try {
+        // Simple CSV splitting (Say doesn't typically escape commas in its basic export, but this might break if descriptions have commas)
+        // A more robust regex to handle quoted commas could be used, but for now simple split by comma.
+        // Actually, we can just use a simple regex for CSV parsing if needed, but a basic split is often sufficient if fields are simple.
+        // Let's use a regex that handles basic quoted fields just in case.
+        List<String> row = [];
+        final regex = RegExp(r',(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)');
+        final parts = line.split(regex);
+        for (var p in parts) {
+          if (p.startsWith('"') && p.endsWith('"') && p.length >= 2) {
+            row.add(p.substring(1, p.length - 1).replaceAll('""', '"'));
+          } else {
+            row.add(p);
+          }
+        }
+
+        if (row.length < 7) continue;
+
+        final dateStr = row[0];
+        final desc = row[1];
+        final amountStr = row[2];
+        final currencyStr = row[3];
+        final accountName = row[4];
+        final categoryName = row[5];
+        final typeStr = row[6]; // Expense, Income, Adjustment
+        final hint = row.length > 7 ? row[7] : '';
+
+        final date = DateTime.tryParse(dateStr) ?? DateTime.now();
+        final amount = double.tryParse(amountStr) ?? 0.0;
+        
+        if (amount == 0 && typeStr != 'Adjustment') continue;
+
+        // Find or create account
+        var acc = accounts.firstWhere(
+          (a) => a.name.toLowerCase() == accountName.toLowerCase(),
+          orElse: () {
+            final newAcc = Account(
+              id: newId(), name: accountName, type: 'bank',
+              currency: currencyStr, balance: 0, colorValue: 0xFF6750A4,
+            );
+            DBHelper.insertAccount(newAcc);
+            accounts.add(newAcc);
+            return newAcc;
+          }
+        );
+
+        // Find or create category
+        final isIncome = typeStr == 'Income' || typeStr == 'Adjustment';
+        final catType = isIncome ? 'income' : 'expense';
+        final catNameToUse = typeStr == 'Adjustment' && categoryName.isEmpty ? 'Balance Adjustment' : categoryName;
+        var cat = categories.firstWhere(
+          (c) => c.name.toLowerCase() == catNameToUse.toLowerCase() && c.type == catType,
+          orElse: () {
+            final newCat = AppCategory(
+              id: newId(), name: catNameToUse, type: catType, colorValue: 0xFF9C27B0,
+            );
+            DBHelper.insertCategory(newCat);
+            categories.add(newCat);
+            return newCat;
+          }
+        );
+
+        // Create transaction
+        final tx = AppTransaction(
+          id: newId(),
+          type: catType,
+          amount: amount,
+          description: typeStr == 'Adjustment' && desc.isEmpty ? 'Initial Balance' : desc,
+          accountId: acc.id,
+          categoryId: cat.id,
+          date: date,
+          note: hint,
+          currency: currencyStr,
+        );
+
+        await addTransaction(tx);
+
+      } catch (e) {
+        // Skip malformed rows
+        continue;
+      }
+    }
+    await load();
   }
 }

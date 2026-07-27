@@ -2857,6 +2857,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose Language'**
   String get onboarding_chooseLanguage;
+
+  /// No description provided for @error_required.
+  ///
+  /// In en, this message translates to:
+  /// **'This field is required'**
+  String get error_required;
+
+  /// No description provided for @recurring_subscriptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscriptions ({count})'**
+  String recurring_subscriptions(Object count);
+
+  /// No description provided for @recurring_installments.
+  ///
+  /// In en, this message translates to:
+  /// **'Installments ({count})'**
+  String recurring_installments(Object count);
+
+  /// No description provided for @recurring_recurringType.
+  ///
+  /// In en, this message translates to:
+  /// **'Recurring Type'**
+  String get recurring_recurringType;
+
+  /// No description provided for @recurring_subscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription'**
+  String get recurring_subscription;
+
+  /// No description provided for @recurring_installment.
+  ///
+  /// In en, this message translates to:
+  /// **'Installment'**
+  String get recurring_installment;
+
+  /// No description provided for @recurring_installmentsRequireEndDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Installments must have a final payment date.'**
+  String get recurring_installmentsRequireEndDate;
+
+  /// No description provided for @backup_importFromOtherApps.
+  ///
+  /// In en, this message translates to:
+  /// **'Import from Other Apps'**
+  String get backup_importFromOtherApps;
+
+  /// No description provided for @backup_importDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Import data from supported apps'**
+  String get backup_importDescription;
+
+  /// No description provided for @backup_importFromGreenStash.
+  ///
+  /// In en, this message translates to:
+  /// **'Import from GreenStash (.json)'**
+  String get backup_importFromGreenStash;
 }
 
 class _AppLocalizationsDelegate

@@ -3,6 +3,7 @@
 
     <!-- Internet access for fetching daily exchange rates -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <!-- Notification permissions -->
@@ -94,6 +95,19 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/quick_add_widget_info" />
+        </receiver>
+
+        <!-- New Nothing Style Add Transaction Widget -->
+        <receiver
+            android:name=".AddTransactionWidgetProvider"
+            android:exported="false"
+            android:label="Quick Add - Nothing Style">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_add_transaction_info" />
         </receiver>
 
         <!-- FileProvider for share_plus -->

@@ -137,16 +137,27 @@ ThemeData buildTheme({
 
 ThemeData _base(ColorScheme cs, String appFont) {
   final baseTextTheme = ThemeData(brightness: cs.brightness).textTheme;
+  final fontTextTheme = _applyFont(appFont, baseTextTheme);
+  
   return ThemeData(
   colorScheme: cs,
   useMaterial3: true,
-  textTheme: _applyFont(appFont, baseTextTheme),
-  // Fast page transitions: subtle upward slide + fade in 140 ms.
+  textTheme: fontTextTheme,
+  // Android 15+ predictive back gesture support with smooth transitions.
   pageTransitionsTheme: const PageTransitionsTheme(builders: {
-    TargetPlatform.android: _FadeUpTransitionBuilder(),
+    TargetPlatform.android: CupertinoPageTransitionsBuilder(),
     TargetPlatform.iOS:     CupertinoPageTransitionsBuilder(),
   }),
   appBarTheme: const AppBarTheme(centerTitle: false, elevation: 0),
+  navigationBarTheme: NavigationBarThemeData(
+    labelTextStyle: WidgetStateProperty.resolveWith((states) {
+      final style = fontTextTheme.labelMedium ?? const TextStyle();
+      if (states.contains(WidgetState.selected)) {
+        return style.copyWith(fontSize: (style.fontSize ?? 12) - 1, fontWeight: FontWeight.bold);
+      }
+      return style.copyWith(fontSize: (style.fontSize ?? 12) - 1);
+    }),
+  ),
   cardTheme: CardThemeData(
     elevation: 0,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -158,54 +169,47 @@ ThemeData _base(ColorScheme cs, String appFont) {
     focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: cs.primary, width: 2)),
   ),
-);}
-
-
-/// A page transition that slides up 8 px + fades in over 220 ms (push)
-/// or fades out over 160 ms (pop). Uses [ExpensyRoute] for real duration control.
-class _FadeUpTransitionBuilder extends PageTransitionsBuilder {
-  const _FadeUpTransitionBuilder();
-
-  @override
-  Widget buildTransitions<T>(
-    PageRoute<T> route,
-    BuildContext context,
-    Animation<double> animation,
-    Animation<double> secondaryAnimation,
-    Widget child,
-  ) {
-    // Forward (push): easeOutCubic slide-up + fade.
-    // Reverse (pop):  easeIn — accelerates out, feels instant.
-    final curved = CurvedAnimation(
-      parent: animation,
-      curve:        Curves.easeOutCubic,
-      reverseCurve: Curves.easeIn,
-    );
-    return FadeTransition(
-      opacity: curved,
-      child: SlideTransition(
-        position: Tween<Offset>(
-          begin: const Offset(0, 0.03),
-          end: Offset.zero,
-        ).animate(curved),
-        child: child,
-      ),
-    );
-  }
+);
 }
 
-/// Drop-in replacement for [MaterialPageRoute] with shorter transition durations.
-/// Push: 220 ms  |  Pop: 160 ms
-/// Import [app_theme.dart] and use instead of MaterialPageRoute everywhere.
+
+/// Drop-in replacement for [MaterialPageRoute] that inherits default
+/// system-aware transition durations (300ms) which respect the device's
+/// Animator Duration Scale setting.
 class ExpensyRoute<T> extends MaterialPageRoute<T> {
   ExpensyRoute({required super.builder, super.settings});
-
-  @override
-  Duration get transitionDuration => const Duration(milliseconds: 220);
-
-  @override
-  Duration get reverseTransitionDuration => const Duration(milliseconds: 160);
 }
+
+/// Slide-up + fade route specifically for add/edit forms.
+/// Keeps the familiar bottom-to-top animation for full-screen forms.
+/// Uses default system-aware durations (300ms) that respect the device's
+/// Animator Duration Scale setting.
+class ExpensySlideUpRoute<T> extends PageRouteBuilder<T> {
+  ExpensySlideUpRoute({required WidgetBuilder builder, super.settings})
+      : super(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              builder(context),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            final curved = CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOutCubic,
+              reverseCurve: Curves.easeInCubic,
+            );
+            return FadeTransition(
+              opacity: curved,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.06),
+                  end: Offset.zero,
+                ).animate(curved),
+                child: child,
+              ),
+            );
+          },
+        );
+}
+
+
 
 // ── Currency ─────────────────────────────────────────────────────────────────
 class CurrencyInfo {

@@ -565,5 +565,24 @@
   "main_accounts": "Accounts",
   "main_budgets": "Budgets",
   "main_more": "More",
-  "onboarding_chooseLanguage": "Choose Language"
-}
+  "onboarding_chooseLanguage": "Choose Language",
+  "error_required": "This field is required",
+  "recurring_subscriptions": "Subscriptions ({count})",
+  "@recurring_subscriptions": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "recurring_installments": "Installments ({count})",
+  "@recurring_installments": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "recurring_recurringType": "Recurring Type",
+  "recurring_subscription": "Subscription",
+  "recurring_installment": "Installment",
+  "recurring_installmentsRequireEndDate": "Installments must have a final payment date.",
+  "backup_importFromOtherApps": "Import from Other Apps",
+  "backup_importDescription": "Import data from supported apps",
+  "backup_importFromGreenStash": "Import from GreenStash (.json)"}

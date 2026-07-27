@@ -439,5 +439,24 @@
   "main_accounts": "खाते",
   "main_budgets": "बजट",
   "main_more": "अधिक",
-  "onboarding_chooseLanguage": "भाषा चुनें"
-}
+  "onboarding_chooseLanguage": "भाषा चुनें",
+  "error_required": "यह फ़ील्ड आवश्यक है",
+  "recurring_subscriptions": "सदस्यता ({count})",
+  "@recurring_subscriptions": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "recurring_installments": "किस्तें ({count})",
+  "@recurring_installments": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "recurring_recurringType": "आवर्ती प्रकार",
+  "recurring_subscription": "सदस्यता",
+  "recurring_installment": "किस्त",
+  "recurring_installmentsRequireEndDate": "किस्तों की अंतिम भुगतान तिथि होनी चाहिए।",
+  "backup_importFromOtherApps": "अन्य ऐप्स से आयात करें",
+  "backup_importDescription": "समर्थित ऐप्स से डेटा आयात करें",
+  "backup_importFromGreenStash": "GreenStash से आयात करें (.json)"}

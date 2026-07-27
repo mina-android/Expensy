@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../models/models.dart';
 import '../widgets/shared_widgets.dart';
+import '../utils/haptics.dart';
 
 class CategoriesScreen extends StatelessWidget {
   const CategoriesScreen({super.key});
@@ -34,7 +35,7 @@ class CategoriesScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         heroTag: null,
-        onPressed: () => _openSheet(context),
+        onPressed: () { AppHaptics.tap(context, HapticStrength.light); _openSheet(context); },
         child: const Icon(Icons.add),
       ),
     );
@@ -122,7 +123,9 @@ class _CategorySheetState extends State<_CategorySheet> {
   // Stores a 1-based index into kCategoryIconOptions.
   // 0 = auto (name-based heuristic). Never store a raw IconData.codePoint here
   // because reconstructing IconData at runtime breaks release tree-shaking.
-  int    _iconIndex    = 0;
+  int _iconIndex = 1;
+  bool _submitted = false;
+
   bool get isEdit => widget.existing != null;
 
   @override
@@ -150,6 +153,7 @@ class _CategorySheetState extends State<_CategorySheet> {
   }
 
   Future<void> _submit() async {
+    setState(() => _submitted = true);
     if (_nameCtrl.text.trim().isEmpty) return;
     final app = context.read<AppProvider>();
     if (isEdit) {
@@ -217,7 +221,9 @@ class _CategorySheetState extends State<_CategorySheet> {
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
                 labelText: l10n.categories_categoryName,
-                prefixIcon: const Icon(Icons.label_outline_rounded)),
+                prefixIcon: const Icon(Icons.label_outline_rounded),
+                errorText: _submitted && _nameCtrl.text.trim().isEmpty ? l10n.error_required : null,
+            ),
           ),
           const SizedBox(height: 14),
 
@@ -370,7 +376,7 @@ class _CategorySheetState extends State<_CategorySheet> {
 
           const SizedBox(height: 20),
           FilledButton(
-            onPressed: _submit,
+            onPressed: () { AppHaptics.tap(context, HapticStrength.light); _submit(); },
             style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(50),
                 shape: RoundedRectangleBorder(

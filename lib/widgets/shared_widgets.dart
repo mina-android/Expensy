@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../models/models.dart';
 import '../theme/app_theme.dart';
+import '../utils/haptics.dart';
 
 // ── Empty state ───────────────────────────────────────────────────────────────
 class EmptyState extends StatelessWidget {
@@ -140,6 +141,7 @@ class LinearProgressCard extends StatelessWidget {
 
 // ── Delete confirm ────────────────────────────────────────────────────────────
 Future<bool> showDeleteConfirm(BuildContext context, String name) async {
+  AppHaptics.tap(context, HapticStrength.medium);
   final l10n = AppLocalizations.of(context)!;
   final ok = await showDialog<bool>(
     context: context,
@@ -410,7 +412,7 @@ Future<String?> showCurrencyPicker(BuildContext context,
           width: double.maxFinite,
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             TextField(
-              controller: ctrl, autofocus: true,
+              controller: ctrl, autofocus: false,
               decoration: InputDecoration(
                   hintText: l10n.shared_widgets_searchByCode,
                   prefixIcon: Icon(Icons.search), isDense: true),

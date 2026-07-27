@@ -7,6 +7,7 @@ import 'recurring_screen.dart';
 import 'accounts_screen.dart';
 import 'budget_screen.dart';
 import 'more_screen.dart';
+import '../utils/haptics.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -36,11 +37,14 @@ class _MainShellState extends State<MainShell> {
         setState(() => _index = 0);
       },
       child: Scaffold(
-        body: IndexedStack(index: _index, children: _screens),
+        body: FadeIndexedStack(index: _index, children: _screens),
         bottomNavigationBar: NavigationBar(
           selectedIndex: _index,
           animationDuration: const Duration(milliseconds: 120),
-          onDestinationSelected: (i) => setState(() => _index = i),
+          onDestinationSelected: (i) {
+            AppHaptics.tap(context, HapticStrength.selection);
+            setState(() => _index = i);
+          },
           destinations: [
             NavigationDestination(
                 icon: const Icon(Icons.home_outlined),
@@ -69,6 +73,25 @@ class _MainShellState extends State<MainShell> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class FadeIndexedStack extends StatelessWidget {
+  final int index;
+  final List<Widget> children;
+
+  const FadeIndexedStack({
+    super.key,
+    required this.index,
+    required this.children,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return IndexedStack(
+      index: index,
+      children: children,
     );
   }
 }

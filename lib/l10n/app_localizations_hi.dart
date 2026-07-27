@@ -1563,4 +1563,39 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get onboarding_chooseLanguage => 'भाषा चुनें';
+
+  @override
+  String get error_required => 'यह फ़ील्ड आवश्यक है';
+
+  @override
+  String recurring_subscriptions(Object count) {
+    return 'सदस्यता ($count)';
+  }
+
+  @override
+  String recurring_installments(Object count) {
+    return 'किस्तें ($count)';
+  }
+
+  @override
+  String get recurring_recurringType => 'आवर्ती प्रकार';
+
+  @override
+  String get recurring_subscription => 'सदस्यता';
+
+  @override
+  String get recurring_installment => 'किस्त';
+
+  @override
+  String get recurring_installmentsRequireEndDate =>
+      'किस्तों की अंतिम भुगतान तिथि होनी चाहिए।';
+
+  @override
+  String get backup_importFromOtherApps => 'अन्य ऐप्स से आयात करें';
+
+  @override
+  String get backup_importDescription => 'समर्थित ऐप्स से डेटा आयात करें';
+
+  @override
+  String get backup_importFromGreenStash => 'GreenStash से आयात करें (.json)';
 }

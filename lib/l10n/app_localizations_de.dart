@@ -1564,4 +1564,41 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get onboarding_chooseLanguage => 'Sprache wählen';
+
+  @override
+  String get error_required => 'Dieses Feld ist erforderlich';
+
+  @override
+  String recurring_subscriptions(Object count) {
+    return 'Abonnements ($count)';
+  }
+
+  @override
+  String recurring_installments(Object count) {
+    return 'Ratenzahlungen ($count)';
+  }
+
+  @override
+  String get recurring_recurringType => 'Wiederholungsart';
+
+  @override
+  String get recurring_subscription => 'Abonnement';
+
+  @override
+  String get recurring_installment => 'Ratenzahlung';
+
+  @override
+  String get recurring_installmentsRequireEndDate =>
+      'Ratenzahlungen müssen ein endgültiges Zahlungsdatum haben.';
+
+  @override
+  String get backup_importFromOtherApps => 'Aus anderen Apps importieren';
+
+  @override
+  String get backup_importDescription =>
+      'Daten aus unterstützten Apps importieren';
+
+  @override
+  String get backup_importFromGreenStash =>
+      'Aus GreenStash importieren (.json)';
 }

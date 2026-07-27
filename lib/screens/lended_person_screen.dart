@@ -9,6 +9,7 @@ import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
 import '../services/lended_notification_service.dart';
 import 'lended_screen.dart' show kLendedPersonColors;
+import '../utils/haptics.dart';
 
 /// Detail page for a single [LendedPerson] — shows their net balance and
 /// their full ledger of [LendedMoney] entries (add/edit/settle/delete),
@@ -125,7 +126,7 @@ class LendedPersonScreen extends StatelessWidget {
       ]),
       floatingActionButton: FloatingActionButton(
         heroTag: null,
-        onPressed: () => _openEntrySheet(context, current),
+        onPressed: () { AppHaptics.tap(context, HapticStrength.light); _openEntrySheet(context, current); },
         child: const Icon(Icons.add),
       ),
     );
@@ -172,6 +173,7 @@ class _EditPersonInlineSheetState extends State<_EditPersonInlineSheet> {
   late final _nameCtrl  = TextEditingController(text: widget.person.name);
   late final _notesCtrl = TextEditingController(text: widget.person.notes);
   late int _color = widget.person.colorValue;
+  bool _submitted = false;
 
   @override
   void dispose() {
@@ -180,6 +182,7 @@ class _EditPersonInlineSheetState extends State<_EditPersonInlineSheet> {
   }
 
   Future<void> _submit() async {
+    setState(() => _submitted = true);
     final name = _nameCtrl.text.trim();
     if (name.isEmpty) return;
     final app = context.read<AppProvider>();
@@ -204,10 +207,14 @@ class _EditPersonInlineSheetState extends State<_EditPersonInlineSheet> {
           Text(l10n.lended_person_editPerson, style: Theme.of(context).textTheme.titleLarge
               ?.copyWith(fontWeight: FontWeight.w800)),
           const SizedBox(height: 12),
-          TextField(controller: _nameCtrl,
+          TextField(
+              controller: _nameCtrl,
               decoration: InputDecoration(
                   labelText: l10n.lended_person_name,
-                  prefixIcon: const Icon(Icons.person_outline_rounded))),
+                  prefixIcon: const Icon(Icons.person_outline_rounded),
+                  errorText: _submitted && _nameCtrl.text.trim().isEmpty ? l10n.error_required : null,
+              ),
+          ),
           const SizedBox(height: 14),
           Text(l10n.lended_person_colour, style: Theme.of(context).textTheme.labelMedium
               ?.copyWith(letterSpacing: 1)),
@@ -238,7 +245,7 @@ class _EditPersonInlineSheetState extends State<_EditPersonInlineSheet> {
                   prefixIcon: const Icon(Icons.sticky_note_2_outlined))),
           const SizedBox(height: 20),
           FilledButton(
-            onPressed: _submit,
+            onPressed: () { AppHaptics.tap(context, HapticStrength.light); _submit(); },
             style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(50),
                 shape: RoundedRectangleBorder(
@@ -403,6 +410,8 @@ class _EntrySheetState extends State<_EntrySheet> {
   bool      _reminderEnabled  = false;
   TimeOfDay _reminderTime     = const TimeOfDay(hour: 9, minute: 0);
 
+  bool _submitted = false;
+
   bool get isEdit => widget.existing != null;
 
   String get _reminderTimeStr =>
@@ -497,6 +506,7 @@ class _EntrySheetState extends State<_EntrySheet> {
   }
 
   Future<void> _submit() async {
+    setState(() => _submitted = true);
     final amount = double.tryParse(_amtCtrl.text);
     if (amount == null || amount <= 0) return;
     final app = context.read<AppProvider>();
@@ -592,12 +602,16 @@ class _EntrySheetState extends State<_EntrySheet> {
           ]),
           const SizedBox(height: 12),
 
-          TextField(controller: _amtCtrl,
+          TextField(
+              controller: _amtCtrl,
               autofocus: !isEdit,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
               decoration: InputDecoration(
-                  labelText: l10n.lended_person_amount, prefixText: '$sym ')),
+                  labelText: l10n.lended_person_amount,
+                  prefixText: '$sym ',
+                  errorText: _submitted && (double.tryParse(_amtCtrl.text) ?? 0) <= 0 ? l10n.error_required : null,
+              ),
+          ),
           const SizedBox(height: 14),
 
           Text(l10n.lended_person_accountOptional,
@@ -713,7 +727,7 @@ class _EntrySheetState extends State<_EntrySheet> {
                   prefixIcon: const Icon(Icons.sticky_note_2_outlined))),
           const SizedBox(height: 20),
           FilledButton(
-            onPressed: _submit,
+            onPressed: () { AppHaptics.tap(context, HapticStrength.light); _submit(); },
             style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(50),
                 shape: RoundedRectangleBorder(

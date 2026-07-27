@@ -6,6 +6,7 @@ import '../providers/app_provider.dart';
 import '../models/models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
+import '../utils/haptics.dart';
 
 class AssetsScreen extends StatelessWidget {
   const AssetsScreen({super.key});
@@ -68,7 +69,7 @@ class AssetsScreen extends StatelessWidget {
       ]),
       floatingActionButton: FloatingActionButton(
         heroTag: null,
-        onPressed: () => _openSheet(context),
+        onPressed: () { AppHaptics.tap(context, HapticStrength.light); _openSheet(context); },
         child: const Icon(Icons.add),
       ),
     );
@@ -209,6 +210,7 @@ class _AssetSheetState extends State<_AssetSheet> {
   final _valueCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
   String _currency = 'EGP';
+  bool _submitted  = false;
 
   bool get isEdit => widget.existing != null;
 
@@ -235,6 +237,7 @@ class _AssetSheetState extends State<_AssetSheet> {
   }
 
   Future<void> _submit() async {
+    setState(() => _submitted = true);
     if (_nameCtrl.text.trim().isEmpty) return;
     final value = double.tryParse(_valueCtrl.text);
     if (value == null || value < 0) return;
@@ -284,12 +287,16 @@ class _AssetSheetState extends State<_AssetSheet> {
               decoration: InputDecoration(
                 labelText: l10n.assets_productAssetName,
                 prefixIcon: const Icon(Icons.inventory_2_outlined),
+                errorText: _submitted && _nameCtrl.text.trim().isEmpty ? l10n.error_required : null,
               ),
+              onChanged: (_) {
+                if (_submitted) setState(() {});
+              },
             ),
             const SizedBox(height: 12),
 
             // Value + currency on same row
-            Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Expanded(
                 flex: 3,
                 child: TextField(
@@ -299,9 +306,14 @@ class _AssetSheetState extends State<_AssetSheet> {
                   decoration: InputDecoration(
                     labelText: l10n.assets_value,
                     prefixText: '$sym ',
+                    errorText: _submitted && (double.tryParse(_valueCtrl.text) == null || double.parse(_valueCtrl.text) < 0) ? l10n.error_required : null,
+                    helperText: _submitted && (double.tryParse(_valueCtrl.text) == null || double.parse(_valueCtrl.text) < 0) ? null : ' ',
                   ),
                   style: const TextStyle(
                       fontSize: 18, fontWeight: FontWeight.w700),
+                  onChanged: (_) {
+                    if (_submitted) setState(() {});
+                  },
                 ),
               ),
               const SizedBox(width: 10),
@@ -315,8 +327,8 @@ class _AssetSheetState extends State<_AssetSheet> {
                     if (picked != null) setState(() => _currency = picked);
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 14),
+                    height: 56,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
                       border: Border.all(
                           color: Theme.of(context)
@@ -329,11 +341,11 @@ class _AssetSheetState extends State<_AssetSheet> {
                       Expanded(child: Text(_currency,
                           style: const TextStyle(fontWeight: FontWeight.w700,
                               fontSize: 15))),
-                      const Icon(Icons.arrow_drop_down, size: 20),
-                    ]),
+                        const Icon(Icons.arrow_drop_down, size: 20),
+                      ]),
+                    ),
                   ),
                 ),
-              ),
             ]),
             const SizedBox(height: 12),
 
@@ -349,7 +361,7 @@ class _AssetSheetState extends State<_AssetSheet> {
             const SizedBox(height: 24),
 
             FilledButton(
-              onPressed: _submit,
+              onPressed: () { AppHaptics.tap(context, HapticStrength.light); _submit(); },
               style: FilledButton.styleFrom(
                   minimumSize: const Size.fromHeight(50),
                   shape: RoundedRectangleBorder(

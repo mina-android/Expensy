@@ -165,6 +165,7 @@ class RecurringPayment {
   /// at the same [reminderTime]. Only meaningful when [reminderEnabled] is true.
   bool   earlyReminderEnabled;
   String notes;
+  String recurringType; // 'subscription' | 'installment'
 
   RecurringPayment({
     required this.id, required this.name,
@@ -177,6 +178,7 @@ class RecurringPayment {
     this.reminderTime = '09:00',
     this.earlyReminderEnabled = false,
     this.notes = '',
+    this.recurringType = 'subscription',
   });
 
   // Inclusive count: first → last
@@ -256,6 +258,7 @@ class RecurringPayment {
     'reminder_time': reminderTime,
     'early_reminder_enabled': earlyReminderEnabled ? 1 : 0,
     'notes': notes,
+    'recurring_type': recurringType,
   };
 
   static RecurringPayment fromMap(Map<String, dynamic> m) => RecurringPayment(
@@ -275,6 +278,7 @@ class RecurringPayment {
     reminderTime: (m['reminder_time'] as String?) ?? '09:00',
     earlyReminderEnabled: (m['early_reminder_enabled'] as int? ?? 0) == 1,
     notes: (m['notes'] as String?) ?? '',
+    recurringType: (m['recurring_type'] as String?) ?? 'subscription',
   );
 }
 
@@ -549,4 +553,124 @@ class RecurringHistoryEntry {
         amount: (m['amount'] as num).toDouble(),
         currency: m['currency'] as String,
       );
+}
+
+// ── Savings Goal ──────────────────────────────────────────────────────────────
+class SavingsGoal {
+  final String id;
+  String name;
+  double targetAmount;
+  double currentAmount;
+  String currency;
+  DateTime? targetDate;
+  int colorValue;
+  bool isCompleted;
+  DateTime createdAt;
+  DateTime? completedAt;
+
+  SavingsGoal({
+    required this.id,
+    required this.name,
+    required this.targetAmount,
+    this.currentAmount = 0.0,
+    required this.currency,
+    this.targetDate,
+    required this.colorValue,
+    this.isCompleted = false,
+    DateTime? createdAt,
+    this.completedAt,
+  }) : createdAt = createdAt ?? DateTime.now();
+
+  Map<String, dynamic> toMap() => {
+    'id': id, 'name': name, 'target_amount': targetAmount,
+    'current_amount': currentAmount, 'currency': currency,
+    'target_date': targetDate?.toIso8601String(),
+    'color_value': colorValue,
+    'is_completed': isCompleted ? 1 : 0,
+    'created_at': createdAt.toIso8601String(),
+    'completed_at': completedAt?.toIso8601String(),
+  };
+
+  static SavingsGoal fromMap(Map<String, dynamic> m) => SavingsGoal(
+    id: m['id'] as String,
+    name: m['name'] as String,
+    targetAmount: (m['target_amount'] as num).toDouble(),
+    currentAmount: (m['current_amount'] as num).toDouble(),
+    currency: m['currency'] as String,
+    targetDate: m['target_date'] != null
+        ? DateTime.parse(m['target_date'] as String) : null,
+    colorValue: m['color_value'] as int,
+    isCompleted: (m['is_completed'] as int? ?? 0) == 1,
+    createdAt: DateTime.parse(m['created_at'] as String),
+    completedAt: m['completed_at'] != null
+        ? DateTime.parse(m['completed_at'] as String) : null,
+  );
+
+  SavingsGoal copyWith({
+    String? name, double? targetAmount, double? currentAmount,
+    String? currency, DateTime? targetDate, int? colorValue,
+    bool? isCompleted, DateTime? completedAt,
+    bool clearTargetDate = false, bool clearCompletedAt = false,
+  }) => SavingsGoal(
+    id: id,
+    name: name ?? this.name,
+    targetAmount: targetAmount ?? this.targetAmount,
+    currentAmount: currentAmount ?? this.currentAmount,
+    currency: currency ?? this.currency,
+    targetDate: clearTargetDate ? null : (targetDate ?? this.targetDate),
+    colorValue: colorValue ?? this.colorValue,
+    isCompleted: isCompleted ?? this.isCompleted,
+    createdAt: createdAt,
+    completedAt: clearCompletedAt ? null : (completedAt ?? this.completedAt),
+  );
+}
+
+// ── Savings Contribution ──────────────────────────────────────────────────────
+class SavingsContribution {
+  final String id;
+  String goalId;
+  double amount;
+  String accountId;
+  String type; // 'contribution' | 'withdrawal'
+  DateTime date;
+  String note;
+
+  SavingsContribution({
+    required this.id,
+    required this.goalId,
+    required this.amount,
+    required this.accountId,
+    required this.type,
+    required this.date,
+    this.note = '',
+  });
+
+  Map<String, dynamic> toMap() => {
+    'id': id, 'goal_id': goalId, 'amount': amount,
+    'account_id': accountId, 'type': type,
+    'date': date.toIso8601String(), 'note': note,
+  };
+
+  static SavingsContribution fromMap(Map<String, dynamic> m) => SavingsContribution(
+    id: m['id'] as String,
+    goalId: m['goal_id'] as String,
+    amount: (m['amount'] as num).toDouble(),
+    accountId: m['account_id'] as String,
+    type: m['type'] as String,
+    date: DateTime.parse(m['date'] as String),
+    note: (m['note'] as String?) ?? '',
+  );
+
+  SavingsContribution copyWith({
+    String? goalId, double? amount, String? accountId,
+    String? type, DateTime? date, String? note,
+  }) => SavingsContribution(
+    id: id,
+    goalId: goalId ?? this.goalId,
+    amount: amount ?? this.amount,
+    accountId: accountId ?? this.accountId,
+    type: type ?? this.type,
+    date: date ?? this.date,
+    note: note ?? this.note,
+  );
 }

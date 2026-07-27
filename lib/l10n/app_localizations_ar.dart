@@ -1552,4 +1552,40 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get onboarding_chooseLanguage => 'اختر اللغة';
+
+  @override
+  String get error_required => 'هذا الحقل مطلوب';
+
+  @override
+  String recurring_subscriptions(Object count) {
+    return 'الاشتراكات ($count)';
+  }
+
+  @override
+  String recurring_installments(Object count) {
+    return 'الأقساط ($count)';
+  }
+
+  @override
+  String get recurring_recurringType => 'نوع التكرار';
+
+  @override
+  String get recurring_subscription => 'اشتراك';
+
+  @override
+  String get recurring_installment => 'قسط';
+
+  @override
+  String get recurring_installmentsRequireEndDate =>
+      'يجب أن تحتوي الأقساط على تاريخ دفع نهائي.';
+
+  @override
+  String get backup_importFromOtherApps => 'استيراد من تطبيقات أخرى';
+
+  @override
+  String get backup_importDescription =>
+      'استيراد البيانات من التطبيقات المدعومة';
+
+  @override
+  String get backup_importFromGreenStash => 'استيراد من GreenStash (.json)';
 }

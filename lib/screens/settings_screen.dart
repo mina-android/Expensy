@@ -6,6 +6,7 @@ import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
 import '../l10n/app_localizations.dart';
+import '../utils/haptics.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -64,6 +65,22 @@ class SettingsScreen extends StatelessWidget {
             ),
 
             // AMOLED toggle — hidden in light-only mode
+            const Divider(height: 1, indent: 16, endIndent: 16),
+            SwitchListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+              secondary: Icon(Icons.format_paint_outlined, color: cs.primary, size: 20),
+              title: Text('Dynamic Color',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+              subtitle: Text('Use system wallpaper colors',
+                  style: TextStyle(fontSize: 12,
+                      color: cs.onSurface.withValues(alpha: 0.55))),
+              value: s.dynamicColorEnabled,
+              onChanged: (v) {
+                AppHaptics.tap(context, HapticStrength.selection);
+                app.updateSetting('dynamicColorEnabled', v);
+              },
+            ),
+            
             if (s.themeMode != 'light') ...[
               const Divider(height: 1, indent: 16, endIndent: 16),
               SwitchListTile(
@@ -75,14 +92,18 @@ class SettingsScreen extends StatelessWidget {
                     style: TextStyle(fontSize: 12,
                         color: cs.onSurface.withValues(alpha: 0.55))),
                 value: s.amoledSurfaces,
-                onChanged: (v) => app.updateSetting('amoledSurfaces', v),
+                onChanged: (v) {
+                  AppHaptics.tap(context, HapticStrength.selection);
+                  app.updateSetting('amoledSurfaces', v);
+                },
               ),
             ],
 
-            const Divider(height: 1, indent: 16, endIndent: 16),
+            if (!s.dynamicColorEnabled) ...[
+              const Divider(height: 1, indent: 16, endIndent: 16),
 
-            // Accent colour
-            Padding(
+              // Accent colour
+              Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Row(children: [
@@ -119,6 +140,7 @@ class SettingsScreen extends StatelessWidget {
                     }).toList()),
               ]),
             ),
+            ],
           ])),
 
           // ── App Font ──────────────────────────────────────────────────
@@ -237,7 +259,65 @@ class SettingsScreen extends StatelessWidget {
                   style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
               subtitle: Text(l10n.settings_hideBalanceSubtitle),
               value: s.hideBalance,
-              onChanged: (v) => app.updateSetting('hideBalance', v),
+              onChanged: (v) {
+                AppHaptics.tap(context, HapticStrength.selection);
+                app.updateSetting('hideBalance', v);
+              },
+            ),
+            const Divider(height: 1, indent: 56),
+            SwitchListTile.adaptive(
+              secondary: Icon(Icons.notifications_active_outlined, color: cs.primary),
+              title: const Text('Budget Alerts',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+              subtitle: const Text('Notify when a budget or goal is reached'),
+              value: s.budgetAlertsEnabled,
+              onChanged: (v) {
+                AppHaptics.tap(context, HapticStrength.selection);
+                app.updateSetting('budgetAlertsEnabled', v);
+              },
+            ),
+            const Divider(height: 1, indent: 56),
+            SwitchListTile.adaptive(
+              secondary: Icon(Icons.access_time_rounded, color: cs.primary),
+              title: const Text('Daily Reminder',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+              subtitle: const Text('Remind to log transactions daily'),
+              value: s.dailyReminderEnabled,
+              onChanged: (v) {
+                AppHaptics.tap(context, HapticStrength.selection);
+                app.updateSetting('dailyReminderEnabled', v);
+              },
+            ),
+            if (s.dailyReminderEnabled) ...[
+              ListTile(
+                contentPadding: const EdgeInsets.only(left: 72, right: 16),
+                title: const Text('Reminder Time', style: TextStyle(fontSize: 14)),
+                trailing: Text(s.dailyReminderTime,
+                    style: TextStyle(color: cs.primary, fontWeight: FontWeight.bold)),
+                onTap: () async {
+                  final initial = TimeOfDay(
+                    hour: int.tryParse(s.dailyReminderTime.split(':')[0]) ?? 22,
+                    minute: int.tryParse(s.dailyReminderTime.split(':')[1]) ?? 0,
+                  );
+                  final picked = await showTimePicker(context: context, initialTime: initial);
+                  if (picked != null && context.mounted) {
+                    final timeStr = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+                    app.updateSetting('dailyReminderTime', timeStr);
+                  }
+                },
+              ),
+            ],
+            const Divider(height: 1, indent: 56),
+            SwitchListTile.adaptive(
+              secondary: Icon(Icons.vibration_rounded, color: cs.primary),
+              title: const Text('Haptic Feedback',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+              subtitle: const Text('Vibrate on interactions'),
+              value: s.hapticsEnabled,
+              onChanged: (v) {
+                AppHaptics.tap(context, HapticStrength.selection);
+                app.updateSetting('hapticsEnabled', v);
+              },
             ),
           ])),
 
@@ -266,7 +346,7 @@ class SettingsScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(color: cs.primaryContainer,
                     borderRadius: BorderRadius.circular(20)),
-                child: Text('v1.0.7', style: TextStyle(
+                child: Text('v1.0.8', style: TextStyle(
                     fontSize: 12, fontWeight: FontWeight.w700, color: cs.primary)),
               ),
             ),

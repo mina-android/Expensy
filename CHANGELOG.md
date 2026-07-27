@@ -4,6 +4,48 @@ All notable changes to Expensy are documented in this file.
 
 ---
 
+## [1.0.8] — 2026-07-26
+
+### Added
+- **Savings Goals** — Create and track savings goals alongside your budgets, with visual progress bars and goal completion alerts.
+- **Budget Alerts** — Receive instant push notifications the moment an expense pushes a category over its budgeted limit.
+- **Daily Reminders** — Added a 10:00 PM daily reminder to log transactions, which can be toggled via Settings.
+- **Haptic Feedback** — Implemented system haptic feedback for major navigation actions, button taps, and destructive confirmations.
+- **Contributions & Withdrawals** — Goal contributions and withdrawals are natively recorded and interleaved seamlessly into the main Transactions list.
+- **Auto Backup** — Keep your data secure automatically! You can now enable a daily background backup that runs at 2:00 AM and saves a full JSON backup directly to a folder of your choice on your device.
+- **Global Validation** — Implemented global validation across all app forms to ensure mandatory fields are filled before saving.
+- **Recurring Payment UI Improvements** — The Recurring Expenses tab has been split into 'Subscriptions' (ongoing) and 'Installments' (finite payments) for better categorization, featuring larger, more colorful toggle cards. The Add Recurring screen now also uses card selectors instead of a dropdown.
+- **Import from Other Apps** — Added a dedicated "Import from Other Apps" section in the Backup & Restore screen to easily pull in GreenStash backups.
+
+### Fixed
+- **GreenStash Balance & File Picker** — Fixed an issue where the file picker menu was shown twice, and GreenStash imports now correctly calculate the goal balance based on contributions and withdrawals.
+- **Auto Backup Path** — Fixed a bug where auto backup would not correctly turn on without picking a folder, adding a dedicated button to choose the backup directory.
+- **Recurring Filter UI** — The 'Subscriptions' and 'Installments' toggle buttons have been refined to be smaller, keeping text and icons neatly aligned on one line.
+- **Predictive Back** — Enabled Android 15+ predictive back animations app-wide for a smoother navigation experience.
+- **Haptic Feedback** — Expanded haptic feedback to plus icons and all 'Save' button actions across the app.
+- **Fade Transitions** — Smooth fade animations are now used when switching between the main bottom navigation tabs.
+- Fixed the Daily Reminder scheduling logic to fire reliably at the selected time.
+- Fixed the Savings Goal sheet to dynamically follow the app's selected theme color instead of defaulting to purple.
+- Fixed the 'Transactions' label text wrapping in the NavigationBar by slightly reducing the global navigation bar label font size.
+- Added support for migrating and restoring backups from external apps like GreenStash (.json) directly from the Onboarding Screen.
+- Introduced a new minimalist Android Homescreen Widget ("Quick Add - Nothing Style") to instantly launch the Add Transaction screen directly from your launcher. Features a 1x1 default size that is fully resizable, a custom sleek vector icon, and an accurate layout preview in the widget picker.
+- Extended the global mandatory fields validation feature to the Assets screen.
+- Fixed a visual jumping bug in the Add Transaction and Add Asset screens where the currency card would shift out of alignment when the mandatory field error text appeared, fixing it with a robust layout calculation.
+- **GreenStash Restore Cancellation** — Fixed an issue where cancelling the file picker during GreenStash backup import would falsely show a "data restored successfully" message.
+- **Android File Picker Glitch Fixed** — Removed `withData: true` from the `file_picker` config on the Onboarding screen to bypass a known Android intent bug that popped up the "Open With..." app chooser menu before the document picker.
+- **Say App Support Removed** — Cleanly deprecated and removed all data import routes for the "Say" app per user preference.
+- **GreenStash Withdrawals & Balance** — GreenStash imports now correctly parse 'Withdraw' and 'Deposit' type strings to accurately calculate the goal balance.
+- **Auto Backup Path & Realtime UI** — The auto backup switch is now instantly responsive in real time, and the chosen directory is displayed as a human-readable path ('Internal Storage / Folder') rather than raw Android content-provider URIs.
+- **Dynamic Color Toggle** — Decoupled Dynamic Color from the System theme mode. A new independent toggle in Settings allows Material You wallpaper colors to be applied regardless of light/dark/system selection, and hides the accent color picker when enabled.
+- **Haptic Feedback (VIBRATE Permission)** — Added the missing VIBRATE permission in AndroidManifest to ensure new tactile feedback works across all Android devices.
+- **Predictive Back & Page Transitions** — Replaced the heavy Android Zoom transition with the smooth, iOS-style left-to-right `CupertinoPageTransitionsBuilder` across the app. This provides a clean, fluid swipe-to-go-back gesture that scales perfectly with the system's animation speed settings, natively tracking your finger's exact drag speed linearly.
+- **Add Transaction Animation** — Restored the vertical slide-up animation for the Add Transaction and Transfer screens using a dedicated `ExpensySlideUpRoute`, keeping form screens visually distinct from regular page navigations.
+- **Tab Switching** — Removed the tab switching fade animations in favor of a standard, instant `IndexedStack` switch for a snappier, more native feel without any stutter.
+- **Recurring Income End Date** — Removed the unnecessary end date field from the Add Recurring Income form; income entries are now always ongoing.
+- **Recurring Tab Switching** — Animated the monthly/weekly summary cards and subscriptions/installments filter cards with crossfade transitions for instant visual feedback when swiping between Expenses and Income tabs.
+- **Currency Picker Autofocus** — Disabled the automatic keyboard popup when opening the currency picker to allow users to smoothly scroll the list without interruption.
+
+
 ## [1.0.7] — 2026-07-21
 
 ### Added

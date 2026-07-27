@@ -109,6 +109,37 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
+  Future<void> _restoreExternal(String source) async {
+    final l10n = AppLocalizations.of(context)!;
+    setState(() { _restoring = true; _restoreError = null; });
+    try {
+      final app = context.read<AppProvider>();
+      final success = await app.restoreExternalBackup(source);
+      
+      if (!success) {
+        if (mounted) setState(() => _restoring = false);
+        return;
+      }
+      
+      // If we got here, it's successful and data is loaded.
+      if (!app.settings.onboarded) {
+        await app.completeOnboarding(
+            name: app.settings.userName, currency: app.settings.currency);
+      }
+      if (mounted) {
+        Navigator.pushReplacement(context,
+            ExpensyRoute(builder: (_) => const MainShell()));
+      }
+    } on FormatException catch (e) {
+      if (mounted) setState(() { _restoring = false; _restoreError = e.message; });
+    } catch (_) {
+      if (mounted) setState(() {
+        _restoring = false;
+        _restoreError = l10n.onboarding_restoreFailed;
+      });
+    }
+  }
+
   Future<void> _finish() async {
     final app = context.read<AppProvider>();
     await app.completeOnboarding(
@@ -166,6 +197,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   restoring: _restoring,
                   error: _restoreError,
                   onRestore: _restoreFromWelcome,
+                  onRestoreExternal: _restoreExternal,
                   onStartFresh: _next,
                 ),
                 _PageOne(nameCtrl: _nameCtrl),
@@ -226,11 +258,13 @@ class _PageWelcome extends StatelessWidget {
   final bool restoring;
   final String? error;
   final VoidCallback onRestore;
+  final void Function(String) onRestoreExternal;
   final VoidCallback onStartFresh;
   const _PageWelcome({
     required this.restoring,
     required this.error,
     required this.onRestore,
+    required this.onRestoreExternal,
     required this.onStartFresh,
   });
 
@@ -319,6 +353,18 @@ class _PageWelcome extends StatelessWidget {
               ],
             ]),
           ),
+        ),
+
+        const SizedBox(height: 12),
+        // External backup button
+        OutlinedButton.icon(
+          onPressed: restoring ? null : () => onRestoreExternal('greenstash'),
+          icon: const Icon(Icons.savings),
+          label: const Text('Restore from GreenStash (.json)'),
+          style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(48),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24))),
         ),
 
         const SizedBox(height: 16),

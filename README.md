@@ -8,7 +8,7 @@
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.3%2B-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Android](https://img.shields.io/badge/Android-5.0%2B-3DDC84?logo=android&logoColor=white)](https://android.com)
-[![Version](https://img.shields.io/badge/Version-1.0.7-brightgreen)](https://github.com/mina-android/Expensy/releases)
+[![Version](https://img.shields.io/badge/Version-1.0.8-brightgreen)](https://github.com/mina-android/Expensy/releases)
 [![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
 
 No accounts. No cloud. No ads. Your data stays on your device — always.
@@ -31,13 +31,17 @@ Most finance apps want you to sign up, sync to the cloud, or watch ads. Expensy 
 - **Gold accounts** — track holdings by karat and grams, valued automatically from live gold prices
 - **Transactions** — income, expense, lent, and borrowed entries in a unified, chronological list view with search, account filters, and type pills
 - **Transfers** — move money between accounts, with automatic currency conversion
-- **Recurring payments** — subscriptions, rent, salary — with reminders and payment history
-- **Budgets** — monthly or weekly limits per category, with progress bars
+- **Recurring payments** — subscriptions, installments, rent, salary — with reminders and payment history
+- **Budgets** — monthly or weekly limits per category, with progress bars and instant push notifications when exceeded
 - **Statistics & Insights** — spending charts, trends, and month-over-month comparisons
 - **Currency converter** — instant conversion using live exchange rates
-- **Assets & Wishlist** — track savings goals and things you own
+- **Savings Goals** — track progress towards savings targets with contributions/withdrawals and completion alerts
+- **Assets & Wishlist** — track things you own and things you want to buy
 - **Lent & borrowed money** — keep tabs on who owes who, with due-date reminders
-- **Backup & restore** — one JSON file, fully under your control
+- **Daily Reminders** — optional nightly nudge to log your daily spending
+- **Backup & Restore** — one JSON file, fully under your control. Also supports importing backups from **GreenStash**!
+- **Auto Backup** — automatically save your data every night to a local folder.
+- **Home Screen Widget** — a sleek "Nothing Style" quick add widget to instantly launch the add transaction screen
 - **Custom look** — Material You, 29 accent colours, 10 fonts, AMOLED dark mode
 
 ---
@@ -53,6 +57,18 @@ Most finance apps want you to sign up, sync to the cloud, or watch ads. Expensy 
   <img src="screenshots/budgets.png" width="32%" alt="Budgets" />
   <img src="screenshots/statistics.png" width="32%" alt="Statistics" />
 </div>
+
+---
+
+## 🌍 Localization & Translation
+
+Expensy is available in multiple languages! We use native translation and professional finance terminology for a native feel.
+
+- 🇺🇸 **English** — 100%
+- 🇸🇦 **Arabic (العربية)** — 100% (with full RTL support)
+- 🇫🇷 **French (Français)** — 100%
+- 🇩🇪 **German (Deutsch)** — 100%
+- 🇮🇳 **Hindi (हिन्दी)** — 100%
 
 ---
 
@@ -112,20 +128,11 @@ Production builds automatically detect `android/key.properties` and sign with `e
 
 ---
 
-## 🌍 Localization & Translation
-
-Expensy natively supports English (100% base). The following languages are supported:
-- **Arabic (ar):** 72.5% translated
-- **French (fr):** 72.5% translated
-- **German (de):** 72.5% translated
-- **Hindi (hi):** 72.5% translated
-
----
 
 ## 🗺 Roadmap
 
 - [ ] iOS support
-- [ ] Home screen widget
+- [x] Home screen widget
 - [x] Multiple languages
 - [ ] Recurring payment auto-pay
 - [x] Budgets per category
@@ -154,3 +161,4 @@ Copyright © 2026 [Mina Android](https://github.com/mina-android)
 Made with ❤️ and Flutter · [**More projects**](https://github.com/mina-android)
 
 </div>
+

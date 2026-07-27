@@ -1,9 +1,13 @@
 // lib/screens/backup_screen.dart
 import 'package:flutter/material.dart';
-import '../l10n/app_localizations.dart';
-import 'package:provider/provider.dart';
-import '../providers/app_provider.dart';
+import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_storage/shared_storage.dart' as saf;
 import '../database/db_helper.dart';
+import '../providers/app_provider.dart';
+import '../l10n/app_localizations.dart';
+import '../services/auto_backup_service.dart';
+import 'package:provider/provider.dart';
 
 class BackupScreen extends StatefulWidget {
   const BackupScreen({super.key});
@@ -16,6 +20,68 @@ class _BackupScreenState extends State<BackupScreen> {
   bool    _restoring = false;
   String? _msg;
   bool    _msgOk = true;
+
+  bool _autoBackupEnabled = false;
+  String? _autoBackupUri;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAutoBackupState();
+  }
+
+  Future<void> _loadAutoBackupState() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _autoBackupEnabled = prefs.getBool(AutoBackupService.backupEnabledPrefKey) ?? false;
+      _autoBackupUri = prefs.getString(AutoBackupService.backupUriPrefKey);
+    });
+  }
+
+  String _formatUri(String? uriStr) {
+    if (uriStr == null) return 'No folder selected';
+    try {
+      final uri = Uri.parse(uriStr);
+      String path = Uri.decodeComponent(uri.pathSegments.last);
+      if (path.startsWith('primary:')) {
+        return 'Internal Storage / ' + path.substring(8).replaceAll(':', ' / ');
+      }
+      return path.replaceAll(':', ' / ');
+    } catch (_) {
+      return uriStr;
+    }
+  }
+
+  Future<void> _toggleAutoBackup(bool enable) async {
+    setState(() => _autoBackupEnabled = enable);
+    if (!enable) {
+      await AutoBackupService.disable();
+      return;
+    }
+    if (_autoBackupUri == null) {
+      final success = await _pickAutoBackupFolder();
+      if (!success) {
+        setState(() => _autoBackupEnabled = false);
+      }
+    } else {
+      await AutoBackupService.enable(_autoBackupUri!);
+      if (mounted) _setMsg('Auto backup enabled', ok: true);
+    }
+  }
+
+  Future<bool> _pickAutoBackupFolder() async {
+    final uri = await saf.openDocumentTree();
+    if (uri != null) {
+      await AutoBackupService.enable(uri.toString());
+      setState(() {
+        _autoBackupEnabled = true;
+        _autoBackupUri = uri.toString();
+      });
+      if (mounted) _setMsg('Auto backup enabled', ok: true);
+      return true;
+    }
+    return false;
+  }
 
   void _setMsg(String m, {bool ok = true}) =>
       setState(() { _msg = m; _msgOk = ok; });
@@ -82,6 +148,24 @@ class _BackupScreenState extends State<BackupScreen> {
     }
   }
 
+  Future<void> _restoreExternal(String source) async {
+    final l10n = AppLocalizations.of(context)!;
+    setState(() { _restoring = true; _msg = null; });
+    try {
+      final app = context.read<AppProvider>();
+      final success = await app.restoreExternalBackup(source);
+      if (mounted && success) {
+        _setMsg(l10n.backup_dataRestoredSuccessfully(''));
+      }
+    } on FormatException catch (e) {
+      if (mounted) _setMsg(l10n.backup_restoreFailed(e.message), ok: false);
+    } catch (e) {
+      if (mounted) _setMsg(l10n.backup_restoreFailedCorrupted, ok: false);
+    } finally {
+      if (mounted) setState(() => _restoring = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -100,6 +184,8 @@ class _BackupScreenState extends State<BackupScreen> {
       _CountRow(Icons.repeat_rounded,                    l10n.backup_recurringPayments, app.recurring.length),
       _CountRow(Icons.history_rounded,                   l10n.backup_recurringHistory,  app.recurringHistoryCount),
       _CountRow(Icons.pie_chart_outline_rounded,         l10n.backup_budgets,            app.budgets.length),
+      _CountRow(Icons.savings_outlined,                  'Savings Goals',                app.savingsGoals.length),
+      _CountRow(Icons.payments_outlined,                 'Savings Contributions',        app.savingsContributions.length),
       _CountRow(Icons.star_outline_rounded,               l10n.backup_wishlist,           app.wishlist.length),
       _CountRow(Icons.people_alt_outlined,                l10n.backup_lentPeople,  app.lendedPeople.length),
       _CountRow(Icons.handshake_outlined,                 l10n.backup_lentRecords, app.lended.length),
@@ -214,6 +300,54 @@ class _BackupScreenState extends State<BackupScreen> {
               ),
             ]),
           )),
+          // ── Auto Backup ────────────────────────────────────────────────
+          Text('Automatic Backup',
+              style: Theme.of(context).textTheme.labelMedium
+                  ?.copyWith(letterSpacing: 1,
+                      color: cs.onSurface.withValues(alpha: 0.6))),
+          const SizedBox(height: 8),
+          Card(child: Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [
+                Container(width: 44, height: 44,
+                    decoration: BoxDecoration(
+                        color: cs.tertiary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12)),
+                    child: Icon(Icons.autorenew_rounded, color: cs.tertiary)),
+                const SizedBox(width: 14),
+                Expanded(child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Daily Auto Backup', style: TextStyle(
+                        fontWeight: FontWeight.w800, fontSize: 15)),
+                    Text('Runs automatically at 2:00 AM',
+                        style: TextStyle(fontSize: 12,
+                            color: cs.onSurface.withValues(alpha: 0.6))),
+                  ],
+                )),
+                Switch(
+                  value: _autoBackupEnabled,
+                  onChanged: (v) => _toggleAutoBackup(v),
+                ),
+              ]),
+              if (_autoBackupEnabled && _autoBackupUri != null) ...[
+                const SizedBox(height: 14),
+                Text('Saving to: ${_formatUri(_autoBackupUri)}', 
+                    style: TextStyle(fontSize: 12, color: cs.tertiary)),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: _pickAutoBackupFolder,
+                  icon: const Icon(Icons.folder_open),
+                  label: const Text('Change Folder'),
+                  style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(44),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(22))),
+                ),
+              ],
+            ]),
+          )),
           const SizedBox(height: 12),
 
           // ── Restore backup ─────────────────────────────────────────────
@@ -284,6 +418,47 @@ class _BackupScreenState extends State<BackupScreen> {
                     minimumSize: const Size.fromHeight(44),
                     foregroundColor: cs.error,
                     side: BorderSide(color: cs.error),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(22))),
+              ),
+            ]),
+          )),
+          const SizedBox(height: 12),
+
+          // ── Import from Other Apps ─────────────────────────────────────────────
+          Text(l10n.backup_importFromOtherApps,
+              style: Theme.of(context).textTheme.labelMedium
+                  ?.copyWith(letterSpacing: 1,
+                      color: cs.onSurface.withValues(alpha: 0.6))),
+          const SizedBox(height: 8),
+          Card(child: Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [
+                Container(width: 44, height: 44,
+                    decoration: BoxDecoration(
+                        color: cs.secondary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12)),
+                    child: Icon(Icons.download_outlined, color: cs.secondary)),
+                const SizedBox(width: 14),
+                Expanded(child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(l10n.backup_importFromOtherApps, style: TextStyle(
+                        fontWeight: FontWeight.w800, fontSize: 15)),
+                    Text(l10n.backup_importDescription,
+                        style: TextStyle(fontSize: 12,
+                            color: cs.onSurface.withValues(alpha: 0.6))),
+                  ],
+                )),
+              ]),
+              const SizedBox(height: 14),
+              OutlinedButton.icon(
+                onPressed: _restoring ? null : () => _restoreExternal('greenstash'),
+                icon: const Icon(Icons.savings),
+                label: Text(l10n.backup_importFromGreenStash),
+                style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(44),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(22))),
               ),

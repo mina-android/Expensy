@@ -1559,4 +1559,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboarding_chooseLanguage => 'Choose Language';
+
+  @override
+  String get error_required => 'This field is required';
+
+  @override
+  String recurring_subscriptions(Object count) {
+    return 'Subscriptions ($count)';
+  }
+
+  @override
+  String recurring_installments(Object count) {
+    return 'Installments ($count)';
+  }
+
+  @override
+  String get recurring_recurringType => 'Recurring Type';
+
+  @override
+  String get recurring_subscription => 'Subscription';
+
+  @override
+  String get recurring_installment => 'Installment';
+
+  @override
+  String get recurring_installmentsRequireEndDate =>
+      'Installments must have a final payment date.';
+
+  @override
+  String get backup_importFromOtherApps => 'Import from Other Apps';
+
+  @override
+  String get backup_importDescription => 'Import data from supported apps';
+
+  @override
+  String get backup_importFromGreenStash => 'Import from GreenStash (.json)';
 }

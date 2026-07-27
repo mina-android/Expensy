@@ -8,6 +8,7 @@ import '../models/models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
 import '../services/notification_service.dart';
+import '../utils/haptics.dart';
 
 class RecurringScreen extends StatefulWidget {
   const RecurringScreen({super.key});
@@ -18,6 +19,8 @@ class RecurringScreen extends StatefulWidget {
 class _RecurringScreenState extends State<RecurringScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tab;
+  String _expenseSubFilter = 'subscription'; // 'subscription' or 'installment'
+
   @override
   void initState() {
     super.initState();
@@ -36,7 +39,8 @@ class _RecurringScreenState extends State<RecurringScreen>
 
     final expenses = app.recurring.where((r) => r.paymentType == 'expense').toList();
     final incomes  = app.recurring.where((r) => r.paymentType == 'income').toList();
-    final shown    = _tab.index == 0 ? expenses : incomes;
+    final filteredExpenses = expenses.where((r) => r.recurringType == _expenseSubFilter).toList();
+    final shown    = _tab.index == 0 ? filteredExpenses : incomes;
 
     double monthly(List<RecurringPayment> list) {
       double t = 0;
@@ -69,25 +73,60 @@ class _RecurringScreenState extends State<RecurringScreen>
         ),
       ),
       body: Column(children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
-          child: Row(children: [
-            Expanded(child: _SummaryCard(
-                label: l10n.recurring_monthly, value: fmt(m),
-                color: cs.primary,
-                bg: cs.primaryContainer,
-                fg: cs.onPrimaryContainer)),
-            const SizedBox(width: 10),
-            Expanded(child: _SummaryCard(
-                label: l10n.recurring_weekly, value: fmt(m / 4.33),
-                color: cs.secondary,
-                bg: cs.secondaryContainer,
-                fg: cs.onSecondaryContainer)),
-          ]),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 150),
+          child: Padding(
+            key: ValueKey('summary_${_tab.index}_${_expenseSubFilter}'),
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
+            child: Row(children: [
+              Expanded(child: _SummaryCard(
+                  label: l10n.recurring_monthly, value: fmt(m),
+                  color: cs.primary,
+                  bg: cs.primaryContainer,
+                  fg: cs.onPrimaryContainer)),
+              const SizedBox(width: 10),
+              Expanded(child: _SummaryCard(
+                  label: l10n.recurring_weekly, value: fmt(m / 4.33),
+                  color: cs.secondary,
+                  bg: cs.secondaryContainer,
+                  fg: cs.onSecondaryContainer)),
+            ]),
+          ),
         ),
         const SizedBox(height: 8),
+        AnimatedCrossFade(
+          duration: const Duration(milliseconds: 150),
+          crossFadeState: _tab.index == 0
+              ? CrossFadeState.showFirst
+              : CrossFadeState.showSecond,
+          firstChild: Padding(
+            padding: const EdgeInsets.only(left: 14, right: 14, bottom: 8),
+            child: Row(children: [
+              Expanded(
+                child: _FilterCard(
+                  label: l10n.recurring_subscriptions(expenses.where((e) => e.recurringType == 'subscription').length.toString()),
+                  icon: Icons.sync_rounded,
+                  selected: _expenseSubFilter == 'subscription',
+                  onTap: () => setState(() => _expenseSubFilter = 'subscription'),
+                  color: cs.primary,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _FilterCard(
+                  label: l10n.recurring_installments(expenses.where((e) => e.recurringType == 'installment').length.toString()),
+                  icon: Icons.payments_outlined,
+                  selected: _expenseSubFilter == 'installment',
+                  onTap: () => setState(() => _expenseSubFilter = 'installment'),
+                  color: cs.secondary,
+                ),
+              ),
+            ]),
+          ),
+          secondChild: const SizedBox.shrink(),
+        ),
         Expanded(child: TabBarView(controller: _tab, children: [
-          _RecurringList(items: expenses, app: app, fmt: fmt,
+          _RecurringList(items: filteredExpenses, app: app, fmt: fmt,
               empty: l10n.recurring_noRecurringExpenses),
           _RecurringList(items: incomes,  app: app, fmt: fmt,
               empty: l10n.recurring_noRecurringIncome),
@@ -133,6 +172,59 @@ class _SummaryCard extends StatelessWidget {
               fontWeight: FontWeight.w800, color: color)),
         ]),
       );
+}
+
+class _FilterCard extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+  final Color color;
+  
+  const _FilterCard({
+    required this.label, required this.icon, required this.selected,
+    required this.onTap, required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final bg = selected ? color.withValues(alpha: 0.15) : cs.surfaceContainerHigh.withValues(alpha: 0.5);
+    final fg = selected ? color : cs.onSurfaceVariant;
+    final border = selected ? color.withValues(alpha: 0.5) : Colors.transparent;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: border, width: 1.5),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: fg, size: 20),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(label, 
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: fg,
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                  fontSize: 12,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 // ── List ──────────────────────────────────────────────────────────────────────
@@ -486,9 +578,10 @@ class _RecurringSheetState extends State<_RecurringSheet> {
   final _amtCtrl  = TextEditingController();
   final _freqCtrl = TextEditingController(text: '1');
 
-  String    _payType              = 'expense';
-  String    _freqUnit             = 'months';
-  DateTime  _first                = DateTime.now();
+  String _payType = 'expense';
+  String _recurringType = 'subscription';
+  String _freqUnit = 'months';
+  DateTime _first = DateTime.now();
   DateTime? _last;
   String?   _accountId;
   String?   _categoryId;
@@ -526,6 +619,7 @@ class _RecurringSheetState extends State<_RecurringSheet> {
       _amtCtrl.text         = e.amount.toStringAsFixed(2);
       _freqCtrl.text        = '${e.freqVal}';
       _payType              = e.paymentType;
+      _recurringType        = e.recurringType;
       _freqUnit             = e.freqUnit;
       _first                = e.startDate;
       _last                 = e.endDate;
@@ -536,6 +630,8 @@ class _RecurringSheetState extends State<_RecurringSheet> {
       _reminderTime         = _parseTime(e.reminderTime);
     }
   }
+
+  bool _submitted = false;
 
   @override
   void dispose() {
@@ -595,10 +691,15 @@ class _RecurringSheetState extends State<_RecurringSheet> {
   }
 
   Future<void> _submit() async {
+    setState(() => _submitted = true);
     if (_nameCtrl.text.trim().isEmpty) return;
     final amount = double.tryParse(_amtCtrl.text);
     if (amount == null || amount <= 0) return;
     if (_accountId == null || _categoryId == null) return;
+    if (_payType == 'expense' && _recurringType == 'installment' && _last == null) {
+      return;
+    }
+
     final freq = int.tryParse(_freqCtrl.text) ?? 1;
     final app  = context.read<AppProvider>();
 
@@ -607,6 +708,7 @@ class _RecurringSheetState extends State<_RecurringSheet> {
       name: _nameCtrl.text.trim(),
       accountId: _accountId!, categoryId: _categoryId!,
       amount: amount, paymentType: _payType,
+      recurringType: _payType == 'expense' ? _recurringType : 'subscription',
       freqVal: freq, freqUnit: _freqUnit,
       startDate: _first,
       nextDate: isEdit ? widget.existing!.nextDate : _first,
@@ -685,14 +787,60 @@ class _RecurringSheetState extends State<_RecurringSheet> {
           ]),
           const SizedBox(height: 12),
 
-          TextField(controller: _nameCtrl,
-              decoration: InputDecoration(labelText: l10n.recurring_name,
-                  prefixIcon: const Icon(Icons.repeat_rounded))),
+          if (_payType == 'expense') ...[
+            Row(children: [
+              Expanded(child: GestureDetector(
+                onTap: () => setState(() => _recurringType = 'subscription'),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 100),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: _recurringType == 'subscription'
+                        ? cs.primary : cs.primaryContainer.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(12)),
+                  child: Center(child: Text(l10n.recurring_subscription,
+                      style: TextStyle(fontWeight: FontWeight.w700,
+                          color: _recurringType == 'subscription'
+                              ? cs.onPrimary : cs.onPrimaryContainer))),
+                ),
+              )),
+              const SizedBox(width: 10),
+              Expanded(child: GestureDetector(
+                onTap: () => setState(() => _recurringType = 'installment'),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 100),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: _recurringType == 'installment'
+                        ? cs.secondary : cs.secondaryContainer.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(12)),
+                  child: Center(child: Text(l10n.recurring_installment,
+                      style: TextStyle(fontWeight: FontWeight.w700,
+                          color: _recurringType == 'installment'
+                              ? cs.onSecondary : cs.onSecondaryContainer))),
+                ),
+              )),
+            ]),
+            const SizedBox(height: 12),
+          ],
+
+          TextField(
+            controller: _nameCtrl,
+            decoration: InputDecoration(
+                labelText: l10n.recurring_name,
+                prefixIcon: const Icon(Icons.repeat_rounded),
+                errorText: _submitted && _nameCtrl.text.trim().isEmpty ? l10n.error_required : null,
+            ),
+          ),
           const SizedBox(height: 12),
-          TextField(controller: _amtCtrl,
+          TextField(
+              controller: _amtCtrl,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               decoration: InputDecoration(
-                  labelText: l10n.recurring_amountPerPayment, prefixText: '$sym '),
+                  labelText: l10n.recurring_amountPerPayment,
+                  prefixText: '$sym ',
+                  errorText: _submitted && (double.tryParse(_amtCtrl.text) ?? 0) <= 0 ? l10n.error_required : null,
+              ),
               onChanged: (_) => setState(() {})),
           const SizedBox(height: 12),
 
@@ -735,23 +883,30 @@ class _RecurringSheetState extends State<_RecurringSheet> {
               });
             },
           ),
-          ListTile(contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.stop_circle_outlined),
-            title: Text(_last != null
-                ? l10n.recurring_lastDate(DateFormat('d MMM yyyy').format(_last!))
-                : l10n.recurring_noLastPaymentOngoing,
-                style: const TextStyle(fontWeight: FontWeight.w600)),
-            trailing: _last != null
-                ? IconButton(icon: const Icon(Icons.clear),
-                    onPressed: () => setState(() => _last = null))
-                : null,
-            onTap: () async {
-              final p = await showDatePicker(context: context,
-                  initialDate: _last ?? _first.add(const Duration(days: 365)),
-                  firstDate: _first, lastDate: DateTime(2100));
-              if (p != null) setState(() => _last = p);
-            },
-          ),
+          if (_recurringType == 'installment' && _payType == 'expense')
+            ListTile(contentPadding: EdgeInsets.zero,
+              leading: Icon(Icons.stop_circle_outlined, 
+                color: _submitted && _last == null && _recurringType == 'installment' && _payType == 'expense' ? cs.error : null),
+              title: Text(_last != null
+                  ? l10n.recurring_lastDate(DateFormat('d MMM yyyy').format(_last!))
+                  : (_submitted && _recurringType == 'installment' && _payType == 'expense' 
+                      ? l10n.recurring_installmentsRequireEndDate 
+                      : l10n.recurring_noLastPaymentOngoing),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: _submitted && _last == null && _recurringType == 'installment' && _payType == 'expense' ? cs.error : null,
+                  )),
+              trailing: _last != null
+                  ? IconButton(icon: const Icon(Icons.clear),
+                      onPressed: () => setState(() => _last = null))
+                  : null,
+              onTap: () async {
+                final p = await showDatePicker(context: context,
+                    initialDate: _last ?? _first.add(const Duration(days: 365)),
+                    firstDate: _first, lastDate: DateTime(2100));
+                if (p != null) setState(() => _last = p);
+              },
+            ),
 
           if (est != null && est > 0 && amt > 0)
             Container(
@@ -882,7 +1037,7 @@ class _RecurringSheetState extends State<_RecurringSheet> {
 
           const SizedBox(height: 16),
           FilledButton.icon(
-            onPressed: _submit,
+            onPressed: () { AppHaptics.tap(context, HapticStrength.light); _submit(); },
             icon: Icon(isEdit ? Icons.save_outlined : Icons.add),
             label: Text(isEdit ? 'Save Changes' : 'Add Recurring'),
             style: FilledButton.styleFrom(

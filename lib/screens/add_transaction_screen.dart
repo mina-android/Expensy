@@ -7,6 +7,7 @@ import '../providers/app_provider.dart';
 import '../models/models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
+import '../utils/haptics.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   final AppTransaction? existing;
@@ -19,6 +20,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final _amtCtrl  = TextEditingController();
   final _descCtrl = TextEditingController();
   final _noteCtrl = TextEditingController();
+
+  bool _submitted = false;
 
   String    _type       = 'expense';
   String?   _accountId;
@@ -87,6 +90,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   }
 
   Future<void> _submit() async {
+    setState(() => _submitted = true);
     final amount = double.tryParse(_amtCtrl.text);
     if (amount == null || amount <= 0) return;
     if (_accountId == null || _categoryId == null) return;
@@ -183,15 +187,23 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           const SizedBox(height: 16),
 
           // ── Amount + currency row ─────────────────────────────────────
-          Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Expanded(
               flex: 3,
               child: TextField(
                 controller: _amtCtrl,
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
-                decoration: InputDecoration(labelText: l10n.add_transaction_amount,
-                    prefixText: '$sym '),
+                decoration: InputDecoration(
+                    labelText: l10n.add_transaction_amount,
+                    prefixText: '$sym ',
+                    errorText: _submitted && (double.tryParse(_amtCtrl.text) ?? 0) <= 0
+                        ? l10n.error_required
+                        : null,
+                    helperText: _submitted && (double.tryParse(_amtCtrl.text) ?? 0) <= 0
+                        ? null
+                        : ' ',
+                ),
                 style: const TextStyle(
                     fontSize: 20, fontWeight: FontWeight.w700),
                 onChanged: (_) => setState(() {}),
@@ -209,14 +221,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   if (picked != null) setState(() => _currency = picked);
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 14),
+                  height: 56,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
                     border: Border.all(
                         color: cs.outline.withValues(alpha: 0.4)),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Row(children: [
+                  child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
                     Expanded(child: Text(
                       _currency.isNotEmpty ? _currency : accCurrency,
                       style: const TextStyle(
@@ -224,10 +236,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     )),
                     const Icon(Icons.arrow_drop_down, size: 20),
                   ]),
-                ),
-              ),
-            ),
-          ]),
+                ), // Container
+              ), // InkWell
+            ), // Expanded
+          ]), // Row
 
           // Conversion preview banner
           if (convertedPreview != null) ...[
@@ -309,7 +321,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           const SizedBox(height: 24),
 
           FilledButton.icon(
-            onPressed: _submit,
+            onPressed: () { AppHaptics.tap(context, HapticStrength.light); _submit(); },
             icon: Icon(isEdit ? Icons.save_outlined : Icons.add),
             label: Text(isEdit ? l10n.add_transaction_saveChanges : l10n.add_transaction_addTransaction),
             style: FilledButton.styleFrom(

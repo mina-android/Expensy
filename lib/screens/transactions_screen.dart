@@ -9,6 +9,8 @@ import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
 import 'add_transaction_screen.dart';
 import 'lended_person_screen.dart';
+import 'savings_goal_detail_screen.dart';
+import '../utils/haptics.dart';
 
 class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({super.key});
@@ -64,6 +66,22 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               !typeStr.contains(q)) continue;
         }
         allItems.add(_TxItem.fromLended(l));
+      }
+    }
+
+    // 3. Add savings contributions
+    if (_filter == 'all' || _filter == 'expense' || _filter == 'income') {
+      for (final c in app.savingsContributions) {
+        if (_filter == 'expense' && c.type != 'contribution') continue; // Contribution = money out of account = expense
+        if (_filter == 'income' && c.type != 'withdrawal') continue; // Withdrawal = money into account = income
+        if (_accFilter != null && c.accountId != _accFilter) continue;
+        if (_search.isNotEmpty) {
+          final q = _search.toLowerCase();
+          final goal = app.savingsGoals.where((g) => g.id == c.goalId).firstOrNull?.name.toLowerCase() ?? '';
+          final note = (c.note ?? '').toLowerCase();
+          if (!goal.contains(q) && !note.contains(q)) continue;
+        }
+        allItems.add(_TxItem.fromContribution(c));
       }
     }
 
@@ -184,10 +202,21 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                               fontSize: 12, fontWeight: FontWeight.w700,
                               color: cs.primary)),
                         ),
-                        for (final item in items)
-                          item.isTx
-                              ? _TxTile(t: item.tx!, app: app)
-                              : _LendedTile(l: item.lended!, app: app),
+                        ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: items.length,
+                            itemBuilder: (_, idx) {
+                              final item = items[idx];
+                              if (item.isTx) {
+                                return _TxTile(t: item.tx!, app: app);
+                              } else if (item.isLended) {
+                                return _LendedTile(l: item.lended!, app: app);
+                              } else if (item.isContribution) {
+                                return _ContributionTile(c: item.contribution!, app: app);
+                              }
+                              return const SizedBox.shrink();
+                            }),
                       ],
                     );
                   },
@@ -197,7 +226,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       floatingActionButton: FloatingActionButton(
         heroTag: null,
         onPressed: () => Navigator.push(context,
-            ExpensyRoute(builder: (_) => const AddTransactionScreen())),
+            ExpensySlideUpRoute(builder: (_) => const AddTransactionScreen())),
         child: const Icon(Icons.add),
       ),
     );
@@ -252,7 +281,7 @@ class _TxTile extends StatelessWidget {
             Icon(Icons.sticky_note_2_outlined,
                 size: 12, color: cs.onSurface.withValues(alpha: 0.4)),
         ]),
-        onTap: () => Navigator.push(context, ExpensyRoute(
+        onTap: () => Navigator.push(context, ExpensySlideUpRoute(
             builder: (_) => AddTransactionScreen(existing: t))),
         onLongPress: () async {
           if (await showDeleteConfirm(
@@ -433,11 +462,85 @@ class _LendedTile extends StatelessWidget {
 class _TxItem {
   final AppTransaction? tx;
   final LendedMoney? lended;
+  final SavingsContribution? contribution;
   final DateTime date;
 
-  _TxItem.fromTx(this.tx) : lended = null, date = tx!.date;
-  _TxItem.fromLended(this.lended) : tx = null, date = lended!.date;
+  _TxItem.fromTx(this.tx) : lended = null, contribution = null, date = tx!.date;
+  _TxItem.fromLended(this.lended) : tx = null, contribution = null, date = lended!.date;
+  _TxItem.fromContribution(this.contribution) : tx = null, lended = null, date = contribution!.date;
 
   bool get isTx => tx != null;
   bool get isLended => lended != null;
+  bool get isContribution => contribution != null;
 }
+
+// ── Contribution Tile ─────────────────────────────────────────────────────────
+class _ContributionTile extends StatelessWidget {
+  final SavingsContribution c;
+  final AppProvider app;
+  
+  const _ContributionTile({required this.c, required this.app});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isContrib = c.type == 'contribution';
+    final goal = app.savingsGoals.where((g) => g.id == c.goalId).firstOrNull;
+    final acc = app.accountById(c.accountId);
+    
+    final color = goal != null ? Color(goal.colorValue) : cs.primary;
+    final amountColor = isContrib ? cs.error : const Color(0xFF2E7D32); // Contrib is money OUT of account
+    
+    return Card(
+      margin: const EdgeInsets.only(bottom: 6),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            Icons.savings_outlined,
+            color: color,
+            size: 22,
+          ),
+        ),
+        title: Text(
+          isContrib ? 'Goal Contribution' : 'Goal Withdrawal',
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+        ),
+        subtitle: Text(
+          [
+            if (goal != null) goal.name,
+            if (acc != null) acc.name,
+            if (c.note != null && c.note!.isNotEmpty) c.note!,
+          ].join('  ·  '),
+          style: TextStyle(
+            fontSize: 11,
+            color: cs.onSurface.withValues(alpha: 0.5),
+          ),
+        ),
+        trailing: Text(
+          '${isContrib ? '-' : '+'}${formatAmount(c.amount, goal?.currency ?? app.settings.currency)}',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: amountColor,
+          ),
+        ),
+        onTap: () {
+          if (goal != null) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => SavingsGoalDetailScreen(goal: goal)),
+            );
+          }
+        },
+      ),
+    );
+  }
+}
+

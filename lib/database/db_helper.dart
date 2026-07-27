@@ -5,7 +5,7 @@ import '../models/models.dart';
 
 class DBHelper {
   static Database? _db;
-  static const int _version = 10;
+  static const int _version = 12;
 
   /// Public accessor for the current DB/backup schema version, so UI code
   /// (e.g. the Backup screen) never has to hardcode a copy that can drift
@@ -211,8 +211,34 @@ class DBHelper {
         // until it's retried on a future launch. Surface it loudly in debug
         // builds instead of failing completely silently.
         // ignore: avoid_print
+        // ignore: avoid_print
         print('Expensy DB migration warning: lended_money rebuild failed: $e');
       }
+    }
+    // v10 → v11: savings goals and contributions
+    if (oldV < 11) {
+      try {
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS savings_goals (
+            id TEXT PRIMARY KEY, name TEXT NOT NULL, target_amount REAL NOT NULL,
+            current_amount REAL NOT NULL DEFAULT 0, currency TEXT NOT NULL,
+            target_date TEXT, color_value INTEGER NOT NULL,
+            is_completed INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT NOT NULL, completed_at TEXT
+          )''');
+      } catch (_) {}
+      try {
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS savings_contributions (
+            id TEXT PRIMARY KEY, goal_id TEXT NOT NULL, amount REAL NOT NULL,
+            account_id TEXT NOT NULL, type TEXT NOT NULL, date TEXT NOT NULL,
+            note TEXT NOT NULL DEFAULT ''
+          )''');
+      } catch (_) {}
+    }
+    // v11 → v12: recurring subscriptions vs installments
+    if (oldV < 12) {
+      try { await db.execute("ALTER TABLE recurring_payments ADD COLUMN recurring_type TEXT NOT NULL DEFAULT 'subscription'"); } catch (_) {}
     }
   }
 
@@ -251,7 +277,8 @@ class DBHelper {
         reminder_enabled INTEGER NOT NULL DEFAULT 0,
         reminder_time TEXT NOT NULL DEFAULT '09:00',
         early_reminder_enabled INTEGER NOT NULL DEFAULT 0,
-        notes TEXT NOT NULL DEFAULT ''
+        notes TEXT NOT NULL DEFAULT '',
+        recurring_type TEXT NOT NULL DEFAULT 'subscription'
       )''');
     await db.execute('''
       CREATE TABLE wishlist (
@@ -295,6 +322,20 @@ class DBHelper {
         date TEXT NOT NULL,
         amount REAL NOT NULL,
         currency TEXT NOT NULL
+      )''');
+    await db.execute('''
+      CREATE TABLE savings_goals (
+        id TEXT PRIMARY KEY, name TEXT NOT NULL, target_amount REAL NOT NULL,
+        current_amount REAL NOT NULL DEFAULT 0, currency TEXT NOT NULL,
+        target_date TEXT, color_value INTEGER NOT NULL,
+        is_completed INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL, completed_at TEXT
+      )''');
+    await db.execute('''
+      CREATE TABLE savings_contributions (
+        id TEXT PRIMARY KEY, goal_id TEXT NOT NULL, amount REAL NOT NULL,
+        account_id TEXT NOT NULL, type TEXT NOT NULL, date TEXT NOT NULL,
+        note TEXT NOT NULL DEFAULT ''
       )''');
     await db.execute(
         'CREATE INDEX idx_rh_recurring_id ON recurring_history(recurring_id)');
@@ -463,6 +504,51 @@ class DBHelper {
   static Future<void> deleteBudget(String id) async =>
       (await database).delete('budgets', where: 'id=?', whereArgs: [id]);
 
+  // ── Savings Goals ──────────────────────────────────────────────────────────
+  static Future<List<SavingsGoal>> getSavingsGoals() async {
+    final db = await database;
+    final rows = await db.query('savings_goals', orderBy: 'created_at ASC');
+    return rows.map(SavingsGoal.fromMap).toList();
+  }
+  static Future<int> getSavingsGoalsCount() async {
+    final db = await database;
+    final rows = await db.rawQuery('SELECT COUNT(*) AS c FROM savings_goals');
+    return (rows.first['c'] as int?) ?? 0;
+  }
+  static Future<void> insertSavingsGoal(SavingsGoal g) async =>
+      (await database).insert('savings_goals', g.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace);
+  static Future<void> updateSavingsGoal(SavingsGoal g) async =>
+      (await database).update('savings_goals', g.toMap(), where: 'id=?', whereArgs: [g.id]);
+  static Future<void> deleteSavingsGoal(String id) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.delete('savings_contributions', where: 'goal_id=?', whereArgs: [id]);
+      await txn.delete('savings_goals', where: 'id=?', whereArgs: [id]);
+    });
+  }
+
+  // ── Savings Contributions ─────────────────────────────────────────────────
+  static Future<List<SavingsContribution>> getSavingsContributionsFor(String goalId) async {
+    final db = await database;
+    final rows = await db.query('savings_contributions',
+        where: 'goal_id = ?', whereArgs: [goalId], orderBy: 'date DESC');
+    return rows.map(SavingsContribution.fromMap).toList();
+  }
+  static Future<List<SavingsContribution>> getAllSavingsContributions() async {
+    final db = await database;
+    final rows = await db.query('savings_contributions', orderBy: 'date DESC');
+    return rows.map(SavingsContribution.fromMap).toList();
+  }
+  static Future<int> getSavingsContributionsCount() async {
+    final db = await database;
+    final rows = await db.rawQuery('SELECT COUNT(*) AS c FROM savings_contributions');
+    return (rows.first['c'] as int?) ?? 0;
+  }
+  static Future<void> insertSavingsContribution(SavingsContribution c) async =>
+      (await database).insert('savings_contributions', c.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace);
+
   // ── Recurring History ─────────────────────────────────────────────────
   static Future<List<RecurringHistoryEntry>> getRecurringHistory(
       String recurringId) async {
@@ -512,6 +598,8 @@ class DBHelper {
       'assets':              await db.query('assets'),
       'budgets':             await db.query('budgets'),
       'recurring_history':   await db.query('recurring_history'),
+      'savings_goals':       await db.query('savings_goals'),
+      'savings_contributions': await db.query('savings_contributions'),
       'version':             _version,
     };
   }
@@ -525,6 +613,7 @@ class DBHelper {
         'accounts', 'categories', 'transactions',
         'recurring_payments', 'wishlist', 'lended_people', 'lended_money',
         'assets', 'budgets', 'recurring_history',
+        'savings_goals', 'savings_contributions',
       ]) {
         await txn.delete(table);
         final rows =
@@ -657,6 +746,18 @@ class DBHelper {
       row.putIfAbsent('period', () => 'monthly');
     }
     data.putIfAbsent('recurring_history', () => <dynamic>[]);
+
+    // v11: savings goals and contributions
+    data.putIfAbsent('savings_goals', () => <dynamic>[]);
+    for (final row in _rows(data, 'savings_goals')) {
+      row.putIfAbsent('is_completed', () => 0);
+      row.putIfAbsent('current_amount', () => 0.0);
+    }
+    data.putIfAbsent('savings_contributions', () => <dynamic>[]);
+    for (final row in _rows(data, 'savings_contributions')) {
+      row.putIfAbsent('note', () => '');
+      row.putIfAbsent('type', () => 'contribution');
+    }
 
     data['_originalVersion'] = backupVersion;
     if (data['settings'] is Map) {

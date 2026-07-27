@@ -7,6 +7,7 @@ import '../models/models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
 import 'lended_person_screen.dart';
+import '../utils/haptics.dart';
 
 /// Colour palette for [LendedPerson] avatars — same 10-colour rotation used
 /// to auto-assign colours during the v9→v10 legacy backfill migration, kept
@@ -85,7 +86,7 @@ class LendedScreen extends StatelessWidget {
       ]),
       floatingActionButton: FloatingActionButton(
         heroTag: null,
-        onPressed: () => _openPersonSheet(context),
+        onPressed: () { AppHaptics.tap(context, HapticStrength.light); _openPersonSheet(context); },
         child: const Icon(Icons.person_add_alt_1_rounded),
       ),
     );
@@ -224,6 +225,7 @@ class _PersonSheetState extends State<_PersonSheet> {
   final _nameCtrl  = TextEditingController();
   final _notesCtrl = TextEditingController();
   int _color = kLendedPersonColors.first;
+  bool _submitted = false;
 
   bool get isEdit => widget.existing != null;
 
@@ -245,6 +247,7 @@ class _PersonSheetState extends State<_PersonSheet> {
   }
 
   Future<void> _submit() async {
+    setState(() => _submitted = true);
     final name = _nameCtrl.text.trim();
     if (name.isEmpty) return;
     final app = context.read<AppProvider>();
@@ -278,11 +281,15 @@ class _PersonSheetState extends State<_PersonSheet> {
               style: Theme.of(context).textTheme.titleLarge
                   ?.copyWith(fontWeight: FontWeight.w800)),
           const SizedBox(height: 12),
-          TextField(controller: _nameCtrl,
+          TextField(
+              controller: _nameCtrl,
               autofocus: !isEdit,
               decoration: InputDecoration(
                   labelText: l10n.lended_name,
-                  prefixIcon: const Icon(Icons.person_outline_rounded))),
+                  prefixIcon: const Icon(Icons.person_outline_rounded),
+                  errorText: _submitted && _nameCtrl.text.trim().isEmpty ? l10n.error_required : null,
+              ),
+          ),
           const SizedBox(height: 14),
           Text(l10n.lended_colour, style: Theme.of(context).textTheme.labelMedium
               ?.copyWith(letterSpacing: 1)),
@@ -313,7 +320,7 @@ class _PersonSheetState extends State<_PersonSheet> {
                   prefixIcon: const Icon(Icons.sticky_note_2_outlined))),
           const SizedBox(height: 20),
           FilledButton(
-            onPressed: _submit,
+            onPressed: () { AppHaptics.tap(context, HapticStrength.light); _submit(); },
             style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(50),
                 shape: RoundedRectangleBorder(
