@@ -166,9 +166,3 @@ Copyright © 2026 [Mina Android](https://github.com/mina-android)
 Made with ❤️ and Flutter · [**More projects**](https://github.com/mina-android)
 
 </div>
-
-
-
-## Recent Updates
-- Introduced Linked Accounts and drag-and-drop account reordering.
-- Separated Cards from standard Accounts.
