@@ -9,9 +9,27 @@
   "settings_dark": "Dark",
   "settings_amoledTitle": "Pure Black (AMOLED)",
   "settings_amoledSubtitle": "Forces black backgrounds in dark mode",
-  "settings_accentColor": "Accent Colour",
-  "settings_appFont": "App Font",
   "settings_systemDefault": "System Default",
+  "@settings_systemDefault": {
+    "description": "System default option in settings"
+  },
+  "settings_dynamicColor": "Dynamic Color",
+  "@settings_dynamicColor": {
+    "description": "Dynamic Color toggle title"
+  },
+  "settings_dynamicColorSubtitle": "Use system wallpaper colors",
+  "@settings_dynamicColorSubtitle": {
+    "description": "Dynamic Color toggle subtitle"
+  },
+  "settings_accentColor": "Accent Color",
+  "@settings_accentColor": {
+    "description": "Accent Color title"
+  },
+  "settings_accentColorSubtitle": "Choose a seed color for the app",
+  "@settings_accentColorSubtitle": {
+    "description": "Accent Color subtitle"
+  },
+  "settings_appFont": "App Font",
   "settings_currency": "Currency",
   "settings_defaultCurrency": "Default Currency",
   "settings_preferences": "Preferences",
@@ -442,7 +460,7 @@
   "accounts_goldPurityKarat": "Gold Purity (Karat)",
   "accounts_weight": "Weight",
   "accounts_excludeFromTotalBala": "Exclude from Total Balance",
-  "accounts_colour": "Colour",
+  "accounts_color": "Color",
   "accounts_liveGoldValue": "Live Gold Value",
   "accounts_enterWeightAboveToSe": "Enter weight above to see value",
   "add_transaction_expense": "Expense",
@@ -473,7 +491,7 @@
   "categories_categories": "Categories",
   "categories_expense": "Expense",
   "categories_income": "Income",
-  "categories_colour": "Colour",
+  "categories_color": "Color",
   "categories_icon": "Icon",
   "categories_autoBasedOnName": "Auto (based on name)",
   "categories_expenseCategories": "Expense Categories",
@@ -492,7 +510,7 @@
   "insights_insights": "Insights",
   "lended_person_deletePerson": "Delete person",
   "lended_person_editPerson": "Edit Person",
-  "lended_person_colour": "Colour",
+  "lended_person_color": "Color",
   "lended_person_saveChanges": "Save Changes",
   "lended_person_settled": "SETTLED",
   "lended_person_settle": "Settle",
@@ -506,7 +524,7 @@
   "lended_person_settled_": "Settled",
   "lended_lentMoney": "Lent Money",
   "lended_overdue": "OVERDUE",
-  "lended_colour": "Colour",
+  "lended_color": "Color",
   "more_more": "More",
   "onboarding_back": "Back",
   "onboarding_welcomeToExpensy": "Welcome to Expensy!",
@@ -522,7 +540,7 @@
   "onboarding_setUpYourMainAccount": "Set up your main account to start tracking.",
   "onboarding_accountType": "Account Type",
   "onboarding_currency": "Currency",
-  "onboarding_colour": "Colour",
+  "onboarding_color": "Color",
   "recurring_recurring": "Recurring",
   "recurring_income": "INCOME",
   "recurring_2D": "−2d",
@@ -585,4 +603,57 @@
   "recurring_installmentsRequireEndDate": "Installments must have a final payment date.",
   "backup_importFromOtherApps": "Import from Other Apps",
   "backup_importDescription": "Import data from supported apps",
-  "backup_importFromGreenStash": "Import from GreenStash (.json)"}
+  "backup_importFromGreenStash": "Import from GreenStash (.json)",
+  "backup_automaticBackup": "Automatic Backup",
+  "backup_dailyAutoBackup": "Daily Auto Backup",
+  "backup_runsDailyAt": "Runs daily at {time}",
+  "@backup_runsDailyAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "backup_lastBackup": "Last backup: {time}",
+  "@backup_lastBackup": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "backup_savingTo": "Saving to: {path}",
+  "@backup_savingTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "backup_changeTime": "Change Time",
+  "backup_changeFolder": "Change Folder",
+  "budget_budgetsAndGoals": "Budgets & Goals",
+  "onboarding_restoreGreenStash": "Restore from GreenStash (.json)",
+  "savings_goalNotFound": "Goal not found",
+  "savings_savedSoFar": "Saved so far",
+  "savings_target": "Target",
+  "savings_targetDate": "Target Date: {date}",
+  "@savings_targetDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "savings_contribute": "Contribute",
+  "savings_withdraw": "Withdraw",
+  "savings_noAccounts": "No accounts available. Please add an account first.",
+  "settings_budgetAlerts": "Budget Alerts",
+  "settings_budgetAlertsSub": "Notify when a budget or goal is reached",
+  "settings_dailyReminder": "Daily Reminder",
+  "settings_dailyReminderSub": "Remind to log transactions daily",
+  "settings_reminderTime": "Reminder Time",
+  "settings_hapticFeedback": "Haptic Feedback",
+  "settings_hapticFeedbackSub": "Vibrate on interactions",
+  "savings_saveGoal": "Save Goal"
+}

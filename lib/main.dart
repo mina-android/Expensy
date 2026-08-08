@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'providers/app_provider.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'services/budget_notification_service.dart';
 import 'services/daily_reminder_service.dart';
 import 'l10n/app_localizations.dart';
@@ -15,7 +14,6 @@ import 'screens/add_transaction_screen.dart';
 import 'services/notification_service.dart';
 import 'services/lended_notification_service.dart';
 import 'services/quick_add_service.dart';
-import 'services/auto_backup_service.dart';
 
 /// Root navigator key so the "Quick Add Transaction" home screen widget can
 /// push [AddTransactionScreen] on top of whatever's currently showing,
@@ -37,10 +35,9 @@ void main() async {
   await LendedNotificationService().initialize();
   await BudgetNotificationService().initialize();
   await DailyReminderService().initialize();
-  await AutoBackupService.initialize();
 
   final provider = AppProvider();
-  await provider.load();   // DB reads finish before Flutter draws anything
+  await provider.load(); // DB reads finish before Flutter draws anything
 
   runApp(
     ChangeNotifierProvider.value(
@@ -102,38 +99,61 @@ class _ExpensyAppState extends State<ExpensyApp> {
 
   @override
   Widget build(BuildContext context) {
-    final app = context.watch<AppProvider>();
-    final s   = app.settings;
+    // Watch only the specific settings properties needed by MaterialApp.
+    // This prevents the entire app from rebuilding when transactions, accounts, etc. change.
+    final settingsRecord = context.select<AppProvider,
+        (bool, String, String, String, String, bool, bool)>((app) {
+      final s = app.settings;
+      return (
+        s.dynamicColorEnabled,
+        s.languageCode,
+        s.themeMode,
+        s.themeSeed,
+        s.appFont,
+        s.amoledSurfaces,
+        s.onboarded
+      );
+    });
+
+    final usesDynamic = settingsRecord.$1;
+    final languageCode = settingsRecord.$2;
+    final themeMode = settingsRecord.$3;
+    final themeSeed = settingsRecord.$4;
+    final appFont = settingsRecord.$5;
+    final amoledSurfaces = settingsRecord.$6;
+    final onboarded = settingsRecord.$7;
 
     return DynamicColorBuilder(
       builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
-        // Dynamic colour only when following the system — Android 12+ devices
-        // provide a wallpaper-extracted palette; older devices return null and
-        // fall back to the chosen seed colour automatically.
-        final usesDynamic = s.dynamicColorEnabled;
+        final view = View.of(context);
+        final mediaQueryData =
+            MediaQueryData.fromView(view).copyWith(accessibleNavigation: false);
 
-        return MaterialApp(
-          title: 'Expensy',
-          navigatorKey: rootNavigatorKey,
-          debugShowCheckedModeBanner: false,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          locale: s.languageCode == 'system' ? null : Locale(s.languageCode),
-          themeMode: resolveThemeMode(s.themeMode),
-          theme: buildTheme(
-            seed:          s.themeSeed,
-            dark:          false,
-            appFont:       s.appFont,
-            dynamicScheme: usesDynamic ? lightDynamic : null,
+        return MediaQuery(
+          data: mediaQueryData,
+          child: MaterialApp(
+            title: 'Expensy',
+            navigatorKey: rootNavigatorKey,
+            debugShowCheckedModeBanner: false,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: languageCode == 'system' ? null : Locale(languageCode),
+            themeMode: resolveThemeMode(themeMode),
+            theme: buildTheme(
+              seed: themeSeed,
+              dark: false,
+              appFont: appFont,
+              dynamicScheme: usesDynamic ? lightDynamic : null,
+            ),
+            darkTheme: buildTheme(
+              seed: themeSeed,
+              dark: true,
+              amoled: amoledSurfaces, // applies regardless of color source
+              appFont: appFont,
+              dynamicScheme: usesDynamic ? darkDynamic : null,
+            ),
+            home: onboarded ? const MainShell() : const OnboardingScreen(),
           ),
-          darkTheme: buildTheme(
-            seed:          s.themeSeed,
-            dark:          true,
-            amoled:        s.amoledSurfaces, // applies regardless of colour source
-            appFont:       s.appFont,
-            dynamicScheme: usesDynamic ? darkDynamic : null,
-          ),
-          home: s.onboarded ? const MainShell() : const OnboardingScreen(),
         );
       },
     );

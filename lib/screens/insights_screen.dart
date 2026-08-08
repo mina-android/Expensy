@@ -8,39 +8,159 @@ import '../providers/app_provider.dart';
 import '../models/models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
+import 'package:flutter/foundation.dart';
+import '../database/db_helper.dart';
+import '../services/exchange_rate_service.dart';
 
-class InsightsScreen extends StatelessWidget {
-  const InsightsScreen({super.key});
+class _ComputePayload {
+  final List<AppTransaction> txs;
+  final String mainCurrency;
+  final Map<String, double> rates;
+  final Map<String, String> accountCurrencies;
+  final DateTime now;
+  final Map<String, String> categoryNames;
+  
+  _ComputePayload({
+    required this.txs,
+    required this.mainCurrency,
+    required this.rates,
+    required this.accountCurrencies,
+    required this.now,
+    required this.categoryNames,
+  });
+}
 
-  // ── Data helpers ──────────────────────────────────────────────────────
+class _InsightsData {
+  final List<AppTransaction> thisMonth;
+  final List<AppTransaction> lastMonth;
+  final double thisExp;
+  final double lastExp;
+  final double thisInc;
+  final double pctChange;
+  final double dailyAverage;
+  final int daysElapsed;
+  final Map<String, double> thisCatMap;
+  final Map<String, double> lastCatMap;
+  final List<MapEntry<String, double>> topCats;
+  final AppTransaction? biggestTx;
+  final double biggestAmt;
+  final List<DateTime> months12;
+  final List<FlSpot> expSpots;
+  final List<FlSpot> incSpots;
 
-  static List<AppTransaction> _txsInMonth(AppProvider app, DateTime month) {
+  _InsightsData({
+    required this.thisMonth, required this.lastMonth, required this.thisExp, required this.lastExp,
+    required this.thisInc, required this.pctChange, required this.dailyAverage, required this.daysElapsed,
+    required this.thisCatMap, required this.lastCatMap, required this.topCats,
+    this.biggestTx, required this.biggestAmt,
+    required this.months12, required this.expSpots, required this.incSpots,
+  });
+}
+
+_InsightsData _computeInsights(_ComputePayload p) {
+  List<AppTransaction> txsInMonth(DateTime month) {
     final start = DateTime(month.year, month.month, 1);
     final end   = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
-    return app.transactions
-        .where((t) => !t.date.isBefore(start) && !t.date.isAfter(end))
-        .toList();
+    return p.txs.where((t) => !t.date.isBefore(start) && !t.date.isAfter(end)).toList();
+  }
+  
+  final er = ExchangeRateService();
+  double converted(AppTransaction t) {
+    final acctCur = p.accountCurrencies[t.accountId];
+    final cur = t.currency.isNotEmpty ? t.currency : (acctCur ?? p.mainCurrency);
+    if (cur == p.mainCurrency || p.rates.isEmpty) return t.amount;
+    return er.convert(t.amount, cur, p.mainCurrency, p.rates) ?? t.amount;
   }
 
-  static double _converted(AppProvider app, AppTransaction t) {
-    final acct = app.accountById(t.accountId);
-    final cur  = t.currency.isNotEmpty
-        ? t.currency
-        : (acct?.currency ?? app.settings.currency);
-    return app.convertToMain(t.amount, cur);
-  }
+  double sum(List<AppTransaction> ts, String type) =>
+      ts.where((t) => t.type == type).fold(0.0, (s, t) => s + converted(t));
 
-  static double _sum(AppProvider app, List<AppTransaction> txs, String type) =>
-      txs.where((t) => t.type == type).fold(0.0, (s, t) => s + _converted(app, t));
-
-  static Map<String, double> _byCategory(
-      AppProvider app, List<AppTransaction> txs, String type, String otherLabel) {
+  Map<String, double> byCategory(List<AppTransaction> ts, String type, String otherLabel) {
     final map = <String, double>{};
-    for (final t in txs.where((t) => t.type == type)) {
-      final cat = app.categoryById(t.categoryId)?.name ?? otherLabel;
-      map[cat] = (map[cat] ?? 0) + _converted(app, t);
+    for (final t in ts.where((x) => x.type == type)) {
+      final cat = p.categoryNames[t.categoryId] ?? otherLabel;
+      map[cat] = (map[cat] ?? 0) + converted(t);
     }
     return map;
+  }
+  
+  final thisMonth = txsInMonth(p.now);
+  final lastMonth = txsInMonth(DateTime(p.now.year, p.now.month - 1));
+  
+  final thisExp = sum(thisMonth, 'expense');
+  final lastExp = sum(lastMonth, 'expense');
+  final thisInc = sum(thisMonth, 'income');
+  final pctChange = lastExp > 0 ? ((thisExp - lastExp) / lastExp * 100) : (thisExp > 0 ? 100.0 : 0.0);
+  final daysElapsed = p.now.day.clamp(1, 31);
+  final dailyAverage = thisExp / daysElapsed;
+  
+  final thisCatMap = byCategory(thisMonth, 'expense', 'Other');
+  final lastCatMap = byCategory(lastMonth, 'expense', 'Other');
+  
+  final topCats = (thisCatMap.entries.toList()..sort((a, b) => b.value.compareTo(a.value))).take(3).toList();
+  
+  AppTransaction? biggestTx;
+  double biggestAmt = 0;
+  for (final t in thisMonth.where((t) => t.type == 'expense')) {
+    final a = converted(t);
+    if (a > biggestAmt) { biggestAmt = a; biggestTx = t; }
+  }
+  
+  final months12 = List.generate(12, (i) => DateTime(p.now.year, p.now.month - 11 + i));
+  final expSpots = <FlSpot>[];
+  final incSpots = <FlSpot>[];
+  for (int i = 0; i < months12.length; i++) {
+    final ts = txsInMonth(months12[i]);
+    expSpots.add(FlSpot(i.toDouble(), sum(ts, 'expense')));
+    incSpots.add(FlSpot(i.toDouble(), sum(ts, 'income')));
+  }
+
+  return _InsightsData(
+    thisMonth: thisMonth, lastMonth: lastMonth, thisExp: thisExp, lastExp: lastExp,
+    thisInc: thisInc, pctChange: pctChange, dailyAverage: dailyAverage, daysElapsed: daysElapsed,
+    thisCatMap: thisCatMap, lastCatMap: lastCatMap, topCats: topCats, biggestTx: biggestTx, biggestAmt: biggestAmt,
+    months12: months12, expSpots: expSpots, incSpots: incSpots,
+  );
+}
+
+class InsightsScreen extends StatefulWidget {
+  const InsightsScreen({super.key});
+
+  @override
+  State<InsightsScreen> createState() => _InsightsScreenState();
+}
+
+class _InsightsScreenState extends State<InsightsScreen> {
+  bool _isLoading = true;
+  _InsightsData? _data;
+  int _lastTxLength = -1;
+  int _lastLoadTime = 0;
+
+  Future<void> _loadData() async {
+    if (!mounted) return;
+    setState(() => _isLoading = true);
+    final app = context.read<AppProvider>();
+    
+    final allTxs = await DBHelper.getTransactions(limit: null); 
+
+    final payload = _ComputePayload(
+      txs: allTxs,
+      mainCurrency: app.settings.currency,
+      rates: app.exchangeRates,
+      accountCurrencies: { for (var a in app.accounts) a.id: a.currency },
+      now: DateTime.now(),
+      categoryNames: { for (var c in app.categories) c.id: c.name },
+    );
+
+    final data = await compute(_computeInsights, payload);
+    
+    if (mounted) {
+      setState(() {
+        _data = data;
+        _isLoading = false;
+        _lastLoadTime = DateTime.now().millisecondsSinceEpoch;
+      });
+    }
   }
 
   @override
@@ -51,11 +171,19 @@ class InsightsScreen extends StatelessWidget {
     final cur = app.settings.currency;
     String fmt(double v) => formatAmount(v, cur);
 
-    if (app.transactions.isEmpty) {
+    // Trigger reload if transactions changed
+    if (_lastTxLength != app.transactions.length) {
+      _lastTxLength = app.transactions.length;
+      if (DateTime.now().millisecondsSinceEpoch - _lastLoadTime > 100) {
+        Future.microtask(_loadData);
+      }
+    }
+
+    if (app.transactions.isEmpty && !_isLoading) {
       return Scaffold(
         appBar: AppBar(
           title: Text(l10n.insights_insights,
-              style: TextStyle(fontWeight: FontWeight.w800)),
+              style: const TextStyle(fontWeight: FontWeight.w800)),
           backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
         ),
         body: EmptyState(
@@ -65,55 +193,61 @@ class InsightsScreen extends StatelessWidget {
         ),
       );
     }
-
-    final now       = DateTime.now();
-    final thisMonth = _txsInMonth(app, now);
-    final lastMonth = _txsInMonth(app, DateTime(now.year, now.month - 1));
-
-    final thisExp  = _sum(app, thisMonth, 'expense');
-    final lastExp  = _sum(app, lastMonth, 'expense');
-    final thisInc  = _sum(app, thisMonth, 'income');
-    final pctChange = lastExp > 0
-        ? ((thisExp - lastExp) / lastExp * 100)
-        : (thisExp > 0 ? 100.0 : 0.0);
-
-    final daysElapsed  = now.day.clamp(1, 31);
-    final dailyAverage = thisExp / daysElapsed;
-
-    final thisCatMap = _byCategory(app, thisMonth, 'expense', l10n.insights_other);
-    final lastCatMap = _byCategory(app, lastMonth, 'expense', l10n.insights_other);
-
-    final topCats = (thisCatMap.entries.toList()
-          ..sort((a, b) => b.value.compareTo(a.value)))
-        .take(3)
-        .toList();
-
-    AppTransaction? biggestTx;
-    double biggestAmt = 0;
-    for (final t in thisMonth.where((t) => t.type == 'expense')) {
-      final a = _converted(app, t);
-      if (a > biggestAmt) { biggestAmt = a; biggestTx = t; }
+    
+    if (_isLoading || _data == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(l10n.insights_insights,
+              style: const TextStyle(fontWeight: FontWeight.w800)),
+          backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
     }
+    
+    final data = _data!;
+    final now = DateTime.now();
+    final thisExp = data.thisExp;
+    final lastExp = data.lastExp;
+    final thisInc = data.thisInc;
+    final pctChange = data.pctChange;
+    final dailyAverage = data.dailyAverage;
+    final daysElapsed = data.daysElapsed;
+    final thisCatMap = data.thisCatMap;
+    final lastCatMap = data.lastCatMap;
+    final topCats = data.topCats;
+    final biggestTx = data.biggestTx;
+    final biggestAmt = data.biggestAmt;
+    final months12 = data.months12;
+    final incSpots = data.incSpots;
+    final expSpots = data.expSpots;
 
-    // 12-month line chart data
-    final months12 = List.generate(12, (i) =>
-        DateTime(now.year, now.month - 11 + i));
-    final expSpots = <FlSpot>[];
-    final incSpots = <FlSpot>[];
-    for (int i = 0; i < months12.length; i++) {
-      final txs = _txsInMonth(app, months12[i]);
-      expSpots.add(FlSpot(i.toDouble(), _sum(app, txs, 'expense')));
-      incSpots.add(FlSpot(i.toDouble(), _sum(app, txs, 'income')));
-    }
+    final daysInMonth = DateUtils.getDaysInMonth(now.year, now.month);
+    final projectedTotal = dailyAverage * daysInMonth;
+    final remainingDays = daysInMonth - daysElapsed;
+    final totalBudget = app.budgets.fold(0.0, (s, b) => s + b.amount);
+    final forecastColor = totalBudget > 0
+        ? (projectedTotal >= totalBudget
+            ? cs.error
+            : (projectedTotal >= totalBudget * 0.75
+                ? Colors.orange
+                : cs.primary))
+        : cs.primary;
+
+    final liveTotalAccounts = app.totalBalanceAll;
+    final liveTotalAssets = app.totalAssetsValue;
+    final liveNetWorth = liveTotalAccounts + liveTotalAssets;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.insights_insights,
-            style: TextStyle(fontWeight: FontWeight.w800)),
+            style: const TextStyle(fontWeight: FontWeight.w800)),
         backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 40),
+      body: RefreshIndicator(
+        onRefresh: app.refreshRates,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 40),
         children: [
 
           // ── This vs Last month ──────────────────────────────────────
@@ -167,6 +301,81 @@ class InsightsScreen extends StatelessWidget {
           )),
           const SizedBox(height: 12),
 
+          // ── Spending Forecast ───────────────────────────────────────
+          if (daysElapsed >= 3) ...[
+            const _SectionLabel(label: 'Spending Forecast'),
+            Card(
+                child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: cs.tertiaryContainer,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(Icons.insights_rounded,
+                      color: cs.tertiary, size: 22),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                      RichText(
+                        text: TextSpan(
+                          style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: cs.onSurface),
+                          children: [
+                            const TextSpan(
+                                text: 'At this rate, you\'ll spend '),
+                            TextSpan(
+                                text: fmt(projectedTotal),
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    color: forecastColor)),
+                            TextSpan(
+                                text:
+                                    ' by the end of ${DateFormat('MMMM').format(now)} — $remainingDays days left.'),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Projection based on spending so far, doesn\'t include upcoming recurring bills.',
+                        style: TextStyle(
+                            fontSize: 11,
+                            color: cs.onSurface.withValues(alpha: 0.5)),
+                      ),
+                    ])),
+              ]),
+            )),
+            const SizedBox(height: 12),
+          ] else ...[
+            const _SectionLabel(label: 'Spending Forecast'),
+            Card(
+                child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(children: [
+                Icon(Icons.info_outline,
+                    size: 20, color: cs.onSurface.withValues(alpha: 0.5)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Based on the first $daysElapsed days — accuracy improves as the month goes on.',
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: cs.onSurface.withValues(alpha: 0.6)),
+                  ),
+                ),
+              ]),
+            )),
+            const SizedBox(height: 12),
+          ],
+
           // ── Income vs Expense ratio ─────────────────────────────────
           if (thisInc > 0 || thisExp > 0) ...[
             _SectionLabel(label: l10n.insights_incomeVsExpenses),
@@ -186,10 +395,10 @@ class InsightsScreen extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     l10n.insights_percentSaved(((thisInc - thisExp) / thisInc * 100).toStringAsFixed(0)),
-                    style: TextStyle(
+                    style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF2E7D32)),
+                        color: Color(0xFF2E7D32)),
                   ),
                 ],
               ]),
@@ -203,56 +412,126 @@ class InsightsScreen extends StatelessWidget {
             Card(child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
-                children: topCats.map((e) {
-                  final cat = app.categories
-                      .where((c) => c.name == e.key)
-                      .firstOrNull;
-                  final pct = thisExp > 0 ? e.value / thisExp : 0.0;
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Row(children: [
-                      CategoryDot(category: cat, size: 36),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                          Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
-                              children: [
-                            Text(e.key,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 13)),
-                            Text(fmt(e.value),
-                                style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w800,
-                                    color: cs.primary)),
-                          ]),
-                          const SizedBox(height: 4),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(3),
-                            child: LinearProgressIndicator(
-                              value: pct.clamp(0.0, 1.0),
-                              minHeight: 4,
-                              backgroundColor:
-                                  cs.primary.withValues(alpha: 0.1),
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                              l10n.insights_percentOfTotal((pct * 100).toStringAsFixed(1)),
-                              style: TextStyle(
-                                  fontSize: 10,
-                                  color:
-                                      cs.onSurface.withValues(alpha: 0.45))),
-                        ]),
+                children: [
+                  SizedBox(
+                    height: 200,
+                    child: PieChart(
+                      PieChartData(
+                        sectionsSpace: 2,
+                        centerSpaceRadius: 40,
+                        sections: topCats.asMap().entries.map((entry) {
+                          final i = entry.key;
+                          final e = entry.value;
+                          final color = i == 0 
+                              ? cs.primary 
+                              : (i == 1 ? cs.secondary : cs.tertiary);
+                          return PieChartSectionData(
+                            value: e.value,
+                            title: '${(e.value / thisExp * 100).toStringAsFixed(0)}%',
+                            radius: 50,
+                            titleStyle: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white),
+                            color: color,
+                          );
+                        }).toList(),
                       ),
-                    ]),
-                  );
-                }).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Column(
+                    children: topCats.map((e) {
+                      final cat = app.categories
+                          .where((c) => c.name == e.key)
+                          .firstOrNull;
+                      final pct = thisExp > 0 ? e.value / thisExp : 0.0;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Row(children: [
+                          CategoryDot(category: cat, size: 36),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(e.key,
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 13)),
+                                        Text(fmt(e.value),
+                                            style: TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w800,
+                                                color: cs.primary)),
+                                      ]),
+                                  const SizedBox(height: 4),
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(3),
+                                    child: LinearProgressIndicator(
+                                      value: pct.clamp(0.0, 1.0),
+                                      minHeight: 4,
+                                      backgroundColor:
+                                          cs.primary.withValues(alpha: 0.1),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                          l10n.insights_percentOfTotal(
+                                              (pct * 100).toStringAsFixed(1)),
+                                          style: TextStyle(
+                                              fontSize: 10,
+                                              color: cs.onSurface
+                                                  .withValues(alpha: 0.45))),
+                                      if (daysElapsed >= 3)
+                                        Builder(builder: (ctx) {
+                                          final catDaily = e.value / daysElapsed;
+                                          final catProj = catDaily * daysInMonth;
+                                          final catBudget = app
+                                                  .budgetForCategory(cat?.id ?? '')
+                                                  ?.amount ??
+                                              0;
+                                          String txt = 'Proj: ${fmt(catProj)}';
+                                          if (catBudget > 0) {
+                                            final projPct =
+                                                (catProj / catBudget * 100)
+                                                    .toStringAsFixed(0);
+                                            txt += ' ($projPct% of budget)';
+                                          }
+                                          final cColor = catBudget > 0
+                                              ? (catProj >= catBudget
+                                                  ? cs.error
+                                                  : (catProj >= catBudget * 0.75
+                                                      ? Colors.orange
+                                                      : cs.onSurface
+                                                          .withValues(alpha: 0.45)))
+                                              : cs.onSurface
+                                                  .withValues(alpha: 0.45);
+                                          return Text(
+                                            txt,
+                                            style: TextStyle(
+                                                fontSize: 10,
+                                                color: cColor,
+                                                fontWeight: FontWeight.w600),
+                                          );
+                                        }),
+                                    ],
+                                  ),
+                                ]),
+                          ),
+                        ]),
+                      );
+                    }).toList(),
+                  ),
+                ],
               ),
             )),
             const SizedBox(height: 12),
@@ -376,9 +655,130 @@ class InsightsScreen extends StatelessWidget {
               ),
             ]),
           )),
+
+          // ── Net Worth ───────────────────────────────────────────────
+          if (app.netWorthSnapshots.isNotEmpty || liveNetWorth != 0) ...[
+            const _SectionLabel(label: 'Net Worth'),
+            Card(
+                child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Current Net Worth',
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: cs.onSurface.withValues(alpha: 0.5))),
+                  const SizedBox(height: 4),
+                  Text(fmt(liveNetWorth),
+                      style: TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w800,
+                          color: cs.primary)),
+                  const SizedBox(height: 12),
+                  if (app.netWorthSnapshots.isNotEmpty) ...[
+                    Builder(builder: (context) {
+                      final spots = <FlSpot>[];
+                      for (int i = 0; i < app.netWorthSnapshots.length; i++) {
+                        spots.add(FlSpot(i.toDouble(), app.netWorthSnapshots[i].netWorth));
+                      }
+                      // Append live point to show immediate changes
+                      spots.add(FlSpot(app.netWorthSnapshots.length.toDouble(), liveNetWorth));
+
+                      return SizedBox(
+                        height: 80,
+                        child: LineChart(LineChartData(
+                          lineBarsData: [
+                            LineChartBarData(
+                              spots: spots,
+                              isCurved: true,
+                              color: cs.primary,
+                              barWidth: 2,
+                              dotData: const FlDotData(show: false),
+                              belowBarData: BarAreaData(
+                                show: true,
+                                color: cs.primary.withValues(alpha: 0.1),
+                              ),
+                            ),
+                          ],
+                          gridData: const FlGridData(show: false),
+                          borderData: FlBorderData(show: false),
+                          titlesData: const FlTitlesData(show: false),
+                          lineTouchData: const LineTouchData(enabled: false),
+                        )),
+                      );
+                    }),
+                    const SizedBox(height: 12),
+                  ],
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: cs.primaryContainer.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Accounts & Gold',
+                                    style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                        color: cs.onSurface
+                                            .withValues(alpha: 0.55))),
+                                const SizedBox(height: 2),
+                                Text(
+                                    fmt(liveTotalAccounts),
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w800,
+                                        color: cs.primary)),
+                              ]),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: cs.tertiaryContainer.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Assets',
+                                    style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                        color: cs.onSurface
+                                            .withValues(alpha: 0.55))),
+                                const SizedBox(height: 2),
+                                Text(
+                                    fmt(liveTotalAssets),
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w800,
+                                        color: cs.tertiary)),
+                              ]),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            )),
+            const SizedBox(height: 12),
+          ],
+
         ],
       ),
-    );
+    ));
   }
 
   List<Widget> _buildTrendRows(
@@ -504,7 +904,6 @@ class _TrendBadge extends StatelessWidget {
   const _TrendBadge({required this.pct});
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final isUp = pct > 0;
     final isFlat = pct == 0;
     final color = isFlat
@@ -545,7 +944,6 @@ class _RatioBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final total = income + expense;
     if (total == 0) return const SizedBox();
     final incRatio = income / total;

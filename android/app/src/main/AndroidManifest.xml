@@ -15,6 +15,7 @@
     <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
     <!-- Reschedule notifications after device reboot -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
 
     <!-- Storage permissions for export/backup on Android 12 and below -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
@@ -60,6 +61,24 @@
             </intent-filter>
         </activity>
 
+        <service
+            android:name="dev.fluttercommunity.plus.androidalarmmanager.AlarmService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="false"/>
+        
+        <receiver
+            android:name="dev.fluttercommunity.plus.androidalarmmanager.AlarmBroadcastReceiver"
+            android:exported="false"/>
+
+        <receiver
+            android:name="dev.fluttercommunity.plus.androidalarmmanager.RebootBroadcastReceiver"
+            android:enabled="false"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
         <!-- flutter_local_notifications: alarm receiver -->
         <receiver
             android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"
@@ -87,7 +106,7 @@
              directly, so exported="false" is correct and safe here. -->
         <receiver
             android:name=".QuickAddWidgetProvider"
-            android:exported="false"
+            android:exported="true"
             android:label="@string/quick_add_widget_label">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -97,10 +116,25 @@
                 android:resource="@xml/quick_add_widget_info" />
         </receiver>
 
+        <receiver android:name=".BudgetWidgetProvider" android:exported="true" android:label="Budgets">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/budget_widget_info" />
+        </receiver>
+
+        <!-- Accounts Widget -->
+        <receiver android:name=".AccountsWidgetProvider" android:exported="true" android:label="Accounts">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/accounts_widget_info" />
+        </receiver>
+
         <!-- New Nothing Style Add Transaction Widget -->
         <receiver
             android:name=".AddTransactionWidgetProvider"
-            android:exported="false"
+            android:exported="true"
             android:label="Quick Add - Nothing Style">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />

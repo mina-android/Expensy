@@ -1,5 +1,6 @@
 // lib/screens/lended_person_screen.dart
 import 'package:flutter/material.dart';
+import '../utils/snackbar.dart';
 import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -23,16 +24,16 @@ class LendedPersonScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
-    final cs  = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
     // Re-resolve in case the person was edited since this screen was pushed.
     final current = app.personById(person.id) ?? person;
     String fmt(double v) => formatAmount(v, app.settings.currency);
 
     final entries = app.lendedFor(current.id);
-    final active  = entries.where((l) => !l.isSettled).toList();
+    final active = entries.where((l) => !l.isSettled).toList();
     final settled = entries.where((l) => l.isSettled).toList();
     final balance = app.personBalance(current.id);
-    final color   = Color(current.colorValue);
+    final color = Color(current.colorValue);
 
     final balColor = balance > 0
         ? const Color(0xFF2E7D32)
@@ -49,7 +50,8 @@ class LendedPersonScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(current.name,
             style: const TextStyle(fontWeight: FontWeight.w800)),
-        backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
+        backgroundColor: cs.primary,
+        foregroundColor: cs.onPrimary,
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_outlined),
@@ -59,18 +61,26 @@ class LendedPersonScreen extends StatelessWidget {
             icon: const Icon(Icons.more_vert),
             onSelected: (v) async {
               if (v == 'delete') {
-                final ok = await showDeleteConfirm(context, current.name);
-                if (ok && context.mounted) {
-                  await context.read<AppProvider>().deleteLendedPerson(current.id);
-                  if (context.mounted) Navigator.pop(context);
+                AppHaptics.tap(context, HapticStrength.medium);
+                final undo = await context
+                    .read<AppProvider>()
+                    .deleteLendedPersonWithUndo(current.id);
+                if (context.mounted) {
+                  showAppSnackbar(context, '${current.name} deleted',
+                      onUndo: undo);
+                  Navigator.pop(context);
                 }
               }
             },
             itemBuilder: (_) => [
-              PopupMenuItem(value: 'delete', child: Row(children: [
-                const Icon(Icons.delete_outline_rounded, size: 18, color: Colors.red),
-                const SizedBox(width: 8), Text(l10n.lended_person_deletePerson),
-              ])),
+              PopupMenuItem(
+                  value: 'delete',
+                  child: Row(children: [
+                    const Icon(Icons.delete_outline_rounded,
+                        size: 18, color: Colors.red),
+                    const SizedBox(width: 8),
+                    Text(l10n.lended_person_deletePerson),
+                  ])),
             ],
           ),
         ],
@@ -82,51 +92,66 @@ class LendedPersonScreen extends StatelessWidget {
           color: cs.primary,
           child: Column(children: [
             Container(
-              width: 56, height: 56,
+              width: 56,
+              height: 56,
               decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.25),
                   borderRadius: BorderRadius.circular(28)),
-              child: Center(child: Text(
+              child: Center(
+                  child: Text(
                 current.name.isNotEmpty ? current.name[0].toUpperCase() : '?',
-                style: const TextStyle(fontWeight: FontWeight.w800,
-                    fontSize: 22, color: Colors.white),
+                style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 22,
+                    color: Colors.white),
               )),
             ),
             const SizedBox(height: 10),
-            Text(fmt(balance.abs()), style: TextStyle(fontSize: 26,
-                fontWeight: FontWeight.w800, color: cs.onPrimary)),
+            Text(fmt(balance.abs()),
+                style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
+                    color: cs.onPrimary)),
             const SizedBox(height: 4),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                   color: balColor.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(10)),
-              child: Text(balLabel, style: TextStyle(fontSize: 12,
-                  fontWeight: FontWeight.w700, color: balColor)),
+              child: Text(balLabel,
+                  style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: balColor)),
             ),
           ]),
         ),
-        Expanded(child: entries.isEmpty
-          ? EmptyState(icon: Icons.receipt_long_outlined,
-              message: l10n.lended_person_noRecordsYet,
-              subMessage: l10n.lended_person_tapPlusToLog)
-          : ListView(
-              padding: const EdgeInsets.fromLTRB(14, 14, 14, 100),
-              children: [
-                if (active.isNotEmpty) ...[
-                  SectionHeader(title: l10n.lended_person_active),
-                  ...active.map((l) => _EntryCard(l: l, fmt: fmt)),
-                ],
-                if (settled.isNotEmpty) ...[
-                  SectionHeader(title: l10n.lended_person_settled_),
-                  ...settled.map((l) => _EntryCard(l: l, fmt: fmt)),
-                ],
-              ],
-            )),
+        Expanded(
+            child: entries.isEmpty
+                ? EmptyState(
+                    icon: Icons.receipt_long_outlined,
+                    message: l10n.lended_person_noRecordsYet,
+                    subMessage: l10n.lended_person_tapPlusToLog)
+                : ListView(
+                    padding: const EdgeInsets.fromLTRB(14, 14, 14, 100),
+                    children: [
+                      if (active.isNotEmpty) ...[
+                        SectionHeader(title: l10n.lended_person_active),
+                        ...active.map((l) => _EntryCard(l: l, fmt: fmt)),
+                      ],
+                      if (settled.isNotEmpty) ...[
+                        SectionHeader(title: l10n.lended_person_settled_),
+                        ...settled.map((l) => _EntryCard(l: l, fmt: fmt)),
+                      ],
+                    ],
+                  )),
       ]),
       floatingActionButton: FloatingActionButton(
         heroTag: null,
-        onPressed: () { AppHaptics.tap(context, HapticStrength.light); _openEntrySheet(context, current); },
+        onPressed: () {
+          AppHaptics.tap(context, HapticStrength.light);
+          _openEntrySheet(context, current);
+        },
         child: const Icon(Icons.add),
       ),
     );
@@ -134,14 +159,17 @@ class LendedPersonScreen extends StatelessWidget {
 
   static void _editPerson(BuildContext ctx, LendedPerson p) {
     showModalBottomSheet(
-      context: ctx, isScrollControlled: true, useSafeArea: true,
+      context: ctx,
+      isScrollControlled: true,
+      useSafeArea: true,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => _EditPersonInlineSheet(person: p),
     );
   }
 
-  static void openEntrySheetFromExternal(BuildContext ctx, LendedMoney existing) {
+  static void openEntrySheetFromExternal(
+      BuildContext ctx, LendedMoney existing) {
     final app = ctx.read<AppProvider>();
     final p = app.personById(existing.personId);
     if (p == null) return;
@@ -151,7 +179,9 @@ class LendedPersonScreen extends StatelessWidget {
   static void _openEntrySheet(BuildContext ctx, LendedPerson person,
       {LendedMoney? existing}) {
     showModalBottomSheet(
-      context: ctx, isScrollControlled: true, useSafeArea: true,
+      context: ctx,
+      isScrollControlled: true,
+      useSafeArea: true,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => _EntrySheet(person: person, existing: existing),
@@ -170,14 +200,15 @@ class _EditPersonInlineSheet extends StatefulWidget {
 }
 
 class _EditPersonInlineSheetState extends State<_EditPersonInlineSheet> {
-  late final _nameCtrl  = TextEditingController(text: widget.person.name);
+  late final _nameCtrl = TextEditingController(text: widget.person.name);
   late final _notesCtrl = TextEditingController(text: widget.person.notes);
   late int _color = widget.person.colorValue;
   bool _submitted = false;
 
   @override
   void dispose() {
-    _nameCtrl.dispose(); _notesCtrl.dispose();
+    _nameCtrl.dispose();
+    _notesCtrl.dispose();
     super.dispose();
   }
 
@@ -187,7 +218,9 @@ class _EditPersonInlineSheetState extends State<_EditPersonInlineSheet> {
     if (name.isEmpty) return;
     final app = context.read<AppProvider>();
     await app.updateLendedPerson(widget.person.copyWith(
-      name: name, colorValue: _color, notes: _notesCtrl.text.trim(),
+      name: name,
+      colorValue: _color,
+      notes: _notesCtrl.text.trim(),
     ));
     if (mounted) Navigator.pop(context);
   }
@@ -197,55 +230,79 @@ class _EditPersonInlineSheetState extends State<_EditPersonInlineSheet> {
     final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     return Padding(
-      padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-          left: 20, right: 20, top: 20),
-      child: SingleChildScrollView(child: Column(
+      padding: const EdgeInsets.only(
+          bottom: 16,
+          left: 20,
+          right: 20,
+          top: 20),
+      child: SingleChildScrollView(
+          child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l10n.lended_person_editPerson, style: Theme.of(context).textTheme.titleLarge
-              ?.copyWith(fontWeight: FontWeight.w800)),
+          Text(l10n.lended_person_editPerson,
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge
+                  ?.copyWith(fontWeight: FontWeight.w800)),
           const SizedBox(height: 12),
           TextField(
-              controller: _nameCtrl,
-              decoration: InputDecoration(
-                  labelText: l10n.lended_person_name,
-                  prefixIcon: const Icon(Icons.person_outline_rounded),
-                  errorText: _submitted && _nameCtrl.text.trim().isEmpty ? l10n.error_required : null,
-              ),
+            controller: _nameCtrl,
+            textInputAction: TextInputAction.next,
+            decoration: InputDecoration(
+              labelText: l10n.lended_person_name,
+              prefixIcon: const Icon(Icons.person_outline_rounded),
+              errorText: _submitted && _nameCtrl.text.trim().isEmpty
+                  ? l10n.error_required
+                  : null,
+            ),
           ),
           const SizedBox(height: 14),
-          Text(l10n.lended_person_colour, style: Theme.of(context).textTheme.labelMedium
-              ?.copyWith(letterSpacing: 1)),
+          Text(l10n.lended_person_color,
+              style: Theme.of(context)
+                  .textTheme
+                  .labelMedium
+                  ?.copyWith(letterSpacing: 1)),
           const SizedBox(height: 8),
-          Wrap(spacing: 10, runSpacing: 10, children: kLendedPersonColors.map((col) {
-            final sel = _color == col;
-            return GestureDetector(
-              onTap: () => setState(() => _color = col),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 100),
-                width: 36, height: 36,
-                decoration: BoxDecoration(
-                  color: Color(col), shape: BoxShape.circle,
-                  border: sel
-                      ? Border.all(color: cs.onSurface, width: 2.5)
-                      : null,
-                ),
-                child: sel
-                    ? const Icon(Icons.check, color: Colors.white, size: 18)
-                    : null,
-              ),
-            );
-          }).toList()),
+          Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: kLendedPersonColors.map((col) {
+                final sel = _color == col;
+                return GestureDetector(
+                  onTap: () => setState(() => _color = col),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 100),
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: Color(col),
+                      shape: BoxShape.circle,
+                      border: sel
+                          ? Border.all(color: cs.onSurface, width: 2.5)
+                          : null,
+                    ),
+                    child: sel
+                        ? const Icon(Icons.check, color: Colors.white, size: 18)
+                        : null,
+                  ),
+                );
+              }).toList()),
           const SizedBox(height: 14),
-          TextField(controller: _notesCtrl, maxLines: 2,
+          TextField(
+              controller: _notesCtrl,
+              maxLines: 2,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _submit(),
               decoration: InputDecoration(
                   labelText: l10n.lended_person_notesOptional,
                   prefixIcon: const Icon(Icons.sticky_note_2_outlined))),
           const SizedBox(height: 20),
           FilledButton(
-            onPressed: () { AppHaptics.tap(context, HapticStrength.light); _submit(); },
+            onPressed: () {
+              AppHaptics.tap(context, HapticStrength.light);
+              _submit();
+            },
             style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(50),
                 shape: RoundedRectangleBorder(
@@ -267,13 +324,11 @@ class _EntryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final cs     = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
     final isLent = l.type == 'lent';
-    final color  = isLent
-        ? const Color(0xFF2E7D32)
-        : const Color(0xFFC62828);
+    final color = isLent ? const Color(0xFF2E7D32) : const Color(0xFFC62828);
 
-    final now    = DateTime.now();
+    final now = DateTime.now();
     final isOverdue = l.dueDate != null &&
         !l.isSettled &&
         l.dueDate!.isBefore(DateTime(now.year, now.month, now.day));
@@ -284,7 +339,9 @@ class _EntryCard extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
-            Container(width: 42, height: 42,
+            Container(
+                width: 42,
+                height: 42,
                 decoration: BoxDecoration(
                     color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12)),
@@ -294,35 +351,46 @@ class _EntryCard extends StatelessWidget {
                         : Icons.arrow_downward_rounded,
                     color: color)),
             const SizedBox(width: 12),
-            Expanded(child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(isLent ? l10n.lended_person_lent : l10n.lended_person_borrowed, style: const TextStyle(
-                  fontWeight: FontWeight.w700, fontSize: 15)),
-              Text(DateFormat('d MMM yyyy').format(l.date),
-                  style: TextStyle(fontSize: 11,
-                      color: cs.onSurface.withValues(alpha: 0.5))),
-            ])),
+            Expanded(
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                  Text(
+                      isLent
+                          ? l10n.lended_person_lent
+                          : l10n.lended_person_borrowed,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w700, fontSize: 15)),
+                  Text(DateFormat('d MMM yyyy').format(l.date),
+                      style: TextStyle(
+                          fontSize: 11,
+                          color: cs.onSurface.withValues(alpha: 0.5))),
+                ])),
             Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-              Text(fmt(l.amount), style: TextStyle(fontSize: 16,
-                  fontWeight: FontWeight.w800, color: color)),
+              Text(fmt(l.amount),
+                  style: TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.w800, color: color)),
               if (l.dueDate != null)
                 Text(
                   isOverdue
                       ? l10n.lended_person_overdue
-                      : l10n.lended_person_due(DateFormat('d MMM yy').format(l.dueDate!)),
-                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600,
-                      color: isOverdue ? cs.error
+                      : l10n.lended_person_due(
+                          DateFormat('d MMM yy').format(l.dueDate!)),
+                  style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: isOverdue
+                          ? cs.error
                           : cs.onSurface.withValues(alpha: 0.5)),
                 ),
             ]),
           ]),
-
           if (l.notes.isNotEmpty) ...[
             const SizedBox(height: 6),
-            Text(l.notes, style: TextStyle(fontSize: 12,
-                color: cs.onSurface.withValues(alpha: 0.6))),
+            Text(l.notes,
+                style: TextStyle(
+                    fontSize: 12, color: cs.onSurface.withValues(alpha: 0.6))),
           ],
-
           if (l.reminderEnabled && l.dueDate != null && !l.isSettled) ...[
             const SizedBox(height: 6),
             Container(
@@ -336,13 +404,14 @@ class _EntryCard extends StatelessWidget {
                 const SizedBox(width: 4),
                 Text(
                   l10n.lended_person_reminderAt(l.reminderTime),
-                  style: TextStyle(fontSize: 10,
-                      fontWeight: FontWeight.w600, color: cs.primary),
+                  style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: cs.primary),
                 ),
               ]),
             ),
           ],
-
           const SizedBox(height: 8),
           Row(children: [
             if (l.isSettled)
@@ -351,15 +420,18 @@ class _EntryCard extends StatelessWidget {
                 decoration: BoxDecoration(
                     color: const Color(0xFFE8F5E9),
                     borderRadius: BorderRadius.circular(8)),
-                child: Text(l10n.lended_person_settled, style: TextStyle(fontSize: 10,
-                    fontWeight: FontWeight.w700, color: Color(0xFF2E7D32))),
+                child: Text(l10n.lended_person_settled,
+                    style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF2E7D32))),
               )
             else
               TextButton.icon(
                 icon: const Icon(Icons.check_circle_outline, size: 16),
-                label: Text(l10n.lended_person_settle, style: TextStyle(fontSize: 12)),
-                onPressed: () =>
-                    context.read<AppProvider>().settleLended(l),
+                label: Text(l10n.lended_person_settle,
+                    style: const TextStyle(fontSize: 12)),
+                onPressed: () => context.read<AppProvider>().settleLended(l),
               ),
             const Spacer(),
             IconButton(
@@ -378,10 +450,9 @@ class _EntryCard extends StatelessWidget {
                 onPressed: () async {
                   final app = context.read<AppProvider>();
                   final person = app.personById(l.personId);
-                  if (await showDeleteConfirm(
-                          context, person?.name ?? 'this record') &&
-                      context.mounted) {
-                    app.deleteLended(l.id);
+                  final undo = await app.deleteLendedWithUndo(l.id);
+                  if (context.mounted) {
+                    showAppSnackbar(context, 'Record deleted', onUndo: undo);
                   }
                 }),
           ]),
@@ -401,14 +472,14 @@ class _EntrySheet extends StatefulWidget {
 }
 
 class _EntrySheetState extends State<_EntrySheet> {
-  final _amtCtrl   = TextEditingController();
+  final _amtCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
 
-  String    _type             = 'lent';
-  String?   _accountId;
+  String _type = 'lent';
+  String? _accountId;
   DateTime? _dueDate;
-  bool      _reminderEnabled  = false;
-  TimeOfDay _reminderTime     = const TimeOfDay(hour: 9, minute: 0);
+  bool _reminderEnabled = false;
+  TimeOfDay _reminderTime = const TimeOfDay(hour: 9, minute: 0);
 
   bool _submitted = false;
 
@@ -418,27 +489,23 @@ class _EntrySheetState extends State<_EntrySheet> {
       '${_reminderTime.hour.toString().padLeft(2, '0')}:'
       '${_reminderTime.minute.toString().padLeft(2, '0')}';
 
-  /// True when [_dueDate] is today and [_reminderTime] has already passed —
-  /// the case where NotificationService falls back to a near-term reminder
-  /// instead of the picked time (see scheduleLendedReminder /
-  /// _fallbackDueTodayDate), since a system-computed recurring nextDate is
-  /// never "today, earlier than now" the way a freely-picked dueDate can be.
   bool get _reminderTimeAlreadyPassedToday {
     if (_dueDate == null) return false;
     final now = DateTime.now();
-    final isToday = _dueDate!.year == now.year &&
+    if (_dueDate!.year == now.year &&
         _dueDate!.month == now.month &&
-        _dueDate!.day == now.day;
-    if (!isToday) return false;
-    final target = DateTime(
-        now.year, now.month, now.day, _reminderTime.hour, _reminderTime.minute);
-    return target.isBefore(now);
+        _dueDate!.day == now.day) {
+      return now.hour > _reminderTime.hour ||
+          (now.hour == _reminderTime.hour &&
+              now.minute >= _reminderTime.minute);
+    }
+    return false;
   }
 
   static TimeOfDay _parseTime(String s) {
     final parts = s.split(':');
     return TimeOfDay(
-      hour:   int.tryParse(parts[0]) ?? 9,
+      hour: int.tryParse(parts[0]) ?? 9,
       minute: parts.length > 1 ? (int.tryParse(parts[1]) ?? 0) : 0,
     );
   }
@@ -448,19 +515,20 @@ class _EntrySheetState extends State<_EntrySheet> {
     super.initState();
     final e = widget.existing;
     if (e != null) {
-      _amtCtrl.text     = e.amount.toStringAsFixed(2);
-      _notesCtrl.text   = e.notes;
-      _type             = e.type;
-      _accountId        = e.accountId;
-      _dueDate          = e.dueDate;
-      _reminderEnabled  = e.reminderEnabled;
-      _reminderTime     = _parseTime(e.reminderTime);
+      _amtCtrl.text = e.amount.toStringAsFixed(2);
+      _notesCtrl.text = e.notes;
+      _type = e.type;
+      _accountId = e.accountId;
+      _dueDate = e.dueDate;
+      _reminderEnabled = e.reminderEnabled;
+      _reminderTime = _parseTime(e.reminderTime);
     }
   }
 
   @override
   void dispose() {
-    _amtCtrl.dispose(); _notesCtrl.dispose();
+    _amtCtrl.dispose();
+    _notesCtrl.dispose();
     super.dispose();
   }
 
@@ -515,29 +583,29 @@ class _EntrySheetState extends State<_EntrySheet> {
 
     if (isEdit) {
       final updated = widget.existing!.copyWith(
-        amount:          amount,
-        type:            _type,
-        accountId:       _accountId,
-        dueDate:         _dueDate,
-        clearDueDate:    _dueDate == null,
-        notes:           _notesCtrl.text.trim(),
-        clearAccount:    _accountId == null,
+        amount: amount,
+        type: _type,
+        accountId: _accountId,
+        dueDate: _dueDate,
+        clearDueDate: _dueDate == null,
+        notes: _notesCtrl.text.trim(),
+        clearAccount: _accountId == null,
         reminderEnabled: effectiveReminder,
-        reminderTime:    _reminderTimeStr,
+        reminderTime: _reminderTimeStr,
       );
       await app.updateLended(updated, widget.existing!);
     } else {
       await app.addLended(LendedMoney(
-        id:              app.newId(),
-        personId:        widget.person.id,
-        amount:          amount,
-        type:            _type,
-        accountId:       _accountId,
-        date:            DateTime.now(),
-        dueDate:         _dueDate,
-        notes:           _notesCtrl.text.trim(),
+        id: app.newId(),
+        personId: widget.person.id,
+        amount: amount,
+        type: _type,
+        accountId: _accountId,
+        date: DateTime.now(),
+        dueDate: _dueDate,
+        notes: _notesCtrl.text.trim(),
         reminderEnabled: effectiveReminder,
-        reminderTime:    _reminderTimeStr,
+        reminderTime: _reminderTimeStr,
       ));
     }
     if (mounted) Navigator.pop(context);
@@ -547,102 +615,134 @@ class _EntrySheetState extends State<_EntrySheet> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
-    final cs  = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
     final sym = currencyInfo(app.settings.currency).symbol;
 
     return Padding(
-      padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-          left: 20, right: 20, top: 20),
-      child: SingleChildScrollView(child: Column(
+      padding: const EdgeInsets.only(
+          bottom: 16,
+          left: 20,
+          right: 20,
+          top: 20),
+      child: SingleChildScrollView(
+          child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(isEdit ? l10n.lended_person_editRecord : l10n.lended_person_addRecord,
-              style: Theme.of(context).textTheme.titleLarge
+          Text(
+              isEdit
+                  ? l10n.lended_person_editRecord
+                  : l10n.lended_person_addRecord,
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge
                   ?.copyWith(fontWeight: FontWeight.w800)),
-          Text(widget.person.name, style: TextStyle(fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: cs.onSurface.withValues(alpha: 0.55))),
+          Text(widget.person.name,
+              style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: cs.onSurface.withValues(alpha: 0.55))),
           const SizedBox(height: 12),
 
           // Type toggle
           Row(children: [
-            Expanded(child: GestureDetector(
+            Expanded(
+                child: GestureDetector(
               onTap: () => setState(() => _type = 'lent'),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 120),
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
-                  color: _type == 'lent'
-                      ? const Color(0xFF2E7D32) : const Color(0xFFE8F5E9),
-                  borderRadius: BorderRadius.circular(12)),
-                child: Center(child: Text(l10n.lended_person_iLent,
-                    style: TextStyle(fontWeight: FontWeight.w700,
-                        color: _type == 'lent'
-                            ? Colors.white : const Color(0xFF2E7D32)))),
+                    color: _type == 'lent'
+                        ? const Color(0xFF2E7D32)
+                        : const Color(0xFFE8F5E9),
+                    borderRadius: BorderRadius.circular(12)),
+                child: Center(
+                    child: Text(l10n.lended_person_iLent,
+                        style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: _type == 'lent'
+                                ? Colors.white
+                                : const Color(0xFF2E7D32)))),
               ),
             )),
             const SizedBox(width: 10),
-            Expanded(child: GestureDetector(
+            Expanded(
+                child: GestureDetector(
               onTap: () => setState(() => _type = 'borrowed'),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 120),
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
-                  color: _type == 'borrowed'
-                      ? const Color(0xFFC62828) : const Color(0xFFFFEBEE),
-                  borderRadius: BorderRadius.circular(12)),
-                child: Center(child: Text(l10n.lended_person_iBorrowed,
-                    style: TextStyle(fontWeight: FontWeight.w700,
-                        color: _type == 'borrowed'
-                            ? Colors.white : const Color(0xFFC62828)))),
+                    color: _type == 'borrowed'
+                        ? const Color(0xFFC62828)
+                        : const Color(0xFFFFEBEE),
+                    borderRadius: BorderRadius.circular(12)),
+                child: Center(
+                    child: Text(l10n.lended_person_iBorrowed,
+                        style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: _type == 'borrowed'
+                                ? Colors.white
+                                : const Color(0xFFC62828)))),
               ),
             )),
           ]),
           const SizedBox(height: 12),
 
           TextField(
-              controller: _amtCtrl,
-              autofocus: !isEdit,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                  labelText: l10n.lended_person_amount,
-                  prefixText: '$sym ',
-                  errorText: _submitted && (double.tryParse(_amtCtrl.text) ?? 0) <= 0 ? l10n.error_required : null,
-              ),
+            controller: _amtCtrl,
+            autofocus: !isEdit,
+            textInputAction: TextInputAction.next,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: InputDecoration(
+              labelText: l10n.lended_person_amount,
+              prefixText: '$sym ',
+              errorText:
+                  _submitted && (double.tryParse(_amtCtrl.text) ?? 0) <= 0
+                      ? l10n.error_required
+                      : null,
+            ),
           ),
           const SizedBox(height: 14),
 
           Text(l10n.lended_person_accountOptional,
-              style: Theme.of(context).textTheme.labelMedium
+              style: Theme.of(context)
+                  .textTheme
+                  .labelMedium
                   ?.copyWith(letterSpacing: 1)),
           const SizedBox(height: 8),
           AccountCardPicker(
             accounts: app.accounts.where((a) => !a.isGold).toList(),
-            selectedId: _accountId, allowNone: true,
+            selectedId: _accountId,
+            allowNone: true,
             onSelected: (id) => setState(() => _accountId = id),
           ),
           const SizedBox(height: 12),
 
           // Due date picker
-          ListTile(contentPadding: EdgeInsets.zero,
+          ListTile(
+            contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.event_outlined),
-            title: Text(_dueDate != null
-                ? l10n.lended_person_dueColon(DateFormat('d MMM yyyy').format(_dueDate!))
-                : l10n.lended_person_noDueDate,
+            title: Text(
+                _dueDate != null
+                    ? l10n.lended_person_dueColon(
+                        DateFormat('d MMM yyyy').format(_dueDate!))
+                    : l10n.lended_person_noDueDate,
                 style: const TextStyle(fontWeight: FontWeight.w600)),
             trailing: _dueDate != null
-                ? IconButton(icon: const Icon(Icons.clear),
+                ? IconButton(
+                    icon: const Icon(Icons.clear),
                     onPressed: () => setState(() {
-                      _dueDate = null;
-                      _reminderEnabled = false;
-                    }))
+                          _dueDate = null;
+                          _reminderEnabled = false;
+                        }))
                 : null,
             onTap: () async {
-              final p = await showDatePicker(context: context,
-                  initialDate: _dueDate ??
-                      DateTime.now().add(const Duration(days: 30)),
+              final p = await showDatePicker(
+                  context: context,
+                  initialDate:
+                      _dueDate ?? DateTime.now().add(const Duration(days: 30)),
                   firstDate: DateTime.now(),
                   lastDate: DateTime(2100));
               if (p != null) setState(() => _dueDate = p);
@@ -658,8 +758,10 @@ class _EntrySheetState extends State<_EntrySheet> {
                   : Icons.notifications_none_outlined,
               color: _reminderEnabled ? cs.primary : null,
             ),
-            title: Text(l10n.lended_person_dueDateReminder,
-              style: TextStyle(fontWeight: FontWeight.w600,
+            title: Text(
+              l10n.lended_person_dueDateReminder,
+              style: TextStyle(
+                  fontWeight: FontWeight.w600,
                   color: _reminderEnabled ? cs.primary : null),
             ),
             subtitle: Text(
@@ -668,8 +770,8 @@ class _EntrySheetState extends State<_EntrySheet> {
                   : _reminderEnabled
                       ? l10n.lended_person_notifiedOnDue
                       : l10n.lended_person_getNotifiedWhenDue,
-              style: TextStyle(fontSize: 12,
-                  color: cs.onSurface.withValues(alpha: 0.5)),
+              style: TextStyle(
+                  fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5)),
             ),
             value: _reminderEnabled,
             onChanged: _dueDate == null ? null : _toggleReminder,
@@ -681,28 +783,30 @@ class _EntrySheetState extends State<_EntrySheet> {
               onTap: _pickTime,
               borderRadius: BorderRadius.circular(12),
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 decoration: BoxDecoration(
                   color: cs.primaryContainer.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                      color: cs.primary.withValues(alpha: 0.35)),
+                  border: Border.all(color: cs.primary.withValues(alpha: 0.35)),
                 ),
                 child: Row(children: [
-                  Icon(Icons.access_time_rounded, size: 20,
-                      color: cs.primary),
+                  Icon(Icons.access_time_rounded, size: 20, color: cs.primary),
                   const SizedBox(width: 12),
-                  Expanded(child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                    Text(l10n.lended_person_remindMeAt,
-                        style: TextStyle(fontSize: 11,
-                            color: cs.onSurface.withValues(alpha: 0.55))),
-                    Text(_reminderTime.format(context),
-                        style: TextStyle(fontSize: 16,
-                            fontWeight: FontWeight.w700, color: cs.primary)),
-                  ])),
+                  Expanded(
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                        Text(l10n.lended_person_remindMeAt,
+                            style: TextStyle(
+                                fontSize: 11,
+                                color: cs.onSurface.withValues(alpha: 0.55))),
+                        Text(_reminderTime.format(context),
+                            style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: cs.primary)),
+                      ])),
                   Icon(Icons.chevron_right_rounded, color: cs.primary),
                 ]),
               ),
@@ -713,26 +817,37 @@ class _EntrySheetState extends State<_EntrySheet> {
               child: Text(
                 _reminderTimeAlreadyPassedToday
                     ? l10n.lended_person_thatTimePassed
-                    : l10n.lended_person_notificationFiresOn(DateFormat('d MMM yyyy').format(_dueDate!), _reminderTime.format(context)),
-                style: TextStyle(fontSize: 11,
-                    color: cs.onSurface.withValues(alpha: 0.4)),
+                    : l10n.lended_person_notificationFiresOn(
+                        DateFormat('d MMM yyyy').format(_dueDate!),
+                        _reminderTime.format(context)),
+                style: TextStyle(
+                    fontSize: 11, color: cs.onSurface.withValues(alpha: 0.4)),
               ),
             ),
           ],
 
           const SizedBox(height: 12),
-          TextField(controller: _notesCtrl, maxLines: 2,
+          TextField(
+              controller: _notesCtrl,
+              maxLines: 2,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _submit(),
               decoration: InputDecoration(
                   labelText: l10n.lended_person_notesOptional,
                   prefixIcon: const Icon(Icons.sticky_note_2_outlined))),
           const SizedBox(height: 20),
           FilledButton(
-            onPressed: () { AppHaptics.tap(context, HapticStrength.light); _submit(); },
+            onPressed: () {
+              AppHaptics.tap(context, HapticStrength.light);
+              _submit();
+            },
             style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(50),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(28))),
-            child: Text(isEdit ? l10n.lended_person_saveChangesBtn : l10n.lended_person_addRecordBtn),
+            child: Text(isEdit
+                ? l10n.lended_person_saveChangesBtn
+                : l10n.lended_person_addRecordBtn),
           ),
         ],
       )),

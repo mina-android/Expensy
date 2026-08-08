@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:layout_marginBottom="4dp">
+
+    <TextView
+        android:id="@+id/account_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="Cash"
+        android:textColor="@color/widget_text"
+        android:textSize="14sp"
+        android:maxLines="1"
+        android:ellipsize="end" />
+
+    <TextView
+        android:id="@+id/account_balance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="200.00 EGP"
+        android:textColor="@color/widget_text"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:paddingStart="8dp" />
+
+</LinearLayout>

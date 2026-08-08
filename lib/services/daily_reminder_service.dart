@@ -2,16 +2,19 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 class DailyReminderService {
-  static final DailyReminderService _instance = DailyReminderService._internal();
+  static final DailyReminderService _instance =
+      DailyReminderService._internal();
   factory DailyReminderService() => _instance;
   DailyReminderService._internal();
 
-  final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _plugin =
+      FlutterLocalNotificationsPlugin();
   bool _initialized = false;
 
   Future<void> initialize() async {
     if (_initialized) return;
-    const androidInit = AndroidInitializationSettings('@drawable/ic_notification');
+    const androidInit =
+        AndroidInitializationSettings('@drawable/ic_notification');
     const initSettings = InitializationSettings(android: androidInit);
     await _plugin.initialize(initSettings);
     _initialized = true;
@@ -33,11 +36,13 @@ class DailyReminderService {
 
   tz.TZDateTime _toUtcTZDate(int hour, int minute) {
     final nowLocal = DateTime.now();
-    final localTarget = DateTime(nowLocal.year, nowLocal.month, nowLocal.day, hour, minute);
+    final localTarget =
+        DateTime(nowLocal.year, nowLocal.month, nowLocal.day, hour, minute);
     final offset = nowLocal.timeZoneOffset;
     final utc = localTarget.subtract(offset);
-    var tzDate = tz.TZDateTime.utc(utc.year, utc.month, utc.day, utc.hour, utc.minute);
-    
+    var tzDate =
+        tz.TZDateTime.utc(utc.year, utc.month, utc.day, utc.hour, utc.minute);
+
     // If passed for today in local time, schedule for tomorrow
     if (tzDate.isBefore(tz.TZDateTime.now(tz.UTC))) {
       tzDate = tzDate.add(const Duration(days: 1));
@@ -47,7 +52,7 @@ class DailyReminderService {
 
   Future<void> scheduleDailyReminder(String timeString) async {
     if (!(await hasPermission())) return;
-    
+
     // Parse timeString (e.g. '22:00')
     final parts = timeString.split(':');
     if (parts.length != 2) return;

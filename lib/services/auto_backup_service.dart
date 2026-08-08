@@ -75,12 +75,12 @@ class AutoBackupService {
       await saf.createFile(
         uri,
         mimeType: 'application/json',
-        displayName: 'expensy_autobackup_${ts}.json',
+        displayName: 'expensy_autobackup_$ts.json',
         bytes: bytes,
       );
     } catch (e) {
       // Background isolate, can't show UI.
-      print('Auto Backup failed: $e');
+      // Auto Backup failed: $e
     }
   }
 }

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/widget_bg_rounded"
+    android:padding="16dp"
+    android:gravity="center_vertical">
+
+    <TextView
+        android:id="@+id/empty_state_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="No budgets set.\nTap to add."
+        android:textColor="@color/widget_text"
+        android:textSize="14sp"
+        android:gravity="center"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/budget_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="visible">
+
+        <!-- Slot 1 -->
+        <LinearLayout android:id="@+id/budget_item_1" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginBottom="12dp" android:visibility="gone">
+            <TextView android:id="@+id/budget_name_1" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text" android:textSize="16sp" android:textStyle="bold" android:maxLines="1" android:ellipsize="end" />
+            <ProgressBar android:id="@+id/budget_progress_bar_1" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="8dp" android:layout_marginTop="6dp" android:layout_marginBottom="6dp" android:max="100" android:progressDrawable="@drawable/widget_progress" />
+            <TextView android:id="@+id/budget_amount_1" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text" android:textSize="12sp" android:gravity="end" />
+        </LinearLayout>
+
+        <!-- Slot 2 -->
+        <LinearLayout android:id="@+id/budget_item_2" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginBottom="12dp" android:visibility="gone">
+            <TextView android:id="@+id/budget_name_2" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text" android:textSize="16sp" android:textStyle="bold" android:maxLines="1" android:ellipsize="end" />
+            <ProgressBar android:id="@+id/budget_progress_bar_2" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="8dp" android:layout_marginTop="6dp" android:layout_marginBottom="6dp" android:max="100" android:progressDrawable="@drawable/widget_progress" />
+            <TextView android:id="@+id/budget_amount_2" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text" android:textSize="12sp" android:gravity="end" />
+        </LinearLayout>
+
+        <!-- Slot 3 -->
+        <LinearLayout android:id="@+id/budget_item_3" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginBottom="12dp" android:visibility="gone">
+            <TextView android:id="@+id/budget_name_3" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text" android:textSize="16sp" android:textStyle="bold" android:maxLines="1" android:ellipsize="end" />
+            <ProgressBar android:id="@+id/budget_progress_bar_3" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="8dp" android:layout_marginTop="6dp" android:layout_marginBottom="6dp" android:max="100" android:progressDrawable="@drawable/widget_progress" />
+            <TextView android:id="@+id/budget_amount_3" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text" android:textSize="12sp" android:gravity="end" />
+        </LinearLayout>
+
+        <!-- Slot 4 -->
+        <LinearLayout android:id="@+id/budget_item_4" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginBottom="12dp" android:visibility="gone">
+            <TextView android:id="@+id/budget_name_4" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text" android:textSize="16sp" android:textStyle="bold" android:maxLines="1" android:ellipsize="end" />
+            <ProgressBar android:id="@+id/budget_progress_bar_4" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="8dp" android:layout_marginTop="6dp" android:layout_marginBottom="6dp" android:max="100" android:progressDrawable="@drawable/widget_progress" />
+            <TextView android:id="@+id/budget_amount_4" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text" android:textSize="12sp" android:gravity="end" />
+        </LinearLayout>
+
+        <!-- Slot 5 -->
+        <LinearLayout android:id="@+id/budget_item_5" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginBottom="4dp" android:visibility="gone">
+            <TextView android:id="@+id/budget_name_5" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text" android:textSize="16sp" android:textStyle="bold" android:maxLines="1" android:ellipsize="end" />
+            <ProgressBar android:id="@+id/budget_progress_bar_5" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="8dp" android:layout_marginTop="6dp" android:layout_marginBottom="6dp" android:max="100" android:progressDrawable="@drawable/widget_progress" />
+            <TextView android:id="@+id/budget_amount_5" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text" android:textSize="12sp" android:gravity="end" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

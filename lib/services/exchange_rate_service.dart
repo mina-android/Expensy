@@ -19,10 +19,10 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ExchangeRateService {
-  static const _ratesKey   = 'er_rates';
+  static const _ratesKey = 'er_rates';
   static const _fetchedKey = 'er_fetched_at';
   static const _staleAfter = Duration(hours: 24);
-  static const _apiUrl     = 'https://open.er-api.com/v6/latest/USD';
+  static const _apiUrl = 'https://open.er-api.com/v6/latest/USD';
 
   /// Free currency API by fawazahmed0 — includes metals (XAU, XAG…).
   /// No API key. Daily updated. 200+ currencies.
@@ -57,7 +57,7 @@ class ExchangeRateService {
   /// freshness timestamp.  Safe to call after a background gold fetch.
   Future<void> patchCachedXau(double xauRate) async {
     final prefs = await SharedPreferences.getInstance();
-    final raw   = prefs.getString(_ratesKey);
+    final raw = prefs.getString(_ratesKey);
     if (raw == null) return;
     try {
       final map = (jsonDecode(raw) as Map<String, dynamic>)
@@ -69,7 +69,7 @@ class ExchangeRateService {
 
   /// Timestamp of the last successful fetch, or null if never fetched.
   Future<DateTime?> lastFetchedAt() async {
-    final prefs   = await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
     final fetched = prefs.getString(_fetchedKey);
     if (fetched == null) return null;
     return DateTime.tryParse(fetched);
@@ -86,7 +86,7 @@ class ExchangeRateService {
   ) {
     if (from == to) return amount;
     final fromRate = rates[from];
-    final toRate   = rates[to];
+    final toRate = rates[to];
     if (fromRate == null || toRate == null || fromRate == 0) return null;
     return amount / fromRate * toRate;
   }
@@ -105,20 +105,19 @@ class ExchangeRateService {
       if (json['result'] != 'success') return null;
 
       final rawRates = json['rates'] as Map<String, dynamic>;
-      final rates    = rawRates.map(
+      final rates = rawRates.map(
         (k, v) => MapEntry(k, (v as num).toDouble()),
       );
 
       // XAU is not in the open.er-api.com free tier — fetch separately.
-      final hasXau = rates.containsKey('XAU') &&
-          (rates['XAU'] ?? 0) > 0;
+      final hasXau = rates.containsKey('XAU') && (rates['XAU'] ?? 0) > 0;
       if (!hasXau) {
         final xauRate = await _fetchGoldRate();
         if (xauRate != null) rates['XAU'] = xauRate;
       }
 
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_ratesKey,   jsonEncode(rates));
+      await prefs.setString(_ratesKey, jsonEncode(rates));
       await prefs.setString(_fetchedKey, DateTime.now().toIso8601String());
       return rates;
     } catch (_) {
@@ -133,9 +132,8 @@ class ExchangeRateService {
   Future<double?> _fetchGoldRate() async {
     for (final url in [_goldApiPrimary, _goldApiFallback]) {
       try {
-        final resp = await http
-            .get(Uri.parse(url))
-            .timeout(const Duration(seconds: 10));
+        final resp =
+            await http.get(Uri.parse(url)).timeout(const Duration(seconds: 10));
         if (resp.statusCode != 200) continue;
 
         final data = jsonDecode(resp.body);
@@ -169,7 +167,7 @@ class ExchangeRateService {
 
   Future<Map<String, double>?> _loadCached() async {
     final prefs = await SharedPreferences.getInstance();
-    final raw   = prefs.getString(_ratesKey);
+    final raw = prefs.getString(_ratesKey);
     if (raw == null) return null;
     try {
       final map = jsonDecode(raw) as Map<String, dynamic>;
@@ -180,10 +178,10 @@ class ExchangeRateService {
   }
 
   Future<bool> _isFresh() async {
-    final prefs   = await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
     final fetched = prefs.getString(_fetchedKey);
     if (fetched == null) return false;
-    final parsed  = DateTime.tryParse(fetched);
+    final parsed = DateTime.tryParse(fetched);
     if (parsed == null) return false;
     return DateTime.now().difference(parsed) < _staleAfter;
   }

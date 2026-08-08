@@ -1,7 +1,7 @@
 name: expensy
 description: A fully offline expense manager with Material You design.
 publish_to: 'none'
-version: 1.0.8+10
+version: 1.0.9+11
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
@@ -29,8 +29,11 @@ dependencies:
   dynamic_color: ^1.7.0
   cupertino_icons: ^1.0.8
   archive: ^3.6.1
+  home_widget: ^0.9.3
+  package_info_plus: ^9.0.1
   android_alarm_manager_plus: ^5.1.1
   shared_storage: ^0.8.1
+  shimmer: ^3.0.0
 
 dev_dependencies:
   flutter_test:

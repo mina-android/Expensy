@@ -10,7 +10,7 @@ import '../widgets/shared_widgets.dart';
 import 'add_transaction_screen.dart';
 import 'lended_person_screen.dart';
 import 'savings_goal_detail_screen.dart';
-import '../utils/haptics.dart';
+import '../utils/snackbar.dart';
 
 class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({super.key});
@@ -22,6 +22,12 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   String  _search    = '';
   String  _filter    = 'all';   // all|income|expense
   String? _accFilter;
+
+  // New selections & advanced filters
+  final Set<String> _selectedIds = {};
+  double? _minAmount;
+  double? _maxAmount;
+  String? _advCategoryFilter;
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +43,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       for (final t in app.transactions) {
         if (_filter != 'all' && t.type != _filter) continue;
         if (_accFilter != null && t.accountId != _accFilter) continue;
+        if (_minAmount != null && t.amount < _minAmount!) continue;
+        if (_maxAmount != null && t.amount > _maxAmount!) continue;
+        if (_advCategoryFilter != null && t.categoryId != _advCategoryFilter) continue;
         if (_search.isNotEmpty) {
           final q   = _search.toLowerCase();
           final cat = app.categoryById(t.categoryId)?.name.toLowerCase() ?? '';
@@ -53,6 +62,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       for (final l in app.lended) {
         if (_filter != 'all' && l.type != _filter) continue;
         if (_accFilter != null && l.accountId != _accFilter) continue;
+        if (_minAmount != null && l.amount < _minAmount!) continue;
+        if (_maxAmount != null && l.amount > _maxAmount!) continue;
+        if (_advCategoryFilter != null) continue;
         if (_search.isNotEmpty) {
           final q      = _search.toLowerCase();
           final person = app.personById(l.personId)?.name.toLowerCase() ?? '';
@@ -75,6 +87,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         if (_filter == 'expense' && c.type != 'contribution') continue; // Contribution = money out of account = expense
         if (_filter == 'income' && c.type != 'withdrawal') continue; // Withdrawal = money into account = income
         if (_accFilter != null && c.accountId != _accFilter) continue;
+        if (_minAmount != null && c.amount < _minAmount!) continue;
+        if (_maxAmount != null && c.amount > _maxAmount!) continue;
+        if (_advCategoryFilter != null) continue;
         if (_search.isNotEmpty) {
           final q = _search.toLowerCase();
           final goal = app.savingsGoals.where((g) => g.id == c.goalId).firstOrNull?.name.toLowerCase() ?? '';
@@ -96,36 +111,82 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     }
     final keys = groups.keys.toList()..sort((a, b) => b.compareTo(a));
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.transactions_transactions,
-            style: TextStyle(fontWeight: FontWeight.w800)),
-        backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
-      ),
+    return PopScope(
+      canPop: _selectedIds.isEmpty,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && _selectedIds.isNotEmpty) {
+          setState(() => _selectedIds.clear());
+        }
+      },
+      child: Scaffold(
+      appBar: _selectedIds.isEmpty
+          ? AppBar(
+              title: Text(l10n.transactions_transactions,
+                  style: const TextStyle(fontWeight: FontWeight.w800)),
+              backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
+            )
+          : AppBar(
+              backgroundColor: cs.secondaryContainer,
+              foregroundColor: cs.onSecondaryContainer,
+              leading: IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => setState(() => _selectedIds.clear()),
+              ),
+              title: Text('${_selectedIds.length} selected', style: const TextStyle(fontWeight: FontWeight.w600)),
+              actions: [
+                if (_selectedIds.every((id) => app.transactions.any((t) => t.id == id)))
+                  IconButton(
+                    icon: const Icon(Icons.category_outlined),
+                    onPressed: () => _bulkChangeCategory(context, app),
+                    tooltip: 'Change Category',
+                  ),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: () => _bulkDelete(context, app),
+                  tooltip: 'Delete Selected',
+                ),
+              ],
+            ),
       body: Column(children: [
         // ── Search bar ──────────────────────────────────────────────────
         Padding(
           padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
-          child: TextField(
-            decoration: InputDecoration(
-              hintText: l10n.transactions_searchTransactions,
-              prefixIcon: const Icon(Icons.search),
-              suffixIcon: _search.isNotEmpty
-                  ? IconButton(icon: const Icon(Icons.clear),
-                      onPressed: () => setState(() => _search = ''))
-                  : null,
-              isDense: true,
-              contentPadding: const EdgeInsets.symmetric(vertical: 10),
-              border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(28)),
-              enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(28)),
-              focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(28),
-                  borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.primary, width: 2)),
-            ),
-            onChanged: (v) => setState(() => _search = v),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: l10n.transactions_searchTransactions,
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: _search.isNotEmpty
+                        ? IconButton(icon: const Icon(Icons.clear),
+                            onPressed: () => setState(() => _search = ''))
+                        : null,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(28)),
+                    enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(28)),
+                    focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(28),
+                        borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.primary, width: 2)),
+                  ),
+                  onChanged: (v) => setState(() => _search = v),
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton.filledTonal(
+                onPressed: () => _openAdvancedFilter(context, app),
+                icon: const Icon(Icons.filter_alt_outlined),
+                style: IconButton.styleFrom(
+                  backgroundColor: (_minAmount != null || _maxAmount != null || _advCategoryFilter != null)
+                      ? cs.primaryContainer
+                      : cs.surfaceContainerHighest,
+                ),
+              ),
+            ],
           ),
         ),
 
@@ -209,9 +270,60 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                             itemBuilder: (_, idx) {
                               final item = items[idx];
                               if (item.isTx) {
-                                return _TxTile(t: item.tx!, app: app);
+                                final isSelected = _selectedIds.contains(item.tx!.id);
+                                return _TxTile(
+                                  t: item.tx!, 
+                                  app: app,
+                                  isSelected: isSelected,
+                                  selectionMode: _selectedIds.isNotEmpty,
+                                  onTap: () {
+                                    if (_selectedIds.isNotEmpty) {
+                                      setState(() {
+                                        if (isSelected) _selectedIds.remove(item.tx!.id);
+                                        else _selectedIds.add(item.tx!.id);
+                                      });
+                                    } else {
+                                      Navigator.push(context, ExpensySlideUpRoute(
+                                          builder: (_) => AddTransactionScreen(existing: item.tx!)));
+                                    }
+                                  },
+                                  onLongPress: () {
+                                    setState(() {
+                                      if (isSelected) _selectedIds.remove(item.tx!.id);
+                                      else _selectedIds.add(item.tx!.id);
+                                    });
+                                  }
+                                );
                               } else if (item.isLended) {
-                                return _LendedTile(l: item.lended!, app: app);
+                                final isSelected = _selectedIds.contains(item.lended!.id);
+                                return _LendedTile(
+                                  l: item.lended!, 
+                                  app: app,
+                                  isSelected: isSelected,
+                                  selectionMode: _selectedIds.isNotEmpty,
+                                  onTap: () {
+                                    if (_selectedIds.isNotEmpty) {
+                                      setState(() {
+                                        if (isSelected) _selectedIds.remove(item.lended!.id);
+                                        else _selectedIds.add(item.lended!.id);
+                                      });
+                                    } else {
+                                      final person = app.personById(item.lended!.personId);
+                                      if (person != null) {
+                                        Navigator.push(
+                                          context,
+                                          ExpensyRoute(builder: (_) => LendedPersonScreen(person: person)),
+                                        );
+                                      }
+                                    }
+                                  },
+                                  onLongPress: () {
+                                    setState(() {
+                                      if (isSelected) _selectedIds.remove(item.lended!.id);
+                                      else _selectedIds.add(item.lended!.id);
+                                    });
+                                  }
+                                );
                               } else if (item.isContribution) {
                                 return _ContributionTile(c: item.contribution!, app: app);
                               }
@@ -229,6 +341,103 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             ExpensySlideUpRoute(builder: (_) => const AddTransactionScreen())),
         child: const Icon(Icons.add),
       ),
+      ),
+    );
+  }
+
+  Future<void> _bulkDelete(BuildContext context, AppProvider app) async {
+    final idsToDelete = _selectedIds.toList();
+    setState(() => _selectedIds.clear());
+
+    final undoActions = <VoidCallback>[];
+    for (final id in idsToDelete) {
+      if (app.transactions.any((t) => t.id == id)) {
+        undoActions.add(await app.deleteTransactionWithUndo(id));
+      } else if (app.lended.any((l) => l.id == id)) {
+        undoActions.add(await app.deleteLendedWithUndo(id));
+      }
+    }
+
+    if (context.mounted) {
+      showAppSnackbar(
+        context, 
+        'Deleted ${idsToDelete.length} items',
+        onUndo: () {
+          for (final undo in undoActions.reversed) {
+            undo();
+          }
+        },
+      );
+    }
+  }
+
+  void _bulkChangeCategory(BuildContext context, AppProvider app) {
+    final l10n = AppLocalizations.of(context)!;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (_) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 24, right: 24, top: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Change Category', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            Flexible(
+              child: SingleChildScrollView(
+                child: CategoryChipPicker(
+                  categories: app.categories,
+                  selectedId: null,
+                  onSelected: (catId) {
+                    Navigator.pop(context);
+                    for (final id in _selectedIds.toList()) {
+                      final tx = app.transactions.where((t) => t.id == id).firstOrNull;
+                      if (tx == null) continue;
+                      final updated = AppTransaction(
+                        id: tx.id,
+                        accountId: tx.accountId,
+                        categoryId: catId,
+                        amount: tx.amount,
+                        type: tx.type,
+                        date: tx.date,
+                        description: tx.description,
+                        note: tx.note,
+                        currency: tx.currency,
+                      );
+                      app.updateTransaction(updated, tx);
+                    }
+                    setState(() => _selectedIds.clear());
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openAdvancedFilter(BuildContext context, AppProvider app) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (_) => _AdvancedFilterSheet(
+        initialMinAmount: _minAmount,
+        initialMaxAmount: _maxAmount,
+        initialCategory: _advCategoryFilter,
+        app: app,
+        onApply: (minAmt, maxAmt, catId) {
+          setState(() {
+            _minAmount = minAmt;
+            _maxAmount = maxAmt;
+            _advCategoryFilter = catId;
+          });
+        },
+      ),
     );
   }
 }
@@ -237,7 +446,19 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 class _TxTile extends StatelessWidget {
   final AppTransaction t;
   final AppProvider    app;
-  const _TxTile({required this.t, required this.app});
+  final bool isSelected;
+  final bool selectionMode;
+  final VoidCallback onTap;
+  final VoidCallback onLongPress;
+
+  const _TxTile({
+    required this.t, 
+    required this.app,
+    required this.isSelected,
+    required this.selectionMode,
+    required this.onTap,
+    required this.onLongPress,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -251,10 +472,13 @@ class _TxTile extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 6),
+      color: isSelected ? cs.primaryContainer : null,
       child: ListTile(
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        leading: CategoryDot(category: cat, size: 40),
+        leading: selectionMode
+            ? Checkbox(value: isSelected, onChanged: (_) => onTap())
+            : CategoryDot(category: cat, size: 40),
         title: Text(
           t.description.isNotEmpty ? t.description : (cat?.name ?? t.type),
           style:
@@ -281,16 +505,8 @@ class _TxTile extends StatelessWidget {
             Icon(Icons.sticky_note_2_outlined,
                 size: 12, color: cs.onSurface.withValues(alpha: 0.4)),
         ]),
-        onTap: () => Navigator.push(context, ExpensySlideUpRoute(
-            builder: (_) => AddTransactionScreen(existing: t))),
-        onLongPress: () async {
-          if (await showDeleteConfirm(
-                  context,
-                  t.description.isNotEmpty ? t.description : t.type) &&
-              context.mounted) {
-            context.read<AppProvider>().deleteTransaction(t.id);
-          }
-        },
+        onTap: onTap,
+        onLongPress: onLongPress,
       ),
     );
   }
@@ -345,7 +561,19 @@ class _FilterPill extends StatelessWidget {
 class _LendedTile extends StatelessWidget {
   final LendedMoney l;
   final AppProvider app;
-  const _LendedTile({required this.l, required this.app});
+  final bool isSelected;
+  final bool selectionMode;
+  final VoidCallback onTap;
+  final VoidCallback onLongPress;
+
+  const _LendedTile({
+    required this.l, 
+    required this.app,
+    required this.isSelected,
+    required this.selectionMode,
+    required this.onTap,
+    required this.onLongPress,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -363,10 +591,13 @@ class _LendedTile extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 6),
+      color: isSelected ? cs.primaryContainer : null,
       child: ListTile(
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        leading: Container(
+        leading: selectionMode
+            ? Checkbox(value: isSelected, onChanged: (_) => onTap())
+            : Container(
           width: 40,
           height: 40,
           decoration: BoxDecoration(
@@ -432,27 +663,8 @@ class _LendedTile extends StatelessWidget {
               ),
           ],
         ),
-        onTap: () {
-          if (person != null) {
-            Navigator.push(
-              context,
-              ExpensyRoute(
-                builder: (_) => LendedPersonScreen(person: person),
-              ),
-            );
-          }
-        },
-        onLongPress: () async {
-          if (await showDeleteConfirm(
-                context,
-                l.notes.isNotEmpty
-                    ? l.notes
-                    : (isLent ? l10n.transactions_lentTo(person?.name ?? l10n.transactions_unknown) : l10n.transactions_borrowedFrom(person?.name ?? l10n.transactions_unknown)),
-              ) &&
-              context.mounted) {
-            context.read<AppProvider>().deleteLended(l.id);
-          }
-        },
+        onTap: onTap,
+        onLongPress: onLongPress,
       ),
     );
   }
@@ -544,3 +756,124 @@ class _ContributionTile extends StatelessWidget {
   }
 }
 
+// ── Advanced Filter Sheet ───────────────────────────────────────────────────
+class _AdvancedFilterSheet extends StatefulWidget {
+  final double? initialMinAmount;
+  final double? initialMaxAmount;
+  final String? initialCategory;
+  final AppProvider app;
+  final void Function(double? min, double? max, String? category) onApply;
+
+  const _AdvancedFilterSheet({
+    this.initialMinAmount,
+    this.initialMaxAmount,
+    this.initialCategory,
+    required this.app,
+    required this.onApply,
+  });
+
+  @override
+  State<_AdvancedFilterSheet> createState() => _AdvancedFilterSheetState();
+}
+
+class _AdvancedFilterSheetState extends State<_AdvancedFilterSheet> {
+  final _minCtrl = TextEditingController();
+  final _maxCtrl = TextEditingController();
+  String? _catId;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialMinAmount != null) _minCtrl.text = widget.initialMinAmount.toString();
+    if (widget.initialMaxAmount != null) _maxCtrl.text = widget.initialMaxAmount.toString();
+    _catId = widget.initialCategory;
+  }
+
+  @override
+  void dispose() {
+    _minCtrl.dispose();
+    _maxCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+        left: 24, right: 24, top: 24
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Advanced Filters', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              TextButton(
+                onPressed: () {
+                  widget.onApply(null, null, null);
+                  Navigator.pop(context);
+                },
+                child: const Text('Clear All'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const Text('Amount Range', style: TextStyle(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _minCtrl,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  textInputAction: TextInputAction.next,
+                 
+                  decoration: const InputDecoration(labelText: 'Min Amount', prefixIcon: Icon(Icons.attach_money)),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: TextField(
+                  controller: _maxCtrl,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  textInputAction: TextInputAction.done,
+                  decoration: const InputDecoration(labelText: 'Max Amount', prefixIcon: Icon(Icons.attach_money)),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const Text('Category', style: TextStyle(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          Flexible(
+            child: SingleChildScrollView(
+              child: CategoryChipPicker(
+                categories: widget.app.categories,
+                selectedId: _catId,
+                onSelected: (id) => setState(() => _catId = id),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: FilledButton(
+              onPressed: () {
+                final minAmt = double.tryParse(_minCtrl.text);
+                final maxAmt = double.tryParse(_maxCtrl.text);
+                widget.onApply(minAmt, maxAmt, _catId);
+                Navigator.pop(context);
+              },
+              child: const Text('Apply Filters'),
+            ),
+          ),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+}

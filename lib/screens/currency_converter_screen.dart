@@ -13,8 +13,7 @@ class CurrencyConverterScreen extends StatefulWidget {
       _CurrencyConverterScreenState();
 }
 
-class _CurrencyConverterScreenState
-    extends State<CurrencyConverterScreen> {
+class _CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
   late String _from;
   late String _to;
   final _ctrl = TextEditingController();
@@ -57,61 +56,60 @@ class _CurrencyConverterScreenState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
-    final cs  = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
 
     final fromInfo = currencyInfo(_from);
-    final toInfo   = currencyInfo(_to);
+    final toInfo = currencyInfo(_to);
     final rateAvail = app.ratesLoaded && app.exchangeRates.isNotEmpty;
 
     // 1 FROM → X TO
-    final unitRate = rateAvail
-        ? app.convertBetween(1.0, _from, _to)
-        : null;
+    final unitRate = rateAvail ? app.convertBetween(1.0, _from, _to) : null;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.currency_converter_currencyConverter,
-            style: TextStyle(fontWeight: FontWeight.w800)),
+            style: const TextStyle(fontWeight: FontWeight.w800)),
         backgroundColor: cs.primary,
         foregroundColor: cs.onPrimary,
       ),
-      body: Padding(
-        padding: EdgeInsets.only(
-          left: 20, right: 20, top: 24,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 24,
+          bottom: 24,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
             // ── Offline banner ───────────────────────────────────────
             if (!rateAvail) ...[
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
                   color: cs.errorContainer,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(children: [
-                  Icon(Icons.wifi_off_rounded, size: 18,
-                      color: cs.onErrorContainer),
+                  Icon(Icons.wifi_off_rounded,
+                      size: 18, color: cs.onErrorContainer),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       app.ratesFetching
                           ? l10n.currency_converter_loadingRates
                           : l10n.currency_converter_ratesUnavailable,
-                      style: TextStyle(
-                          fontSize: 12, color: cs.onErrorContainer),
+                      style:
+                          TextStyle(fontSize: 12, color: cs.onErrorContainer),
                     ),
                   ),
                   if (app.ratesFetching)
                     SizedBox(
-                      width: 14, height: 14,
+                      width: 14,
+                      height: 14,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: cs.onErrorContainer),
+                          strokeWidth: 2, color: cs.onErrorContainer),
                     ),
                 ]),
               ),
@@ -119,18 +117,19 @@ class _CurrencyConverterScreenState
             ],
 
             // ── FROM field ───────────────────────────────────────────
-            Text(l10n.currency_converter_amount, style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.8,
-                color: cs.onSurface.withValues(alpha: 0.5))),
+            Text(l10n.currency_converter_amount,
+                style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.8,
+                    color: cs.onSurface.withValues(alpha: 0.5))),
             const SizedBox(height: 6),
             Row(children: [
               Expanded(
                 child: TextField(
                   controller: _ctrl,
-                  keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
                   style: const TextStyle(
                       fontSize: 22, fontWeight: FontWeight.w700),
                   decoration: InputDecoration(
@@ -144,10 +143,11 @@ class _CurrencyConverterScreenState
               // FROM currency pill
               GestureDetector(
                 onTap: () async {
-                  final picked = await showCurrencyPicker(
-                      context, current: _from);
-                  if (picked != null && mounted) {
+                  final picked =
+                      await showCurrencyPicker(context, current: _from);
+                  if (picked != null) {
                     setState(() => _from = picked);
+                    if (!context.mounted) return;
                     _convert(context.read<AppProvider>());
                   }
                 },
@@ -166,8 +166,8 @@ class _CurrencyConverterScreenState
                   decoration: BoxDecoration(
                     color: cs.primaryContainer,
                     shape: BoxShape.circle,
-                    border: Border.all(
-                        color: cs.primary.withValues(alpha: 0.3)),
+                    border:
+                        Border.all(color: cs.primary.withValues(alpha: 0.3)),
                   ),
                   child: Icon(Icons.swap_vert_rounded,
                       size: 22, color: cs.primary),
@@ -177,22 +177,23 @@ class _CurrencyConverterScreenState
             const SizedBox(height: 20),
 
             // ── TO result ────────────────────────────────────────────
-            Text(l10n.currency_converter_convertedTo, style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.8,
-                color: cs.onSurface.withValues(alpha: 0.5))),
+            Text(l10n.currency_converter_convertedTo,
+                style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.8,
+                    color: cs.onSurface.withValues(alpha: 0.5))),
             const SizedBox(height: 6),
             Row(children: [
               Expanded(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 18),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
                   decoration: BoxDecoration(
                     color: cs.primaryContainer.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                        color: cs.primary.withValues(alpha: 0.3)),
+                    border:
+                        Border.all(color: cs.primary.withValues(alpha: 0.3)),
                   ),
                   child: Text(
                     _result != null
@@ -212,10 +213,11 @@ class _CurrencyConverterScreenState
               // TO currency pill
               GestureDetector(
                 onTap: () async {
-                  final picked = await showCurrencyPicker(
-                      context, current: _to);
-                  if (picked != null && mounted) {
+                  final picked =
+                      await showCurrencyPicker(context, current: _to);
+                  if (picked != null) {
                     setState(() => _to = picked);
+                    if (!context.mounted) return;
                     _convert(context.read<AppProvider>());
                   }
                 },
@@ -227,16 +229,15 @@ class _CurrencyConverterScreenState
             // ── Rate info ────────────────────────────────────────────
             if (unitRate != null)
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
                   color: cs.surfaceContainerHighest.withValues(alpha: 0.6),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(children: [
                   Icon(Icons.info_outline_rounded,
-                      size: 15,
-                      color: cs.onSurface.withValues(alpha: 0.45)),
+                      size: 15, color: cs.onSurface.withValues(alpha: 0.45)),
                   const SizedBox(width: 8),
                   Text(
                     '1 $_from = ${unitRate.toStringAsFixed(4)} $_to',
@@ -283,8 +284,12 @@ class _CurrencyConverterScreenState
   String _rateAge(DateTime fetched, AppLocalizations l10n) {
     final diff = DateTime.now().difference(fetched);
     if (diff.inMinutes < 2) return l10n.currency_converter_rateAgeJustNow;
-    if (diff.inHours < 1) return l10n.currency_converter_rateAgeMins(diff.inMinutes);
-    if (diff.inHours < 24) return l10n.currency_converter_rateAgeHours(diff.inHours);
+    if (diff.inHours < 1) {
+      return l10n.currency_converter_rateAgeMins(diff.inMinutes);
+    }
+    if (diff.inHours < 24) {
+      return l10n.currency_converter_rateAgeHours(diff.inHours);
+    }
     return l10n.currency_converter_rateAgeDays(diff.inDays);
   }
 }
@@ -331,12 +336,9 @@ class _QuickConversions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    const popular = ['USD', 'EUR', 'GBP', 'SAR', 'AED', 'EGP', 'JPY', 'GBP'];
-    final targets = popular
-        .where((c) => c != from && c != excludeTo)
-        .take(4)
-        .toList();
+    const popular = ['USD', 'EUR', 'GBP', 'BRL', 'SAR', 'AED', 'EGP', 'JPY'];
+    final targets =
+        popular.where((c) => c != from && c != excludeTo).take(4).toList();
 
     if (targets.isEmpty || amount <= 0) return const SizedBox();
 
@@ -347,14 +349,13 @@ class _QuickConversions extends StatelessWidget {
         final converted = app.convertBetween(amount, from, code);
         final info = currencyInfo(code);
         return Container(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(code,
                 style: TextStyle(
                     fontSize: 10,
@@ -364,8 +365,7 @@ class _QuickConversions extends StatelessWidget {
               converted != null
                   ? '${info.symbol} ${converted.toStringAsFixed(2)}'
                   : '—',
-              style: const TextStyle(
-                  fontSize: 13, fontWeight: FontWeight.w700),
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
             ),
           ]),
         );

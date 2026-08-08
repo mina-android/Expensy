@@ -23,10 +23,16 @@ class _SavingsGoalSheetState extends State<SavingsGoalSheet> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_colorValue == null) {
-      final primary = Theme.of(context).colorScheme.primary.value;
+      final primary = Theme.of(context).colorScheme.primary.toARGB32();
       _colors = [
-        primary, 0xFF1565C0, 0xFF2E7D32, 0xFFC62828,
-        0xFFE65100, 0xFF00838F, 0xFF6A1B9A, 0xFF37474F,
+        primary,
+        0xFF1565C0,
+        0xFF2E7D32,
+        0xFFC62828,
+        0xFFE65100,
+        0xFF00838F,
+        0xFF6A1B9A,
+        0xFF37474F,
       ];
       _colorValue = widget.existing?.colorValue ?? primary;
     }
@@ -38,8 +44,13 @@ class _SavingsGoalSheetState extends State<SavingsGoalSheet> {
     final e = widget.existing;
     _nameCtrl = TextEditingController(text: e?.name);
     _amountCtrl = TextEditingController(
-        text: e != null ? e.targetAmount.toStringAsFixed(2).replaceAll('.00', '') : '');
-    _dateCtrl = TextEditingController(text: e?.targetDate != null ? DateFormat('yyyy-MM-dd').format(e!.targetDate!) : '');
+        text: e != null
+            ? e.targetAmount.toStringAsFixed(2).replaceAll('.00', '')
+            : '');
+    _dateCtrl = TextEditingController(
+        text: e?.targetDate != null
+            ? DateFormat('yyyy-MM-dd').format(e!.targetDate!)
+            : '');
   }
 
   @override
@@ -64,7 +75,9 @@ class _SavingsGoalSheetState extends State<SavingsGoalSheet> {
       targetAmount: amount,
       currentAmount: widget.existing?.currentAmount ?? 0.0,
       currency: widget.existing?.currency ?? app.settings.currency,
-      targetDate: _dateCtrl.text.trim().isEmpty ? null : DateTime.tryParse(_dateCtrl.text.trim()),
+      targetDate: _dateCtrl.text.trim().isEmpty
+          ? null
+          : DateTime.tryParse(_dateCtrl.text.trim()),
       colorValue: _colorValue!,
       isCompleted: widget.existing?.isCompleted ?? false,
       createdAt: widget.existing?.createdAt ?? DateTime.now(),
@@ -87,79 +100,117 @@ class _SavingsGoalSheetState extends State<SavingsGoalSheet> {
 
     return Padding(
       padding: EdgeInsets.only(
-          left: 16, right: 16, top: 24,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(isNew ? 'New Savings Goal' : 'Edit Savings Goal',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 20),
-          TextField(
-            controller: _nameCtrl,
-            textCapitalization: TextCapitalization.words,
-            decoration: InputDecoration(
-              labelText: 'Goal Name',
-              hintText: 'e.g. New Car, Vacation',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              prefixIcon: const Icon(Icons.stars_rounded),
-              errorText: _submitted && _nameCtrl.text.trim().isEmpty ? l10n.error_required : null,
-            ),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _amountCtrl,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(
-              labelText: 'Target Amount',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              prefixIcon: const Icon(Icons.monetization_on_outlined),
-              errorText: _submitted && (double.tryParse(_amountCtrl.text.replaceAll(',', '')) ?? 0.0) <= 0 ? l10n.error_required : null,
-            ),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _dateCtrl,
-            decoration: InputDecoration(
-              labelText: 'Target Date (Optional)',
-              hintText: 'YYYY-MM-DD',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              prefixIcon: const Icon(Icons.date_range_outlined),
-            ),
-          ),
-          const SizedBox(height: 24),
-          const Text('Color', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: _colors.map((c) {
-              final color = Color(c);
-              final sel = _colorValue == c;
-              return GestureDetector(
-                onTap: () => setState(() => _colorValue = c),
-                child: Container(
-                  width: 44, height: 44,
-                  decoration: BoxDecoration(
-                    color: color,
-                    shape: BoxShape.circle,
-                    border: sel ? Border.all(color: cs.onSurface, width: 3) : null,
-                  ),
-                  child: sel ? Icon(Icons.check, color: color.computeLuminance() > 0.5 ? Colors.black : Colors.white) : null,
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: SingleChildScrollView(
+        child: Padding(
+          padding:
+              const EdgeInsets.only(left: 16, right: 16, top: 24, bottom: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(isNew ? 'New Savings Goal' : 'Edit Savings Goal',
+                  style: const TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 20),
+              TextField(
+                controller: _nameCtrl,
+                textInputAction: TextInputAction.next,
+               
+                textCapitalization: TextCapitalization.words,
+                decoration: InputDecoration(
+                  labelText: 'Goal Name',
+                  hintText: 'e.g. New Car, Vacation',
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  prefixIcon: const Icon(Icons.stars_rounded),
+                  errorText: _submitted && _nameCtrl.text.trim().isEmpty
+                      ? l10n.error_required
+                      : null,
                 ),
-              );
-            }).toList(),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _amountCtrl,
+                textInputAction: TextInputAction.next,
+               
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(
+                  labelText: 'Target Amount',
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  prefixIcon: const Icon(Icons.monetization_on_outlined),
+                  errorText: _submitted &&
+                          (double.tryParse(
+                                      _amountCtrl.text.replaceAll(',', '')) ??
+                                  0.0) <=
+                              0
+                      ? l10n.error_required
+                      : null,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _dateCtrl,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _save(),
+                decoration: InputDecoration(
+                  labelText: 'Target Date (Optional)',
+                  hintText: 'YYYY-MM-DD',
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  prefixIcon: const Icon(Icons.date_range_outlined),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(l10n.categories_color,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w600, fontSize: 13)),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: _colors.map((c) {
+                  final color = Color(c);
+                  final sel = _colorValue == c;
+                  return GestureDetector(
+                    onTap: () => setState(() => _colorValue = c),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: color,
+                        shape: BoxShape.circle,
+                        border: sel
+                            ? Border.all(color: cs.onSurface, width: 3)
+                            : null,
+                      ),
+                      child: sel
+                          ? Icon(Icons.check,
+                              color: color.computeLuminance() > 0.5
+                                  ? Colors.black
+                                  : Colors.white)
+                          : null,
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 32),
+              FilledButton(
+                onPressed: _save,
+                style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16))),
+                child: Text(l10n.savings_saveGoal,
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w700)),
+              ),
+            ],
           ),
-          const SizedBox(height: 32),
-          FilledButton(
-            onPressed: _save,
-            style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
-            child: const Text('Save Goal', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-          ),
-        ],
+        ),
       ),
     );
   }

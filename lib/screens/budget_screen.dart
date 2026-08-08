@@ -539,6 +539,8 @@ class _BudgetSheetState extends State<_BudgetSheet> {
             // Amount
             TextField(
               controller: _amtCtrl,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _submit(),
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
               decoration: InputDecoration(

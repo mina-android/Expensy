@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../models/models.dart';
@@ -14,13 +15,15 @@ class SavingsGoalDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
     final cs = Theme.of(context).colorScheme;
-    
+
     // The goal instance might have updated
-    final currentGoal = app.savingsGoals.where((g) => g.id == goal.id).firstOrNull;
+    final currentGoal =
+        app.savingsGoals.where((g) => g.id == goal.id).firstOrNull;
     if (currentGoal == null) {
-      return const Scaffold(body: Center(child: Text('Goal not found')));
+      return Scaffold(body: Center(child: Text(l10n.savings_goalNotFound)));
     }
 
     final progress = app.goalProgress(currentGoal);
@@ -28,9 +31,11 @@ class SavingsGoalDetailScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(currentGoal.name, style: const TextStyle(fontWeight: FontWeight.w800)),
+        title: Text(currentGoal.name,
+            style: const TextStyle(fontWeight: FontWeight.w800)),
         backgroundColor: color,
-        foregroundColor: color.computeLuminance() > 0.5 ? Colors.black : Colors.white,
+        foregroundColor:
+            color.computeLuminance() > 0.5 ? Colors.black : Colors.white,
         actions: [
           IconButton(
             icon: const Icon(Icons.edit),
@@ -39,9 +44,9 @@ class SavingsGoalDetailScreen extends StatelessWidget {
               showModalBottomSheet(
                 context: context,
                 isScrollControlled: true,
-                useSafeArea: true,
                 shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(24))),
                 builder: (_) => SavingsGoalSheet(existing: currentGoal),
               );
             },
@@ -54,7 +59,8 @@ class SavingsGoalDetailScreen extends StatelessWidget {
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.1),
-              border: Border(bottom: BorderSide(color: color.withValues(alpha: 0.2))),
+              border: Border(
+                  bottom: BorderSide(color: color.withValues(alpha: 0.2))),
             ),
             child: Column(
               children: [
@@ -64,17 +70,29 @@ class SavingsGoalDetailScreen extends StatelessWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Saved so far', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                        Text(formatAmount(currentGoal.currentAmount, currentGoal.currency),
-                            style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: color)),
+                        Text(l10n.savings_savedSoFar,
+                            style: const TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.w600)),
+                        Text(
+                            formatAmount(currentGoal.currentAmount,
+                                currentGoal.currency),
+                            style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.w800,
+                                color: color)),
                       ],
                     ),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        const Text('Target', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                        Text(formatAmount(currentGoal.targetAmount, currentGoal.currency),
-                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+                        Text(l10n.savings_target,
+                            style: const TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.w600)),
+                        Text(
+                            formatAmount(
+                                currentGoal.targetAmount, currentGoal.currency),
+                            style: const TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.w700)),
                       ],
                     ),
                   ],
@@ -85,7 +103,9 @@ class SavingsGoalDetailScreen extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: progress,
                     minHeight: 12,
-                    color: currentGoal.isCompleted ? const Color(0xFF2E7D32) : color,
+                    color: currentGoal.isCompleted
+                        ? const Color(0xFF2E7D32)
+                        : color,
                     backgroundColor: color.withValues(alpha: 0.2),
                   ),
                 ),
@@ -94,47 +114,57 @@ class SavingsGoalDetailScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('${(progress * 100).toStringAsFixed(1)}%',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: color)),
+                        style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: color)),
                     if (currentGoal.targetDate != null)
-                      Text('Target Date: ${currentGoal.targetDate}',
-                          style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.6))),
+                      Text(
+                          l10n.savings_targetDate(
+                              currentGoal.targetDate as String? ?? ''),
+                          style: TextStyle(
+                              fontSize: 13,
+                              color: cs.onSurface.withValues(alpha: 0.6))),
                   ],
                 ),
               ],
             ),
           ),
-          
           Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
                 Expanded(
                   child: FilledButton.icon(
-                    onPressed: () { AppHaptics.tap(context, HapticStrength.light); _showContributionSheet(context, app, currentGoal, true); },
+                    onPressed: () {
+                      AppHaptics.tap(context, HapticStrength.light);
+                      _showContributionSheet(context, app, currentGoal, true);
+                    },
                     icon: const Icon(Icons.add),
-                    label: const Text('Contribute'),
-                    style: FilledButton.styleFrom(backgroundColor: const Color(0xFF2E7D32)),
+                    label: Text(l10n.savings_contribute),
+                    style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFF2E7D32)),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () { AppHaptics.tap(context, HapticStrength.light); _showContributionSheet(context, app, currentGoal, false); },
+                    onPressed: () {
+                      AppHaptics.tap(context, HapticStrength.light);
+                      _showContributionSheet(context, app, currentGoal, false);
+                    },
                     icon: const Icon(Icons.remove),
-                    label: const Text('Withdraw'),
+                    label: Text(l10n.savings_withdraw),
                     style: OutlinedButton.styleFrom(foregroundColor: cs.error),
                   ),
                 ),
               ],
             ),
           ),
-          
           Expanded(
-            child: FutureBuilder<List<SavingsContribution>>(
-              future: app.contributionsFor(currentGoal.id),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-                final contributions = snapshot.data!;
+            child: Builder(
+              builder: (context) {
+                final contributions = app.contributionsFor(currentGoal.id);
                 if (contributions.isEmpty) {
                   return const EmptyState(
                     icon: Icons.history,
@@ -151,21 +181,29 @@ class SavingsGoalDetailScreen extends StatelessWidget {
                     return ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: CircleAvatar(
-                        backgroundColor: isContrib ? const Color(0xFF2E7D32).withValues(alpha: 0.1) : cs.error.withValues(alpha: 0.1),
+                        backgroundColor: isContrib
+                            ? const Color(0xFF2E7D32).withValues(alpha: 0.1)
+                            : cs.error.withValues(alpha: 0.1),
                         child: Icon(
                           isContrib ? Icons.arrow_downward : Icons.arrow_upward,
                           color: isContrib ? const Color(0xFF2E7D32) : cs.error,
                         ),
                       ),
-                      title: Text(isContrib ? 'Contribution' : 'Withdrawal', style: const TextStyle(fontWeight: FontWeight.w600)),
-                      subtitle: Text('${DateFormat('MMM d, yyyy').format(c.date)} • ${acc?.name ?? 'Unknown Account'}',
-                          style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.6))),
+                      title: Text(isContrib ? 'Contribution' : 'Withdrawal',
+                          style: const TextStyle(fontWeight: FontWeight.w600)),
+                      subtitle: Text(
+                          '${DateFormat('MMM d, yyyy').format(c.date)} • ${acc?.name ?? 'Unknown Account'}',
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: cs.onSurface.withValues(alpha: 0.6))),
                       trailing: Text(
                         '${isContrib ? '+' : '-'}${formatAmount(c.amount, currentGoal.currency)}',
                         style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
-                            color: isContrib ? const Color(0xFF2E7D32) : cs.onSurface),
+                            color: isContrib
+                                ? const Color(0xFF2E7D32)
+                                : cs.onSurface),
                       ),
                     );
                   },
@@ -178,14 +216,16 @@ class SavingsGoalDetailScreen extends StatelessWidget {
     );
   }
 
-  void _showContributionSheet(BuildContext context, AppProvider app, SavingsGoal goal, bool isContribution) {
+  void _showContributionSheet(BuildContext context, AppProvider app,
+      SavingsGoal goal, bool isContribution) {
     AppHaptics.tap(context, HapticStrength.medium);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      useSafeArea: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (_) => _ContributionSheet(goal: goal, isContribution: isContribution, app: app),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (_) => _ContributionSheet(
+          goal: goal, isContribution: isContribution, app: app),
     );
   }
 }
@@ -194,8 +234,9 @@ class _ContributionSheet extends StatefulWidget {
   final SavingsGoal goal;
   final bool isContribution;
   final AppProvider app;
-  
-  const _ContributionSheet({required this.goal, required this.isContribution, required this.app});
+
+  const _ContributionSheet(
+      {required this.goal, required this.isContribution, required this.app});
 
   @override
   State<_ContributionSheet> createState() => _ContributionSheetState();
@@ -211,7 +252,8 @@ class _ContributionSheetState extends State<_ContributionSheet> {
   void initState() {
     super.initState();
     // Preselect the primary account or the first one with matching currency
-    final matches = widget.app.accounts.where((a) => a.currency == widget.goal.currency);
+    final matches =
+        widget.app.accounts.where((a) => a.currency == widget.goal.currency);
     if (matches.isNotEmpty) {
       _selectedAccountId = matches.first.id;
     } else if (widget.app.accounts.isNotEmpty) {
@@ -251,42 +293,54 @@ class _ContributionSheetState extends State<_ContributionSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
-      padding: EdgeInsets.only(
-          left: 16, right: 16, top: 24,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 24),
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 24, bottom: 24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(widget.isContribution ? 'Add Contribution' : 'Withdraw from Goal',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+          Text(
+              widget.isContribution ? 'Add Contribution' : 'Withdraw from Goal',
+              style:
+                  const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
           const SizedBox(height: 20),
-          
           if (widget.app.accounts.isEmpty)
-            const Text('No accounts available. Please add an account first.')
+            Text(l10n.savings_noAccounts)
           else ...[
             DropdownButtonFormField<String>(
-              value: _selectedAccountId,
+              initialValue: _selectedAccountId,
               decoration: InputDecoration(
-                labelText: widget.isContribution ? 'From Account' : 'To Account',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                labelText:
+                    widget.isContribution ? 'From Account' : 'To Account',
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              items: widget.app.accounts.map((a) => DropdownMenuItem(
-                value: a.id,
-                child: Text('${a.name} (${a.currency})'),
-              )).toList(),
+              items: widget.app.accounts
+                  .map((a) => DropdownMenuItem(
+                        value: a.id,
+                        child: Text('${a.name} (${a.currency})'),
+                      ))
+                  .toList(),
               onChanged: (v) => setState(() => _selectedAccountId = v),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _amountCtrl,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               decoration: InputDecoration(
                 labelText: 'Amount',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 prefixIcon: const Icon(Icons.monetization_on_outlined),
-                errorText: _submitted && (double.tryParse(_amountCtrl.text.replaceAll(',', '')) ?? 0.0) <= 0 ? 'Amount is required' : null,
+                errorText: _submitted &&
+                        (double.tryParse(
+                                    _amountCtrl.text.replaceAll(',', '')) ??
+                                0.0) <=
+                            0
+                    ? 'Amount is required'
+                    : null,
               ),
             ),
             const SizedBox(height: 16),
@@ -295,18 +349,28 @@ class _ContributionSheetState extends State<_ContributionSheet> {
               textCapitalization: TextCapitalization.sentences,
               decoration: InputDecoration(
                 labelText: 'Note (Optional)',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 prefixIcon: const Icon(Icons.notes),
               ),
             ),
             const SizedBox(height: 32),
             FilledButton(
-              onPressed: () { AppHaptics.tap(context, HapticStrength.light); _submit(); },
+              onPressed: () {
+                AppHaptics.tap(context, HapticStrength.light);
+                _submit();
+              },
               style: FilledButton.styleFrom(
-                  backgroundColor: widget.isContribution ? const Color(0xFF2E7D32) : Theme.of(context).colorScheme.error,
+                  backgroundColor: widget.isContribution
+                      ? const Color(0xFF2E7D32)
+                      : Theme.of(context).colorScheme.error,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
-              child: Text(widget.isContribution ? 'Add Contribution' : 'Withdraw', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16))),
+              child: Text(
+                  widget.isContribution ? 'Add Contribution' : 'Withdraw',
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.w700)),
             ),
           ],
         ],

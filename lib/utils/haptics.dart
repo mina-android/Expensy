@@ -6,7 +6,8 @@ import '../providers/app_provider.dart';
 enum HapticStrength { selection, light, medium, heavy }
 
 class AppHaptics {
-  static void tap(BuildContext context, [HapticStrength strength = HapticStrength.light]) {
+  static void tap(BuildContext context,
+      [HapticStrength strength = HapticStrength.light]) {
     final enabled = context.read<AppProvider>().settings.hapticsEnabled;
     if (!enabled) return;
 

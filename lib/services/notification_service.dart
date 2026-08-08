@@ -26,7 +26,7 @@ class NotificationService {
   final _plugin = FlutterLocalNotificationsPlugin();
   bool _initialized = false;
 
-  static const _channelId   = 'expensy_recurring';
+  static const _channelId = 'expensy_recurring';
   static const _channelName = 'Recurring Payment Reminders';
   static const _channelDesc =
       'Reminders for your scheduled recurring payments and income';
@@ -40,8 +40,10 @@ class NotificationService {
     // _toUtcTZDate() converts local times to UTC using the device offset directly.
     tz_data.initializeTimeZones();
 
-    const androidSettings = AndroidInitializationSettings('@drawable/ic_notification');
-    await _plugin.initialize(const InitializationSettings(android: androidSettings));
+    const androidSettings =
+        AndroidInitializationSettings('@drawable/ic_notification');
+    await _plugin
+        .initialize(const InitializationSettings(android: androidSettings));
     _initialized = true;
 
     // Eagerly register the recurring payment notification channel so it's
@@ -72,7 +74,8 @@ class NotificationService {
         AndroidFlutterLocalNotificationsPlugin>();
     if (android == null) return false;
 
-    final notifGranted = await android.requestNotificationsPermission() ?? false;
+    final notifGranted =
+        await android.requestNotificationsPermission() ?? false;
     if (notifGranted) await android.requestExactAlarmsPermission();
     return notifGranted;
   }
@@ -101,11 +104,11 @@ class NotificationService {
 
     if (r.endDate != null && r.nextDate.isAfter(r.endDate!)) return;
 
-    final parts  = r.reminderTime.split(':');
-    final hour   = int.tryParse(parts[0]) ?? 9;
+    final parts = r.reminderTime.split(':');
+    final hour = int.tryParse(parts[0]) ?? 9;
     final minute = parts.length > 1 ? (int.tryParse(parts[1]) ?? 0) : 0;
 
-    final emoji  = r.paymentType == 'expense' ? '\u{1F4B8}' : '\u{1F4B0}';
+    final emoji = r.paymentType == 'expense' ? '\u{1F4B8}' : '\u{1F4B0}';
     final amount = formatAmount(r.amount, mainCurrency);
     final details = _buildDetails();
 
@@ -131,7 +134,7 @@ class NotificationService {
     // ── 2. 2-days-before advance notification ────────────────────────────
     if (r.earlyReminderEnabled) {
       final advanceDay = r.nextDate.subtract(const Duration(days: 2));
-      final advTzDate  = _toUtcTZDate(advanceDay, hour, minute);
+      final advTzDate = _toUtcTZDate(advanceDay, hour, minute);
       if (advTzDate != null) {
         final body = r.paymentType == 'expense'
             ? '$amount due in 2 days'
@@ -155,7 +158,7 @@ class NotificationService {
   Future<void> cancelReminder(String paymentId) async {
     await _ensureInit();
     await _plugin.cancel(_notifId(paymentId));
-    await _plugin.cancel(_advanceId(paymentId));   // safe even when not scheduled
+    await _plugin.cancel(_advanceId(paymentId)); // safe even when not scheduled
   }
 
   /// Cancel all pending recurring payment notifications and reschedule only
@@ -185,12 +188,16 @@ class NotificationService {
     // Build the target moment in local time (no timezone info yet).
     final local = DateTime(date.year, date.month, date.day, hour, minute);
 
-    // Shift to UTC by subtracting the device's current UTC offset.
-    final offset = DateTime.now().timeZoneOffset;
-    final utc    = local.subtract(offset);
+    // Shift to UTC by subtracting the local time's offset (fixes DST bugs).
+    final offset = local.timeZoneOffset;
+    final utc = local.subtract(offset);
 
     final tzDate = tz.TZDateTime.utc(
-      utc.year, utc.month, utc.day, utc.hour, utc.minute,
+      utc.year,
+      utc.month,
+      utc.day,
+      utc.hour,
+      utc.minute,
     );
 
     // Return null (skip scheduling) if the moment has already passed.
@@ -207,7 +214,7 @@ class NotificationService {
       ('${paymentId}_adv').hashCode & 0x7FFFFFFF;
 
   /// Builds the shared [NotificationDetails] for recurring payment reminders.
-  NotificationDetails _buildDetails() => NotificationDetails(
+  NotificationDetails _buildDetails() => const NotificationDetails(
         android: AndroidNotificationDetails(
           _channelId,
           _channelName,
@@ -217,7 +224,7 @@ class NotificationService {
           category: AndroidNotificationCategory.reminder,
           playSound: true,
           enableVibration: true,
-          styleInformation: const BigTextStyleInformation(''),
+          styleInformation: BigTextStyleInformation(''),
         ),
       );
 

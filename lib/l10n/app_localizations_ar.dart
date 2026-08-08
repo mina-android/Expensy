@@ -9,7 +9,7 @@ class AppLocalizationsAr extends AppLocalizations {
   AppLocalizationsAr([String locale = 'ar']) : super(locale);
 
   @override
-  String get appTitle => 'Expensy';
+  String get appTitle => 'نفقة';
 
   @override
   String get settings_title => 'الإعدادات';
@@ -36,13 +36,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settings_amoledSubtitle => 'فرض خلفيات سوداء في الوضع الداكن';
 
   @override
+  String get settings_systemDefault => 'الافتراضي للنظام';
+
+  @override
+  String get settings_dynamicColor => 'اللون الديناميكي';
+
+  @override
+  String get settings_dynamicColorSubtitle => 'استخدام ألوان خلفية النظام';
+
+  @override
   String get settings_accentColor => 'لون التمييز';
 
   @override
-  String get settings_appFont => 'خط التطبيق';
+  String get settings_accentColorSubtitle => 'اختر اللون الأساسي للتطبيق';
 
   @override
-  String get settings_systemDefault => 'الافتراضي للنظام';
+  String get settings_appFont => 'خط التطبيق';
 
   @override
   String get settings_currency => 'العملة';
@@ -94,7 +103,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'يتم تخزين جميع البيانات محليًا — 100% بدون إنترنت';
 
   @override
-  String get settings_github => 'GitHub';
+  String get settings_github => 'جيثب';
 
   @override
   String get settings_githubSubtitle => 'عرض الكود المصدري';
@@ -858,8 +867,8 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count عناصر',
-      one: 'عنصر واحد',
+      other: '$count items',
+      one: '1 item',
     );
     return '$_temp0';
   }
@@ -880,8 +889,8 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count عناصر',
-      one: 'عنصر واحد',
+      other: '$count items',
+      one: '1 item',
     );
     return '$_temp0';
   }
@@ -894,8 +903,8 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count فئات',
-      one: 'فئة واحدة',
+      other: '$count categories',
+      one: '1 category',
     );
     return '$_temp0';
   }
@@ -1003,8 +1012,8 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count سجلات نشطة',
-      one: 'سجل نشط واحد',
+      other: '$count active records',
+      one: '1 active record',
     );
     return '$_temp0';
   }
@@ -1115,8 +1124,8 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count معاملات في النطاق',
-      one: 'معاملة واحدة في النطاق',
+      other: '$count transactions in range',
+      one: '1 transaction in range',
     );
     return '$_temp0';
   }
@@ -1144,393 +1153,391 @@ class AppLocalizationsAr extends AppLocalizations {
   String get shared_widgets_searchByCode => 'البحث بالرمز أو الاسم...';
 
   @override
-  String get accounts_accounts => 'Accounts';
+  String get accounts_accounts => 'الحسابات';
 
   @override
-  String get accounts_totalBalance => 'Total Balance';
+  String get accounts_totalBalance => 'إجمالي الرصيد';
 
   @override
-  String get accounts_excluded => 'Excluded';
+  String get accounts_excluded => 'مستبعد';
 
   @override
   String get accounts_goldPriceNotYetLoade =>
-      'Gold price not yet loaded. Wait a moment and try again.';
+      'لم يتم تحميل سعر الذهب بعد. انتظر لحظة وحاول مرة أخرى.';
 
   @override
-  String get accounts_accountType => 'Account Type';
+  String get accounts_accountType => 'نوع الحساب';
 
   @override
-  String get accounts_currency => 'Currency';
+  String get accounts_currency => 'العملة';
 
   @override
-  String get accounts_goldPurityKarat => 'Gold Purity (Karat)';
+  String get accounts_goldPurityKarat => 'نقاء الذهب (عيار)';
 
   @override
-  String get accounts_weight => 'Weight';
+  String get accounts_weight => 'الوزن';
 
   @override
-  String get accounts_excludeFromTotalBala => 'Exclude from Total Balance';
+  String get accounts_excludeFromTotalBala => 'استبعاد من إجمالي الرصيد';
 
   @override
-  String get accounts_colour => 'Colour';
+  String get accounts_color => 'اللون';
 
   @override
-  String get accounts_liveGoldValue => 'Live Gold Value';
+  String get accounts_liveGoldValue => 'قيمة الذهب المباشرة';
 
   @override
-  String get accounts_enterWeightAboveToSe => 'Enter weight above to see value';
+  String get accounts_enterWeightAboveToSe => 'أدخل الوزن أعلاه لمعرفة القيمة';
 
   @override
-  String get add_transaction_expense => 'Expense';
+  String get add_transaction_expense => 'مصروف';
 
   @override
-  String get add_transaction_income => 'Income';
+  String get add_transaction_income => 'دخل';
 
   @override
-  String get add_transaction_account => 'Account';
+  String get add_transaction_account => 'الحساب';
 
   @override
-  String get add_transaction_category => 'Category';
+  String get add_transaction_category => 'الفئة';
 
   @override
-  String get assets_assets => 'Assets';
+  String get assets_assets => 'الأصول';
 
   @override
-  String get backup_restoreBackup => 'Restore Backup?';
+  String get backup_restoreBackup => 'استعادة النسخة الاحتياطية؟';
 
   @override
-  String get backup_cancel => 'Cancel';
+  String get backup_cancel => 'إلغاء';
 
   @override
-  String get backup_replaceData => 'Replace Data';
+  String get backup_replaceData => 'استبدال البيانات';
 
   @override
-  String get backup_backupRestore => 'Backup & Restore';
+  String get backup_backupRestore => 'النسخ الاحتياطي والاستعادة';
 
   @override
-  String get backup_everythingAlways => 'Everything, always';
+  String get backup_everythingAlways => 'كل شيء، دائمًا';
 
   @override
-  String get backup_createBackup => 'Create Backup';
+  String get backup_createBackup => 'إنشاء نسخة احتياطية';
 
   @override
-  String get backup_saveAsJson => 'Save as JSON';
+  String get backup_saveAsJson => 'حفظ كملف JSON';
 
   @override
   String get backup_exportsAllAppDataToA =>
-      'Exports ALL app data to a portable file';
+      'يصدر كل بيانات التطبيق إلى ملف محمول';
 
   @override
-  String get backup_restoreBackup_ => 'Restore Backup';
+  String get backup_restoreBackup_ => 'استعادة النسخة الاحتياطية';
 
   @override
-  String get backup_loadFromJson => 'Load from JSON';
+  String get backup_loadFromJson => 'تحميل من JSON';
 
   @override
-  String get backup_picksABackupFileAndR =>
-      'Picks a backup file and restores it';
+  String get backup_picksABackupFileAndR => 'يختار ملف نسخة احتياطية ويستعيده';
 
   @override
-  String get backup_thisOverwritesAllCur => 'This overwrites ALL current data.';
+  String get backup_thisOverwritesAllCur =>
+      'هذا سيكتب فوق جميع البيانات الحالية.';
 
   @override
-  String get budget_budgets => 'Budgets';
+  String get budget_budgets => 'الميزانيات';
 
   @override
-  String get budget_empty => ' · ';
+  String get budget_empty => '·';
 
   @override
-  String get budget_overBudget => 'Over budget';
+  String get budget_overBudget => 'تجاوز الميزانية';
 
   @override
   String get budget_thisCategoryAlreadyH =>
-      'This category already has a budget. Tap it to edit.';
+      'هذه الفئة لديها ميزانية بالفعل. اضغط للتعديل.';
 
   @override
-  String get budget_period => 'Period';
+  String get budget_period => 'الفترة';
 
   @override
-  String get budget_monthly => 'Monthly';
+  String get budget_monthly => 'شهريًا';
 
   @override
-  String get budget_weekly => 'Weekly';
+  String get budget_weekly => 'أسبوعيًا';
 
   @override
-  String get budget_category => 'Category';
+  String get budget_category => 'الفئة';
 
   @override
-  String get categories_categories => 'Categories';
+  String get categories_categories => 'الفئات';
 
   @override
-  String get categories_expense => 'Expense';
+  String get categories_expense => 'مصروف';
 
   @override
-  String get categories_income => 'Income';
+  String get categories_income => 'دخل';
 
   @override
-  String get categories_colour => 'Colour';
+  String get categories_color => 'اللون';
 
   @override
-  String get categories_icon => 'Icon';
+  String get categories_icon => 'الأيقونة';
 
   @override
-  String get categories_autoBasedOnName => 'Auto (based on name)';
+  String get categories_autoBasedOnName => 'تلقائي (بناءً على الاسم)';
 
   @override
-  String get categories_expenseCategories => 'Expense Categories';
+  String get categories_expenseCategories => 'فئات المصروفات';
 
   @override
-  String get categories_incomeCategories => 'Income Categories';
+  String get categories_incomeCategories => 'فئات الدخل';
 
   @override
-  String get currency_converter_currencyConverter => 'Currency Converter';
+  String get currency_converter_currencyConverter => 'محول العملات';
 
   @override
-  String get currency_converter_amount => 'Amount';
+  String get currency_converter_amount => 'المبلغ';
 
   @override
-  String get currency_converter_convertedTo => 'Converted to';
+  String get currency_converter_convertedTo => 'تم التحويل إلى';
 
   @override
-  String get export_exportTransactions => 'Export Transactions';
+  String get export_exportTransactions => 'تصدير المعاملات';
 
   @override
-  String get export_dateRange => 'Date Range';
+  String get export_dateRange => 'نطاق التاريخ';
 
   @override
-  String get export_formatExcelXlsx => 'Format: Excel (.xlsx)';
+  String get export_formatExcelXlsx => 'التنسيق: Excel (.xlsx)';
 
   @override
-  String get home_totalBalance => 'Total Balance';
+  String get home_totalBalance => 'إجمالي الرصيد';
 
   @override
-  String get home_accounts => 'Accounts';
+  String get home_accounts => 'الحسابات';
 
   @override
-  String get home_recentTransactions => 'Recent Transactions';
+  String get home_recentTransactions => 'أحدث المعاملات';
 
   @override
-  String get home_noTransactionsYet => 'No transactions yet';
+  String get home_noTransactionsYet => 'لا توجد معاملات بعد';
 
   @override
-  String get home_add => 'Add';
+  String get home_add => 'إضافة';
 
   @override
-  String get insights_insights => 'Insights';
+  String get insights_insights => 'الرؤى';
 
   @override
-  String get lended_person_deletePerson => 'Delete person';
+  String get lended_person_deletePerson => 'حذف الشخص';
 
   @override
-  String get lended_person_editPerson => 'Edit Person';
+  String get lended_person_editPerson => 'تعديل الشخص';
 
   @override
-  String get lended_person_colour => 'Colour';
+  String get lended_person_color => 'اللون';
 
   @override
-  String get lended_person_saveChanges => 'Save Changes';
+  String get lended_person_saveChanges => 'حفظ التغييرات';
 
   @override
-  String get lended_person_settled => 'SETTLED';
+  String get lended_person_settled => 'تمت التسوية';
 
   @override
-  String get lended_person_settle => 'Settle';
+  String get lended_person_settle => 'تسوية';
 
   @override
   String get lended_person_setADueDateFirstToEn =>
-      'Set a due date first to enable reminders.';
+      'حدد تاريخ استحقاق أولاً لتفعيل التذكيرات.';
 
   @override
-  String get lended_person_iLent => 'I Lent';
+  String get lended_person_iLent => 'أنا أقرضت';
 
   @override
-  String get lended_person_iBorrowed => 'I Borrowed';
+  String get lended_person_iBorrowed => 'أنا اقترضت';
 
   @override
-  String get lended_person_accountOptional => 'Account (optional)';
+  String get lended_person_accountOptional => 'الحساب (اختياري)';
 
   @override
-  String get lended_person_dueDateReminder => 'Due Date Reminder';
+  String get lended_person_dueDateReminder => 'تذكير تاريخ الاستحقاق';
 
   @override
-  String get lended_person_remindMeAt => 'Remind me at';
+  String get lended_person_remindMeAt => 'ذكرني في';
 
   @override
-  String get lended_person_active => 'Active';
+  String get lended_person_active => 'نشط';
 
   @override
-  String get lended_person_settled_ => 'Settled';
+  String get lended_person_settled_ => 'تمت التسوية';
 
   @override
-  String get lended_lentMoney => 'Lent Money';
+  String get lended_lentMoney => 'المال المقرض';
 
   @override
-  String get lended_overdue => 'OVERDUE';
+  String get lended_overdue => 'متأخر';
 
   @override
-  String get lended_colour => 'Colour';
+  String get lended_color => 'اللون';
 
   @override
-  String get more_more => 'More';
+  String get more_more => 'المزيد';
 
   @override
-  String get onboarding_back => 'Back';
+  String get onboarding_back => 'رجوع';
 
   @override
-  String get onboarding_welcomeToExpensy => 'Welcome to Expensy!';
+  String get onboarding_welcomeToExpensy => 'مرحبًا بك في Expensy!';
 
   @override
-  String get onboarding_restoreABackup => 'Restore a Backup';
+  String get onboarding_restoreABackup => 'استعادة نسخة احتياطية';
 
   @override
   String get onboarding_loadAPreviouslySaved =>
-      'Load a previously saved Expensy JSON file';
+      'تحميل ملف JSON محفوظ مسبقًا لـ Expensy';
 
   @override
-  String get onboarding_or => 'or';
+  String get onboarding_or => 'أو';
 
   @override
-  String get onboarding_startFresh => 'Start Fresh';
+  String get onboarding_startFresh => 'ابدأ من جديد';
 
   @override
-  String get onboarding_firstWhatShouldWeCal =>
-      'First, what should we call you?';
+  String get onboarding_firstWhatShouldWeCal => 'أولاً، ماذا يجب أن نسميك؟';
 
   @override
-  String get onboarding_defaultCurrency => 'Default Currency';
+  String get onboarding_defaultCurrency => 'العملة الافتراضية';
 
   @override
   String get onboarding_thisWillBeUsedAcross =>
-      'This will be used across the app.\\nYou can change it later in Settings.';
+      'سيتم استخدام هذا في جميع أنحاء التطبيق.\nيمكنك تغييره لاحقًا في الإعدادات.';
 
   @override
-  String get onboarding_searchAllCurrencies => 'Search all currencies';
+  String get onboarding_searchAllCurrencies => 'البحث في جميع العملات';
 
   @override
-  String get onboarding_yourFirstAccount => 'Your First Account';
+  String get onboarding_yourFirstAccount => 'حسابك الأول';
 
   @override
   String get onboarding_setUpYourMainAccount =>
-      'Set up your main account to start tracking.';
+      'قم بإعداد حسابك الرئيسي لبدء التتبع.';
 
   @override
-  String get onboarding_accountType => 'Account Type';
+  String get onboarding_accountType => 'نوع الحساب';
 
   @override
-  String get onboarding_currency => 'Currency';
+  String get onboarding_currency => 'العملة';
 
   @override
-  String get onboarding_colour => 'Colour';
+  String get onboarding_color => 'اللون';
 
   @override
-  String get recurring_recurring => 'Recurring';
+  String get recurring_recurring => 'متكرر';
 
   @override
-  String get recurring_income => 'INCOME';
+  String get recurring_income => 'دخل';
 
   @override
-  String get recurring_2D => '−2d';
+  String get recurring_2D => '−2ي';
 
   @override
-  String get recurring_skipNextPayment => 'Skip Next Payment?';
+  String get recurring_skipNextPayment => 'تخطي الدفعة القادمة؟';
 
   @override
-  String get recurring_cancel => 'Cancel';
+  String get recurring_cancel => 'إلغاء';
 
   @override
-  String get recurring_skip => 'Skip';
+  String get recurring_skip => 'تخطي';
 
   @override
-  String get recurring_noHistoryYet => 'No history yet';
+  String get recurring_noHistoryYet => 'لا يوجد سجل بعد';
 
   @override
-  String get recurring_expense => 'Expense';
+  String get recurring_expense => 'مصروف';
 
   @override
-  String get recurring_income_ => 'Income';
+  String get recurring_income_ => 'دخل';
 
   @override
-  String get recurring_every => 'Every ';
+  String get recurring_every => 'كل ';
 
   @override
-  String get recurring_days => 'Days';
+  String get recurring_days => 'أيام';
 
   @override
-  String get recurring_weeks => 'Weeks';
+  String get recurring_weeks => 'أسابيع';
 
   @override
-  String get recurring_months => 'Months';
+  String get recurring_months => 'أشهر';
 
   @override
-  String get recurring_years => 'Years';
+  String get recurring_years => 'سنوات';
 
   @override
-  String get recurring_payments => 'Payments';
+  String get recurring_payments => 'دفعات';
 
   @override
-  String get recurring_totalCost => 'Total Cost';
+  String get recurring_totalCost => 'التكلفة الإجمالية';
 
   @override
-  String get recurring_account => 'Account';
+  String get recurring_account => 'الحساب';
 
   @override
-  String get recurring_category => 'Category';
+  String get recurring_category => 'الفئة';
 
   @override
-  String get recurring_paymentReminder => 'Payment Reminder';
+  String get recurring_paymentReminder => 'تذكير بالدفع';
 
   @override
   String get recurring_notificationWillFire =>
-      'Notification will fire on the next due date at this time.';
+      'سيتم إطلاق الإشعار في تاريخ الاستحقاق القادم في هذا الوقت.';
 
   @override
-  String get recurring_remind2DaysBefore => 'Remind 2 days before';
+  String get recurring_remind2DaysBefore => 'ذكرني قبل يومين';
 
   @override
-  String get statistics_statistics => 'Statistics';
+  String get statistics_statistics => 'الإحصائيات';
 
   @override
-  String get statistics_expensesByCategory => 'Expenses by Category';
+  String get statistics_expensesByCategory => 'المصروفات حسب الفئة';
 
   @override
-  String get transactions_transactions => 'Transactions';
+  String get transactions_transactions => 'المعاملات';
 
   @override
-  String get transactions_settled => 'Settled';
+  String get transactions_settled => 'تمت التسوية';
 
   @override
-  String get transfer_transfer => 'Transfer';
+  String get transfer_transfer => 'تحويل';
 
   @override
-  String get transfer_from => 'FROM';
+  String get transfer_from => 'من';
 
   @override
-  String get transfer_to => 'TO';
+  String get transfer_to => 'إلى';
 
   @override
-  String get transfer_enterAnAmountToSeeTh =>
-      'Enter an amount to see the conversion';
+  String get transfer_enterAnAmountToSeeTh => 'أدخل مبلغًا لرؤية التحويل';
 
   @override
-  String get wishlist_wishlist => 'Wishlist';
+  String get wishlist_wishlist => 'قائمة الرغبات';
 
   @override
-  String get wishlist_priority => 'Priority';
+  String get wishlist_priority => 'الأولوية';
 
   @override
-  String get shared_widgets_delete => 'Delete?';
+  String get shared_widgets_delete => 'حذف؟';
 
   @override
-  String get shared_widgets_cancel => 'Cancel';
+  String get shared_widgets_cancel => 'إلغاء';
 
   @override
-  String get shared_widgets_delete_ => 'Delete';
+  String get shared_widgets_delete_ => 'حذف';
 
   @override
-  String get shared_widgets_none => 'None';
+  String get shared_widgets_none => 'لا شيء';
 
   @override
-  String get shared_widgets_selectCurrency => 'Select Currency';
+  String get shared_widgets_selectCurrency => 'اختر العملة';
 
   @override
   String get main_home => 'الرئيسية';
@@ -1588,4 +1595,86 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get backup_importFromGreenStash => 'استيراد من GreenStash (.json)';
+
+  @override
+  String get backup_automaticBackup => 'النسخ الاحتياطي التلقائي';
+
+  @override
+  String get backup_dailyAutoBackup => 'النسخ الاحتياطي التلقائي اليومي';
+
+  @override
+  String backup_runsDailyAt(String time) {
+    return 'Runs daily at $time';
+  }
+
+  @override
+  String backup_lastBackup(String time) {
+    return 'آخر نسخة احتياطية: $time';
+  }
+
+  @override
+  String backup_savingTo(String path) {
+    return 'Saving to: $path';
+  }
+
+  @override
+  String get backup_changeTime => 'تغيير الوقت';
+
+  @override
+  String get backup_changeFolder => 'تغيير المجلد';
+
+  @override
+  String get budget_budgetsAndGoals => 'الميزانيات والأهداف';
+
+  @override
+  String get onboarding_restoreGreenStash => 'استعادة من GreenStash (.json)';
+
+  @override
+  String get savings_goalNotFound => 'لم يتم العثور على الهدف';
+
+  @override
+  String get savings_savedSoFar => 'تم الحفظ حتى الآن';
+
+  @override
+  String get savings_target => 'هدف';
+
+  @override
+  String savings_targetDate(String date) {
+    return 'Target Date: $date';
+  }
+
+  @override
+  String get savings_contribute => 'ساهم';
+
+  @override
+  String get savings_withdraw => 'انسحاب';
+
+  @override
+  String get savings_noAccounts =>
+      'لا توجد حسابات متاحة. الرجاء إضافة حساب أولا.';
+
+  @override
+  String get settings_budgetAlerts => 'تنبيهات الميزانية';
+
+  @override
+  String get settings_budgetAlertsSub =>
+      'إعلام عند الوصول إلى الميزانية أو الهدف';
+
+  @override
+  String get settings_dailyReminder => 'التذكير اليومي';
+
+  @override
+  String get settings_dailyReminderSub => 'تذكير بتسجيل المعاملات يوميا';
+
+  @override
+  String get settings_reminderTime => 'وقت التذكير';
+
+  @override
+  String get settings_hapticFeedback => 'ردود الفعل اللمسية';
+
+  @override
+  String get settings_hapticFeedbackSub => 'اهتزاز عند التفاعلات';
+
+  @override
+  String get savings_saveGoal => 'حفظ الهدف';
 }

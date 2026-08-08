@@ -1,6 +1,82 @@
 # Changelog
 
-All notable changes to Expensy are documented in this file.
+## [1.0.9] - 2026-08-07
+### Added
+- Linked Accounts feature: Cards can now be linked directly to Bank accounts.
+- Bank accounts now compute their total balance, income, expense, and transaction history dynamically by summing up all their linked debit and credit cards.
+- Added option to write card expiration dates (MM/YY) and display it on the real-world card UI.
+- Added a toggle to exclude a specific linked card's balance from the bank account's total.
+- Added an Advanced Filter sheet in the Transactions Screen to allow granular transaction searching by Amount Range (Min/Max) and Category.
+- Added Bulk Selection mode in the Transactions Screen: Long-press to select multiple transactions and perform bulk category changes or bulk deletions.
+- Global Form Keyboard Navigation: Added `TextInputAction.next` and `onSubmitted` handlers to text fields across the app (Add Transaction, Accounts, Categories, etc.) allowing users to smoothly advance to the next field using the soft keyboard's "Next/Enter" button.
+- Drag-and-drop account and category reordering with strong/light haptic feedback globally synced across the app.
+- Advanced reminder scheduling for Credit Cards (2 days early + specific time).
+- Insights Screen: Added a new "Spending Forecast" card to project monthly expenses against the total budget.
+- Insights Screen: Added projected spending amounts and budget percentage usage to the "Top Spending Categories" list.
+- Insights Screen: Added a new "Net Worth" section displaying live totals for Accounts and Assets, alongside a historical trend graph.
+
+- Unified all snackbars (including undo actions) across the app to force auto-hide strictly after 3 seconds.
+- Fixed Home Page top bar alignment to sit cleanly behind the summary cards and properly spaced above the accounts text.
+
+- Added left-to-right swipe-to-delete gesture and click-to-edit for recent transactions in the Home Screen.
+- Home page account cards now retain beautifully rounded corners during the drag-and-drop reordering animation.
+- Modified the bottom navigation bar to have circular top edges for a modern, softer look.
+- Standardized haptics globally using a custom AppHaptics utility to ensure consistency.
+- Fine-tuned the trash icon position on the Real Card UI.
+- Fixed an issue where the Excel export screen showed a false "Export Complete" message when the system file picker was cancelled.
+- Fixed an issue in the Transactions screen where long-pressing a transaction to select it would falsely prompt to delete it. Long-press now properly only selects the transaction.
+- Fixed a rendering issue where bottom sheets pop-ups remained visible after switching navigation tabs.
+- Onboarding updated: the 'Add a Credit Card' step is now 'Add a Card' with options for both Credit and Debit cards.
+- Added a 'Skip for now' button to the Add Account and Add Card steps during onboarding.
+- Replaced buggy automatic form slide-up effects with robust dynamic padding across all major forms (Budgets, Assets, Wishlists, Lent Money, Accounts) to ensure forms smoothly glide above the keyboard without layout stability issues.
+- Tweaked home screen spacing by reducing the padding of the top header and tightening the space above the Accounts section.
+- Replaced the two-tap delete confirmation dialog with a seamless one-tap delete action featuring an undo AppSnackbar across all major entities app-wide (Transactions, Assets, Budgets, Savings Goals, Wishlists, Lended Money, Accounts, Categories).
+- Transactions Screen: Selection mode can now be exited cleanly using the system back swipe gesture or back button.
+- Transactions Screen: The 'Change Category' button is dynamically hidden when the bulk selection contains Lent/Borrowed entries, preventing invalid category assignments.
+
+### Changed
+- Re-architected Accounts ordering: Accounts now accurately restore their user-defined layout ordering after an app restart instead of falling back to creation date.
+- Redesigned Card Details UI: Swapped the generic wallet icon for a streamlined inline Delete icon for better accessibility, and made card corners smoothly rounded.
+- Refined Card UI: Replaced the large central balance on Credit Cards with the credit limit elegantly displayed directly above the small bottom-right balance.
+- Perfectly aligned the trash icon on the Card UI to be perfectly centered inside the top-right circular element.
+- Improved the 'Linked Bank Account' chips in the Add Card form to be larger and more tactile.
+- Decoupled the Add Card form from the Add Account form to ensure cleaner UI logic scaling and independent updates.
+- Increased the speed of the Expandable FAB pop-up animations for a snappier, more responsive feel.
+- Categories filter redesigned: Moved from a horizontal slider to scrollable chips integrated directly inside the Advanced Filter bottom sheet.
+- Tabbed Account layout: Cleanly separated Cards from regular Accounts.
+- Bank accounts now function strictly as containers and do not appear in transaction forms.
+- Updated Onboarding: Now supports adding cards directly on the first launch instead of generic accounts.
+- Simplified Net Worth Insights layout by removing redundant trend lines.
+- **Architectural Overhaul**: Converted major screens to use `context.select` instead of `context.watch` to prevent full-app rebuilds.
+- **Optimized Rendering**: Memoized heavy calculations and flattened nested lists in Transactions and Home screens to guarantee 120Hz smooth scrolling.
+
+### Fixed
+- Fixed an edge-case bug where users couldn't deselect a Linked Account once one was set (selecting "None" wouldn't save).
+- Fixed an issue where the global Total Balance would double-count linked cards.
+- Fixed Expandable FAB alignment by letting it naturally align to the ambient RTL/LTR layout instead of forcing LTR, keeping the popups perfectly stacked over the FAB across all languages.
+- Fixed Credit Card 'Due Day' text fields across the app by capping length at 2 characters to prevent accidental long inputs.
+- Fixed an issue where paying an installment erroneously converted it into a subscription.
+- Fixed persistent Snackbars remaining on screen indefinitely; all Snackbars are now strictly enforced to vanish after 3 seconds by bypassing system accessibility overrides.
+- Fixed background silent crashes caused by unhandled async and database exceptions by fully revamping `models.dart` to be 100% null-safe during database initialization.
+- **Database I/O Spikes**: Fixed severe lag when saving transactions by implementing optimistic in-memory list updates instead of fully re-querying SQLite tables on every CRUD operation.
+- Fixed backup normalisation to support new fields like `linked_account_id` and `order_index`.
+- Cleaned up the codebase by removing numerous unused variables (e.g., `l10n`).
+- Fixed an issue where the keyboard "Next"/"Done" button was not correctly adapting to the dynamic number of fields in the Account creation sheet, ensuring a smooth keyboard navigation experience across all account types (Bank, Cash, Gold, etc.).
+
+## [1.0.8] — 2026-07-28
+
+### Fixed
+- **Android Builds** — Fixed issues related to invalid APK builds.
+
+### Removed
+- **Auto Backup** — Completely removed the automatic backup feature, background workers, and associated dependencies to streamline the application architecture.
+
+### Added
+- **Spanish Language (Español)** — Fully translated the app into Spanish with 100% string coverage (512 strings), bringing the total supported languages to 6.
+- **Brazilian Real (BRL)** — Added BRL (R$) to the built-in currency list and promoted it to the popular currencies row in the Currency Converter.
+
+### Changed
+- **Recurring Page UI** — Added a combined "Income / Expenses" summary label at the top of the Recurring page to match the visual styling of the Accounts page total balance.
 
 ---
 
@@ -12,14 +88,12 @@ All notable changes to Expensy are documented in this file.
 - **Daily Reminders** — Added a 10:00 PM daily reminder to log transactions, which can be toggled via Settings.
 - **Haptic Feedback** — Implemented system haptic feedback for major navigation actions, button taps, and destructive confirmations.
 - **Contributions & Withdrawals** — Goal contributions and withdrawals are natively recorded and interleaved seamlessly into the main Transactions list.
-- **Auto Backup** — Keep your data secure automatically! You can now enable a daily background backup that runs at 2:00 AM and saves a full JSON backup directly to a folder of your choice on your device.
 - **Global Validation** — Implemented global validation across all app forms to ensure mandatory fields are filled before saving.
 - **Recurring Payment UI Improvements** — The Recurring Expenses tab has been split into 'Subscriptions' (ongoing) and 'Installments' (finite payments) for better categorization, featuring larger, more colorful toggle cards. The Add Recurring screen now also uses card selectors instead of a dropdown.
 - **Import from Other Apps** — Added a dedicated "Import from Other Apps" section in the Backup & Restore screen to easily pull in GreenStash backups.
 
 ### Fixed
 - **GreenStash Balance & File Picker** — Fixed an issue where the file picker menu was shown twice, and GreenStash imports now correctly calculate the goal balance based on contributions and withdrawals.
-- **Auto Backup Path** — Fixed a bug where auto backup would not correctly turn on without picking a folder, adding a dedicated button to choose the backup directory.
 - **Recurring Filter UI** — The 'Subscriptions' and 'Installments' toggle buttons have been refined to be smaller, keeping text and icons neatly aligned on one line.
 - **Predictive Back** — Enabled Android 15+ predictive back animations app-wide for a smoother navigation experience.
 - **Haptic Feedback** — Expanded haptic feedback to plus icons and all 'Save' button actions across the app.
@@ -35,7 +109,6 @@ All notable changes to Expensy are documented in this file.
 - **Android File Picker Glitch Fixed** — Removed `withData: true` from the `file_picker` config on the Onboarding screen to bypass a known Android intent bug that popped up the "Open With..." app chooser menu before the document picker.
 - **Say App Support Removed** — Cleanly deprecated and removed all data import routes for the "Say" app per user preference.
 - **GreenStash Withdrawals & Balance** — GreenStash imports now correctly parse 'Withdraw' and 'Deposit' type strings to accurately calculate the goal balance.
-- **Auto Backup Path & Realtime UI** — The auto backup switch is now instantly responsive in real time, and the chosen directory is displayed as a human-readable path ('Internal Storage / Folder') rather than raw Android content-provider URIs.
 - **Dynamic Color Toggle** — Decoupled Dynamic Color from the System theme mode. A new independent toggle in Settings allows Material You wallpaper colors to be applied regardless of light/dark/system selection, and hides the accent color picker when enabled.
 - **Haptic Feedback (VIBRATE Permission)** — Added the missing VIBRATE permission in AndroidManifest to ensure new tactile feedback works across all Android devices.
 - **Predictive Back & Page Transitions** — Replaced the heavy Android Zoom transition with the smooth, iOS-style left-to-right `CupertinoPageTransitionsBuilder` across the app. This provides a clean, fluid swipe-to-go-back gesture that scales perfectly with the system's animation speed settings, natively tracking your finger's exact drag speed linearly.
@@ -355,3 +428,4 @@ All notable changes to Expensy are documented in this file.
 #### Technical
 - 100% offline, SQLite, Material You, Provider state management
 - Adaptive launcher icon, `com.ma.expensy`, min Android 5.0 (API 21)
+

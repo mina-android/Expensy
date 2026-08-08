@@ -8,7 +8,7 @@
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.3%2B-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Android](https://img.shields.io/badge/Android-5.0%2B-3DDC84?logo=android&logoColor=white)](https://android.com)
-[![Version](https://img.shields.io/badge/Version-1.0.8-brightgreen)](https://github.com/mina-android/Expensy/releases)
+[![Version](https://img.shields.io/badge/Version-1.0.9-brightgreen)](https://github.com/mina-android/Expensy/releases)
 [![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
 
 No accounts. No cloud. No ads. Your data stays on your device — always.
@@ -27,9 +27,10 @@ Most finance apps want you to sign up, sync to the cloud, or watch ads. Expensy 
 
 ## ✨ Features
 
-- **Accounts** — bank, cash, savings, credit card, e-wallet, or gold, each in its own currency
+- **Accounts** — bank, cash, savings, credit card (with expiration tracking), e-wallet, or gold, each in its own currency, with drag-and-drop custom ordering
+- **Linked Accounts** — dynamically link your credit and debit cards to a central bank account to compute a unified total balance
 - **Gold accounts** — track holdings by karat and grams, valued automatically from live gold prices
-- **Transactions** — income, expense, lent, and borrowed entries in a unified, chronological list view with search, account filters, and type pills
+- **Transactions** — income, expense, lent, and borrowed entries in a unified, chronological list view with search, advanced category and amount filters, type pills, swipe-to-delete, bulk-selection mode for mass deletion and categorization, and click-to-edit gestures
 - **Transfers** — move money between accounts, with automatic currency conversion
 - **Recurring payments** — subscriptions, installments, rent, salary — with reminders and payment history
 - **Budgets** — monthly or weekly limits per category, with progress bars and instant push notifications when exceeded
@@ -40,8 +41,9 @@ Most finance apps want you to sign up, sync to the cloud, or watch ads. Expensy 
 - **Lent & borrowed money** — keep tabs on who owes who, with due-date reminders
 - **Daily Reminders** — optional nightly nudge to log your daily spending
 - **Backup & Restore** — one JSON file, fully under your control. Also supports importing backups from **GreenStash**!
-- **Auto Backup** — automatically save your data every night to a local folder.
-- **Home Screen Widget** — a sleek "Nothing Style" quick add widget to instantly launch the add transaction screen
+- **High Performance** — Architected to remain buttery smooth at 120Hz even with thousands of transactions, with snappy, responsive UI animations.
+
+- **Widgets** — a sleek "Nothing Style" quick add widget to instantly launch the add transaction screen, and a new Budget Progress widget to monitor top budgets on your home screen.
 - **Custom look** — Material You, 29 accent colours, 10 fonts, AMOLED dark mode
 
 ---
@@ -65,6 +67,7 @@ Most finance apps want you to sign up, sync to the cloud, or watch ads. Expensy 
 Expensy is being translated into multiple languages using native translation and professional finance terminology for a native feel. Translation is in progress — percentages reflect the share of strings currently translated relative to the English base:
 
 - 🇺🇸 **English** — 100%
+- 🇪🇸 **Spanish (Español)** — 100%
 - 🇸🇦 **Arabic (العربية)** — 73% (RTL support included)
 - 🇫🇷 **French (Français)** — 73%
 - 🇩🇪 **German (Deutsch)** — 73%
@@ -135,7 +138,7 @@ Production builds automatically detect `android/key.properties` and sign with `e
 
 - [ ] iOS support
 - [x] Home screen widget
-- [ ] Multiple languages (73% complete — AR/DE/FR/HI)
+- [ ] Multiple languages (ES 100%, AR/DE/FR/HI at 73%)
 - [ ] Recurring payment auto-pay
 - [x] Budgets per category
 - [x] Push notifications for recurring & lent/borrowed reminders
@@ -164,3 +167,8 @@ Made with ❤️ and Flutter · [**More projects**](https://github.com/mina-andr
 
 </div>
 
+
+
+## Recent Updates
+- Introduced Linked Accounts and drag-and-drop account reordering.
+- Separated Cards from standard Accounts.

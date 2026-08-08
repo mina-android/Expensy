@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Fallback dark mode colors (pre-Android 12) -->
+    <color name="ic_launcher_background">#1D1B20</color>
+    <color name="budget_primary">#D0BCFF</color>
+    <color name="budget_orange">#FFB74D</color>
+    <color name="budget_red">#FFB4AB</color>
+    <color name="widget_bg">#1D1B20</color>
+    <color name="widget_text">#E6E1E5</color>
+    <color name="widget_progress_bg">#49454F</color>
+</resources>

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import '../providers/app_provider.dart';
+import '../models/models.dart';
 import '../theme/app_theme.dart';
 
 class StatisticsScreen extends StatefulWidget {
@@ -17,11 +18,97 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   DateTime _month = DateTime(DateTime.now().year, DateTime.now().month);
   String? _filterAccountId; // null = all accounts
 
+  List<AppTransaction>? _cachedTxs;
+  DateTime? _cachedMonth;
+  String? _cachedFilterAccountId;
+
+  List<AppTransaction> _mTxs = [];
+  double _income = 0;
+  double _expense = 0;
+  List<BarChartGroupData> _barGroups = [];
+  Map<String, double> _expBycat = {};
+  Map<String, String> _expBycatId = {};
+  List<DateTime> _months = [];
+
+  void _computeData(AppProvider app, AppLocalizations l10n) {
+    if (identical(_cachedTxs, app.transactions) &&
+        _cachedMonth == _month &&
+        _cachedFilterAccountId == _filterAccountId) {
+      return;
+    }
+    _cachedTxs = app.transactions;
+    _cachedMonth = _month;
+    _cachedFilterAccountId = _filterAccountId;
+
+    final mStart = DateTime(_month.year, _month.month, 1);
+    final mEnd = DateTime(_month.year, _month.month + 1, 0, 23, 59, 59);
+
+    _mTxs = app.transactions.where((t) {
+      if (t.date.isBefore(mStart) || t.date.isAfter(mEnd)) return false;
+      if (_filterAccountId != null && t.accountId != _filterAccountId) {
+        return false;
+      }
+      return true;
+    }).toList();
+
+    _income = _mTxs
+        .where((t) => t.type == 'income')
+        .fold(0.0, (s, t) => s + t.amount);
+    _expense = _mTxs
+        .where((t) => t.type == 'expense')
+        .fold(0.0, (s, t) => s + t.amount);
+
+    final now = DateTime.now();
+    _months = List.generate(6, (i) => DateTime(now.year, now.month - 5 + i, 1));
+
+    _barGroups = _months.map((m) {
+      final mE = DateTime(m.year, m.month + 1, 0, 23, 59, 59);
+      final txs = app.transactions.where((t) {
+        if (t.date.isBefore(m) || t.date.isAfter(mE)) return false;
+        if (_filterAccountId != null && t.accountId != _filterAccountId) {
+          return false;
+        }
+        return true;
+      }).toList();
+      final inc = txs
+          .where((t) => t.type == 'income')
+          .fold(0.0, (s, t) => s + t.amount);
+      final exp = txs
+          .where((t) => t.type == 'expense')
+          .fold(0.0, (s, t) => s + t.amount);
+      final idx = _months.indexOf(m);
+      return BarChartGroupData(
+          x: idx,
+          barRods: [
+            BarChartRodData(
+                toY: inc,
+                color: const Color(0xFF2E7D32),
+                width: 9,
+                borderRadius: BorderRadius.circular(4)),
+            BarChartRodData(
+                toY: exp,
+                color: const Color(0xFFC62828),
+                width: 9,
+                borderRadius: BorderRadius.circular(4)),
+          ],
+          barsSpace: 2);
+    }).toList();
+
+    _expBycat = {};
+    _expBycatId = {};
+    for (final t in _mTxs.where((t) => t.type == 'expense')) {
+      final cat = app.categoryById(t.categoryId);
+      final key = cat?.name ?? l10n.statistics_other;
+      _expBycat[key] = (_expBycat[key] ?? 0) + t.amount;
+      if (cat != null) _expBycatId[key] = cat.id;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
-    final cs  = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     String fmt(double v) => formatAmount(v, app.settings.currency);
 
     // Guard stale account filter (account deleted while selected)
@@ -32,74 +119,21 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       });
     }
 
-    final mStart = DateTime(_month.year, _month.month, 1);
-    final mEnd   = DateTime(_month.year, _month.month + 1, 0, 23, 59, 59);
-
-    // All transactions in selected month (optionally filtered by account)
-    final mTxs = app.transactions.where((t) {
-      if (t.date.isBefore(mStart) || t.date.isAfter(mEnd)) return false;
-      if (_filterAccountId != null && t.accountId != _filterAccountId) {
-        return false;
-      }
-      return true;
-    }).toList();
-
-    final income  = mTxs.where((t) => t.type == 'income')
-        .fold(0.0, (s, t) => s + t.amount);
-    final expense = mTxs.where((t) => t.type == 'expense')
-        .fold(0.0, (s, t) => s + t.amount);
-
-    // 6-month bar data (respects account filter)
-    final now    = DateTime.now();
-    final months = List.generate(6, (i) =>
-        DateTime(now.year, now.month - 5 + i, 1));
-
-    List<BarChartGroupData> barGroups() => months.map((m) {
-      final mE = DateTime(m.year, m.month + 1, 0, 23, 59, 59);
-      final txs = app.transactions.where((t) {
-        if (t.date.isBefore(m) || t.date.isAfter(mE)) return false;
-        if (_filterAccountId != null && t.accountId != _filterAccountId) {
-          return false;
-        }
-        return true;
-      }).toList();
-      final inc = txs.where((t) => t.type == 'income')
-          .fold(0.0, (s, t) => s + t.amount);
-      final exp = txs.where((t) => t.type == 'expense')
-          .fold(0.0, (s, t) => s + t.amount);
-      final idx = months.indexOf(m);
-      return BarChartGroupData(x: idx, barRods: [
-        BarChartRodData(toY: inc, color: const Color(0xFF2E7D32), width: 9,
-            borderRadius: BorderRadius.circular(4)),
-        BarChartRodData(toY: exp, color: const Color(0xFFC62828), width: 9,
-            borderRadius: BorderRadius.circular(4)),
-      ], barsSpace: 2);
-    }).toList();
-
-    // Expense pie — category breakdown for selected month/account
-    final expBycat = <String, double>{};
-    final expBycatId = <String, String>{}; // catName → categoryId
-    for (final t in mTxs.where((t) => t.type == 'expense')) {
-      final cat = app.categoryById(t.categoryId);
-      final key = cat?.name ?? l10n.statistics_other;
-      expBycat[key] = (expBycat[key] ?? 0) + t.amount;
-      if (cat != null) expBycatId[key] = cat.id;
-    }
+    _computeData(app, l10n);
 
     // Non-gold accounts for filter chips
-    final filterableAccounts =
-        app.accounts.where((a) => !a.isGold).toList();
+    final filterableAccounts = app.accounts.where((a) => !a.isGold).toList();
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.statistics_statistics,
-            style: TextStyle(fontWeight: FontWeight.w800)),
-        backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
+            style: const TextStyle(fontWeight: FontWeight.w800)),
+        backgroundColor: cs.primary,
+        foregroundColor: cs.onPrimary,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-
           // ── Account filter pills ─────────────────────────────────────
           if (filterableAccounts.length > 1) ...[
             SizedBox(
@@ -114,14 +148,14 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     onTap: () => setState(() => _filterAccountId = null),
                   ),
                   ...filterableAccounts.map((a) => Padding(
-                    padding: const EdgeInsets.only(left: 8),
-                    child: _FilterPill(
-                      label: a.name,
-                      color: Color(a.colorValue),
-                      selected: _filterAccountId == a.id,
-                      onTap: () => setState(() => _filterAccountId = a.id),
-                    ),
-                  )),
+                        padding: const EdgeInsets.only(left: 8),
+                        child: _FilterPill(
+                          label: a.name,
+                          color: Color(a.colorValue),
+                          selected: _filterAccountId == a.id,
+                          onTap: () => setState(() => _filterAccountId = a.id),
+                        ),
+                      )),
                 ],
               ),
             ),
@@ -131,56 +165,70 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           // ── Month nav ────────────────────────────────────────────────
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             IconButton(
-              icon: const Icon(Icons.chevron_left_rounded),
-              onPressed: () => setState(() =>
-                  _month = DateTime(_month.year, _month.month - 1))),
+                icon: const Icon(Icons.chevron_left_rounded),
+                onPressed: () => setState(
+                    () => _month = DateTime(_month.year, _month.month - 1))),
             Text(DateFormat('MMMM yyyy').format(_month),
-                style: const TextStyle(
-                    fontWeight: FontWeight.w800, fontSize: 16)),
+                style:
+                    const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
             IconButton(
-              icon: const Icon(Icons.chevron_right_rounded),
-              onPressed: () => setState(() =>
-                  _month = DateTime(_month.year, _month.month + 1))),
+                icon: const Icon(Icons.chevron_right_rounded),
+                onPressed: () => setState(
+                    () => _month = DateTime(_month.year, _month.month + 1))),
           ]),
 
           // ── Summary cards ─────────────────────────────────────────────
           Row(children: [
-            Expanded(child: _StatCard(label: l10n.statistics_income, value: fmt(income),
-                color: const Color(0xFF2E7D32))),
+            Expanded(
+                child: _StatCard(
+                    label: l10n.statistics_income,
+                    value: fmt(_income),
+                    color: const Color(0xFF2E7D32))),
             const SizedBox(width: 8),
-            Expanded(child: _StatCard(label: l10n.statistics_expenses, value: fmt(expense),
-                color: const Color(0xFFC62828))),
+            Expanded(
+                child: _StatCard(
+                    label: l10n.statistics_expenses,
+                    value: fmt(_expense),
+                    color: const Color(0xFFC62828))),
             const SizedBox(width: 8),
-            Expanded(child: _StatCard(
-                label: l10n.statistics_net, value: fmt(income - expense),
-                color: income >= expense
-                    ? const Color(0xFF1565C0)
-                    : const Color(0xFF785900))),
+            Expanded(
+                child: _StatCard(
+                    label: l10n.statistics_net,
+                    value: fmt(_income - _expense),
+                    color: _income >= _expense
+                        ? const Color(0xFF1565C0)
+                        : const Color(0xFF785900))),
           ]),
           const SizedBox(height: 20),
 
           // ── 6-month bar chart ─────────────────────────────────────────
-          Card(child: Padding(
+          Card(
+              child: Padding(
             padding: const EdgeInsets.all(16),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(
-                _filterAccountId != null
-                    ? l10n.statistics_6MonthOverviewAccount(app.accountById(_filterAccountId!)?.name ?? '')
-                    : l10n.statistics_6MonthOverview,
-                style: const TextStyle(
-                    fontWeight: FontWeight.w700, fontSize: 14)),
+                  _filterAccountId != null
+                      ? l10n.statistics_6MonthOverviewAccount(
+                          app.accountById(_filterAccountId!)?.name ?? '')
+                      : l10n.statistics_6MonthOverview,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w700, fontSize: 14)),
               const SizedBox(height: 4),
               Row(children: [
-                _Legend(color: const Color(0xFF2E7D32), label: l10n.statistics_income),
+                _Legend(
+                    color: const Color(0xFF2E7D32),
+                    label: l10n.statistics_income),
                 const SizedBox(width: 12),
-                _Legend(color: const Color(0xFFC62828), label: l10n.statistics_expense),
+                _Legend(
+                    color: const Color(0xFFC62828),
+                    label: l10n.statistics_expense),
               ]),
               const SizedBox(height: 12),
               SizedBox(
                 height: 160,
                 child: BarChart(BarChartData(
-                  barGroups: barGroups(),
+                  barGroups: _barGroups,
                   gridData: const FlGridData(show: false),
                   borderData: FlBorderData(show: false),
                   titlesData: FlTitlesData(
@@ -196,11 +244,11 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                         reservedSize: 22,
                         getTitlesWidget: (val, _) {
                           final idx = val.toInt();
-                          if (idx < 0 || idx >= months.length) {
+                          if (idx < 0 || idx >= _months.length) {
                             return const SizedBox();
                           }
                           return Text(
-                            DateFormat('MMM').format(months[idx]),
+                            DateFormat('MMM').format(_months[idx]),
                             style: const TextStyle(fontSize: 10),
                           );
                         },
@@ -214,24 +262,55 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           const SizedBox(height: 16),
 
           // ── Expense pie ───────────────────────────────────────────────
-          if (expBycat.isNotEmpty)
-            Card(child: Padding(
+          if (_expBycat.isNotEmpty)
+            Card(
+                child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                Text(l10n.statistics_expensesByCategory,
-                    style: TextStyle(
-                        fontWeight: FontWeight.w700, fontSize: 14)),
-                const SizedBox(height: 12),
-                SizedBox(
-                  height: 200,
-                  child: PieChart(PieChartData(
-                    sections: expBycat.entries
-                        .toList()
-                        .asMap()
-                        .entries
-                        .map((e) {
+                    Text(l10n.statistics_expensesByCategory,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w700, fontSize: 14)),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: 200,
+                      child: PieChart(PieChartData(
+                        sections:
+                            _expBycat.entries.toList().asMap().entries.map((e) {
+                          final colors = [
+                            const Color(0xFF1565C0),
+                            const Color(0xFFC62828),
+                            const Color(0xFF2E7D32),
+                            const Color(0xFF785900),
+                            const Color(0xFF4527A0),
+                            const Color(0xFF00838F),
+                            const Color(0xFF880E4F),
+                            const Color(0xFF37474F),
+                          ];
+                          final color = colors[e.key % colors.length];
+                          final pct = _expense > 0
+                              ? (e.value.value / _expense * 100)
+                              : 0.0;
+                          return PieChartSectionData(
+                            value: e.value.value,
+                            color: color,
+                            radius: 60,
+                            title: '${pct.toStringAsFixed(0)}%',
+                            titleStyle: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white),
+                          );
+                        }).toList(),
+                        sectionsSpace: 2,
+                        centerSpaceRadius: 32,
+                      )),
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Legend with optional budget bar
+                    ..._expBycat.entries.toList().asMap().entries.map((e) {
                       final colors = [
                         const Color(0xFF1565C0),
                         const Color(0xFFC62828),
@@ -242,99 +321,54 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                         const Color(0xFF880E4F),
                         const Color(0xFF37474F),
                       ];
-                      final color = colors[e.key % colors.length];
-                      final pct = expense > 0
-                          ? (e.value.value / expense * 100)
-                          : 0.0;
-                      return PieChartSectionData(
-                        value: e.value.value,
-                        color: color,
-                        radius: 60,
-                        title: '${pct.toStringAsFixed(0)}%',
-                        titleStyle: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white),
+                      final pct =
+                          _expense > 0 ? (e.value.value / _expense * 100) : 0.0;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(children: [
+                                Container(
+                                    width: 10,
+                                    height: 10,
+                                    decoration: BoxDecoration(
+                                        color: colors[e.key % colors.length],
+                                        shape: BoxShape.circle)),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(e.value.key,
+                                      style: const TextStyle(fontSize: 11)),
+                                ),
+                                Text(
+                                  '${pct.toStringAsFixed(0)}%',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: colors[e.key % colors.length],
+                                  ),
+                                ),
+                              ]),
+                              const SizedBox(height: 3),
+                              Padding(
+                                padding: const EdgeInsets.only(left: 14),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(3),
+                                  child: LinearProgressIndicator(
+                                    value: pct / 100,
+                                    minHeight: 3,
+                                    backgroundColor:
+                                        colors[e.key % colors.length]
+                                            .withValues(alpha: 0.1),
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        colors[e.key % colors.length]),
+                                  ),
+                                ),
+                              ),
+                            ]),
                       );
-                    }).toList(),
-                    sectionsSpace: 2,
-                    centerSpaceRadius: 32,
-                  )),
-                ),
-                const SizedBox(height: 10),
-
-                // Legend with optional budget bar
-                ...expBycat.entries.toList().asMap().entries.map((e) {
-                  final colors = [
-                    const Color(0xFF1565C0), const Color(0xFFC62828),
-                    const Color(0xFF2E7D32), const Color(0xFF785900),
-                    const Color(0xFF4527A0), const Color(0xFF00838F),
-                    const Color(0xFF880E4F), const Color(0xFF37474F),
-                  ];
-                  final catId = expBycatId[e.value.key];
-                  final budget = catId != null
-                      ? app.budgetForCategory(catId)
-                      : null;
-                  final progress = budget != null
-                      ? app.budgetProgress(budget)
-                      : null;
-
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                      Row(children: [
-                        Container(
-                            width: 10, height: 10,
-                            decoration: BoxDecoration(
-                                color: colors[e.key % colors.length],
-                                shape: BoxShape.circle)),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(e.value.key,
-                              style: const TextStyle(fontSize: 11)),
-                        ),
-                        if (budget != null)
-                          Text(
-                            l10n.statistics_percentOfBudget((progress! * 100).toStringAsFixed(0)),
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: progress >= 1.0
-                                  ? cs.error
-                                  : progress >= 0.75
-                                      ? Colors.orange
-                                      : cs.primary,
-                            ),
-                          ),
-                      ]),
-                      // Budget mini-bar under this category's legend row
-                      if (budget != null) ...[
-                        const SizedBox(height: 3),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 14),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(3),
-                            child: LinearProgressIndicator(
-                              value: progress!.clamp(0.0, 1.0),
-                              minHeight: 3,
-                              backgroundColor:
-                                  cs.primary.withValues(alpha: 0.1),
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                  progress >= 1.0
-                                      ? cs.error
-                                      : progress >= 0.75
-                                          ? Colors.orange
-                                          : cs.primary),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ]),
-                  );
-                }),
-              ]),
+                    }),
+                  ]),
             )),
           const SizedBox(height: 40),
         ]),
@@ -352,9 +386,9 @@ class _StatCard extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.25))),
+            color: color.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: color.withValues(alpha: 0.25))),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(label,
               style: TextStyle(
@@ -364,9 +398,7 @@ class _StatCard extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: color)),
+                  fontSize: 13, fontWeight: FontWeight.w800, color: color)),
         ]),
       );
 }
@@ -381,14 +413,13 @@ class _Legend extends StatelessWidget {
         Container(
             width: 10,
             height: 10,
-            decoration:
-                BoxDecoration(color: color, shape: BoxShape.circle)),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
         const SizedBox(width: 4),
         Text(label, style: const TextStyle(fontSize: 11)),
       ]);
 }
 
-/// Coloured filter pill — solid fill when selected, tinted border + text idle.
+/// Colored filter pill — solid fill when selected, tinted border + text idle.
 /// Matches the style used in TransactionsScreen.
 class _FilterPill extends StatelessWidget {
   final String label;
@@ -404,7 +435,6 @@ class _FilterPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(

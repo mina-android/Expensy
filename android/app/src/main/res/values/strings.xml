@@ -2,4 +2,6 @@
 <resources>
     <string name="quick_add_widget_description">Add Transaction</string>
     <string name="quick_add_widget_label">Quick Add</string>
+    <string name="budget_widget_desc">Track your top budgets</string>
+    <string name="accounts_widget_desc">View your pinned account balances</string>
 </resources>

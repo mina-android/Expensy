@@ -1,5 +1,6 @@
 // lib/screens/assets_screen.dart
 import 'package:flutter/material.dart';
+import '../utils/snackbar.dart';
 import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
@@ -21,7 +22,7 @@ class AssetsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.assets_assets, style: TextStyle(fontWeight: FontWeight.w800)),
+        title: Text(l10n.assets_assets, style: const TextStyle(fontWeight: FontWeight.w800)),
         backgroundColor: cs.primary,
         foregroundColor: cs.onPrimary,
       ),
@@ -120,7 +121,6 @@ class _AssetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     const assetColor = Color(0xFF1565C0);
 
@@ -183,9 +183,13 @@ class _AssetCard extends StatelessWidget {
               constraints: const BoxConstraints(),
               visualDensity: VisualDensity.compact,
               onPressed: () async {
-                if (await showDeleteConfirm(context, asset.name)
-                    && context.mounted) {
-                  context.read<AppProvider>().deleteAsset(asset.id);
+                AppHaptics.tap(context, HapticStrength.medium);
+                final undo = await context
+                    .read<AppProvider>()
+                    .deleteAssetWithUndo(asset.id);
+                if (context.mounted) {
+                  showAppSnackbar(context, '${asset.name} deleted',
+                      onUndo: undo);
                 }
               },
             ),
@@ -268,14 +272,16 @@ class _AssetSheetState extends State<_AssetSheet> {
     final sym = currencyInfo(_currency).symbol;
 
     return Padding(
-      padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-          left: 20, right: 20, top: 20),
+      padding: const EdgeInsets.only(
+          bottom: 16,
+          left: 20,
+          right: 20,
+          top: 20),
       child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             Text(isEdit ? l10n.assets_editAsset : l10n.assets_addAsset,
                 style: Theme.of(context).textTheme.titleLarge
                     ?.copyWith(fontWeight: FontWeight.w800)),
@@ -284,6 +290,7 @@ class _AssetSheetState extends State<_AssetSheet> {
             // Name
             TextField(
               controller: _nameCtrl,
+              textInputAction: TextInputAction.next,
               decoration: InputDecoration(
                 labelText: l10n.assets_productAssetName,
                 prefixIcon: const Icon(Icons.inventory_2_outlined),
@@ -301,6 +308,7 @@ class _AssetSheetState extends State<_AssetSheet> {
                 flex: 3,
                 child: TextField(
                   controller: _valueCtrl,
+                  textInputAction: TextInputAction.next,
                   keyboardType:
                       const TextInputType.numberWithOptions(decimal: true),
                   decoration: InputDecoration(
@@ -352,6 +360,8 @@ class _AssetSheetState extends State<_AssetSheet> {
             // Notes
             TextField(
               controller: _notesCtrl,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _submit(),
               maxLines: 2,
               decoration: InputDecoration(
                 labelText: l10n.assets_notesOptional,
@@ -368,8 +378,8 @@ class _AssetSheetState extends State<_AssetSheet> {
                       borderRadius: BorderRadius.circular(28))),
               child: Text(isEdit ? l10n.assets_saveChanges : l10n.assets_addAsset),
             ),
-          ],
-        ),
+            ],
+          ),
       ),
     );
   }

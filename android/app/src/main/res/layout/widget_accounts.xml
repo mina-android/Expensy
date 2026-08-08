@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/widget_bg_rounded"
+    android:padding="16dp"
+    android:gravity="center_vertical">
+
+    <TextView
+        android:id="@+id/empty_state_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="No pinned accounts.\nPin in app."
+        android:textColor="@color/widget_text"
+        android:textSize="14sp"
+        android:gravity="center"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/accounts_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="visible">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Accounts"
+            android:textColor="@color/budget_primary"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Item 1 -->
+        <LinearLayout android:id="@+id/account_item_1" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="4dp" android:visibility="gone">
+            <TextView android:id="@+id/account_name_1" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textColor="@color/widget_text" android:textSize="14sp" android:maxLines="1" android:ellipsize="end" />
+            <TextView android:id="@+id/account_balance_1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/widget_text" android:textSize="14sp" android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Item 2 -->
+        <LinearLayout android:id="@+id/account_item_2" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="4dp" android:visibility="gone">
+            <TextView android:id="@+id/account_name_2" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textColor="@color/widget_text" android:textSize="14sp" android:maxLines="1" android:ellipsize="end" />
+            <TextView android:id="@+id/account_balance_2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/widget_text" android:textSize="14sp" android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Item 3 -->
+        <LinearLayout android:id="@+id/account_item_3" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="4dp" android:visibility="gone">
+            <TextView android:id="@+id/account_name_3" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textColor="@color/widget_text" android:textSize="14sp" android:maxLines="1" android:ellipsize="end" />
+            <TextView android:id="@+id/account_balance_3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="@color/widget_text" android:textSize="14sp" android:textStyle="bold" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

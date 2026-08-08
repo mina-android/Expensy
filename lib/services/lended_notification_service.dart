@@ -31,10 +31,9 @@ class LendedNotificationService {
   bool _initialized = false;
 
   // ── Channel constants ────────────────────────────────────────────────────
-  static const _channelId   = 'expensy_lended';
+  static const _channelId = 'expensy_lended';
   static const _channelName = 'Lent & Borrowed Reminders';
-  static const _channelDesc =
-      'Reminders for lent and borrowed money due dates';
+  static const _channelDesc = 'Reminders for lent and borrowed money due dates';
 
   // ── Initialization ──────────────────────────────────────────────────────
 
@@ -51,8 +50,8 @@ class LendedNotificationService {
 
     const androidSettings =
         AndroidInitializationSettings('@drawable/ic_notification');
-    await _plugin.initialize(
-        const InitializationSettings(android: androidSettings));
+    await _plugin
+        .initialize(const InitializationSettings(android: androidSettings));
     _initialized = true;
 
     // Eagerly create the Android notification channel so it appears in
@@ -120,11 +119,11 @@ class LendedNotificationService {
     if (!l.reminderEnabled || l.isSettled || l.dueDate == null) return;
     await _ensureInit();
 
-    final parts  = l.reminderTime.split(':');
-    final hour   = int.tryParse(parts[0]) ?? 9;
+    final parts = l.reminderTime.split(':');
+    final hour = int.tryParse(parts[0]) ?? 9;
     final minute = parts.length > 1 ? (int.tryParse(parts[1]) ?? 0) : 0;
 
-    final emoji  = l.type == 'lent' ? '\u{1F4B8}' : '\u{1F4B0}';
+    final emoji = l.type == 'lent' ? '\u{1F4B8}' : '\u{1F4B0}';
     final amount = formatAmount(l.amount, mainCurrency);
     final details = _buildDetails();
 
@@ -178,8 +177,8 @@ class LendedNotificationService {
       await _plugin.cancel(_notifId(l.id));
     }
     // Re-schedule enabled reminders
-    for (final l in lended.where(
-        (l) => l.reminderEnabled && !l.isSettled && l.dueDate != null)) {
+    for (final l in lended
+        .where((l) => l.reminderEnabled && !l.isSettled && l.dueDate != null)) {
       await scheduleLendedReminder(l, mainCurrency,
           personName: personNameOf?.call(l.personId) ?? '');
     }
@@ -196,12 +195,16 @@ class LendedNotificationService {
     // Build the target moment in local time (no timezone info yet).
     final local = DateTime(date.year, date.month, date.day, hour, minute);
 
-    // Shift to UTC by subtracting the device's current UTC offset.
-    final offset = DateTime.now().timeZoneOffset;
-    final utc    = local.subtract(offset);
+    // Shift to UTC by subtracting the local time's offset (fixes DST bugs).
+    final offset = local.timeZoneOffset;
+    final utc = local.subtract(offset);
 
     final tzDate = tz.TZDateTime.utc(
-      utc.year, utc.month, utc.day, utc.hour, utc.minute,
+      utc.year,
+      utc.month,
+      utc.day,
+      utc.hour,
+      utc.minute,
     );
 
     // Return null (skip scheduling) if the moment has already passed.
@@ -212,8 +215,7 @@ class LendedNotificationService {
   /// Stable positive int ID for lended notifications.
   /// Uses a 'lended_' prefix to guarantee it never collides with recurring
   /// payment notification IDs even if the underlying UUIDs matched.
-  int _notifId(String lendedId) =>
-      'lended_$lendedId'.hashCode & 0x7FFFFFFF;
+  int _notifId(String lendedId) => 'lended_$lendedId'.hashCode & 0x7FFFFFFF;
 
   /// Builds the [NotificationDetails] for all lent/borrowed reminders,
   /// pointed at the dedicated lended channel.
@@ -227,7 +229,7 @@ class LendedNotificationService {
           category: AndroidNotificationCategory.reminder,
           playSound: true,
           enableVibration: true,
-          styleInformation: const BigTextStyleInformation(''),
+          styleInformation: BigTextStyleInformation(''),
         ),
       );
 

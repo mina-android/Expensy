@@ -3,16 +3,19 @@ import '../models/models.dart';
 import 'package:intl/intl.dart';
 
 class BudgetNotificationService {
-  static final BudgetNotificationService _instance = BudgetNotificationService._internal();
+  static final BudgetNotificationService _instance =
+      BudgetNotificationService._internal();
   factory BudgetNotificationService() => _instance;
   BudgetNotificationService._internal();
 
-  final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _plugin =
+      FlutterLocalNotificationsPlugin();
   bool _initialized = false;
 
   Future<void> initialize() async {
     if (_initialized) return;
-    const androidInit = AndroidInitializationSettings('@drawable/ic_notification');
+    const androidInit =
+        AndroidInitializationSettings('@drawable/ic_notification');
     const initSettings = InitializationSettings(android: androidInit);
     await _plugin.initialize(initSettings);
     _initialized = true;
@@ -30,21 +33,24 @@ class BudgetNotificationService {
     return (await android?.areNotificationsEnabled()) ?? false;
   }
 
-  Future<void> showBudgetExceeded(Budget budget, AppCategory category, double spentAmount) async {
+  Future<void> showBudgetExceeded(
+      Budget budget, AppCategory category, double spentAmount) async {
     if (!(await hasPermission())) return;
     final overAmount = spentAmount - budget.amount;
     if (overAmount <= 0) return;
 
     final nf = NumberFormat.currency(symbol: '');
     final amountStr = nf.format(overAmount).trim();
-    
-    // Deliberately non-idempotent ID formula so budget alerts stack.
-    final id = ('budget_${budget.id}_${DateTime.now().millisecondsSinceEpoch}').hashCode & 0x7FFFFFFF;
+
+    // Stable ID that resets daily so budget alerts don't spam.
+    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final id = ('budget_${budget.id}_$today').hashCode & 0x7FFFFFFF;
 
     const androidDetails = AndroidNotificationDetails(
       'expensy_budget',
       'Budget & Goal Alerts',
-      channelDescription: 'Immediate alerts for exceeded budgets and completed goals.',
+      channelDescription:
+          'Immediate alerts for exceeded budgets and completed goals.',
       importance: Importance.high,
       priority: Priority.high,
       category: AndroidNotificationCategory.reminder,
@@ -68,19 +74,21 @@ class BudgetNotificationService {
     final nf = NumberFormat.currency(symbol: '');
     final amountStr = nf.format(goal.targetAmount).trim();
 
-    // Deliberately non-idempotent ID formula so goal completion alerts stack (if re-triggered).
-    final id = ('goal_${goal.id}_${DateTime.now().millisecondsSinceEpoch}').hashCode & 0x7FFFFFFF;
+    // Stable ID that resets daily.
+    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final id = ('goal_${goal.id}_$today').hashCode & 0x7FFFFFFF;
 
     const androidDetails = AndroidNotificationDetails(
       'expensy_budget',
       'Budget & Goal Alerts',
-      channelDescription: 'Immediate alerts for exceeded budgets and completed goals.',
+      channelDescription:
+          'Immediate alerts for exceeded budgets and completed goals.',
       importance: Importance.high,
       priority: Priority.high,
       category: AndroidNotificationCategory.reminder,
       enableVibration: true,
       playSound: true,
-      styleInformation: const BigTextStyleInformation(''),
+      styleInformation: BigTextStyleInformation(''),
     );
     const details = NotificationDetails(android: androidDetails);
 

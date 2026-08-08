@@ -9,7 +9,7 @@ class AppLocalizationsHi extends AppLocalizations {
   AppLocalizationsHi([String locale = 'hi']) : super(locale);
 
   @override
-  String get appTitle => 'Expensy';
+  String get appTitle => 'खर्चा';
 
   @override
   String get settings_title => 'सेटिंग्स';
@@ -37,13 +37,23 @@ class AppLocalizationsHi extends AppLocalizations {
       'डार्क मोड में काली पृष्ठभूमि को लागू करता है';
 
   @override
+  String get settings_systemDefault => 'सिस्टम डिफ़ॉल्ट';
+
+  @override
+  String get settings_dynamicColor => 'गतिशील रंग';
+
+  @override
+  String get settings_dynamicColorSubtitle =>
+      'सिस्टम वॉलपेपर रंगों का उपयोग करें';
+
+  @override
   String get settings_accentColor => 'एक्सेंट रंग';
 
   @override
-  String get settings_appFont => 'ऐप फ़ॉन्ट';
+  String get settings_accentColorSubtitle => 'ऐप के लिए बीज का रंग चुनें';
 
   @override
-  String get settings_systemDefault => 'सिस्टम डिफ़ॉल्ट';
+  String get settings_appFont => 'ऐप फ़ॉन्ट';
 
   @override
   String get settings_currency => 'मुद्रा';
@@ -95,7 +105,7 @@ class AppLocalizationsHi extends AppLocalizations {
       'सभी डेटा स्थानीय रूप से संग्रहीत — 100% ऑफ़लाइन';
 
   @override
-  String get settings_github => 'GitHub';
+  String get settings_github => 'गिटहब';
 
   @override
   String get settings_githubSubtitle => 'स्रोत कोड देखें';
@@ -865,8 +875,8 @@ class AppLocalizationsHi extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count आइटम',
-      one: '1 आइटम',
+      other: '$count items',
+      one: '1 item',
     );
     return '$_temp0';
   }
@@ -887,8 +897,8 @@ class AppLocalizationsHi extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count आइटम',
-      one: '1 आइटम',
+      other: '$count items',
+      one: '1 item',
     );
     return '$_temp0';
   }
@@ -901,8 +911,8 @@ class AppLocalizationsHi extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count श्रेणियां',
-      one: '1 श्रेणी',
+      other: '$count categories',
+      one: '1 category',
     );
     return '$_temp0';
   }
@@ -1012,8 +1022,8 @@ class AppLocalizationsHi extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count सक्रिय रिकॉर्ड',
-      one: '1 सक्रिय रिकॉर्ड',
+      other: '$count active records',
+      one: '1 active record',
     );
     return '$_temp0';
   }
@@ -1126,8 +1136,8 @@ class AppLocalizationsHi extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'रेंज में $count लेन-देन',
-      one: 'रेंज में 1 लेन-देन',
+      other: '$count transactions in range',
+      one: '1 transaction in range',
     );
     return '$_temp0';
   }
@@ -1155,393 +1165,395 @@ class AppLocalizationsHi extends AppLocalizations {
   String get shared_widgets_searchByCode => 'कोड या नाम से खोजें...';
 
   @override
-  String get accounts_accounts => 'Accounts';
+  String get accounts_accounts => 'खाते';
 
   @override
-  String get accounts_totalBalance => 'Total Balance';
+  String get accounts_totalBalance => 'कुल शेष';
 
   @override
-  String get accounts_excluded => 'Excluded';
+  String get accounts_excluded => 'बाहर रखा गया';
 
   @override
   String get accounts_goldPriceNotYetLoade =>
-      'Gold price not yet loaded. Wait a moment and try again.';
+      'सोने की कीमत अभी लोड नहीं हुई है। एक पल रुकें और पुनः प्रयास करें।';
 
   @override
-  String get accounts_accountType => 'Account Type';
+  String get accounts_accountType => 'खाता प्रकार';
 
   @override
-  String get accounts_currency => 'Currency';
+  String get accounts_currency => 'मुद्रा';
 
   @override
-  String get accounts_goldPurityKarat => 'Gold Purity (Karat)';
+  String get accounts_goldPurityKarat => 'सोने की शुद्धता (कैरेट)';
 
   @override
-  String get accounts_weight => 'Weight';
+  String get accounts_weight => 'वजन';
 
   @override
-  String get accounts_excludeFromTotalBala => 'Exclude from Total Balance';
+  String get accounts_excludeFromTotalBala => 'कुल शेष से बाहर रखें';
 
   @override
-  String get accounts_colour => 'Colour';
+  String get accounts_color => 'रंग';
 
   @override
-  String get accounts_liveGoldValue => 'Live Gold Value';
+  String get accounts_liveGoldValue => 'लाइव सोने का मूल्य';
 
   @override
-  String get accounts_enterWeightAboveToSe => 'Enter weight above to see value';
+  String get accounts_enterWeightAboveToSe =>
+      'मूल्य देखने के लिए ऊपर वजन दर्ज करें';
 
   @override
-  String get add_transaction_expense => 'Expense';
+  String get add_transaction_expense => 'खर्च';
 
   @override
-  String get add_transaction_income => 'Income';
+  String get add_transaction_income => 'आय';
 
   @override
-  String get add_transaction_account => 'Account';
+  String get add_transaction_account => 'खाता';
 
   @override
-  String get add_transaction_category => 'Category';
+  String get add_transaction_category => 'श्रेणी';
 
   @override
-  String get assets_assets => 'Assets';
+  String get assets_assets => 'संपत्ति';
 
   @override
-  String get backup_restoreBackup => 'Restore Backup?';
+  String get backup_restoreBackup => 'बैकअप पुनर्स्थापित करें?';
 
   @override
-  String get backup_cancel => 'Cancel';
+  String get backup_cancel => 'रद्द करें';
 
   @override
-  String get backup_replaceData => 'Replace Data';
+  String get backup_replaceData => 'डेटा बदलें';
 
   @override
-  String get backup_backupRestore => 'Backup & Restore';
+  String get backup_backupRestore => 'बैकअप और पुनर्स्थापना';
 
   @override
-  String get backup_everythingAlways => 'Everything, always';
+  String get backup_everythingAlways => 'सब कुछ, हमेशा';
 
   @override
-  String get backup_createBackup => 'Create Backup';
+  String get backup_createBackup => 'बैकअप बनाएं';
 
   @override
-  String get backup_saveAsJson => 'Save as JSON';
+  String get backup_saveAsJson => 'JSON के रूप में सहेजें';
 
   @override
   String get backup_exportsAllAppDataToA =>
-      'Exports ALL app data to a portable file';
+      'पोर्टेबल फ़ाइल में सभी ऐप डेटा निर्यात करता है';
 
   @override
-  String get backup_restoreBackup_ => 'Restore Backup';
+  String get backup_restoreBackup_ => 'बैकअप पुनर्स्थापित करें';
 
   @override
-  String get backup_loadFromJson => 'Load from JSON';
+  String get backup_loadFromJson => 'JSON से लोड करें';
 
   @override
   String get backup_picksABackupFileAndR =>
-      'Picks a backup file and restores it';
+      'एक बैकअप फ़ाइल चुनता है और उसे पुनर्स्थापित करता है';
 
   @override
-  String get backup_thisOverwritesAllCur => 'This overwrites ALL current data.';
+  String get backup_thisOverwritesAllCur =>
+      'यह सभी वर्तमान डेटा को अधिलेखित कर देगा।';
 
   @override
-  String get budget_budgets => 'Budgets';
+  String get budget_budgets => 'बजट';
 
   @override
-  String get budget_empty => ' · ';
+  String get budget_empty => '·';
 
   @override
-  String get budget_overBudget => 'Over budget';
+  String get budget_overBudget => 'बजट से अधिक';
 
   @override
   String get budget_thisCategoryAlreadyH =>
-      'This category already has a budget. Tap it to edit.';
+      'इस श्रेणी में पहले से ही एक बजट है। संपादित करने के लिए टैप करें।';
 
   @override
-  String get budget_period => 'Period';
+  String get budget_period => 'अवधि';
 
   @override
-  String get budget_monthly => 'Monthly';
+  String get budget_monthly => 'मासिक';
 
   @override
-  String get budget_weekly => 'Weekly';
+  String get budget_weekly => 'साप्ताहिक';
 
   @override
-  String get budget_category => 'Category';
+  String get budget_category => 'श्रेणी';
 
   @override
-  String get categories_categories => 'Categories';
+  String get categories_categories => 'श्रेणियां';
 
   @override
-  String get categories_expense => 'Expense';
+  String get categories_expense => 'खर्च';
 
   @override
-  String get categories_income => 'Income';
+  String get categories_income => 'आय';
 
   @override
-  String get categories_colour => 'Colour';
+  String get categories_color => 'रंग';
 
   @override
-  String get categories_icon => 'Icon';
+  String get categories_icon => 'आइकन';
 
   @override
-  String get categories_autoBasedOnName => 'Auto (based on name)';
+  String get categories_autoBasedOnName => 'ऑटो (नाम के आधार पर)';
 
   @override
-  String get categories_expenseCategories => 'Expense Categories';
+  String get categories_expenseCategories => 'खर्च श्रेणियां';
 
   @override
-  String get categories_incomeCategories => 'Income Categories';
+  String get categories_incomeCategories => 'आय श्रेणियां';
 
   @override
-  String get currency_converter_currencyConverter => 'Currency Converter';
+  String get currency_converter_currencyConverter => 'मुद्रा परिवर्तक';
 
   @override
-  String get currency_converter_amount => 'Amount';
+  String get currency_converter_amount => 'राशि';
 
   @override
-  String get currency_converter_convertedTo => 'Converted to';
+  String get currency_converter_convertedTo => 'में परिवर्तित';
 
   @override
-  String get export_exportTransactions => 'Export Transactions';
+  String get export_exportTransactions => 'लेनदेन निर्यात करें';
 
   @override
-  String get export_dateRange => 'Date Range';
+  String get export_dateRange => 'तिथि सीमा';
 
   @override
-  String get export_formatExcelXlsx => 'Format: Excel (.xlsx)';
+  String get export_formatExcelXlsx => 'प्रारूप: Excel (.xlsx)';
 
   @override
-  String get home_totalBalance => 'Total Balance';
+  String get home_totalBalance => 'कुल शेष';
 
   @override
-  String get home_accounts => 'Accounts';
+  String get home_accounts => 'खाते';
 
   @override
-  String get home_recentTransactions => 'Recent Transactions';
+  String get home_recentTransactions => 'हाल के लेनदेन';
 
   @override
-  String get home_noTransactionsYet => 'No transactions yet';
+  String get home_noTransactionsYet => 'अभी तक कोई लेनदेन नहीं';
 
   @override
-  String get home_add => 'Add';
+  String get home_add => 'जोड़ें';
 
   @override
-  String get insights_insights => 'Insights';
+  String get insights_insights => 'अंतर्दृष्टि';
 
   @override
-  String get lended_person_deletePerson => 'Delete person';
+  String get lended_person_deletePerson => 'व्यक्ति को हटाएं';
 
   @override
-  String get lended_person_editPerson => 'Edit Person';
+  String get lended_person_editPerson => 'व्यक्ति संपादित करें';
 
   @override
-  String get lended_person_colour => 'Colour';
+  String get lended_person_color => 'रंग';
 
   @override
-  String get lended_person_saveChanges => 'Save Changes';
+  String get lended_person_saveChanges => 'परिवर्तन सहेजें';
 
   @override
-  String get lended_person_settled => 'SETTLED';
+  String get lended_person_settled => 'निपटाया गया';
 
   @override
-  String get lended_person_settle => 'Settle';
+  String get lended_person_settle => 'निपटान करें';
 
   @override
   String get lended_person_setADueDateFirstToEn =>
-      'Set a due date first to enable reminders.';
+      'रिमाइंडर सक्षम करने के लिए पहले एक नियत तिथि निर्धारित करें।';
 
   @override
-  String get lended_person_iLent => 'I Lent';
+  String get lended_person_iLent => 'मैंने उधार दिया';
 
   @override
-  String get lended_person_iBorrowed => 'I Borrowed';
+  String get lended_person_iBorrowed => 'मैंने उधार लिया';
 
   @override
-  String get lended_person_accountOptional => 'Account (optional)';
+  String get lended_person_accountOptional => 'खाता (वैकल्पिक)';
 
   @override
-  String get lended_person_dueDateReminder => 'Due Date Reminder';
+  String get lended_person_dueDateReminder => 'नियत तिथि रिमाइंडर';
 
   @override
-  String get lended_person_remindMeAt => 'Remind me at';
+  String get lended_person_remindMeAt => 'मुझे याद दिलाएं';
 
   @override
-  String get lended_person_active => 'Active';
+  String get lended_person_active => 'सक्रिय';
 
   @override
-  String get lended_person_settled_ => 'Settled';
+  String get lended_person_settled_ => 'निपटाया गया';
 
   @override
-  String get lended_lentMoney => 'Lent Money';
+  String get lended_lentMoney => 'उधार दिया गया पैसा';
 
   @override
-  String get lended_overdue => 'OVERDUE';
+  String get lended_overdue => 'अतिदेय';
 
   @override
-  String get lended_colour => 'Colour';
+  String get lended_color => 'रंग';
 
   @override
-  String get more_more => 'More';
+  String get more_more => 'अधिक';
 
   @override
-  String get onboarding_back => 'Back';
+  String get onboarding_back => 'पीछे';
 
   @override
-  String get onboarding_welcomeToExpensy => 'Welcome to Expensy!';
+  String get onboarding_welcomeToExpensy => 'Expensy में आपका स्वागत है!';
 
   @override
-  String get onboarding_restoreABackup => 'Restore a Backup';
+  String get onboarding_restoreABackup => 'एक बैकअप पुनर्स्थापित करें';
 
   @override
   String get onboarding_loadAPreviouslySaved =>
-      'Load a previously saved Expensy JSON file';
+      'पहले सहेजी गई Expensy JSON फ़ाइल लोड करें';
 
   @override
-  String get onboarding_or => 'or';
+  String get onboarding_or => 'या';
 
   @override
-  String get onboarding_startFresh => 'Start Fresh';
+  String get onboarding_startFresh => 'नई शुरुआत करें';
 
   @override
   String get onboarding_firstWhatShouldWeCal =>
-      'First, what should we call you?';
+      'सबसे पहले, हम आपको क्या बुलाएं?';
 
   @override
-  String get onboarding_defaultCurrency => 'Default Currency';
+  String get onboarding_defaultCurrency => 'डिफ़ॉल्ट मुद्रा';
 
   @override
   String get onboarding_thisWillBeUsedAcross =>
-      'This will be used across the app.\\nYou can change it later in Settings.';
+      'इसका उपयोग पूरे ऐप में किया जाएगा।\nआप इसे बाद में सेटिंग्स में बदल सकते हैं।';
 
   @override
-  String get onboarding_searchAllCurrencies => 'Search all currencies';
+  String get onboarding_searchAllCurrencies => 'सभी मुद्राएं खोजें';
 
   @override
-  String get onboarding_yourFirstAccount => 'Your First Account';
+  String get onboarding_yourFirstAccount => 'आपका पहला खाता';
 
   @override
   String get onboarding_setUpYourMainAccount =>
-      'Set up your main account to start tracking.';
+      'ट्रैकिंग शुरू करने के लिए अपना मुख्य खाता सेट करें।';
 
   @override
-  String get onboarding_accountType => 'Account Type';
+  String get onboarding_accountType => 'खाता प्रकार';
 
   @override
-  String get onboarding_currency => 'Currency';
+  String get onboarding_currency => 'मुद्रा';
 
   @override
-  String get onboarding_colour => 'Colour';
+  String get onboarding_color => 'रंग';
 
   @override
-  String get recurring_recurring => 'Recurring';
+  String get recurring_recurring => 'आवर्ती';
 
   @override
-  String get recurring_income => 'INCOME';
+  String get recurring_income => 'आय';
 
   @override
-  String get recurring_2D => '−2d';
+  String get recurring_2D => '−2द';
 
   @override
-  String get recurring_skipNextPayment => 'Skip Next Payment?';
+  String get recurring_skipNextPayment => 'अगला भुगतान छोड़ें?';
 
   @override
-  String get recurring_cancel => 'Cancel';
+  String get recurring_cancel => 'रद्द करें';
 
   @override
-  String get recurring_skip => 'Skip';
+  String get recurring_skip => 'छोड़ें';
 
   @override
-  String get recurring_noHistoryYet => 'No history yet';
+  String get recurring_noHistoryYet => 'अभी तक कोई इतिहास नहीं';
 
   @override
-  String get recurring_expense => 'Expense';
+  String get recurring_expense => 'खर्च';
 
   @override
-  String get recurring_income_ => 'Income';
+  String get recurring_income_ => 'आय';
 
   @override
-  String get recurring_every => 'Every ';
+  String get recurring_every => 'हर ';
 
   @override
-  String get recurring_days => 'Days';
+  String get recurring_days => 'दिन';
 
   @override
-  String get recurring_weeks => 'Weeks';
+  String get recurring_weeks => 'सप्ताह';
 
   @override
-  String get recurring_months => 'Months';
+  String get recurring_months => 'महीने';
 
   @override
-  String get recurring_years => 'Years';
+  String get recurring_years => 'साल';
 
   @override
-  String get recurring_payments => 'Payments';
+  String get recurring_payments => 'भुगतान';
 
   @override
-  String get recurring_totalCost => 'Total Cost';
+  String get recurring_totalCost => 'कुल लागत';
 
   @override
-  String get recurring_account => 'Account';
+  String get recurring_account => 'खाता';
 
   @override
-  String get recurring_category => 'Category';
+  String get recurring_category => 'श्रेणी';
 
   @override
-  String get recurring_paymentReminder => 'Payment Reminder';
+  String get recurring_paymentReminder => 'भुगतान रिमाइंडर';
 
   @override
   String get recurring_notificationWillFire =>
-      'Notification will fire on the next due date at this time.';
+      'इस समय अगली नियत तिथि पर अधिसूचना फायर होगी।';
 
   @override
-  String get recurring_remind2DaysBefore => 'Remind 2 days before';
+  String get recurring_remind2DaysBefore => '2 दिन पहले याद दिलाएं';
 
   @override
-  String get statistics_statistics => 'Statistics';
+  String get statistics_statistics => 'आंकड़े';
 
   @override
-  String get statistics_expensesByCategory => 'Expenses by Category';
+  String get statistics_expensesByCategory => 'श्रेणी के अनुसार खर्च';
 
   @override
-  String get transactions_transactions => 'Transactions';
+  String get transactions_transactions => 'लेनदेन';
 
   @override
-  String get transactions_settled => 'Settled';
+  String get transactions_settled => 'निपटाया गया';
 
   @override
-  String get transfer_transfer => 'Transfer';
+  String get transfer_transfer => 'स्थानांतरण';
 
   @override
-  String get transfer_from => 'FROM';
+  String get transfer_from => 'से';
 
   @override
-  String get transfer_to => 'TO';
+  String get transfer_to => 'तक';
 
   @override
   String get transfer_enterAnAmountToSeeTh =>
-      'Enter an amount to see the conversion';
+      'रूपांतरण देखने के लिए राशि दर्ज करें';
 
   @override
-  String get wishlist_wishlist => 'Wishlist';
+  String get wishlist_wishlist => 'इच्छा सूची';
 
   @override
-  String get wishlist_priority => 'Priority';
+  String get wishlist_priority => 'प्राथमिकता';
 
   @override
-  String get shared_widgets_delete => 'Delete?';
+  String get shared_widgets_delete => 'हटाएं?';
 
   @override
-  String get shared_widgets_cancel => 'Cancel';
+  String get shared_widgets_cancel => 'रद्द करें';
 
   @override
-  String get shared_widgets_delete_ => 'Delete';
+  String get shared_widgets_delete_ => 'हटाएं';
 
   @override
-  String get shared_widgets_none => 'None';
+  String get shared_widgets_none => 'कोई नहीं';
 
   @override
-  String get shared_widgets_selectCurrency => 'Select Currency';
+  String get shared_widgets_selectCurrency => 'मुद्रा चुनें';
 
   @override
   String get main_home => 'होम';
@@ -1598,4 +1610,88 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get backup_importFromGreenStash => 'GreenStash से आयात करें (.json)';
+
+  @override
+  String get backup_automaticBackup => 'स्वचालित बैकअप';
+
+  @override
+  String get backup_dailyAutoBackup => 'दैनिक ऑटो बैकअप';
+
+  @override
+  String backup_runsDailyAt(String time) {
+    return 'Runs daily at $time';
+  }
+
+  @override
+  String backup_lastBackup(String time) {
+    return 'Last backup: $time';
+  }
+
+  @override
+  String backup_savingTo(String path) {
+    return 'Saving to: $path';
+  }
+
+  @override
+  String get backup_changeTime => 'समय बदलें';
+
+  @override
+  String get backup_changeFolder => 'फ़ोल्डर बदलें';
+
+  @override
+  String get budget_budgetsAndGoals => 'बजट और लक्ष्य';
+
+  @override
+  String get onboarding_restoreGreenStash =>
+      'ग्रीनस्टैश (.json) से पुनर्स्थापित करें';
+
+  @override
+  String get savings_goalNotFound => 'लक्ष्य नहीं मिला';
+
+  @override
+  String get savings_savedSoFar => 'अब तक सहेजा गया';
+
+  @override
+  String get savings_target => 'लक्ष्य';
+
+  @override
+  String savings_targetDate(String date) {
+    return 'Target Date: $date';
+  }
+
+  @override
+  String get savings_contribute => 'योगदान दें';
+
+  @override
+  String get savings_withdraw => 'वापस लेना';
+
+  @override
+  String get savings_noAccounts =>
+      'कोई खाता उपलब्ध नहीं. कृपया पहले एक खाता जोड़ें.';
+
+  @override
+  String get settings_budgetAlerts => 'बजट अलर्ट';
+
+  @override
+  String get settings_budgetAlertsSub =>
+      'बजट या लक्ष्य पूरा होने पर सूचित करें';
+
+  @override
+  String get settings_dailyReminder => 'दैनिक अनुस्मारक';
+
+  @override
+  String get settings_dailyReminderSub =>
+      'प्रतिदिन लेन-देन लॉग करने की याद दिलाएँ';
+
+  @override
+  String get settings_reminderTime => 'अनुस्मारक समय';
+
+  @override
+  String get settings_hapticFeedback => 'हैप्टिक राय';
+
+  @override
+  String get settings_hapticFeedbackSub => 'बातचीत पर कंपन';
+
+  @override
+  String get savings_saveGoal => 'लक्ष्य सहेजें';
 }

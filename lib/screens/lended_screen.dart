@@ -9,13 +9,25 @@ import '../widgets/shared_widgets.dart';
 import 'lended_person_screen.dart';
 import '../utils/haptics.dart';
 
-/// Colour palette for [LendedPerson] avatars — same 10-colour rotation used
-/// to auto-assign colours during the v9→v10 legacy backfill migration, kept
+/// Color palette for [LendedPerson] avatars — same 10-color rotation used
+/// to auto-assign colors during the v9→v10 legacy backfill migration, kept
 /// here too so newly-created people can pick from the same set.
 const List<int> kLendedPersonColors = [
-  0xFF6750A4, 0xFF1565C0, 0xFF2E7D32, 0xFFC62828, 0xFFE65100,
-  0xFF00838F, 0xFF6A1B9A, 0xFF37474F, 0xFFAD1457, 0xFF827717,
-  0xFF283593, 0xFF00695C, 0xFFEF6C00, 0xFF4527A0, 0xFF00838F,
+  0xFF6750A4,
+  0xFF1565C0,
+  0xFF2E7D32,
+  0xFFC62828,
+  0xFFE65100,
+  0xFF00838F,
+  0xFF6A1B9A,
+  0xFF37474F,
+  0xFFAD1457,
+  0xFF827717,
+  0xFF283593,
+  0xFF00695C,
+  0xFFEF6C00,
+  0xFF4527A0,
+  0xFF00838F,
 ];
 
 class LendedScreen extends StatelessWidget {
@@ -25,14 +37,18 @@ class LendedScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
-    final cs  = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
     String fmt(double v) => formatAmount(v, app.settings.currency);
 
     // Net balances across all people (mirrors the old flat-list totals).
     double theyOwe = 0, iOwe = 0;
     for (final p in app.lendedPeople) {
       final bal = app.personBalance(p.id);
-      if (bal > 0) theyOwe += bal; else iOwe += -bal;
+      if (bal > 0) {
+        theyOwe += bal;
+      } else {
+        iOwe += -bal;
+      }
     }
 
     // Sort: people with an overdue balance first, then by |balance| desc,
@@ -51,8 +67,9 @@ class LendedScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.lended_lentMoney,
-            style: TextStyle(fontWeight: FontWeight.w800)),
-        backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
+            style: const TextStyle(fontWeight: FontWeight.w800)),
+        backgroundColor: cs.primary,
+        foregroundColor: cs.onPrimary,
       ),
       body: Column(children: [
         if (app.lendedPeople.isNotEmpty)
@@ -60,33 +77,45 @@ class LendedScreen extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             color: cs.primary,
             child: Row(children: [
-              Expanded(child: _SumCol(
-                  label: l10n.lended_theyOweMe, value: fmt(theyOwe),
-                  color: cs.onPrimary.withValues(alpha: 0.9),
-                  labelColor: cs.onPrimary.withValues(alpha: 0.65))),
-              Expanded(child: _SumCol(
-                  label: l10n.lended_iOweThem, value: fmt(iOwe),
-                  color: cs.onPrimary.withValues(alpha: 0.9),
-                  labelColor: cs.onPrimary.withValues(alpha: 0.65))),
-              Expanded(child: _SumCol(
-                  label: l10n.lended_net, value: fmt(theyOwe - iOwe),
-                  color: cs.onPrimary,
-                  labelColor: cs.onPrimary.withValues(alpha: 0.65))),
+              Expanded(
+                  child: _SumCol(
+                      label: l10n.lended_theyOweMe,
+                      value: fmt(theyOwe),
+                      color: cs.onPrimary.withValues(alpha: 0.9),
+                      labelColor: cs.onPrimary.withValues(alpha: 0.65))),
+              Expanded(
+                  child: _SumCol(
+                      label: l10n.lended_iOweThem,
+                      value: fmt(iOwe),
+                      color: cs.onPrimary.withValues(alpha: 0.9),
+                      labelColor: cs.onPrimary.withValues(alpha: 0.65))),
+              Expanded(
+                  child: _SumCol(
+                      label: l10n.lended_net,
+                      value: fmt(theyOwe - iOwe),
+                      color: cs.onPrimary,
+                      labelColor: cs.onPrimary.withValues(alpha: 0.65))),
             ]),
           ),
-        Expanded(child: people.isEmpty
-          ? EmptyState(icon: Icons.handshake_outlined,
-              message: l10n.lended_noOneYet,
-              subMessage: l10n.lended_noOneYetSub)
-          : ListView.builder(
-              padding: const EdgeInsets.fromLTRB(14, 14, 14, 100),
-              itemCount: people.length,
-              itemBuilder: (_, i) => _PersonCard(person: people[i], fmt: fmt),
-            )),
+        Expanded(
+            child: people.isEmpty
+                ? EmptyState(
+                    icon: Icons.handshake_outlined,
+                    message: l10n.lended_noOneYet,
+                    subMessage: l10n.lended_noOneYetSub)
+                : ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(14, 14, 14, 100),
+                    itemCount: people.length,
+                    itemBuilder: (_, i) =>
+                        _PersonCard(person: people[i], fmt: fmt),
+                  )),
       ]),
       floatingActionButton: FloatingActionButton(
         heroTag: null,
-        onPressed: () { AppHaptics.tap(context, HapticStrength.light); _openPersonSheet(context); },
+        onPressed: () {
+          AppHaptics.tap(context, HapticStrength.light);
+          _openPersonSheet(context);
+        },
         child: const Icon(Icons.person_add_alt_1_rounded),
       ),
     );
@@ -97,7 +126,9 @@ class LendedScreen extends StatelessWidget {
 
   static void _openPersonSheet(BuildContext ctx, {LendedPerson? existing}) {
     showModalBottomSheet(
-      context: ctx, isScrollControlled: true, useSafeArea: true,
+      context: ctx,
+      isScrollControlled: true,
+      useSafeArea: true,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => _PersonSheet(existing: existing),
@@ -110,17 +141,26 @@ class _SumCol extends StatelessWidget {
   final String label, value;
   final Color color;
   final Color? labelColor;
-  const _SumCol({required this.label, required this.value,
-      required this.color, this.labelColor});
+  const _SumCol(
+      {required this.label,
+      required this.value,
+      required this.color,
+      this.labelColor});
   @override
   Widget build(BuildContext context) => Column(children: [
-    Text(label, style: TextStyle(fontSize: 10,
-        color: labelColor ?? Theme.of(context).colorScheme
-            .onPrimaryContainer.withValues(alpha: 0.6))),
-    const SizedBox(height: 2),
-    Text(value, style: TextStyle(fontSize: 13,
-        fontWeight: FontWeight.w800, color: color)),
-  ]);
+        Text(label,
+            style: TextStyle(
+                fontSize: 10,
+                color: labelColor ??
+                    Theme.of(context)
+                        .colorScheme
+                        .onPrimaryContainer
+                        .withValues(alpha: 0.6))),
+        const SizedBox(height: 2),
+        Text(value,
+            style: TextStyle(
+                fontSize: 13, fontWeight: FontWeight.w800, color: color)),
+      ]);
 }
 
 // ── Person card ────────────────────────────────────────────────────────────────
@@ -132,9 +172,9 @@ class _PersonCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final app     = context.watch<AppProvider>();
-    final cs      = Theme.of(context).colorScheme;
-    final color   = Color(person.colorValue);
+    final app = context.watch<AppProvider>();
+    final cs = Theme.of(context).colorScheme;
+    final color = Color(person.colorValue);
     final balance = app.personBalance(person.id);
     final entries = app.lendedFor(person.id);
     final activeCount = entries.where((l) => !l.isSettled).length;
@@ -161,49 +201,66 @@ class _PersonCard extends StatelessWidget {
           padding: const EdgeInsets.all(14),
           child: Row(children: [
             Container(
-              width: 46, height: 46,
+              width: 46,
+              height: 46,
               decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(23)),
-              child: Center(child: Text(
+              child: Center(
+                  child: Text(
                 person.name.isNotEmpty ? person.name[0].toUpperCase() : '?',
-                style: TextStyle(fontWeight: FontWeight.w800,
-                    fontSize: 18, color: color),
+                style: TextStyle(
+                    fontWeight: FontWeight.w800, fontSize: 18, color: color),
               )),
             ),
             const SizedBox(width: 12),
-            Expanded(child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Row(children: [
-                Flexible(child: Text(person.name, overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w700, fontSize: 15))),
-                if (overdue) ...[
-                  const SizedBox(width: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                        color: cs.errorContainer,
-                        borderRadius: BorderRadius.circular(6)),
-                    child: Text(l10n.lended_overdue, style: TextStyle(fontSize: 9,
-                        fontWeight: FontWeight.w700, color: cs.onErrorContainer)),
+            Expanded(
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                  Row(children: [
+                    Flexible(
+                        child: Text(person.name,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w700, fontSize: 15))),
+                    if (overdue) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                            color: cs.errorContainer,
+                            borderRadius: BorderRadius.circular(6)),
+                        child: Text(l10n.lended_overdue,
+                            style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700,
+                                color: cs.onErrorContainer)),
+                      ),
+                    ],
+                  ]),
+                  const SizedBox(height: 2),
+                  Text(
+                    activeCount == 0
+                        ? l10n.lended_noActiveRecords
+                        : l10n.lended_activeRecords(activeCount),
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: cs.onSurface.withValues(alpha: 0.5)),
                   ),
-                ],
-              ]),
-              const SizedBox(height: 2),
-              Text(
-                activeCount == 0
-                    ? l10n.lended_noActiveRecords
-                    : l10n.lended_activeRecords(activeCount),
-                style: TextStyle(fontSize: 11,
-                    color: cs.onSurface.withValues(alpha: 0.5)),
-              ),
-            ])),
+                ])),
             Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-              Text(fmt(balance.abs()), style: TextStyle(fontSize: 16,
-                  fontWeight: FontWeight.w800, color: balColor)),
-              Text(balLabel, style: TextStyle(fontSize: 10,
-                  fontWeight: FontWeight.w600, color: balColor)),
+              Text(fmt(balance.abs()),
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: balColor)),
+              Text(balLabel,
+                  style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: balColor)),
             ]),
             const Icon(Icons.chevron_right_rounded),
           ]),
@@ -222,7 +279,7 @@ class _PersonSheet extends StatefulWidget {
 }
 
 class _PersonSheetState extends State<_PersonSheet> {
-  final _nameCtrl  = TextEditingController();
+  final _nameCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
   int _color = kLendedPersonColors.first;
   bool _submitted = false;
@@ -234,15 +291,16 @@ class _PersonSheetState extends State<_PersonSheet> {
     super.initState();
     final e = widget.existing;
     if (e != null) {
-      _nameCtrl.text  = e.name;
+      _nameCtrl.text = e.name;
       _notesCtrl.text = e.notes;
-      _color          = e.colorValue;
+      _color = e.colorValue;
     }
   }
 
   @override
   void dispose() {
-    _nameCtrl.dispose(); _notesCtrl.dispose();
+    _nameCtrl.dispose();
+    _notesCtrl.dispose();
     super.dispose();
   }
 
@@ -254,11 +312,15 @@ class _PersonSheetState extends State<_PersonSheet> {
 
     if (isEdit) {
       await app.updateLendedPerson(widget.existing!.copyWith(
-        name: name, colorValue: _color, notes: _notesCtrl.text.trim(),
+        name: name,
+        colorValue: _color,
+        notes: _notesCtrl.text.trim(),
       ));
     } else {
       await app.addLendedPerson(LendedPerson(
-        id: app.newId(), name: name, colorValue: _color,
+        id: app.newId(),
+        name: name,
+        colorValue: _color,
         notes: _notesCtrl.text.trim(),
       ));
     }
@@ -270,62 +332,87 @@ class _PersonSheetState extends State<_PersonSheet> {
     final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     return Padding(
-      padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-          left: 20, right: 20, top: 20),
-      child: SingleChildScrollView(child: Column(
+      padding: const EdgeInsets.only(
+          bottom: 16,
+          left: 20,
+          right: 20,
+          top: 20),
+      child: SingleChildScrollView(
+          child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(isEdit ? l10n.lended_editPerson : l10n.lended_addPerson,
-              style: Theme.of(context).textTheme.titleLarge
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge
                   ?.copyWith(fontWeight: FontWeight.w800)),
           const SizedBox(height: 12),
           TextField(
-              controller: _nameCtrl,
-              autofocus: !isEdit,
-              decoration: InputDecoration(
-                  labelText: l10n.lended_name,
-                  prefixIcon: const Icon(Icons.person_outline_rounded),
-                  errorText: _submitted && _nameCtrl.text.trim().isEmpty ? l10n.error_required : null,
-              ),
+            controller: _nameCtrl,
+            textInputAction: TextInputAction.next,
+           
+            autofocus: !isEdit,
+            decoration: InputDecoration(
+              labelText: l10n.lended_name,
+              prefixIcon: const Icon(Icons.person_outline_rounded),
+              errorText: _submitted && _nameCtrl.text.trim().isEmpty
+                  ? l10n.error_required
+                  : null,
+            ),
           ),
           const SizedBox(height: 14),
-          Text(l10n.lended_colour, style: Theme.of(context).textTheme.labelMedium
-              ?.copyWith(letterSpacing: 1)),
+          Text(l10n.lended_color,
+              style: Theme.of(context)
+                  .textTheme
+                  .labelMedium
+                  ?.copyWith(letterSpacing: 1)),
           const SizedBox(height: 8),
-          Wrap(spacing: 10, runSpacing: 10, children: kLendedPersonColors.map((col) {
-            final sel = _color == col;
-            return GestureDetector(
-              onTap: () => setState(() => _color = col),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 100),
-                width: 36, height: 36,
-                decoration: BoxDecoration(
-                  color: Color(col), shape: BoxShape.circle,
-                  border: sel
-                      ? Border.all(color: cs.onSurface, width: 2.5)
-                      : null,
-                ),
-                child: sel
-                    ? const Icon(Icons.check, color: Colors.white, size: 18)
-                    : null,
-              ),
-            );
-          }).toList()),
+          Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: kLendedPersonColors.map((col) {
+                final sel = _color == col;
+                return GestureDetector(
+                  onTap: () => setState(() => _color = col),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 100),
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: Color(col),
+                      shape: BoxShape.circle,
+                      border: sel
+                          ? Border.all(color: cs.onSurface, width: 2.5)
+                          : null,
+                    ),
+                    child: sel
+                        ? const Icon(Icons.check, color: Colors.white, size: 18)
+                        : null,
+                  ),
+                );
+              }).toList()),
           const SizedBox(height: 14),
-          TextField(controller: _notesCtrl, maxLines: 2,
+          TextField(
+              controller: _notesCtrl,
+              maxLines: 2,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _submit(),
               decoration: InputDecoration(
                   labelText: l10n.lended_notesOptional,
                   prefixIcon: const Icon(Icons.sticky_note_2_outlined))),
           const SizedBox(height: 20),
           FilledButton(
-            onPressed: () { AppHaptics.tap(context, HapticStrength.light); _submit(); },
+            onPressed: () {
+              AppHaptics.tap(context, HapticStrength.light);
+              _submit();
+            },
             style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(50),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(28))),
-            child: Text(isEdit ? l10n.lended_saveChanges : l10n.lended_addPerson),
+            child:
+                Text(isEdit ? l10n.lended_saveChanges : l10n.lended_addPerson),
           ),
         ],
       )),

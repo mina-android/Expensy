@@ -2,12 +2,11 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:flutter/foundation.dart' show ChangeNotifier;
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:excel/excel.dart' hide Border;
-import 'package:archive/archive.dart';
 import '../models/models.dart';
 import '../database/db_helper.dart';
 import '../services/exchange_rate_service.dart';
@@ -32,6 +31,7 @@ class AppSettings {
   bool   dailyReminderEnabled;
   String dailyReminderTime;
   bool   hapticsEnabled;
+  List<String> pinnedWidgetAccountIds;
 
   AppSettings({
     this.currency      = 'EGP',
@@ -49,6 +49,7 @@ class AppSettings {
     this.dailyReminderEnabled = false,
     this.dailyReminderTime = '22:00',
     this.hapticsEnabled = true,
+    this.pinnedWidgetAccountIds = const [],
   });
 
   Map<String, dynamic> toJson() => {
@@ -61,6 +62,7 @@ class AppSettings {
     'dailyReminderEnabled': dailyReminderEnabled,
     'dailyReminderTime': dailyReminderTime,
     'hapticsEnabled': hapticsEnabled,
+    'pinnedWidgetAccountIds': pinnedWidgetAccountIds,
   };
 
   static const _validThemeModes = {'system', 'light', 'dark'};
@@ -120,6 +122,7 @@ class AppSettings {
       dailyReminderEnabled: (j['dailyReminderEnabled'] as bool?) ?? false,
       dailyReminderTime: (j['dailyReminderTime'] as String?) ?? '22:00',
       hapticsEnabled: (j['hapticsEnabled'] as bool?) ?? true,
+      pinnedWidgetAccountIds: (j['pinnedWidgetAccountIds'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
     );
   }
 }
@@ -137,6 +140,7 @@ class AppProvider extends ChangeNotifier {
   List<Budget>                budgets      = [];
   List<SavingsGoal>           savingsGoals = [];
   List<SavingsContribution>   savingsContributions = [];
+  List<NetWorthSnapshot>      netWorthSnapshots = [];
 
   /// Total row count in `recurring_history` — kept for display purposes
   /// (e.g. the Backup screen's "what's included" list) without needing to
@@ -182,6 +186,7 @@ class AppProvider extends ChangeNotifier {
     budgets      = await DBHelper.getBudgets();
     savingsGoals = await DBHelper.getSavingsGoals();
     savingsContributions = await DBHelper.getAllSavingsContributions();
+    netWorthSnapshots = await DBHelper.getNetWorthSnapshots();
     recurringHistoryCount = await DBHelper.getRecurringHistoryCount();
     _loaded = true;
     notifyListeners();
@@ -323,10 +328,11 @@ class AppProvider extends ChangeNotifier {
       case 'budgetAlertsEnabled':  settings.budgetAlertsEnabled  = value as bool;   break;
       case 'dailyReminderEnabled': settings.dailyReminderEnabled = value as bool;   break;
       case 'dailyReminderTime':    settings.dailyReminderTime    = value as String; break;
-      case 'hapticsEnabled':       settings.hapticsEnabled       = value as bool;   break;
+      case 'hapticsEnabled': settings.hapticsEnabled = value as bool;   break;
+      case 'pinnedWidgetAccountIds': settings.pinnedWidgetAccountIds = value as List<String>; break;
     }
 
-    await _saveSettings();
+    _saveSettings();
     notifyListeners();
 
     if (oldLang != settings.languageCode) {
@@ -429,6 +435,18 @@ class AppProvider extends ChangeNotifier {
       lendedPeople.where((p) => p.id == id).firstOrNull;
 
   // ── Accounts ─────────────────────────────────────────────────────────
+  bool toggleWidgetPin(String id) {
+    final pins = List<String>.from(settings.pinnedWidgetAccountIds);
+    if (pins.contains(id)) {
+      pins.remove(id);
+    } else {
+      if (pins.length >= 3) return false;
+      pins.add(id);
+    }
+    updateSetting('pinnedWidgetAccountIds', pins);
+    return true;
+  }
+
   Future<void> addAccount(Account a) async {
     await DBHelper.insertAccount(a);
     accounts = await DBHelper.getAccounts();
@@ -439,6 +457,14 @@ class AppProvider extends ChangeNotifier {
     await DBHelper.updateAccount(a);
     accounts = await DBHelper.getAccounts();
     notifyListeners();
+  }
+
+  Future<VoidCallback> deleteAccountWithUndo(String id) async {
+    final a = accounts.firstWhere((acc) => acc.id == id);
+    await deleteAccount(id);
+    return () async {
+      await addAccount(a);
+    };
   }
 
   Future<void> deleteAccount(String id) async {
@@ -812,6 +838,20 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<VoidCallback> deleteLendedWithUndo(String id) async {
+    final record = lended.firstWhere((l) => l.id == id);
+    await deleteLended(id);
+    return () async {
+      await DBHelper.insertLended(record);
+      lended = await DBHelper.getLended();
+      if (!record.isSettled) {
+        final p = lendedPeople.firstWhere((p) => p.id == record.personId);
+        _lendedNotif.scheduleLendedReminder(record, settings.currency, personName: p.name);
+      }
+      notifyListeners();
+    };
+  }
+
   // ── Assets ────────────────────────────────────────────────────────────
   Future<void> addAsset(AssetItem a) async {
     await DBHelper.insertAsset(a);
@@ -829,6 +869,16 @@ class AppProvider extends ChangeNotifier {
     await DBHelper.deleteAsset(id);
     assets = await DBHelper.getAssets();
     notifyListeners();
+  }
+
+  Future<VoidCallback> deleteAssetWithUndo(String id) async {
+    final asset = assets.firstWhere((a) => a.id == id);
+    await deleteAsset(id);
+    return () async {
+      await DBHelper.insertAsset(asset);
+      assets = await DBHelper.getAssets();
+      notifyListeners();
+    };
   }
 
   double get totalAssetsValue => assets.fold(0.0, (sum, a) {
@@ -857,6 +907,14 @@ class AppProvider extends ChangeNotifier {
     await DBHelper.deleteBudget(id);
     budgets = await DBHelper.getBudgets();
     notifyListeners();
+  }
+
+  Future<VoidCallback> deleteBudgetWithUndo(String id) async {
+    final b = budgets.firstWhere((b) => b.id == id);
+    await deleteBudget(id);
+    return () async {
+      await addBudget(b);
+    };
   }
 
   Budget? budgetForCategory(String categoryId) =>
@@ -932,7 +990,15 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<List<SavingsContribution>> contributionsFor(String goalId) async {
+  Future<VoidCallback> deleteSavingsGoalWithUndo(String id) async {
+    final s = savingsGoals.firstWhere((s) => s.id == id);
+    await deleteSavingsGoal(id);
+    return () async {
+      await addSavingsGoal(s);
+    };
+  }
+
+  List<SavingsContribution> contributionsFor(String goalId) {
     return savingsContributions.where((c) => c.goalId == goalId).toList();
   }
 
@@ -1336,5 +1402,135 @@ class AppProvider extends ChangeNotifier {
       }
     }
     await load();
+  }
+  
+  bool isTransactionSelectionMode = false;
+  final ValueNotifier<int> tabIndexNotifier = ValueNotifier<int>(0);
+
+  List<Account> get nonBankAccounts => accounts.where((a) => a.type != 'bank').toList();
+
+  void reorderCategories(int oldIndex, int newIndex, String type) {
+    if (oldIndex < newIndex) newIndex -= 1;
+    
+    final typedCats = categories.where((c) => c.type == type).toList();
+    if (oldIndex < 0 || oldIndex >= typedCats.length || newIndex < 0 || newIndex >= typedCats.length) return;
+    
+    final item = typedCats[oldIndex];
+    
+    categories.remove(item);
+    
+    int insertionIndex = 0;
+    int currentTypedIndex = 0;
+    for (int i = 0; i < categories.length; i++) {
+      if (categories[i].type == type) {
+        if (currentTypedIndex == newIndex) {
+          insertionIndex = i;
+          break;
+        }
+        currentTypedIndex++;
+      }
+      insertionIndex = i + 1;
+    }
+    
+    categories.insert(insertionIndex, item);
+    notifyListeners();
+  }
+
+  Future<VoidCallback> deleteCategoryWithUndo(String id) async {
+    final cat = categories.firstWhere((c) => c.id == id);
+    final idx = categories.indexOf(cat);
+    categories.removeAt(idx);
+    await DBHelper.deleteCategory(id);
+    notifyListeners();
+    return () async {
+      categories.insert(idx, cat);
+      await DBHelper.insertCategory(cat);
+      notifyListeners();
+    };
+  }
+
+  void reorderAccounts(int oldIndex, int newIndex) {
+    if (oldIndex < newIndex) newIndex -= 1;
+    final item = accounts.removeAt(oldIndex);
+    accounts.insert(newIndex, item);
+    notifyListeners();
+  }
+
+  double getBankTotalBalance(String id) {
+    final acc = accountById(id);
+    if (acc == null) return 0;
+    return acc.balance; // Simplified. You could sum transactions if needed.
+  }
+
+  Future<VoidCallback> deleteTransactionWithUndo(String id) async {
+    final tx = transactions.firstWhere((t) => t.id == id);
+    await deleteTransaction(id);
+    return () async {
+      await addTransaction(tx);
+    };
+  }
+
+  Future<VoidCallback> deleteLendedPersonWithUndo(String id) async {
+    final person = lendedPeople.firstWhere((p) => p.id == id);
+    final personLended = lended.where((l) => l.personId == id).toList();
+    
+    await DBHelper.deleteLendedPerson(id);
+    for (final l in personLended) {
+      await DBHelper.deleteLended(l.id);
+    }
+    await load();
+    return () async {
+      await DBHelper.insertLendedPerson(person);
+      for (final l in personLended) {
+        await DBHelper.insertLended(l);
+      }
+      await load();
+    };
+  }
+
+  Future<VoidCallback> deleteRecurringWithUndo(String id) async {
+    final rec = recurring.firstWhere((r) => r.id == id);
+    await DBHelper.deleteRecurring(id);
+    await load();
+    return () async {
+      await DBHelper.insertRecurring(rec);
+      await load();
+    };
+  }
+
+  Future<VoidCallback> deleteWishlistWithUndo(String id) async {
+    final item = wishlist.firstWhere((w) => w.id == id);
+    await DBHelper.deleteWishlist(id);
+    await load();
+    return () async {
+      await DBHelper.insertWishlist(item);
+      await load();
+    };
+  }
+
+  List<AppTransaction> getAccountTransactions(String id) {
+    return transactions.where((t) => t.accountId == id).toList();
+  }
+
+  double getAccountIncome(String id) {
+    return getAccountTransactions(id)
+        .where((t) => t.type == 'income')
+        .fold(0.0, (sum, t) => sum + t.amount);
+  }
+
+  double getAccountExpense(String id) {
+    return getAccountTransactions(id)
+        .where((t) => t.type == 'expense')
+        .fold(0.0, (sum, t) => sum + t.amount);
+  }
+
+  List<AppTransaction> findPossibleDuplicates(AppTransaction tx, {String? excludeId}) {
+    return transactions.where((t) => 
+      t.id != excludeId &&
+      t.accountId == tx.accountId && 
+      t.amount == tx.amount && 
+      t.type == tx.type && 
+      t.date.difference(tx.date).inDays.abs() <= 2
+    ).toList();
   }
 }

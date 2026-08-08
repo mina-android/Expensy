@@ -36,13 +36,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_amoledSubtitle => 'Forces black backgrounds in dark mode';
 
   @override
-  String get settings_accentColor => 'Accent Colour';
+  String get settings_systemDefault => 'System Default';
+
+  @override
+  String get settings_dynamicColor => 'Dynamic Color';
+
+  @override
+  String get settings_dynamicColorSubtitle => 'Use system wallpaper colors';
+
+  @override
+  String get settings_accentColor => 'Accent Color';
+
+  @override
+  String get settings_accentColorSubtitle => 'Choose a seed color for the app';
 
   @override
   String get settings_appFont => 'App Font';
-
-  @override
-  String get settings_systemDefault => 'System Default';
 
   @override
   String get settings_currency => 'Currency';
@@ -1179,7 +1188,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accounts_excludeFromTotalBala => 'Exclude from Total Balance';
 
   @override
-  String get accounts_colour => 'Colour';
+  String get accounts_color => 'Color';
 
   @override
   String get accounts_liveGoldValue => 'Live Gold Value';
@@ -1275,7 +1284,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get categories_income => 'Income';
 
   @override
-  String get categories_colour => 'Colour';
+  String get categories_color => 'Color';
 
   @override
   String get categories_icon => 'Icon';
@@ -1332,7 +1341,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lended_person_editPerson => 'Edit Person';
 
   @override
-  String get lended_person_colour => 'Colour';
+  String get lended_person_color => 'Color';
 
   @override
   String get lended_person_saveChanges => 'Save Changes';
@@ -1375,7 +1384,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lended_overdue => 'OVERDUE';
 
   @override
-  String get lended_colour => 'Colour';
+  String get lended_color => 'Color';
 
   @override
   String get more_more => 'More';
@@ -1427,7 +1436,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboarding_currency => 'Currency';
 
   @override
-  String get onboarding_colour => 'Colour';
+  String get onboarding_color => 'Color';
 
   @override
   String get recurring_recurring => 'Recurring';
@@ -1594,4 +1603,86 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backup_importFromGreenStash => 'Import from GreenStash (.json)';
+
+  @override
+  String get backup_automaticBackup => 'Automatic Backup';
+
+  @override
+  String get backup_dailyAutoBackup => 'Daily Auto Backup';
+
+  @override
+  String backup_runsDailyAt(String time) {
+    return 'Runs daily at $time';
+  }
+
+  @override
+  String backup_lastBackup(String time) {
+    return 'Last backup: $time';
+  }
+
+  @override
+  String backup_savingTo(String path) {
+    return 'Saving to: $path';
+  }
+
+  @override
+  String get backup_changeTime => 'Change Time';
+
+  @override
+  String get backup_changeFolder => 'Change Folder';
+
+  @override
+  String get budget_budgetsAndGoals => 'Budgets & Goals';
+
+  @override
+  String get onboarding_restoreGreenStash => 'Restore from GreenStash (.json)';
+
+  @override
+  String get savings_goalNotFound => 'Goal not found';
+
+  @override
+  String get savings_savedSoFar => 'Saved so far';
+
+  @override
+  String get savings_target => 'Target';
+
+  @override
+  String savings_targetDate(String date) {
+    return 'Target Date: $date';
+  }
+
+  @override
+  String get savings_contribute => 'Contribute';
+
+  @override
+  String get savings_withdraw => 'Withdraw';
+
+  @override
+  String get savings_noAccounts =>
+      'No accounts available. Please add an account first.';
+
+  @override
+  String get settings_budgetAlerts => 'Budget Alerts';
+
+  @override
+  String get settings_budgetAlertsSub =>
+      'Notify when a budget or goal is reached';
+
+  @override
+  String get settings_dailyReminder => 'Daily Reminder';
+
+  @override
+  String get settings_dailyReminderSub => 'Remind to log transactions daily';
+
+  @override
+  String get settings_reminderTime => 'Reminder Time';
+
+  @override
+  String get settings_hapticFeedback => 'Haptic Feedback';
+
+  @override
+  String get settings_hapticFeedbackSub => 'Vibrate on interactions';
+
+  @override
+  String get savings_saveGoal => 'Save Goal';
 }

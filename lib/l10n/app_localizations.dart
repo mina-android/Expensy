@@ -8,8 +8,14 @@ import 'package:intl/intl.dart' as intl;
 import 'app_localizations_ar.dart';
 import 'app_localizations_de.dart';
 import 'app_localizations_en.dart';
+import 'app_localizations_es.dart';
 import 'app_localizations_fr.dart';
 import 'app_localizations_hi.dart';
+import 'app_localizations_it.dart';
+import 'app_localizations_ja.dart';
+import 'app_localizations_pt.dart';
+import 'app_localizations_ru.dart';
+import 'app_localizations_zh.dart';
 
 // ignore_for_file: type=lint
 
@@ -100,8 +106,14 @@ abstract class AppLocalizations {
     Locale('ar'),
     Locale('de'),
     Locale('en'),
+    Locale('es'),
     Locale('fr'),
-    Locale('hi')
+    Locale('hi'),
+    Locale('it'),
+    Locale('ja'),
+    Locale('pt'),
+    Locale('ru'),
+    Locale('zh')
   ];
 
   /// No description provided for @appTitle.
@@ -158,23 +170,41 @@ abstract class AppLocalizations {
   /// **'Forces black backgrounds in dark mode'**
   String get settings_amoledSubtitle;
 
-  /// No description provided for @settings_accentColor.
+  /// System default option in settings
   ///
   /// In en, this message translates to:
-  /// **'Accent Colour'**
+  /// **'System Default'**
+  String get settings_systemDefault;
+
+  /// Dynamic Color toggle title
+  ///
+  /// In en, this message translates to:
+  /// **'Dynamic Color'**
+  String get settings_dynamicColor;
+
+  /// Dynamic Color toggle subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Use system wallpaper colors'**
+  String get settings_dynamicColorSubtitle;
+
+  /// Accent Color title
+  ///
+  /// In en, this message translates to:
+  /// **'Accent Color'**
   String get settings_accentColor;
+
+  /// Accent Color subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a seed color for the app'**
+  String get settings_accentColorSubtitle;
 
   /// No description provided for @settings_appFont.
   ///
   /// In en, this message translates to:
   /// **'App Font'**
   String get settings_appFont;
-
-  /// No description provided for @settings_systemDefault.
-  ///
-  /// In en, this message translates to:
-  /// **'System Default'**
-  String get settings_systemDefault;
 
   /// No description provided for @settings_currency.
   ///
@@ -2114,11 +2144,11 @@ abstract class AppLocalizations {
   /// **'Exclude from Total Balance'**
   String get accounts_excludeFromTotalBala;
 
-  /// No description provided for @accounts_colour.
+  /// No description provided for @accounts_color.
   ///
   /// In en, this message translates to:
-  /// **'Colour'**
-  String get accounts_colour;
+  /// **'Color'**
+  String get accounts_color;
 
   /// No description provided for @accounts_liveGoldValue.
   ///
@@ -2300,11 +2330,11 @@ abstract class AppLocalizations {
   /// **'Income'**
   String get categories_income;
 
-  /// No description provided for @categories_colour.
+  /// No description provided for @categories_color.
   ///
   /// In en, this message translates to:
-  /// **'Colour'**
-  String get categories_colour;
+  /// **'Color'**
+  String get categories_color;
 
   /// No description provided for @categories_icon.
   ///
@@ -2414,11 +2444,11 @@ abstract class AppLocalizations {
   /// **'Edit Person'**
   String get lended_person_editPerson;
 
-  /// No description provided for @lended_person_colour.
+  /// No description provided for @lended_person_color.
   ///
   /// In en, this message translates to:
-  /// **'Colour'**
-  String get lended_person_colour;
+  /// **'Color'**
+  String get lended_person_color;
 
   /// No description provided for @lended_person_saveChanges.
   ///
@@ -2498,11 +2528,11 @@ abstract class AppLocalizations {
   /// **'OVERDUE'**
   String get lended_overdue;
 
-  /// No description provided for @lended_colour.
+  /// No description provided for @lended_color.
   ///
   /// In en, this message translates to:
-  /// **'Colour'**
-  String get lended_colour;
+  /// **'Color'**
+  String get lended_color;
 
   /// No description provided for @more_more.
   ///
@@ -2594,11 +2624,11 @@ abstract class AppLocalizations {
   /// **'Currency'**
   String get onboarding_currency;
 
-  /// No description provided for @onboarding_colour.
+  /// No description provided for @onboarding_color.
   ///
   /// In en, this message translates to:
-  /// **'Colour'**
-  String get onboarding_colour;
+  /// **'Color'**
+  String get onboarding_color;
 
   /// No description provided for @recurring_recurring.
   ///
@@ -2917,6 +2947,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Import from GreenStash (.json)'**
   String get backup_importFromGreenStash;
+
+  /// No description provided for @backup_automaticBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic Backup'**
+  String get backup_automaticBackup;
+
+  /// No description provided for @backup_dailyAutoBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Auto Backup'**
+  String get backup_dailyAutoBackup;
+
+  /// No description provided for @backup_runsDailyAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Runs daily at {time}'**
+  String backup_runsDailyAt(String time);
+
+  /// No description provided for @backup_lastBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Last backup: {time}'**
+  String backup_lastBackup(String time);
+
+  /// No description provided for @backup_savingTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving to: {path}'**
+  String backup_savingTo(String path);
+
+  /// No description provided for @backup_changeTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Time'**
+  String get backup_changeTime;
+
+  /// No description provided for @backup_changeFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Folder'**
+  String get backup_changeFolder;
+
+  /// No description provided for @budget_budgetsAndGoals.
+  ///
+  /// In en, this message translates to:
+  /// **'Budgets & Goals'**
+  String get budget_budgetsAndGoals;
+
+  /// No description provided for @onboarding_restoreGreenStash.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore from GreenStash (.json)'**
+  String get onboarding_restoreGreenStash;
+
+  /// No description provided for @savings_goalNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal not found'**
+  String get savings_goalNotFound;
+
+  /// No description provided for @savings_savedSoFar.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved so far'**
+  String get savings_savedSoFar;
+
+  /// No description provided for @savings_target.
+  ///
+  /// In en, this message translates to:
+  /// **'Target'**
+  String get savings_target;
+
+  /// No description provided for @savings_targetDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Target Date: {date}'**
+  String savings_targetDate(String date);
+
+  /// No description provided for @savings_contribute.
+  ///
+  /// In en, this message translates to:
+  /// **'Contribute'**
+  String get savings_contribute;
+
+  /// No description provided for @savings_withdraw.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdraw'**
+  String get savings_withdraw;
+
+  /// No description provided for @savings_noAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'No accounts available. Please add an account first.'**
+  String get savings_noAccounts;
+
+  /// No description provided for @settings_budgetAlerts.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget Alerts'**
+  String get settings_budgetAlerts;
+
+  /// No description provided for @settings_budgetAlertsSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify when a budget or goal is reached'**
+  String get settings_budgetAlertsSub;
+
+  /// No description provided for @settings_dailyReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Reminder'**
+  String get settings_dailyReminder;
+
+  /// No description provided for @settings_dailyReminderSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Remind to log transactions daily'**
+  String get settings_dailyReminderSub;
+
+  /// No description provided for @settings_reminderTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder Time'**
+  String get settings_reminderTime;
+
+  /// No description provided for @settings_hapticFeedback.
+  ///
+  /// In en, this message translates to:
+  /// **'Haptic Feedback'**
+  String get settings_hapticFeedback;
+
+  /// No description provided for @settings_hapticFeedbackSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Vibrate on interactions'**
+  String get settings_hapticFeedbackSub;
+
+  /// No description provided for @savings_saveGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Goal'**
+  String get savings_saveGoal;
 }
 
 class _AppLocalizationsDelegate
@@ -2929,8 +3103,19 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['ar', 'de', 'en', 'fr', 'hi'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>[
+        'ar',
+        'de',
+        'en',
+        'es',
+        'fr',
+        'hi',
+        'it',
+        'ja',
+        'pt',
+        'ru',
+        'zh'
+      ].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -2945,10 +3130,22 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
       return AppLocalizationsDe();
     case 'en':
       return AppLocalizationsEn();
+    case 'es':
+      return AppLocalizationsEs();
     case 'fr':
       return AppLocalizationsFr();
     case 'hi':
       return AppLocalizationsHi();
+    case 'it':
+      return AppLocalizationsIt();
+    case 'ja':
+      return AppLocalizationsJa();
+    case 'pt':
+      return AppLocalizationsPt();
+    case 'ru':
+      return AppLocalizationsRu();
+    case 'zh':
+      return AppLocalizationsZh();
   }
 
   throw FlutterError(

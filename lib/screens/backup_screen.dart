@@ -1,12 +1,9 @@
 // lib/screens/backup_screen.dart
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:shared_storage/shared_storage.dart' as saf;
 import '../database/db_helper.dart';
 import '../providers/app_provider.dart';
 import '../l10n/app_localizations.dart';
-import '../services/auto_backup_service.dart';
 import 'package:provider/provider.dart';
 
 class BackupScreen extends StatefulWidget {
@@ -16,79 +13,37 @@ class BackupScreen extends StatefulWidget {
 }
 
 class _BackupScreenState extends State<BackupScreen> {
-  bool    _backingUp = false;
-  bool    _restoring = false;
+  bool _backingUp = false;
+  bool _restoring = false;
   String? _msg;
-  bool    _msgOk = true;
-
-  bool _autoBackupEnabled = false;
-  String? _autoBackupUri;
+  bool _msgOk = true;
+  Timer? _msgTimer;
 
   @override
-  void initState() {
-    super.initState();
-    _loadAutoBackupState();
+  void dispose() {
+    _msgTimer?.cancel();
+    super.dispose();
   }
 
-  Future<void> _loadAutoBackupState() async {
-    final prefs = await SharedPreferences.getInstance();
+  void _setMsg(String m, {bool ok = true}) {
     setState(() {
-      _autoBackupEnabled = prefs.getBool(AutoBackupService.backupEnabledPrefKey) ?? false;
-      _autoBackupUri = prefs.getString(AutoBackupService.backupUriPrefKey);
+      _msg = m;
+      _msgOk = ok;
+    });
+    _msgTimer?.cancel();
+    _msgTimer = Timer(const Duration(seconds: 3), () {
+      if (mounted) {
+        setState(() => _msg = null);
+      }
     });
   }
 
-  String _formatUri(String? uriStr) {
-    if (uriStr == null) return 'No folder selected';
-    try {
-      final uri = Uri.parse(uriStr);
-      String path = Uri.decodeComponent(uri.pathSegments.last);
-      if (path.startsWith('primary:')) {
-        return 'Internal Storage / ' + path.substring(8).replaceAll(':', ' / ');
-      }
-      return path.replaceAll(':', ' / ');
-    } catch (_) {
-      return uriStr;
-    }
-  }
-
-  Future<void> _toggleAutoBackup(bool enable) async {
-    setState(() => _autoBackupEnabled = enable);
-    if (!enable) {
-      await AutoBackupService.disable();
-      return;
-    }
-    if (_autoBackupUri == null) {
-      final success = await _pickAutoBackupFolder();
-      if (!success) {
-        setState(() => _autoBackupEnabled = false);
-      }
-    } else {
-      await AutoBackupService.enable(_autoBackupUri!);
-      if (mounted) _setMsg('Auto backup enabled', ok: true);
-    }
-  }
-
-  Future<bool> _pickAutoBackupFolder() async {
-    final uri = await saf.openDocumentTree();
-    if (uri != null) {
-      await AutoBackupService.enable(uri.toString());
-      setState(() {
-        _autoBackupEnabled = true;
-        _autoBackupUri = uri.toString();
-      });
-      if (mounted) _setMsg('Auto backup enabled', ok: true);
-      return true;
-    }
-    return false;
-  }
-
-  void _setMsg(String m, {bool ok = true}) =>
-      setState(() { _msg = m; _msgOk = ok; });
-
   Future<void> _backup() async {
     final l10n = AppLocalizations.of(context)!;
-    setState(() { _backingUp = true; _msg = null; });
+    setState(() {
+      _backingUp = true;
+      _msg = null;
+    });
     try {
       final savedPath = await context.read<AppProvider>().createBackup();
       if (savedPath != null) {
@@ -111,7 +66,8 @@ class _BackupScreenState extends State<BackupScreen> {
         title: Text(l10n.backup_restoreBackup),
         content: Text(l10n.backup_replaceDataWarning),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
               child: Text(l10n.backup_cancel)),
           FilledButton(
             style: FilledButton.styleFrom(
@@ -124,7 +80,10 @@ class _BackupScreenState extends State<BackupScreen> {
     );
     if (confirmed != true || !mounted) return;
 
-    setState(() { _restoring = true; _msg = null; });
+    setState(() {
+      _restoring = true;
+      _msg = null;
+    });
     try {
       final originalVersion = await context.read<AppProvider>().restoreBackup();
       if (mounted) {
@@ -132,7 +91,8 @@ class _BackupScreenState extends State<BackupScreen> {
           // User cancelled the file picker — say nothing
         } else {
           final vLabel = originalVersion < DBHelper.schemaVersion
-              ? l10n.backup_upgradedFrom(originalVersion.toString(), DBHelper.schemaVersion.toString())
+              ? l10n.backup_upgradedFrom(
+                  originalVersion.toString(), DBHelper.schemaVersion.toString())
               : '';
           _setMsg(l10n.backup_dataRestoredSuccessfully(vLabel));
         }
@@ -140,9 +100,7 @@ class _BackupScreenState extends State<BackupScreen> {
     } on FormatException catch (e) {
       if (mounted) _setMsg(l10n.backup_restoreFailed(e.message), ok: false);
     } catch (e) {
-      if (mounted) _setMsg(
-          l10n.backup_restoreFailedCorrupted,
-          ok: false);
+      if (mounted) _setMsg(l10n.backup_restoreFailedCorrupted, ok: false);
     } finally {
       if (mounted) setState(() => _restoring = false);
     }
@@ -150,7 +108,10 @@ class _BackupScreenState extends State<BackupScreen> {
 
   Future<void> _restoreExternal(String source) async {
     final l10n = AppLocalizations.of(context)!;
-    setState(() { _restoring = true; _msg = null; });
+    setState(() {
+      _restoring = true;
+      _msg = null;
+    });
     try {
       final app = context.read<AppProvider>();
       final success = await app.restoreExternalBackup(source);
@@ -170,7 +131,7 @@ class _BackupScreenState extends State<BackupScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
-    final cs  = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
 
     // Live counts for the "what's included" breakdown. This list is kept in
     // sync with everything DBHelper.exportAll() actually writes to the
@@ -179,39 +140,55 @@ class _BackupScreenState extends State<BackupScreen> {
     // per-person lending structure, even though all of that data was always
     // correctly included in the file.
     final counts = [
-      _CountRow(Icons.account_balance_wallet_outlined,  l10n.backup_accounts,           app.accounts.length),
-      _CountRow(Icons.receipt_long_outlined,             l10n.backup_transactions,       app.transactions.length),
-      _CountRow(Icons.repeat_rounded,                    l10n.backup_recurringPayments, app.recurring.length),
-      _CountRow(Icons.history_rounded,                   l10n.backup_recurringHistory,  app.recurringHistoryCount),
-      _CountRow(Icons.pie_chart_outline_rounded,         l10n.backup_budgets,            app.budgets.length),
-      _CountRow(Icons.savings_outlined,                  'Savings Goals',                app.savingsGoals.length),
-      _CountRow(Icons.payments_outlined,                 'Savings Contributions',        app.savingsContributions.length),
-      _CountRow(Icons.star_outline_rounded,               l10n.backup_wishlist,           app.wishlist.length),
-      _CountRow(Icons.people_alt_outlined,                l10n.backup_lentPeople,  app.lendedPeople.length),
-      _CountRow(Icons.handshake_outlined,                 l10n.backup_lentRecords, app.lended.length),
-      _CountRow(Icons.inventory_2_outlined,               l10n.backup_assets,             app.assets.length),
-      _CountRow(Icons.label_outline_rounded,              l10n.backup_categories,         app.categories.length),
-      _CountRow(Icons.settings_outlined,                  l10n.backup_settings,           -1), // -1 = 'included'
+      _CountRow(Icons.account_balance_wallet_outlined, l10n.backup_accounts,
+          app.accounts.length),
+      _CountRow(Icons.receipt_long_outlined, l10n.backup_transactions,
+          app.transactions.length),
+      _CountRow(Icons.repeat_rounded, l10n.backup_recurringPayments,
+          app.recurring.length),
+      _CountRow(Icons.history_rounded, l10n.backup_recurringHistory,
+          app.recurringHistoryCount),
+      _CountRow(Icons.pie_chart_outline_rounded, l10n.backup_budgets,
+          app.budgets.length),
+      _CountRow(
+          Icons.savings_outlined, 'Savings Goals', app.savingsGoals.length),
+      _CountRow(Icons.payments_outlined, 'Savings Contributions',
+          app.savingsContributions.length),
+      _CountRow(Icons.star_outline_rounded, l10n.backup_wishlist,
+          app.wishlist.length),
+      _CountRow(Icons.people_alt_outlined, l10n.backup_lentPeople,
+          app.lendedPeople.length),
+      _CountRow(
+          Icons.handshake_outlined, l10n.backup_lentRecords, app.lended.length),
+      _CountRow(
+          Icons.inventory_2_outlined, l10n.backup_assets, app.assets.length),
+      _CountRow(Icons.label_outline_rounded, l10n.backup_categories,
+          app.categories.length),
+      _CountRow(
+          Icons.settings_outlined, l10n.backup_settings, -1), // -1 = 'included'
     ];
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.backup_backupRestore,
-            style: TextStyle(fontWeight: FontWeight.w800)),
-        backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
+            style: const TextStyle(fontWeight: FontWeight.w800)),
+        backgroundColor: cs.primary,
+        foregroundColor: cs.onPrimary,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-
           // ── What's included ────────────────────────────────────────────
           Row(children: [
-            Expanded(child: Text(l10n.backup_whatsIncluded,
-                style: Theme.of(context).textTheme.labelMedium
-                    ?.copyWith(letterSpacing: 1,
+            Expanded(
+                child: Text(l10n.backup_whatsIncluded,
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        letterSpacing: 1,
                         color: cs.onSurface.withValues(alpha: 0.6)))),
             Text(l10n.backup_everythingAlways,
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700,
+                style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
                     color: cs.primary)),
           ]),
           const SizedBox(height: 8),
@@ -219,31 +196,39 @@ class _BackupScreenState extends State<BackupScreen> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               child: Column(
-                children: counts.map((r) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Row(children: [
-                    Icon(r.icon, size: 18,
-                        color: cs.primary.withValues(alpha: 0.8)),
-                    const SizedBox(width: 12),
-                    Expanded(child: Text(r.label,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w600, fontSize: 13))),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: cs.primaryContainer,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        r.count == -1 ? l10n.backup_included : '${r.count}',
-                        style: TextStyle(
-                            fontSize: 11, fontWeight: FontWeight.w700,
-                            color: cs.onPrimaryContainer),
-                      ),
-                    ),
-                  ]),
-                )).toList(),
+                children: counts
+                    .map((r) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Row(children: [
+                            Icon(r.icon,
+                                size: 18,
+                                color: cs.primary.withValues(alpha: 0.8)),
+                            const SizedBox(width: 12),
+                            Expanded(
+                                child: Text(r.label,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 13))),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: cs.primaryContainer,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                r.count == -1
+                                    ? l10n.backup_included
+                                    : '${r.count}',
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: cs.onPrimaryContainer),
+                              ),
+                            ),
+                          ]),
+                        ))
+                    .toList(),
               ),
             ),
           ),
@@ -252,35 +237,41 @@ class _BackupScreenState extends State<BackupScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Text(
               l10n.backup_backupDescription,
-              style: TextStyle(fontSize: 11.5,
-                  color: cs.onSurface.withValues(alpha: 0.55)),
+              style: TextStyle(
+                  fontSize: 11.5, color: cs.onSurface.withValues(alpha: 0.55)),
             ),
           ),
           const SizedBox(height: 20),
 
           // ── Create backup ──────────────────────────────────────────────
           Text(l10n.backup_createBackup,
-              style: Theme.of(context).textTheme.labelMedium
-                  ?.copyWith(letterSpacing: 1,
-                      color: cs.onSurface.withValues(alpha: 0.6))),
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  letterSpacing: 1,
+                  color: cs.onSurface.withValues(alpha: 0.6))),
           const SizedBox(height: 8),
-          Card(child: Padding(
+          Card(
+              child: Padding(
             padding: const EdgeInsets.all(18),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(children: [
-                Container(width: 44, height: 44,
+                Container(
+                    width: 44,
+                    height: 44,
                     decoration: BoxDecoration(
                         color: cs.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12)),
                     child: Icon(Icons.backup_outlined, color: cs.primary)),
                 const SizedBox(width: 14),
-                Expanded(child: Column(
+                Expanded(
+                    child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(l10n.backup_saveAsJson, style: TextStyle(
-                        fontWeight: FontWeight.w800, fontSize: 15)),
+                    Text(l10n.backup_saveAsJson,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w800, fontSize: 15)),
                     Text(l10n.backup_exportsAllAppDataToA,
-                        style: TextStyle(fontSize: 12)),
+                        style: const TextStyle(fontSize: 12)),
                   ],
                 )),
               ]),
@@ -288,11 +279,14 @@ class _BackupScreenState extends State<BackupScreen> {
               FilledButton.icon(
                 onPressed: _backingUp ? null : _backup,
                 icon: _backingUp
-                    ? const SizedBox(width: 16, height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2,
-                            color: Colors.white))
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white))
                     : const Icon(Icons.save_outlined),
-                label: Text(_backingUp ? l10n.backup_saving : l10n.backup_saveBackup),
+                label: Text(
+                    _backingUp ? l10n.backup_saving : l10n.backup_saveBackup),
                 style: FilledButton.styleFrom(
                     minimumSize: const Size.fromHeight(44),
                     shape: RoundedRectangleBorder(
@@ -300,79 +294,37 @@ class _BackupScreenState extends State<BackupScreen> {
               ),
             ]),
           )),
-          // ── Auto Backup ────────────────────────────────────────────────
-          Text('Automatic Backup',
-              style: Theme.of(context).textTheme.labelMedium
-                  ?.copyWith(letterSpacing: 1,
-                      color: cs.onSurface.withValues(alpha: 0.6))),
-          const SizedBox(height: 8),
-          Card(child: Padding(
-            padding: const EdgeInsets.all(18),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Row(children: [
-                Container(width: 44, height: 44,
-                    decoration: BoxDecoration(
-                        color: cs.tertiary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12)),
-                    child: Icon(Icons.autorenew_rounded, color: cs.tertiary)),
-                const SizedBox(width: 14),
-                Expanded(child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Daily Auto Backup', style: TextStyle(
-                        fontWeight: FontWeight.w800, fontSize: 15)),
-                    Text('Runs automatically at 2:00 AM',
-                        style: TextStyle(fontSize: 12,
-                            color: cs.onSurface.withValues(alpha: 0.6))),
-                  ],
-                )),
-                Switch(
-                  value: _autoBackupEnabled,
-                  onChanged: (v) => _toggleAutoBackup(v),
-                ),
-              ]),
-              if (_autoBackupEnabled && _autoBackupUri != null) ...[
-                const SizedBox(height: 14),
-                Text('Saving to: ${_formatUri(_autoBackupUri)}', 
-                    style: TextStyle(fontSize: 12, color: cs.tertiary)),
-                const SizedBox(height: 8),
-                OutlinedButton.icon(
-                  onPressed: _pickAutoBackupFolder,
-                  icon: const Icon(Icons.folder_open),
-                  label: const Text('Change Folder'),
-                  style: OutlinedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(44),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(22))),
-                ),
-              ],
-            ]),
-          )),
-          const SizedBox(height: 12),
 
           // ── Restore backup ─────────────────────────────────────────────
           Text(l10n.backup_restoreBackup_,
-              style: Theme.of(context).textTheme.labelMedium
-                  ?.copyWith(letterSpacing: 1,
-                      color: cs.onSurface.withValues(alpha: 0.6))),
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  letterSpacing: 1,
+                  color: cs.onSurface.withValues(alpha: 0.6))),
           const SizedBox(height: 8),
-          Card(child: Padding(
+          Card(
+              child: Padding(
             padding: const EdgeInsets.all(18),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(children: [
-                Container(width: 44, height: 44,
+                Container(
+                    width: 44,
+                    height: 44,
                     decoration: BoxDecoration(
                         color: cs.error.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12)),
                     child: Icon(Icons.restore_outlined, color: cs.error)),
                 const SizedBox(width: 14),
-                Expanded(child: Column(
+                Expanded(
+                    child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(l10n.backup_loadFromJson, style: TextStyle(
-                        fontWeight: FontWeight.w800, fontSize: 15)),
+                    Text(l10n.backup_loadFromJson,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w800, fontSize: 15)),
                     Text(l10n.backup_picksABackupFileAndR,
-                        style: TextStyle(fontSize: 12,
+                        style: TextStyle(
+                            fontSize: 12,
                             color: cs.onSurface.withValues(alpha: 0.6))),
                   ],
                 )),
@@ -383,37 +335,45 @@ class _BackupScreenState extends State<BackupScreen> {
                 decoration: BoxDecoration(
                     color: cs.errorContainer,
                     borderRadius: BorderRadius.circular(10)),
-                child: Row(crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                  Icon(Icons.warning_amber_rounded,
-                      color: cs.error, size: 16),
-                  const SizedBox(width: 8),
-                  Expanded(child: Column(
+                child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(l10n.backup_thisOverwritesAllCur,
-                          style: TextStyle(fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: cs.onErrorContainer)),
-                      const SizedBox(height: 2),
-                      Text(
-                        l10n.backup_restoreWarningText,
-                        style: TextStyle(fontSize: 11,
-                            color: cs.onErrorContainer
-                                .withValues(alpha: 0.75)),
-                      ),
-                    ],
-                  )),
-                ]),
+                      Icon(Icons.warning_amber_rounded,
+                          color: cs.error, size: 16),
+                      const SizedBox(width: 8),
+                      Expanded(
+                          child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(l10n.backup_thisOverwritesAllCur,
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: cs.onErrorContainer)),
+                          const SizedBox(height: 2),
+                          Text(
+                            l10n.backup_restoreWarningText,
+                            style: TextStyle(
+                                fontSize: 11,
+                                color: cs.onErrorContainer
+                                    .withValues(alpha: 0.75)),
+                          ),
+                        ],
+                      )),
+                    ]),
               ),
               const SizedBox(height: 12),
               OutlinedButton.icon(
                 onPressed: _restoring ? null : _restore,
                 icon: _restoring
-                    ? const SizedBox(width: 16, height: 16,
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
                         child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.upload_file_outlined),
-                label: Text(_restoring ? l10n.backup_restoring : l10n.backup_restoreBackupBtn),
+                label: Text(_restoring
+                    ? l10n.backup_restoring
+                    : l10n.backup_restoreBackupBtn),
                 style: OutlinedButton.styleFrom(
                     minimumSize: const Size.fromHeight(44),
                     foregroundColor: cs.error,
@@ -427,34 +387,42 @@ class _BackupScreenState extends State<BackupScreen> {
 
           // ── Import from Other Apps ─────────────────────────────────────────────
           Text(l10n.backup_importFromOtherApps,
-              style: Theme.of(context).textTheme.labelMedium
-                  ?.copyWith(letterSpacing: 1,
-                      color: cs.onSurface.withValues(alpha: 0.6))),
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  letterSpacing: 1,
+                  color: cs.onSurface.withValues(alpha: 0.6))),
           const SizedBox(height: 8),
-          Card(child: Padding(
+          Card(
+              child: Padding(
             padding: const EdgeInsets.all(18),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(children: [
-                Container(width: 44, height: 44,
+                Container(
+                    width: 44,
+                    height: 44,
                     decoration: BoxDecoration(
                         color: cs.secondary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12)),
                     child: Icon(Icons.download_outlined, color: cs.secondary)),
                 const SizedBox(width: 14),
-                Expanded(child: Column(
+                Expanded(
+                    child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(l10n.backup_importFromOtherApps, style: TextStyle(
-                        fontWeight: FontWeight.w800, fontSize: 15)),
+                    Text(l10n.backup_importFromOtherApps,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w800, fontSize: 15)),
                     Text(l10n.backup_importDescription,
-                        style: TextStyle(fontSize: 12,
+                        style: TextStyle(
+                            fontSize: 12,
                             color: cs.onSurface.withValues(alpha: 0.6))),
                   ],
                 )),
               ]),
               const SizedBox(height: 14),
               OutlinedButton.icon(
-                onPressed: _restoring ? null : () => _restoreExternal('greenstash'),
+                onPressed:
+                    _restoring ? null : () => _restoreExternal('greenstash'),
                 icon: const Icon(Icons.savings),
                 label: Text(l10n.backup_importFromGreenStash),
                 style: OutlinedButton.styleFrom(
@@ -464,36 +432,40 @@ class _BackupScreenState extends State<BackupScreen> {
               ),
             ]),
           )),
-
-          // ── Status message ─────────────────────────────────────────────
-          if (_msg != null) ...[
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: _msgOk
-                    ? const Color(0xFFE8F5E9)
-                    : const Color(0xFFFFEBEE),
-                borderRadius: BorderRadius.circular(12)),
-              child: Row(crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                Icon(_msgOk
-                    ? Icons.check_circle_outline
-                    : Icons.error_outline,
-                    color: _msgOk
-                        ? const Color(0xFF2E7D32)
-                        : const Color(0xFFC62828)),
-                const SizedBox(width: 10),
-                Expanded(child: Text(_msg!, style: TextStyle(
-                    fontSize: 13,
-                    color: _msgOk
-                        ? const Color(0xFF2E7D32)
-                        : const Color(0xFFC62828)))),
-              ]),
-            ),
-          ],
         ]),
       ),
+      bottomNavigationBar: _msg != null
+          ? SafeArea(
+              child: Container(
+                margin: const EdgeInsets.all(20).copyWith(top: 0),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                    color: _msgOk
+                        ? const Color(0xFFE8F5E9)
+                        : const Color(0xFFFFEBEE),
+                    borderRadius: BorderRadius.circular(12)),
+                child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Icon(
+                          _msgOk
+                              ? Icons.check_circle_outline
+                              : Icons.error_outline,
+                          color: _msgOk
+                              ? const Color(0xFF2E7D32)
+                              : const Color(0xFFC62828)),
+                      const SizedBox(width: 10),
+                      Expanded(
+                          child: Text(_msg!,
+                              style: TextStyle(
+                                  fontSize: 13,
+                                  color: _msgOk
+                                      ? const Color(0xFF2E7D32)
+                                      : const Color(0xFFC62828)))),
+                    ]),
+              ),
+            )
+          : null,
     );
   }
 }
@@ -502,8 +474,9 @@ class _BackupScreenState extends State<BackupScreen> {
 
 class _CountRow {
   final IconData icon;
-  final String   label;
+  final String label;
+
   /// Negative sentinel values render as "included" instead of a raw number.
-  final int      count;
+  final int count;
   const _CountRow(this.icon, this.label, this.count);
 }
