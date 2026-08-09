@@ -294,6 +294,7 @@
   "budget_noBudgetsYet": "لا توجد ميزانيات بعد",
   "budget_tapToAddBudget": "انقر على + لتعيين حد للإنفاق لكل فئة",
   "budget_budgeted": "الميزانية المحددة",
+  "budget_leftToSpend": "متبقي للإنفاق",
   "budget_spent": "ما تم إنفاقه",
   "budget_overLimit": "تجاوز الحد",
   "budget_unknown": "غير معروف",

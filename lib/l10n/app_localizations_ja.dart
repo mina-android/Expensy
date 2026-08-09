@@ -641,6 +641,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get budget_budgeted => '予算が決まっています';
 
   @override
+  String get budget_leftToSpend => 'Left to Spend';
+
+  @override
   String get budget_spent => '費やしました';
 
   @override

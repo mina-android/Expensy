@@ -646,6 +646,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get budget_budgeted => 'الميزانية المحددة';
 
   @override
+  String get budget_leftToSpend => 'متبقي للإنفاق';
+
+  @override
   String get budget_spent => 'ما تم إنفاقه';
 
   @override

@@ -1256,6 +1256,12 @@ abstract class AppLocalizations {
   /// **'Budgeted'**
   String get budget_budgeted;
 
+  /// No description provided for @budget_leftToSpend.
+  ///
+  /// In en, this message translates to:
+  /// **'Left to Spend'**
+  String get budget_leftToSpend;
+
   /// No description provided for @budget_spent.
   ///
   /// In en, this message translates to:

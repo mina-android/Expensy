@@ -654,6 +654,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get budget_budgeted => 'Budget';
 
   @override
+  String get budget_leftToSpend => 'Left to Spend';
+
+  @override
   String get budget_spent => 'Speso';
 
   @override

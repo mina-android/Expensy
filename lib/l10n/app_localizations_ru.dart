@@ -652,6 +652,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get budget_budgeted => 'В бюджете';
 
   @override
+  String get budget_leftToSpend => 'Left to Spend';
+
+  @override
   String get budget_spent => 'Потрачено';
 
   @override

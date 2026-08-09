@@ -312,6 +312,7 @@
   "budget_noBudgetsYet": "No budgets yet",
   "budget_tapToAddBudget": "Tap + to set a spending limit per category",
   "budget_budgeted": "Budgeted",
+  "budget_leftToSpend": "Left to Spend",
   "budget_spent": "Spent",
   "budget_overLimit": "Over limit",
   "budget_unknown": "Unknown",

@@ -55,6 +55,41 @@ class _BudgetScreenState extends State<BudgetScreen> with SingleTickerProviderSt
     final totalBudgeted = app.budgets.fold(0.0, (s, b) => s + b.amount);
     final totalSpent    = app.budgets.fold(0.0, (s, b) => s + app.budgetSpent(b));
 
+    // Calculate total monthly recurring income in main currency
+    final recurringIncomes = app.recurring.where((r) => r.paymentType == 'income');
+    double totalMonthlyIncome = 0.0;
+    for (final r in recurringIncomes) {
+      final amountInMain = app.convertToMain(r.amount, app.accountById(r.accountId)?.currency ?? cur);
+      double multiplier = 1.0;
+      switch (r.freqUnit) {
+        case 'days':
+          multiplier = 30.0 / r.freqVal;
+          break;
+        case 'weeks':
+          multiplier = 52.0 / 12.0 / r.freqVal;
+          break;
+        case 'months':
+          multiplier = 1.0 / r.freqVal;
+          break;
+        case 'years':
+          multiplier = 1.0 / (12.0 * r.freqVal);
+          break;
+      }
+      totalMonthlyIncome += amountInMain * multiplier;
+    }
+
+    // Calculate total monthly budgets in main currency
+    double totalMonthlyBudgets = 0.0;
+    for (final b in app.budgets) {
+      if (b.period == 'weekly') {
+        totalMonthlyBudgets += b.amount * 52.0 / 12.0;
+      } else {
+        totalMonthlyBudgets += b.amount;
+      }
+    }
+
+    final leftToSpend = totalMonthlyIncome - totalMonthlyBudgets;
+
     final goals = app.savingsGoals;
     final totalSaved = app.totalSaved;
     final totalTarget = goals.fold(0.0, (s, g) => s + app.convertToMain(g.targetAmount, g.currency));
@@ -68,30 +103,42 @@ class _BudgetScreenState extends State<BudgetScreen> with SingleTickerProviderSt
         : Column(children: [
             // ── Summary strip ───────────────────────────────────────
             Container(
+              width: double.infinity,
               color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              child: Row(children: [
-                _SumChip(
-                  label: l10n.budget_budgeted,
-                  value: formatAmount(totalBudgeted, cur),
-                  color: cs.primary,
-                ),
-                const SizedBox(width: 8),
-                _SumChip(
-                  label: l10n.budget_spent,
-                  value: formatAmount(totalSpent, cur),
-                  color: totalSpent > totalBudgeted
-                      ? cs.error
-                      : const Color(0xFF2E7D32),
-                ),
-                const SizedBox(width: 8),
-                if (overCount > 0)
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(children: [
                   _SumChip(
-                    label: l10n.budget_overLimit,
-                    value: '$overCount',
-                    color: cs.error,
+                    label: l10n.budget_budgeted,
+                    value: formatAmount(totalBudgeted, cur),
+                    color: cs.primary,
                   ),
-              ]),
+                  const SizedBox(width: 8),
+                  _SumChip(
+                    label: l10n.budget_spent,
+                    value: formatAmount(totalSpent, cur),
+                    color: totalSpent > totalBudgeted
+                        ? cs.error
+                        : const Color(0xFF2E7D32),
+                  ),
+                  const SizedBox(width: 8),
+                  _SumChip(
+                    label: l10n.budget_leftToSpend,
+                    value: formatAmount(leftToSpend, cur),
+                    color: leftToSpend < 0 ? cs.error : const Color(0xFF2E7D32),
+                  ),
+                  if (overCount > 0) ...[
+                    const SizedBox(width: 8),
+                    _SumChip(
+                      label: l10n.budget_overLimit,
+                      value: '$overCount',
+                      color: cs.error,
+                    ),
+                  ],
+                ]),
+              ),
             ),
             // ── Budget list ─────────────────────────────────────────
             Expanded(
@@ -141,8 +188,44 @@ class _BudgetScreenState extends State<BudgetScreen> with SingleTickerProviderSt
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Budgets & Goals', style: const TextStyle(fontWeight: FontWeight.w800)),
+        title: Text(l10n.budget_budgetsAndGoals, style: const TextStyle(fontWeight: FontWeight.w800)),
         backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (_tabCtrl.index == 0) ...[
+                  Text(l10n.budget_leftToSpend,
+                      style: TextStyle(
+                          fontSize: 10,
+                          color: cs.onPrimary.withValues(alpha: 0.7))),
+                  Text(
+                    formatAmount(leftToSpend, cur),
+                    style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: cs.onPrimary),
+                  ),
+                ] else ...[
+                  Text('Target / Saved',
+                      style: TextStyle(
+                          fontSize: 10,
+                          color: cs.onPrimary.withValues(alpha: 0.7))),
+                  Text(
+                    '${formatAmount(totalTarget, cur)} / ${formatAmount(totalSaved, cur)}',
+                    style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: cs.onPrimary),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
         bottom: TabBar(
           controller: _tabCtrl,
           indicatorColor: cs.onPrimary,

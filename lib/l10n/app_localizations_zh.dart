@@ -635,6 +635,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get budget_budgeted => '预算';
 
   @override
+  String get budget_leftToSpend => 'Left to Spend';
+
+  @override
   String get budget_spent => '已用';
 
   @override
