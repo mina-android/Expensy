@@ -1688,4 +1688,185 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get savings_saveGoal => 'Save Goal';
+
+  @override
+  String get more_loans => 'Loans';
+
+  @override
+  String more_loansSub(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count active loans',
+      one: '1 active loan',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get loans_title => 'Loans';
+
+  @override
+  String get loans_addLoan => 'Add Loan';
+
+  @override
+  String get loans_editLoan => 'Edit Loan';
+
+  @override
+  String get loans_loanName => 'Loan Name';
+
+  @override
+  String get loans_amount => 'Amount';
+
+  @override
+  String get loans_startDate => 'Start Date';
+
+  @override
+  String get loans_endDate => 'End Date';
+
+  @override
+  String get loans_interestRateOptional => 'Interest Rate (Optional)';
+
+  @override
+  String get loans_account => 'Linked Account';
+
+  @override
+  String get loans_monthlyPayment => 'Monthly Payment';
+
+  @override
+  String get loans_totalPayable => 'Total Payable';
+
+  @override
+  String get loans_remaining => 'Remaining';
+
+  @override
+  String get loans_paid => 'Paid';
+
+  @override
+  String get loans_logPayment => 'Log Payment';
+
+  @override
+  String get loans_paymentReminder => 'Payment Reminder';
+
+  @override
+  String get loans_reminderDay => 'Reminder Day';
+
+  @override
+  String get loans_notes => 'Notes';
+
+  @override
+  String get loans_saveLoan => 'Save Loan';
+
+  @override
+  String get loans_deleteLoan => 'Delete Loan';
+
+  @override
+  String get loans_settled => 'Settled';
+
+  @override
+  String loans_durationMonths(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count months',
+      one: '1 month',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get loans_paymentHistory => 'Payment History';
+
+  @override
+  String get loans_noPayments => 'No payments logged yet';
+
+  @override
+  String get loans_outstandingDebt => 'Outstanding Debt';
+
+  @override
+  String get loans_monthlyObligation => 'Monthly Obligation';
+
+  @override
+  String get insights_loans => 'Loans';
+
+  @override
+  String get backup_loans => 'Loans';
+
+  @override
+  String get backup_loanPayments => 'Loan Payments';
+
+  @override
+  String get more_yearlyAnalysis => 'Yearly Analysis';
+
+  @override
+  String get more_yearlyAnalysisSub => 'Month-by-month cash flow forecast';
+
+  @override
+  String get yearly_title => 'Yearly Analysis';
+
+  @override
+  String get yearly_recurringExp => 'Recurring Expenses';
+
+  @override
+  String get yearly_recurringInc => 'Recurring Income';
+
+  @override
+  String get yearly_loans => 'Loan Payments';
+
+  @override
+  String get yearly_borrowed => 'Borrowed Due';
+
+  @override
+  String get yearly_lentDue => 'Lent Due Back';
+
+  @override
+  String get yearly_inflow => 'Inflows';
+
+  @override
+  String get yearly_outflow => 'Outflows';
+
+  @override
+  String get yearly_netFlow => 'Net Flow';
+
+  @override
+  String get yearly_totalInflow => 'Total Inflow';
+
+  @override
+  String get yearly_totalOutflow => 'Total Outflow';
+
+  @override
+  String get yearly_netCashFlow => 'Net Cash Flow';
+
+  @override
+  String get yearly_noData => 'No projected activity yet';
+
+  @override
+  String get yearly_noDataSub =>
+      'Add recurring payments, loans, or lent money with due dates to see a forecast';
+
+  @override
+  String get budget_addBudget => 'Add Budget';
+
+  @override
+  String get budget_addGoal => 'Add Savings Goal';
+
+  @override
+  String get add_transaction_possibleDuplicate => 'Possible duplicate';
+
+  @override
+  String get add_transaction_goBack => 'Go back';
+
+  @override
+  String get add_transaction_saveAnyway => 'Save anyway';
+
+  @override
+  String get loans_confirmDeleteLoan =>
+      'Are you sure you want to delete this loan and all its payments?';
+
+  @override
+  String get loans_deletePayment => 'Delete Payment';
+
+  @override
+  String get loans_confirmDeletePayment =>
+      'Are you sure you want to delete this payment record?';
 }

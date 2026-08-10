@@ -1,7 +1,6 @@
 // lib/providers/app_provider.dart
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
@@ -14,6 +13,12 @@ import '../services/notification_service.dart';
 import '../services/lended_notification_service.dart';
 import '../services/budget_notification_service.dart';
 import '../services/daily_reminder_service.dart';
+import 'package:intl/intl.dart';
+import '../l10n/app_localizations.dart';
+import 'package:home_widget/home_widget.dart';
+import '../services/credit_reminder_service.dart';
+import '../services/loan_reminder_service.dart';
+import '../theme/app_theme.dart';
 
 class AppSettings {
   String currency;
@@ -77,7 +82,10 @@ class AppSettings {
     'default','plus_jakarta_sans','dm_sans','inter','nunito_sans',
     'space_grotesk','outfit','sora','poppins','nunito',
   };
-  static const _validLanguages = {'system', 'en', 'ar', 'fr', 'de', 'hi'};
+  static final _validLanguages = {
+    'system',
+    ...AppLocalizations.supportedLocales.map((l) => l.languageCode),
+  };
 
   static AppSettings fromJson(Map<String, dynamic> j) {
     String seed = (j['themeSeed'] as String?) ?? 'violet';
@@ -156,11 +164,15 @@ class AppProvider extends ChangeNotifier {
   // ── Recurring history (lazy cache) ────────────────────────────────────
   final Map<String, List<RecurringHistoryEntry>> _historyCache = {};
 
+  List<Loan> loans = [];
+  List<LoanPayment> loanPayments = [];
+
   final _erService = ExchangeRateService();
   final _notif       = NotificationService();
   final _lendedNotif = LendedNotificationService();
   final _budgetNotif = BudgetNotificationService();
   final _dailyNotif  = DailyReminderService();
+  final _loanNotif   = LoanReminderService();
 
   bool _loaded = false;
   bool get loaded => _loaded;
@@ -186,6 +198,8 @@ class AppProvider extends ChangeNotifier {
     budgets      = await DBHelper.getBudgets();
     savingsGoals = await DBHelper.getSavingsGoals();
     savingsContributions = await DBHelper.getAllSavingsContributions();
+    loans        = await DBHelper.getLoans();
+    loanPayments = await DBHelper.getAllLoanPayments();
     netWorthSnapshots = await DBHelper.getNetWorthSnapshots();
     recurringHistoryCount = await DBHelper.getRecurringHistoryCount();
     _loaded = true;
@@ -193,6 +207,8 @@ class AppProvider extends ChangeNotifier {
 
     _lendedNotif.rescheduleAllLended(lended, settings.currency);
     _notif.rescheduleAll(recurring, settings.currency);
+    _loanNotif.rescheduleAllLoans(loans, settings.currency);
+    CreditReminderService().rescheduleAll(accounts);
     if (settings.dailyReminderEnabled) {
       await _dailyNotif.scheduleDailyReminder(settings.dailyReminderTime);
     } else {
@@ -200,6 +216,62 @@ class AppProvider extends ChangeNotifier {
     }
 
     _loadRates();
+    await _recordNetWorthSnapshot();
+    await updateHomeWidgets();
+  }
+
+  Future<void> updateHomeWidgets() async {
+    try {
+      final pinnedIds = settings.pinnedWidgetAccountIds;
+      final pinnedAccounts = accounts.where((a) => pinnedIds.contains(a.id)).take(3).toList();
+      if (pinnedAccounts.isEmpty) {
+        pinnedAccounts.addAll(accounts.take(3));
+      }
+      final accountsJson = jsonEncode(pinnedAccounts.map((a) => {
+        'name': a.name,
+        'balance': formatAmount(a.balance, a.currency.isNotEmpty ? a.currency : settings.currency),
+      }).toList());
+      await HomeWidget.saveWidgetData('accounts_widget_data', accountsJson);
+      await HomeWidget.updateWidget(name: 'AccountsWidgetProvider');
+
+      final budgetData = budgets.map((b) {
+        final spent = transactions
+            .where((t) => t.type == 'expense' && t.categoryId == b.categoryId)
+            .fold(0.0, (s, t) => s + t.amount);
+        return {
+          'category': categoryById(b.categoryId)?.name ?? 'Budget',
+          'spent': spent,
+          'amount': b.amount,
+          'progress': b.amount > 0 ? spent / b.amount : 0.0,
+          'exceeded': spent > b.amount,
+          'currency': settings.currency,
+        };
+      }).toList();
+      await HomeWidget.saveWidgetData('budget_widget_data', jsonEncode(budgetData));
+      await HomeWidget.updateWidget(name: 'BudgetWidgetProvider');
+    } catch (e) {
+      debugPrint('Error updating home widgets: $e');
+    }
+  }
+
+  Future<void> _recordNetWorthSnapshot() async {
+    try {
+      final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+      final existing = await DBHelper.getNetWorthSnapshotForDate(today);
+      if (existing != null) return;
+      final snap = NetWorthSnapshot(
+        id: const Uuid().v4(),
+        date: today,
+        totalAccounts: totalBalanceAll,
+        totalAssets: totalAssetsValue,
+        netWorth: totalBalanceAll + totalAssetsValue,
+        currency: settings.currency,
+      );
+      await DBHelper.insertNetWorthSnapshot(snap);
+      netWorthSnapshots.add(snap);
+    } catch (e) {
+      debugPrint('Error recording net worth snapshot: $e');
+    }
   }
 
   Future<void> _loadRates({bool forceNetwork = false}) async {
@@ -450,12 +522,21 @@ class AppProvider extends ChangeNotifier {
   Future<void> addAccount(Account a) async {
     await DBHelper.insertAccount(a);
     accounts = await DBHelper.getAccounts();
+    if (a.type == 'credit' && a.creditReminderEnabled) {
+      await CreditReminderService().scheduleReminder(a);
+    }
     notifyListeners();
   }
 
   Future<void> updateAccount(Account a) async {
     await DBHelper.updateAccount(a);
     accounts = await DBHelper.getAccounts();
+    if (a.type == 'credit') {
+      await CreditReminderService().cancelReminder(a.id);
+      if (a.creditReminderEnabled) {
+        await CreditReminderService().scheduleReminder(a);
+      }
+    }
     notifyListeners();
   }
 
@@ -468,6 +549,7 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> deleteAccount(String id) async {
+    await CreditReminderService().cancelReminder(id);
     await DBHelper.deleteAccount(id);
     accounts     = await DBHelper.getAccounts();
     transactions = await DBHelper.getTransactions();
@@ -1086,6 +1168,174 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ── Loans ────────────────────────────────────────────────────────────
+  Future<void> addLoan(Loan l) async {
+    await DBHelper.insertLoan(l);
+    if (l.transferAccountId != null) {
+      await _updateAccountBalance(l.transferAccountId!, l.principal);
+    }
+    loans = await DBHelper.getLoans();
+    accounts = await DBHelper.getAccounts();
+    notifyListeners();
+    if (l.reminderEnabled) await _loanNotif.scheduleReminder(l);
+  }
+
+  Future<void> updateLoan(Loan l) async {
+    await _loanNotif.cancelReminder(l.id);
+    final oldL = loans.firstWhere((x) => x.id == l.id);
+    
+    // Reverse old principal transfer if any
+    if (oldL.transferAccountId != null) {
+      await _updateAccountBalance(oldL.transferAccountId!, -oldL.principal);
+    }
+    // Apply new principal transfer if any
+    if (l.transferAccountId != null) {
+      await _updateAccountBalance(l.transferAccountId!, l.principal);
+    }
+
+    await DBHelper.updateLoan(l);
+    loans = await DBHelper.getLoans();
+    accounts = await DBHelper.getAccounts();
+    notifyListeners();
+    if (l.reminderEnabled) await _loanNotif.scheduleReminder(l);
+  }
+
+  Future<void> deleteLoan(String id) async {
+    await _loanNotif.cancelReminder(id);
+    final l = loans.firstWhere((x) => x.id == id);
+    
+    // Reverse principal transfer if any
+    if (l.transferAccountId != null) {
+      await _updateAccountBalance(l.transferAccountId!, -l.principal);
+    }
+
+    for (final p in loanPaymentsFor(id)) {
+      if (p.accountId != null) {
+        await _updateAccountBalance(p.accountId!, p.amount); // reverse debit
+      }
+    }
+    await DBHelper.deleteLoan(id);
+    loans = await DBHelper.getLoans();
+    loanPayments = await DBHelper.getAllLoanPayments();
+    accounts = await DBHelper.getAccounts();
+    notifyListeners();
+  }
+
+  Future<VoidCallback> deleteLoanWithUndo(String id) async {
+    final l = loans.firstWhere((x) => x.id == id);
+    final payments = loanPaymentsFor(id);
+    await deleteLoan(id);
+    return () async {
+      await DBHelper.insertLoan(l);
+      if (l.transferAccountId != null) {
+        await _updateAccountBalance(l.transferAccountId!, l.principal);
+      }
+      for (final p in payments) {
+        await DBHelper.insertLoanPayment(p);
+        if (p.accountId != null) {
+          await _updateAccountBalance(p.accountId!, -p.amount);
+        }
+      }
+      loans = await DBHelper.getLoans();
+      loanPayments = await DBHelper.getAllLoanPayments();
+      accounts = await DBHelper.getAccounts();
+      notifyListeners();
+      if (l.reminderEnabled) await _loanNotif.scheduleReminder(l);
+    };
+  }
+
+  Future<void> payLoanInstallment(Loan l, {double? amount, String? accountId, String notes = ''}) async {
+    final payAmount = amount ?? l.monthlyPayment;
+    final useAccount = accountId ?? l.accountId;
+
+    final payment = LoanPayment(
+      id: newId(),
+      loanId: l.id,
+      date: DateTime.now(),
+      amount: payAmount,
+      currency: l.currency,
+      accountId: useAccount,
+      notes: notes,
+    );
+    await DBHelper.insertLoanPayment(payment);
+    if (useAccount != null) {
+      await _updateAccountBalance(useAccount, -payAmount); // expense-like debit
+    }
+    loanPayments = await DBHelper.getAllLoanPayments();
+    accounts = await DBHelper.getAccounts();
+
+    // Auto-settle when the loan is fully paid off
+    final totalPaid = loanTotalPaid(l) + payAmount;
+    if (totalPaid >= l.totalPayable && !l.isSettled) {
+      final settled = l.copyWith(isSettled: true);
+      await DBHelper.updateLoan(settled);
+      loans = await DBHelper.getLoans();
+      await _loanNotif.cancelReminder(l.id);
+    }
+    notifyListeners();
+  }
+
+  Future<void> skipLoanInstallment(Loan l, {String notes = 'Skipped'}) async {
+    final payment = LoanPayment(
+      id: newId(),
+      loanId: l.id,
+      date: DateTime.now(),
+      amount: 0.0,
+      currency: l.currency,
+      accountId: null,
+      notes: notes,
+    );
+    await DBHelper.insertLoanPayment(payment);
+    loanPayments = await DBHelper.getAllLoanPayments();
+    notifyListeners();
+  }
+
+  Future<void> deleteLoanPayment(String id) async {
+    final p = loanPayments.firstWhere((x) => x.id == id);
+    if (p.accountId != null) {
+      await _updateAccountBalance(p.accountId!, p.amount); // reverse the debit
+    }
+    await DBHelper.deleteLoanPayment(id);
+    loanPayments = await DBHelper.getAllLoanPayments();
+    accounts = await DBHelper.getAccounts();
+    notifyListeners();
+  }
+
+  Future<VoidCallback> deleteLoanPaymentWithUndo(String id) async {
+    final p = loanPayments.firstWhere((x) => x.id == id);
+    await deleteLoanPayment(id);
+    return () async {
+      await DBHelper.insertLoanPayment(p);
+      if (p.accountId != null) {
+        await _updateAccountBalance(p.accountId!, -p.amount);
+      }
+      loanPayments = await DBHelper.getAllLoanPayments();
+      accounts = await DBHelper.getAccounts();
+      notifyListeners();
+    };
+  }
+
+  List<LoanPayment> loanPaymentsFor(String loanId) =>
+      loanPayments.where((p) => p.loanId == loanId).toList()
+        ..sort((a, b) => b.date.compareTo(a.date));
+
+  double loanTotalPaid(Loan l) =>
+      loanPaymentsFor(l.id).fold(0.0, (s, p) => s + p.amount);
+
+  double loanRemaining(Loan l) =>
+      (l.totalPayable - loanTotalPaid(l)).clamp(0.0, double.infinity);
+
+  double loanProgress(Loan l) =>
+      l.totalPayable <= 0 ? 0.0 : (loanTotalPaid(l) / l.totalPayable).clamp(0.0, 1.0);
+
+  double get totalMonthlyLoanObligation => loans
+      .where((l) => !l.isSettled)
+      .fold(0.0, (s, l) => s + convertToMain(l.monthlyPayment, l.currency));
+
+  double get totalOutstandingLoanDebt => loans
+      .where((l) => !l.isSettled)
+      .fold(0.0, (s, l) => s + convertToMain(loanRemaining(l), l.currency));
+
   // ── Export ────────────────────────────────────────────────────────────
   Future<String?> exportTransactionsExcel({
     required DateTime from, required DateTime to,
@@ -1217,6 +1467,8 @@ class AppProvider extends ChangeNotifier {
     await _notif.rescheduleAll(recurring, settings.currency);
     await _lendedNotif.rescheduleAllLended(lended, settings.currency,
         personNameOf: (id) => personById(id)?.name ?? '');
+    await _loanNotif.rescheduleAllLoans(loans, settings.currency);
+    await CreditReminderService().rescheduleAll(accounts);
 
     return (data['_originalVersion'] as int?) ?? (data['version'] as int?) ?? 1;
   }
@@ -1288,8 +1540,11 @@ class AppProvider extends ChangeNotifier {
             date: DateTime.fromMillisecondsSinceEpoch(tx['timeStamp'] ?? DateTime.now().millisecondsSinceEpoch),
             note: tx['notes'] ?? '',
           ));
-          if (isDeposit) currentAmount += amt;
-          else currentAmount -= amt;
+          if (isDeposit) {
+            currentAmount += amt;
+          } else {
+            currentAmount -= amt;
+          }
         }
       }
       sg.currentAmount = currentAmount;
@@ -1405,6 +1660,12 @@ class AppProvider extends ChangeNotifier {
   }
   
   bool isTransactionSelectionMode = false;
+  void setTransactionSelectionMode(bool value) {
+    if (isTransactionSelectionMode != value) {
+      isTransactionSelectionMode = value;
+      notifyListeners();
+    }
+  }
   final ValueNotifier<int> tabIndexNotifier = ValueNotifier<int>(0);
 
   List<Account> get nonBankAccounts => accounts.where((a) => a.type != 'bank').toList();

@@ -980,3 +980,179 @@ class SavingsContribution {
         note: note ?? this.note,
       );
 }
+
+// ── Loans Models ─────────────────────────────────────────────────────────────
+
+class Loan {
+  final String id;
+  String name;
+  double principal;          // original loan amount
+  String currency;
+  DateTime startDate;
+  DateTime endDate;           // duration is derived: endDate - startDate
+  double? interestRate;       // annual %, nullable — optional field
+  String? accountId;          // account the loan is tied to (nullable — "not linked")
+  String? transferAccountId;  // account the loan principal is transferred to (nullable)
+  bool reminderEnabled;
+  int reminderDay;            // day-of-month (1-31) the payment is due
+  String reminderTime;        // 'HH:mm'
+  bool isSettled;             // manually markable "paid off" / or auto when totalPaid >= totalOwed
+  String notes;
+  DateTime createdAt;
+
+  Loan({
+    required this.id,
+    required this.name,
+    required this.principal,
+    this.currency = 'EGP',
+    required this.startDate,
+    required this.endDate,
+    this.interestRate,
+    this.accountId,
+    this.transferAccountId,
+    this.reminderEnabled = false,
+    this.reminderDay = 1,
+    this.reminderTime = '09:00',
+    this.isSettled = false,
+    this.notes = '',
+    DateTime? createdAt,
+  }) : createdAt = createdAt ?? DateTime.now();
+
+  /// Whole months between start and end, minimum 1, so a same-month
+  /// loan never divides by zero.
+  int get durationMonths {
+    final months =
+        (endDate.year - startDate.year) * 12 + (endDate.month - startDate.month);
+    return months < 1 ? 1 : months;
+  }
+
+  /// Simple/flat-interest total payable: principal + (principal * annualRate/100 * years).
+  /// Only meaningful when interestRate != null.
+  double get totalPayable {
+    if (interestRate == null || interestRate == 0) return principal;
+    final years = durationMonths / 12.0;
+    final totalInterest = principal * (interestRate! / 100) * years;
+    return principal + totalInterest;
+  }
+
+  double get monthlyPayment => totalPayable / durationMonths;
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'name': name,
+        'principal': principal,
+        'currency': currency,
+        'start_date': startDate.toIso8601String(),
+        'end_date': endDate.toIso8601String(),
+        'interest_rate': interestRate,
+        'account_id': accountId,
+        'transfer_account_id': transferAccountId,
+        'reminder_enabled': reminderEnabled ? 1 : 0,
+        'reminder_day': reminderDay,
+        'reminder_time': reminderTime,
+        'is_settled': isSettled ? 1 : 0,
+        'notes': notes,
+        'created_at': createdAt.toIso8601String(),
+      };
+
+  static Loan fromMap(Map<String, dynamic> m) => Loan(
+        id: (m['id'] as String?) ?? '',
+        name: (m['name'] as String?) ?? '',
+        principal: (m['principal'] as num?)?.toDouble() ?? 0.0,
+        currency: (m['currency'] as String?) ?? 'EGP',
+        startDate: m['start_date'] != null
+            ? DateTime.parse(m['start_date'] as String)
+            : DateTime.now(),
+        endDate: m['end_date'] != null
+            ? DateTime.parse(m['end_date'] as String)
+            : DateTime.now(),
+        interestRate: (m['interest_rate'] as num?)?.toDouble(),
+        accountId: m['account_id'] as String?,
+        transferAccountId: m['transfer_account_id'] as String?,
+        reminderEnabled: (m['reminder_enabled'] as int? ?? 0) == 1,
+        reminderDay: m['reminder_day'] as int? ?? 1,
+        reminderTime: (m['reminder_time'] as String?) ?? '09:00',
+        isSettled: (m['is_settled'] as int? ?? 0) == 1,
+        notes: (m['notes'] as String?) ?? '',
+        createdAt: m['created_at'] != null
+            ? DateTime.parse(m['created_at'] as String)
+            : DateTime.now(),
+      );
+
+  Loan copyWith({
+    String? name,
+    double? principal,
+    String? currency,
+    DateTime? startDate,
+    DateTime? endDate,
+    double? interestRate,
+    String? accountId,
+    String? transferAccountId,
+    bool? reminderEnabled,
+    int? reminderDay,
+    String? reminderTime,
+    bool? isSettled,
+    String? notes,
+    bool clearInterestRate = false,
+    bool clearAccount = false,
+    bool clearTransferAccount = false,
+  }) => Loan(
+        id: id,
+        name: name ?? this.name,
+        principal: principal ?? this.principal,
+        currency: currency ?? this.currency,
+        startDate: startDate ?? this.startDate,
+        endDate: endDate ?? this.endDate,
+        interestRate: clearInterestRate ? null : (interestRate ?? this.interestRate),
+        accountId: clearAccount ? null : (accountId ?? this.accountId),
+        transferAccountId: clearTransferAccount ? null : (transferAccountId ?? this.transferAccountId),
+        reminderEnabled: reminderEnabled ?? this.reminderEnabled,
+        reminderDay: reminderDay ?? this.reminderDay,
+        reminderTime: reminderTime ?? this.reminderTime,
+        isSettled: isSettled ?? this.isSettled,
+        notes: notes ?? this.notes,
+        createdAt: createdAt,
+      );
+}
+
+class LoanPayment {
+  final String id;
+  final String loanId;
+  final DateTime date;
+  final double amount;
+  final String currency;
+  final String? accountId;   // account debited for this payment, if any
+  final String notes;
+
+  const LoanPayment({
+    required this.id,
+    required this.loanId,
+    required this.date,
+    required this.amount,
+    required this.currency,
+    this.accountId,
+    this.notes = '',
+  });
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'loan_id': loanId,
+        'date': date.toIso8601String(),
+        'amount': amount,
+        'currency': currency,
+        'account_id': accountId,
+        'notes': notes,
+      };
+
+  static LoanPayment fromMap(Map<String, dynamic> m) => LoanPayment(
+        id: (m['id'] as String?) ?? '',
+        loanId: (m['loan_id'] as String?) ?? '',
+        date: m['date'] != null
+            ? DateTime.parse(m['date'] as String)
+            : DateTime.now(),
+        amount: (m['amount'] as num?)?.toDouble() ?? 0.0,
+        currency: (m['currency'] as String?) ?? 'EGP',
+        accountId: m['account_id'] as String?,
+        notes: (m['notes'] as String?) ?? '',
+      );
+}

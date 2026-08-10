@@ -4,14 +4,14 @@
 
 # Expensy
 
-### Your personal, fully offline finance tracker
+### A finance tracker that stays on your phone, not in the cloud
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.3%2B-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Android](https://img.shields.io/badge/Android-5.0%2B-3DDC84?logo=android&logoColor=white)](https://android.com)
-[![Version](https://img.shields.io/badge/Version-1.0.9-brightgreen)](https://github.com/mina-android/Expensy/releases)
+[![Version](https://img.shields.io/badge/Version-1.1.0-brightgreen)](https://github.com/mina-android/Expensy/releases)
 [![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
 
-No accounts. No cloud. No ads. Your data stays on your device — always.
+No sign-up. No cloud sync. No ads. Your data lives on your device and nowhere else.
 
 [**Download**](#-installation) · [**Features**](#-features) · [**Screenshots**](#-screenshots) · [**Build from Source**](#-build-from-source)
 
@@ -19,32 +19,34 @@ No accounts. No cloud. No ads. Your data stays on your device — always.
 
 ---
 
-## Why Expensy?
+## Why I built this
 
-Most finance apps want you to sign up, sync to the cloud, or watch ads. Expensy does none of that — everything lives in a local database on your phone, and the only network calls are a once-a-day exchange rate refresh. Uninstall the app and nothing is left behind.
+I got tired of finance apps that ask for an account before they'll even let you add a transaction, then quietly sync everything to a server somewhere. Expensy doesn't do any of that. There's no login screen, no backend, no analytics SDK phoning home. It's just a local SQLite database on your phone. The only time it touches the network is to fetch exchange rates and the day's gold price — everything else, from your account balances to your spending history, never leaves the device. Uninstall the app and there's nothing left behind to "delete your data" from, because it was never anywhere else to begin with.
 
 ---
 
-## ✨ Features
+## ✨ What's in it
 
-- **Accounts** — bank, cash, savings, credit card (with expiration tracking), e-wallet, or gold, each in its own currency, with drag-and-drop custom ordering
-- **Linked Accounts** — dynamically link your credit and debit cards to a central bank account to compute a unified total balance
-- **Gold accounts** — track holdings by karat and grams, valued automatically from live gold prices
-- **Transactions** — income, expense, lent, and borrowed entries in a unified, chronological list view with search, advanced category and amount filters, type pills, swipe-to-delete, bulk-selection mode for mass deletion and categorization, and click-to-edit gestures
-- **Transfers** — move money between accounts, with automatic currency conversion
-- **Recurring payments** — subscriptions, installments, rent, salary — with reminders and payment history
-- **Budgets** — monthly or weekly limits per category, with progress bars and instant push notifications when exceeded
-- **Statistics & Insights** — spending charts, trends, and month-over-month comparisons
-- **Currency converter** — instant conversion using live exchange rates
-- **Savings Goals** — track progress towards savings targets with contributions/withdrawals and completion alerts
-- **Assets & Wishlist** — track things you own and things you want to buy
-- **Lent & borrowed money** — keep tabs on who owes who, with due-date reminders
-- **Daily Reminders** — optional nightly nudge to log your daily spending
-- **Backup & Restore** — one JSON file, fully under your control. Also supports importing backups from **GreenStash**!
-- **High Performance** — Architected to remain buttery smooth at 120Hz even with thousands of transactions, with snappy, responsive UI animations.
+I've tried to make this a genuinely complete money app rather than just a transaction logger:
 
-- **Widgets** — a sleek "Nothing Style" quick add widget to instantly launch the add transaction screen, and a new Budget Progress widget to monitor top budgets on your home screen.
-- **Custom look** — Material You, 29 accent colours, 10 fonts, AMOLED dark mode
+- **Accounts** for however you actually keep money — bank, cash, savings, credit card, e-wallet, or gold — each with its own currency, and you can drag them into whatever order makes sense to you
+- **Linked cards**, so a credit or debit card can sit under a parent bank account and roll up into one total instead of being tracked separately
+- **Gold accounts** that value themselves automatically from live gold prices, tracked by karat and grams
+- A unified **transaction list** — income, expenses, and lent/borrowed money all in one chronological view, with search, filters, swipe-to-delete, bulk selection, and tap-to-edit
+- **Transfers** between accounts with automatic currency conversion baked in
+- **Recurring payments** for subscriptions, installments, rent, salary — with reminders and a full payment history
+- **Budgets**, monthly or weekly, per category, with progress bars and a push notification the moment you go over
+- **Statistics & Insights** — charts, trends, month-over-month comparisons, the stuff that actually tells you where your money went
+- A built-in **currency converter** using live rates
+- **Savings goals** you can contribute to or withdraw from, with a nudge when you hit the target
+- **Assets & a wishlist**, for tracking what you own and what you're saving up for
+- **Lent & borrowed money**, so you can actually remember who owes who, with due-date reminders
+- **Yearly Analysis** — a 24-month planned cash flow forecast for recurring income, expenses, loans, and lent/borrowed due dates
+- An optional **nightly reminder** if you haven't logged anything that day
+- **Backup & restore** to a single JSON file that's entirely yours — and if you're coming from GreenStash, it can import your data directly
+- A UI that's meant to feel fast — smooth at 120Hz even with a few thousand transactions sitting in the list
+
+And because a finance app is something you'll look at every day, I spent real time on how it looks: a sleek **floating Material 3 navigation bar**, Material You theming, 29 accent colors, 10 fonts, a proper AMOLED dark mode, and a few home-screen widgets (quick-add, accounts, budget progress) so you don't always have to open the app just to log something.
 
 ---
 
@@ -62,29 +64,23 @@ Most finance apps want you to sign up, sync to the cloud, or watch ads. Expensy 
 
 ---
 
-## 🌍 Localization & Translation
+## 🌍 Localization
 
-Expensy is being translated into multiple languages using native translation and professional finance terminology for a native feel. Translation is in progress — percentages reflect the share of strings currently translated relative to the English base:
+I wanted this to feel native for more than just English speakers, so it's currently translated into 11 languages (see `lib/l10n/`):
 
-- 🇺🇸 **English** — 100%
-- 🇪🇸 **Spanish (Español)** — 100%
-- 🇸🇦 **Arabic (العربية)** — 73% (RTL support included)
-- 🇫🇷 **French (Français)** — 73%
-- 🇩🇪 **German (Deutsch)** — 73%
-- 🇮🇳 **Hindi (हिन्दी)** — 73%
+🇺🇸 English · 🇪🇸 Spanish · 🇸🇦 Arabic (with RTL support) · 🇫🇷 French · 🇩🇪 German · 🇮🇳 Hindi · 🇮🇹 Italian · 🇯🇵 Japanese · 🇵🇹 Portuguese · 🇷🇺 Russian · 🇨🇳 Chinese
 
-Contributions to complete these translations are welcome — see [Contributing](#-contributing).
+Some of these are more complete than others — check the `.arb` files under `lib/l10n/` if you're curious how far along a given language is. If you speak one of these natively and something reads awkwardly, a PR fixing it would genuinely make the app better for someone. See [Contributing](#-contributing).
 
 ---
 
 ## 📲 Installation
 
-1. Go to [**Releases**](https://github.com/mina-android/Expensy/releases)
-2. Download `app-release.apk`
-3. On your phone, enable **Install Unknown Apps** for your file manager (Settings → Security)
-4. Open the APK and install
+1. Grab the latest APK from [**Releases**](https://github.com/mina-android/Expensy/releases)
+2. Enable **Install Unknown Apps** for your file manager (Settings → Security)
+3. Open the APK and install it
 
-> Requires Android 5.0 or newer.
+That's it — no account to create. Requires Android 5.0 or newer.
 
 ---
 
@@ -98,50 +94,51 @@ cd Expensy
 flutter pub get
 flutter run
 
-# Signed Release APK (Universal)
+# Signed release APK (universal)
 flutter build apk --release
 
-# Signed Split-per-ABI APKs (Smaller download size per architecture)
+# Signed split-per-ABI APKs (smaller download per architecture)
 flutter build apk --split-per-abi --release
 
-# Signed Google Play Store App Bundle (.aab)
+# Signed Play Store bundle
 flutter build appbundle --release
 ```
 
-Production builds automatically detect `android/key.properties` and sign with `expensy.jks` (`signingConfigs.release`). Output artifacts land in `build/app/outputs/flutter-apk/` (`app-release.apk`, `app-arm64-v8a-release.apk`) and `build/app/outputs/bundle/release/` (`app-release.aab`).
+If `android/key.properties` is present, release builds automatically pick it up and sign with `expensy.jks`. You'll find the output in `build/app/outputs/flutter-apk/` (`app-release.apk`, `app-arm64-v8a-release.apk`, ...) and `build/app/outputs/bundle/release/` (`app-release.aab`).
 
 <details>
-<summary><strong>Build troubleshooting</strong></summary>
+<summary><strong>Running into build trouble?</strong></summary>
 
-- **`flutter pub get` fails:** run `flutter clean && flutter pub get`
-- **Gradle build error:** make sure `gradle-wrapper.properties` points to Gradle **8.11.1**, not 9.x
-- **Windows drive-letter errors:** add `kotlin.incremental=false` and `org.gradle.configuration-cache=false` to `android/gradle.properties`
-- **Missing SDK licenses:** run `flutter doctor --android-licenses`
-- **Notifications not firing:** check Settings → Apps → Expensy → Notifications, and "Alarms & Reminders" on Android 12+
+- **`flutter pub get` fails:** `flutter clean && flutter pub get`
+- **Gradle errors:** make sure `gradle-wrapper.properties` points at Gradle **8.11.1**, not 9.x
+- **Weird path/drive-letter errors on Windows:** add `kotlin.incremental=false` and `org.gradle.configuration-cache=false` to `android/gradle.properties`
+- **Missing SDK licenses:** `flutter doctor --android-licenses`
+- **Notifications not firing:** check Settings → Apps → Expensy → Notifications, and don't forget "Alarms & Reminders" on Android 12+
 
 </details>
 
 ---
 
-## 🔒 Privacy
+## 🔒 Privacy, actually
 
-- All data stored locally in SQLite — never leaves your device
-- Exchange rates fetched from free public APIs, no account or key needed
-- No analytics, no crash reporting, no ads
-- Backups are plain JSON files that you control
-- Uninstalling deletes everything
+- Everything is stored locally in SQLite — nothing ever leaves your device
+- Exchange rates come from free public APIs that don't need a key or an account
+- No analytics, no crash reporting, no ads, no trackers of any kind
+- Backups are plain JSON files that live wherever you put them, not on some server
+- Uninstall the app and it's genuinely gone — there's nothing left in a cloud somewhere to worry about
 
 ---
-
 
 ## 🗺 Roadmap
 
 - [ ] iOS support
-- [x] Home screen widget
-- [ ] Multiple languages (ES 100%, AR/DE/FR/HI at 73%)
+- [x] Home screen widgets (quick-add, add transaction, accounts, budget progress)
+- [x] Multiple languages (11 and counting)
 - [ ] Recurring payment auto-pay
 - [x] Budgets per category
-- [x] Push notifications for recurring & lent/borrowed reminders
+- [x] Savings goals
+- [x] Loans with reminders
+- [x] Push notifications for recurring payments and lent/borrowed money
 
 ---
 
@@ -152,7 +149,7 @@ Production builds automatically detect `android/key.properties` and sign with `e
 3. Commit and push your changes
 4. Open a Pull Request
 
-Please run `flutter analyze` before submitting.
+Please run `flutter analyze` before submitting — keeps the diff clean for review.
 
 ---
 

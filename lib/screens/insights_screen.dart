@@ -11,6 +11,8 @@ import '../widgets/shared_widgets.dart';
 import 'package:flutter/foundation.dart';
 import '../database/db_helper.dart';
 import '../services/exchange_rate_service.dart';
+import 'net_worth_screen.dart';
+import '../utils/haptics.dart';
 
 class _ComputePayload {
   final List<AppTransaction> txs;
@@ -660,119 +662,230 @@ class _InsightsScreenState extends State<InsightsScreen> {
           if (app.netWorthSnapshots.isNotEmpty || liveNetWorth != 0) ...[
             const _SectionLabel(label: 'Net Worth'),
             Card(
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: () {
+                  AppHaptics.tap(context, HapticStrength.light);
+                  Navigator.push(context, ExpensyRoute(builder: (_) => const NetWorthScreen()));
+                },
                 child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Current Net Worth',
-                      style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: cs.onSurface.withValues(alpha: 0.5))),
-                  const SizedBox(height: 4),
-                  Text(fmt(liveNetWorth),
-                      style: TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
-                          color: cs.primary)),
-                  const SizedBox(height: 12),
-                  if (app.netWorthSnapshots.isNotEmpty) ...[
-                    Builder(builder: (context) {
-                      final spots = <FlSpot>[];
-                      for (int i = 0; i < app.netWorthSnapshots.length; i++) {
-                        spots.add(FlSpot(i.toDouble(), app.netWorthSnapshots[i].netWorth));
-                      }
-                      // Append live point to show immediate changes
-                      spots.add(FlSpot(app.netWorthSnapshots.length.toDouble(), liveNetWorth));
-
-                      return SizedBox(
-                        height: 80,
-                        child: LineChart(LineChartData(
-                          lineBarsData: [
-                            LineChartBarData(
-                              spots: spots,
-                              isCurved: true,
-                              color: cs.primary,
-                              barWidth: 2,
-                              dotData: const FlDotData(show: false),
-                              belowBarData: BarAreaData(
-                                show: true,
-                                color: cs.primary.withValues(alpha: 0.1),
-                              ),
-                            ),
-                          ],
-                          gridData: const FlGridData(show: false),
-                          borderData: FlBorderData(show: false),
-                          titlesData: const FlTitlesData(show: false),
-                          lineTouchData: const LineTouchData(enabled: false),
-                        )),
-                      );
-                    }),
-                    const SizedBox(height: 12),
-                  ],
-                  Row(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: cs.primaryContainer.withValues(alpha: 0.5),
-                            borderRadius: BorderRadius.circular(12),
+                      Text('Current Net Worth',
+                          style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: cs.onSurface.withValues(alpha: 0.5))),
+                      const SizedBox(height: 4),
+                      Text(fmt(liveNetWorth),
+                          style: TextStyle(
+                              fontSize: 26,
+                              fontWeight: FontWeight.w800,
+                              color: cs.primary)),
+                      const SizedBox(height: 12),
+                      if (app.netWorthSnapshots.isNotEmpty) ...[
+                        Builder(builder: (context) {
+                          final spots = <FlSpot>[];
+                          for (int i = 0; i < app.netWorthSnapshots.length; i++) {
+                            spots.add(FlSpot(i.toDouble(), app.netWorthSnapshots[i].netWorth));
+                          }
+                          // Append live point to show immediate changes
+                          spots.add(FlSpot(app.netWorthSnapshots.length.toDouble(), liveNetWorth));
+
+                          return SizedBox(
+                            height: 80,
+                            child: LineChart(LineChartData(
+                              lineBarsData: [
+                                LineChartBarData(
+                                  spots: spots,
+                                  isCurved: true,
+                                  color: cs.primary,
+                                  barWidth: 2,
+                                  dotData: const FlDotData(show: false),
+                                  belowBarData: BarAreaData(
+                                    show: true,
+                                    color: cs.primary.withValues(alpha: 0.1),
+                                  ),
+                                ),
+                              ],
+                              gridData: const FlGridData(show: false),
+                              borderData: FlBorderData(show: false),
+                              titlesData: const FlTitlesData(show: false),
+                              lineTouchData: const LineTouchData(enabled: false),
+                            )),
+                          );
+                        }),
+                        const SizedBox(height: 12),
+                      ],
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: cs.primaryContainer.withValues(alpha: 0.5),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Accounts & Gold',
+                                        style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w600,
+                                            color: cs.onSurface
+                                                .withValues(alpha: 0.55))),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                        fmt(liveTotalAccounts),
+                                        style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w800,
+                                            color: cs.primary)),
+                                  ]),
+                            ),
                           ),
-                          child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Accounts & Gold',
-                                    style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w600,
-                                        color: cs.onSurface
-                                            .withValues(alpha: 0.55))),
-                                const SizedBox(height: 2),
-                                Text(
-                                    fmt(liveTotalAccounts),
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w800,
-                                        color: cs.primary)),
-                              ]),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: cs.tertiaryContainer.withValues(alpha: 0.5),
-                            borderRadius: BorderRadius.circular(12),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: cs.tertiaryContainer.withValues(alpha: 0.5),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Assets',
+                                        style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w600,
+                                            color: cs.onSurface
+                                                .withValues(alpha: 0.55))),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                        fmt(liveTotalAssets),
+                                        style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w800,
+                                            color: cs.tertiary)),
+                                  ]),
+                            ),
                           ),
-                          child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Assets',
-                                    style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w600,
-                                        color: cs.onSurface
-                                            .withValues(alpha: 0.55))),
-                                const SizedBox(height: 2),
-                                Text(
-                                    fmt(liveTotalAssets),
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w800,
-                                        color: cs.tertiary)),
-                              ]),
-                        ),
+                        ],
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
-            )),
+            ),
+            const SizedBox(height: 12),
+          ],
+
+          // ── Loans ────────────────────────────────────────────────────
+          if (app.loans.isNotEmpty) ...[
+            const _SectionLabel(label: 'Loans'),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Outstanding',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: cs.onSurface.withValues(alpha: 0.5),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                fmt(app.totalOutstandingLoanDebt),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  color: cs.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Monthly Obligation',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: cs.onSurface.withValues(alpha: 0.5),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                fmt(app.totalMonthlyLoanObligation),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  color: cs.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    ...app.loans.where((l) => !l.isSettled).map((l) {
+                      final progress = app.loanProgress(l);
+                      final Color barColor;
+                      if (progress >= 0.8) {
+                        barColor = const Color(0xFF2E7D32); // Green
+                      } else if (progress >= 0.4) barColor = const Color(0xFFE65100); // Orange
+                      else barColor = const Color(0xFFC62828); // Red
+
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(l.name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                                Text(
+                                  '${(progress * 100).toStringAsFixed(0)}%',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 11,
+                                    color: barColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            LinearProgressCard(value: progress, color: barColor),
+                          ],
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ),
+            ),
             const SizedBox(height: 12),
           ],
 

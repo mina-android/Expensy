@@ -1654,4 +1654,172 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get savings_saveGoal => '保存目标';
+
+  @override
+  String get more_loans => '贷款';
+
+  @override
+  String more_loansSub(num count) {
+    return '活跃贷款';
+  }
+
+  @override
+  String get loans_title => '贷款';
+
+  @override
+  String get loans_addLoan => '添加贷款';
+
+  @override
+  String get loans_editLoan => '编辑贷款';
+
+  @override
+  String get loans_loanName => '贷款名称';
+
+  @override
+  String get loans_amount => '金额';
+
+  @override
+  String get loans_startDate => '开始日期';
+
+  @override
+  String get loans_endDate => '结束日期';
+
+  @override
+  String get loans_interestRateOptional => '利率（可选）';
+
+  @override
+  String get loans_account => '关联账户';
+
+  @override
+  String get loans_monthlyPayment => '每月还款';
+
+  @override
+  String get loans_totalPayable => '应还总额';
+
+  @override
+  String get loans_remaining => '剩余';
+
+  @override
+  String get loans_paid => '已还';
+
+  @override
+  String get loans_logPayment => '记录还款';
+
+  @override
+  String get loans_paymentReminder => '还款提醒';
+
+  @override
+  String get loans_reminderDay => '提醒日期';
+
+  @override
+  String get loans_notes => '备注';
+
+  @override
+  String get loans_saveLoan => '保存贷款';
+
+  @override
+  String get loans_deleteLoan => '删除贷款';
+
+  @override
+  String get loans_settled => '已结清';
+
+  @override
+  String loans_durationMonths(num count) {
+    return '个月';
+  }
+
+  @override
+  String get loans_paymentHistory => '还款记录';
+
+  @override
+  String get loans_noPayments => '暂无还款记录';
+
+  @override
+  String get loans_outstandingDebt => '未还债务';
+
+  @override
+  String get loans_monthlyObligation => '每月应还';
+
+  @override
+  String get insights_loans => '贷款';
+
+  @override
+  String get backup_loans => '贷款';
+
+  @override
+  String get backup_loanPayments => '贷款还款';
+
+  @override
+  String get more_yearlyAnalysis => '年度分析';
+
+  @override
+  String get more_yearlyAnalysisSub => '逐月现金流预测';
+
+  @override
+  String get yearly_title => '年度分析';
+
+  @override
+  String get yearly_recurringExp => '定期支出';
+
+  @override
+  String get yearly_recurringInc => '定期收入';
+
+  @override
+  String get yearly_loans => '贷款还款';
+
+  @override
+  String get yearly_borrowed => '借入到期';
+
+  @override
+  String get yearly_lentDue => '借出到期';
+
+  @override
+  String get yearly_inflow => '流入';
+
+  @override
+  String get yearly_outflow => '流出';
+
+  @override
+  String get yearly_netFlow => '净流量';
+
+  @override
+  String get yearly_totalInflow => '总流入';
+
+  @override
+  String get yearly_totalOutflow => '总流出';
+
+  @override
+  String get yearly_netCashFlow => '净现金流';
+
+  @override
+  String get yearly_noData => '暂无预测活动';
+
+  @override
+  String get yearly_noDataSub => '添加定期付款或贷款以查看预测';
+
+  @override
+  String get budget_addBudget => '添加预算';
+
+  @override
+  String get budget_addGoal => '添加储蓄目标';
+
+  @override
+  String get add_transaction_possibleDuplicate => 'Possible duplicate';
+
+  @override
+  String get add_transaction_goBack => 'Go back';
+
+  @override
+  String get add_transaction_saveAnyway => 'Save anyway';
+
+  @override
+  String get loans_confirmDeleteLoan =>
+      'Are you sure you want to delete this loan and all its payments?';
+
+  @override
+  String get loans_deletePayment => 'Delete Payment';
+
+  @override
+  String get loans_confirmDeletePayment =>
+      'Are you sure you want to delete this payment record?';
 }

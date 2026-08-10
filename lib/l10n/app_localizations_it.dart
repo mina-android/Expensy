@@ -1700,4 +1700,174 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get savings_saveGoal => 'Salva obiettivo';
+
+  @override
+  String get more_loans => 'Prestiti';
+
+  @override
+  String more_loansSub(num count) {
+    return 'Prestiti attivi';
+  }
+
+  @override
+  String get loans_title => 'Prestiti';
+
+  @override
+  String get loans_addLoan => 'Aggiungi prestito';
+
+  @override
+  String get loans_editLoan => 'Modifica prestito';
+
+  @override
+  String get loans_loanName => 'Nome prestito';
+
+  @override
+  String get loans_amount => 'Importo';
+
+  @override
+  String get loans_startDate => 'Data inizio';
+
+  @override
+  String get loans_endDate => 'Data fine';
+
+  @override
+  String get loans_interestRateOptional => 'Tasso di interesse (Opzionale)';
+
+  @override
+  String get loans_account => 'Conto collegato';
+
+  @override
+  String get loans_monthlyPayment => 'Pagamento mensile';
+
+  @override
+  String get loans_totalPayable => 'Totale da pagare';
+
+  @override
+  String get loans_remaining => 'Rimanente';
+
+  @override
+  String get loans_paid => 'Pagato';
+
+  @override
+  String get loans_logPayment => 'Registra pagamento';
+
+  @override
+  String get loans_paymentReminder => 'Promemoria pagamento';
+
+  @override
+  String get loans_reminderDay => 'Giorno promemoria';
+
+  @override
+  String get loans_notes => 'Note';
+
+  @override
+  String get loans_saveLoan => 'Salva prestito';
+
+  @override
+  String get loans_deleteLoan => 'Elimina prestito';
+
+  @override
+  String get loans_settled => 'Saldato';
+
+  @override
+  String loans_durationMonths(num count) {
+    return 'Mesi';
+  }
+
+  @override
+  String get loans_paymentHistory => 'Cronologia pagamenti';
+
+  @override
+  String get loans_noPayments => 'Nessun pagamento ancora registrato';
+
+  @override
+  String get loans_outstandingDebt => 'Debito residuo';
+
+  @override
+  String get loans_monthlyObligation => 'Impegno mensile';
+
+  @override
+  String get insights_loans => 'Prestiti';
+
+  @override
+  String get backup_loans => 'Prestiti';
+
+  @override
+  String get backup_loanPayments => 'Pagamenti prestiti';
+
+  @override
+  String get more_yearlyAnalysis => 'Analisi annuale';
+
+  @override
+  String get more_yearlyAnalysisSub =>
+      'Previsione flusso di cassa mese per mese';
+
+  @override
+  String get yearly_title => 'Analisi annuale';
+
+  @override
+  String get yearly_recurringExp => 'Spese ricorrenti';
+
+  @override
+  String get yearly_recurringInc => 'Entrate ricorrenti';
+
+  @override
+  String get yearly_loans => 'Pagamenti prestiti';
+
+  @override
+  String get yearly_borrowed => 'Debiti in scadenza';
+
+  @override
+  String get yearly_lentDue => 'Crediti da incassare';
+
+  @override
+  String get yearly_inflow => 'Entrate';
+
+  @override
+  String get yearly_outflow => 'Uscite';
+
+  @override
+  String get yearly_netFlow => 'Flusso netto';
+
+  @override
+  String get yearly_totalInflow => 'Entrate totali';
+
+  @override
+  String get yearly_totalOutflow => 'Uscite totali';
+
+  @override
+  String get yearly_netCashFlow => 'Flusso di cassa netto';
+
+  @override
+  String get yearly_noData => 'Nessuna attività prevista';
+
+  @override
+  String get yearly_noDataSub =>
+      'Aggiungi pagamenti ricorrenti o prestiti per vedere le previsioni';
+
+  @override
+  String get budget_addBudget => 'Aggiungi budget';
+
+  @override
+  String get budget_addGoal => 'Aggiungi obiettivo di risparmio';
+
+  @override
+  String get add_transaction_possibleDuplicate => 'Possible duplicate';
+
+  @override
+  String get add_transaction_goBack => 'Go back';
+
+  @override
+  String get add_transaction_saveAnyway => 'Save anyway';
+
+  @override
+  String get loans_confirmDeleteLoan =>
+      'Are you sure you want to delete this loan and all its payments?';
+
+  @override
+  String get loans_deletePayment => 'Delete Payment';
+
+  @override
+  String get loans_confirmDeletePayment =>
+      'Are you sure you want to delete this payment record?';
 }

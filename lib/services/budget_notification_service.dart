@@ -15,7 +15,7 @@ class BudgetNotificationService {
   Future<void> initialize() async {
     if (_initialized) return;
     const androidInit =
-        AndroidInitializationSettings('@drawable/ic_notification');
+        AndroidInitializationSettings('ic_notification');
     const initSettings = InitializationSettings(android: androidInit);
     await _plugin.initialize(initSettings);
     _initialized = true;

@@ -3,17 +3,17 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import '../models/models.dart';
 
-class CreditReminderService {
-  static final CreditReminderService _instance = CreditReminderService._();
-  factory CreditReminderService() => _instance;
-  CreditReminderService._();
+class LoanReminderService {
+  static final LoanReminderService _instance = LoanReminderService._();
+  factory LoanReminderService() => _instance;
+  LoanReminderService._();
 
   final _plugin = FlutterLocalNotificationsPlugin();
   bool _initialized = false;
 
-  static const _channelId = 'expensy_credit';
-  static const _channelName = 'Credit Card Reminders';
-  static const _channelDesc = 'Reminders to pay credit card bills';
+  static const _channelId = 'expensy_loans';
+  static const _channelName = 'Loan Payment Reminders';
+  static const _channelDesc = 'Reminders when a loan installment is due';
 
   Future<void> initialize() async {
     if (_initialized) return;
@@ -45,20 +45,12 @@ class CreditReminderService {
     return (await android?.areNotificationsEnabled()) ?? false;
   }
 
-  int _notifId(String accountId) {
+  int _notifId(String loanId) {
     var hash = 0;
-    for (var i = 0; i < accountId.length; i++) {
-      hash = 31 * hash + accountId.codeUnitAt(i);
+    for (var i = 0; i < loanId.length; i++) {
+      hash = 31 * hash + loanId.codeUnitAt(i);
     }
-    return (hash & 0x7FFFFFFF) + 800000;
-  }
-
-  int _advanceId(String accountId) {
-    var hash = 0;
-    for (var i = 0; i < accountId.length; i++) {
-      hash = 31 * hash + accountId.codeUnitAt(i);
-    }
-    return (hash & 0x7FFFFFFF) + 900000;
+    return (hash & 0x7FFFFFFF) + 1000000; // offset distinct from credit, recurring, lended
   }
 
   tz.TZDateTime? _nextReminderDate(
@@ -111,70 +103,42 @@ class CreditReminderService {
     );
   }
 
-  Future<void> scheduleReminder(Account acc) async {
-    if (acc.type != 'credit' ||
-        !acc.creditReminderEnabled ||
-        acc.dueDay == null) {
-      return;
-    }
+  Future<void> scheduleReminder(Loan l) async {
+    if (!l.reminderEnabled || l.isSettled) return;
     await _ensureInit();
     if (!(await hasPermission())) return;
 
-    final parts = acc.creditReminderTime.split(':');
+    final parts = l.reminderTime.split(':');
     final hour = int.tryParse(parts[0]) ?? 9;
     final minute = parts.length > 1 ? (int.tryParse(parts[1]) ?? 0) : 0;
 
-    // 1. On due date reminder
-    final tzDate = _nextReminderDate(acc.dueDay!, 0, hour, minute);
+    final tzDate = _nextReminderDate(l.reminderDay, 0, hour, minute);
     if (tzDate != null) {
-      final body = 'Your ${acc.name} bill is due today.';
       await _plugin.zonedSchedule(
-        _notifId(acc.id),
-        '💳 Bill Due Today',
-        body,
+        _notifId(l.id),
+        '🏦 Loan Payment Due',
+        '${l.name} installment is due today.',
         tzDate,
         _buildDetails(),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
-        payload: acc.id,
+        payload: l.id,
       );
     }
-
-    // 2. Early reminder (2 days before)
-    if (acc.creditEarlyReminderEnabled) {
-      final advTzDate = _nextReminderDate(acc.dueDay!, 2, hour, minute);
-      if (advTzDate != null) {
-        final body = 'Your ${acc.name} bill is due in 2 days.';
-        await _plugin.zonedSchedule(
-          _advanceId(acc.id),
-          '💳 Bill Due Soon',
-          body,
-          advTzDate,
-          _buildDetails(),
-          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          uiLocalNotificationDateInterpretation:
-              UILocalNotificationDateInterpretation.absoluteTime,
-          payload: acc.id,
-        );
-      }
-    }
   }
 
-  Future<void> cancelReminder(String accountId) async {
+  Future<void> cancelReminder(String loanId) async {
     await _ensureInit();
-    await _plugin.cancel(_notifId(accountId));
-    await _plugin.cancel(_advanceId(accountId));
+    await _plugin.cancel(_notifId(loanId));
   }
 
-  Future<void> rescheduleAll(List<Account> accounts) async {
+  Future<void> rescheduleAllLoans(List<Loan> loans, String mainCurrency) async {
     await _ensureInit();
-    for (final acc in accounts) {
-      if (acc.type == 'credit') {
-        await cancelReminder(acc.id);
-        if (acc.creditReminderEnabled) {
-          await scheduleReminder(acc);
-        }
+    for (final l in loans) {
+      await cancelReminder(l.id);
+      if (l.reminderEnabled && !l.isSettled) {
+        await scheduleReminder(l);
       }
     }
   }

@@ -95,7 +95,7 @@ class AccountsScreen extends StatelessWidget {
                   if (hasMultiCurrency) _RatesBanner(app: app),
                   Expanded(
                     child: ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(14, 14, 14, 100),
+                      padding: const EdgeInsets.fromLTRB(14, 14, 14, 140),
                       itemCount: regularAccounts.length,
                       itemBuilder: (_, i) =>
                           _AccountCard(acc: regularAccounts[i]),
@@ -120,7 +120,7 @@ class AccountsScreen extends StatelessWidget {
                   if (hasMultiCurrency) _RatesBanner(app: app),
                   Expanded(
                     child: ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(14, 14, 14, 100),
+                      padding: const EdgeInsets.fromLTRB(14, 14, 14, 140),
                       itemCount: cardAccounts.length,
                       itemBuilder: (_, i) =>
                           _RealWorldCard(acc: cardAccounts[i]),
@@ -131,15 +131,24 @@ class AccountsScreen extends StatelessWidget {
             }),
           ],
         ),
-        floatingActionButton: Builder(
-          builder: (context) => FloatingActionButton(
-            heroTag: null,
-            onPressed: () {
-              AppHaptics.tap(context, HapticStrength.light);
-              final tabIndex = DefaultTabController.of(context).index;
-              openSheet(context, isCard: tabIndex == 1);
-            },
-            child: const Icon(Icons.add),
+        floatingActionButton: Padding(
+          padding: const EdgeInsets.only(bottom: 76),
+          child: ExpandableFab(
+            label: l10n.home_add,
+            items: [
+              ExpandableFabItem(
+                label: 'Add Account',
+                icon: Icons.account_balance_wallet_rounded,
+                color: const Color(0xFF2E7D32),
+                onTap: () => openSheet(context, isCard: false),
+              ),
+              ExpandableFabItem(
+                label: 'Add Card',
+                icon: Icons.credit_card_rounded,
+                color: const Color(0xFF2E7D32),
+                onTap: () => openSheet(context, isCard: true),
+              ),
+            ],
           ),
         ),
       ),
@@ -359,10 +368,9 @@ class _AccountCard extends StatelessWidget {
                   onPressed: () {
                     final success = ap.toggleWidgetPin(acc.id);
                     if (!success && context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content:
-                                Text('You cannot pin more than 3 accounts')),
+                      showAppSnackbar(
+                        context,
+                        'You cannot pin more than 3 accounts',
                       );
                     }
                   },
@@ -455,7 +463,7 @@ class _AccountCard extends StatelessWidget {
       _Stat(
         label: l10n.accounts_karat,
         value: '${karat}k',
-        subValue: l10n.accounts_pure((karat / 24 * 100).toStringAsFixed(1)),
+        subValue: l10n.accounts_pure((karat / 24 * 140).toStringAsFixed(1)),
         color: const Color(0xFFB8860B),
       ),
       _Divider(),
@@ -718,12 +726,7 @@ class _AccountSheetState extends State<_AccountSheet> {
       );
       if (computedBalance == null) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.accounts_goldPriceNotYetLoade),
-              duration: const Duration(seconds: 3),
-            ),
-          );
+          showAppSnackbar(context, l10n.accounts_goldPriceNotYetLoade);
         }
         return;
       }
@@ -905,7 +908,7 @@ class _AccountSheetState extends State<_AccountSheet> {
                     }
                   }),
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 100),
+                    duration: const Duration(milliseconds: 140),
                     padding:
                         const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
                     decoration: BoxDecoration(
@@ -983,7 +986,7 @@ class _AccountSheetState extends State<_AccountSheet> {
                 return GestureDetector(
                   onTap: () => setState(() => _goldKarat = k),
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 100),
+                    duration: const Duration(milliseconds: 140),
                     padding:
                         const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
                     decoration: BoxDecoration(
@@ -1005,7 +1008,7 @@ class _AccountSheetState extends State<_AccountSheet> {
                               color: sel
                                   ? Colors.white
                                   : const Color(0xFFB8860B))),
-                      Text('${(k / 24 * 100).toStringAsFixed(0)}%',
+                      Text('${(k / 24 * 140).toStringAsFixed(0)}%',
                           style: TextStyle(
                               fontSize: 9,
                               color: sel
@@ -1163,7 +1166,7 @@ class _AccountSheetState extends State<_AccountSheet> {
                   GestureDetector(
                     onTap: () => setState(() => _linkedAccountId = null),
                     child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 100),
+                      duration: const Duration(milliseconds: 140),
                       margin: const EdgeInsets.only(right: 10),
                       padding: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 14),
@@ -1187,7 +1190,7 @@ class _AccountSheetState extends State<_AccountSheet> {
                     return GestureDetector(
                       onTap: () => setState(() => _linkedAccountId = a.id),
                       child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 100),
+                        duration: const Duration(milliseconds: 140),
                         margin: const EdgeInsets.only(right: 10),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 20, vertical: 14),
@@ -1211,122 +1214,13 @@ class _AccountSheetState extends State<_AccountSheet> {
 
           if (isCredit) ...[
             const SizedBox(height: 16),
-            // ── Reminder Logic Replicated from recurring_screen ──
-            Container(
-              decoration: BoxDecoration(
-                color: _creditReminderEnabled
-                    ? cs.primaryContainer.withValues(alpha: 0.2)
-                    : null,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: _creditReminderEnabled
-                      ? cs.primary.withValues(alpha: 0.3)
-                      : Colors.transparent,
-                ),
-              ),
-              child: Column(
-                children: [
-                  SwitchListTile.adaptive(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                    secondary: Icon(
-                      _creditReminderEnabled
-                          ? Icons.notifications_active_rounded
-                          : Icons.notifications_none_rounded,
-                      color: _creditReminderEnabled ? cs.primary : null,
-                    ),
-                    title: Text('Payment Reminder',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: _creditReminderEnabled ? cs.primary : null)),
-                    subtitle: Text(
-                      _creditReminderEnabled
-                          ? 'You\'ll be notified on the due date'
-                          : 'Get notified when payment is due',
-                      style: TextStyle(
-                          fontSize: 12,
-                          color: cs.onSurface.withValues(alpha: 0.5)),
-                    ),
-                    value: _creditReminderEnabled,
-                    onChanged: (v) =>
-                        setState(() => _creditReminderEnabled = v),
-                  ),
-                  if (_creditReminderEnabled) ...[
-                    const SizedBox(height: 4),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: InkWell(
-                        onTap: _pickTime,
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 12),
-                          decoration: BoxDecoration(
-                            color: cs.primaryContainer.withValues(alpha: 0.5),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                                color: cs.primary.withValues(alpha: 0.35)),
-                          ),
-                          child: Row(children: [
-                            Icon(Icons.access_time_rounded,
-                                size: 20, color: cs.primary),
-                            const SizedBox(width: 12),
-                            Expanded(
-                                child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                  Text('Remind me at',
-                                      style: TextStyle(
-                                          fontSize: 11,
-                                          color: cs.onSurface
-                                              .withValues(alpha: 0.55))),
-                                  Text(_creditReminderTime.format(context),
-                                      style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w700,
-                                          color: cs.primary)),
-                                ])),
-                            Icon(Icons.chevron_right_rounded,
-                                color: cs.primary),
-                          ]),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    SwitchListTile.adaptive(
-                      contentPadding:
-                          const EdgeInsets.only(left: 12, right: 12),
-                      secondary: Icon(
-                        _creditEarlyReminderEnabled
-                            ? Icons.notifications_active_outlined
-                            : Icons.notifications_outlined,
-                        color:
-                            _creditEarlyReminderEnabled ? cs.secondary : null,
-                        size: 22,
-                      ),
-                      title: Text('Remind 2 days before',
-                          style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: _creditEarlyReminderEnabled
-                                  ? cs.secondary
-                                  : null)),
-                      subtitle: Text(
-                        _creditEarlyReminderEnabled
-                            ? 'Extra heads-up 2 days early at the same time'
-                            : 'Also get notified 2 days before the due date',
-                        style: TextStyle(
-                            fontSize: 11,
-                            color: cs.onSurface.withValues(alpha: 0.5)),
-                      ),
-                      value: _creditEarlyReminderEnabled,
-                      onChanged: (v) =>
-                          setState(() => _creditEarlyReminderEnabled = v),
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                ],
-              ),
+            _CreditReminderSection(
+              enabled: _creditReminderEnabled,
+              earlyEnabled: _creditEarlyReminderEnabled,
+              time: _creditReminderTime,
+              onEnabledChanged: (v) => setState(() => _creditReminderEnabled = v),
+              onEarlyEnabledChanged: (v) => setState(() => _creditEarlyReminderEnabled = v),
+              onPickTime: _pickTime,
             ),
           ],
 
@@ -1578,12 +1472,7 @@ class _CardSheetState extends State<_CardSheet> {
       );
       if (computedBalance == null) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.accounts_goldPriceNotYetLoade),
-              duration: const Duration(seconds: 3),
-            ),
-          );
+          showAppSnackbar(context, l10n.accounts_goldPriceNotYetLoade);
         }
         return;
       }
@@ -1763,7 +1652,7 @@ class _CardSheetState extends State<_CardSheet> {
                     }
                   }),
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 100),
+                    duration: const Duration(milliseconds: 140),
                     padding:
                         const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
                     decoration: BoxDecoration(
@@ -1841,7 +1730,7 @@ class _CardSheetState extends State<_CardSheet> {
                 return GestureDetector(
                   onTap: () => setState(() => _goldKarat = k),
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 100),
+                    duration: const Duration(milliseconds: 140),
                     padding:
                         const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
                     decoration: BoxDecoration(
@@ -1863,7 +1752,7 @@ class _CardSheetState extends State<_CardSheet> {
                               color: sel
                                   ? Colors.white
                                   : const Color(0xFFB8860B))),
-                      Text('${(k / 24 * 100).toStringAsFixed(0)}%',
+                      Text('${(k / 24 * 140).toStringAsFixed(0)}%',
                           style: TextStyle(
                               fontSize: 9,
                               color: sel
@@ -2021,7 +1910,7 @@ class _CardSheetState extends State<_CardSheet> {
                   GestureDetector(
                     onTap: () => setState(() => _linkedAccountId = null),
                     child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 100),
+                      duration: const Duration(milliseconds: 140),
                       margin: const EdgeInsets.only(right: 10),
                       padding: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 14),
@@ -2045,7 +1934,7 @@ class _CardSheetState extends State<_CardSheet> {
                     return GestureDetector(
                       onTap: () => setState(() => _linkedAccountId = a.id),
                       child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 100),
+                        duration: const Duration(milliseconds: 140),
                         margin: const EdgeInsets.only(right: 10),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 20, vertical: 14),
@@ -2069,122 +1958,13 @@ class _CardSheetState extends State<_CardSheet> {
 
           if (isCredit) ...[
             const SizedBox(height: 8),
-            // ── Reminder Logic Replicated from recurring_screen ──
-            Container(
-              decoration: BoxDecoration(
-                color: _creditReminderEnabled
-                    ? cs.primaryContainer.withValues(alpha: 0.2)
-                    : null,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: _creditReminderEnabled
-                      ? cs.primary.withValues(alpha: 0.3)
-                      : Colors.transparent,
-                ),
-              ),
-              child: Column(
-                children: [
-                  SwitchListTile.adaptive(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                    secondary: Icon(
-                      _creditReminderEnabled
-                          ? Icons.notifications_active_rounded
-                          : Icons.notifications_none_rounded,
-                      color: _creditReminderEnabled ? cs.primary : null,
-                    ),
-                    title: Text('Payment Reminder',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: _creditReminderEnabled ? cs.primary : null)),
-                    subtitle: Text(
-                      _creditReminderEnabled
-                          ? 'You\'ll be notified on the due date'
-                          : 'Get notified when payment is due',
-                      style: TextStyle(
-                          fontSize: 12,
-                          color: cs.onSurface.withValues(alpha: 0.5)),
-                    ),
-                    value: _creditReminderEnabled,
-                    onChanged: (v) =>
-                        setState(() => _creditReminderEnabled = v),
-                  ),
-                  if (_creditReminderEnabled) ...[
-                    const SizedBox(height: 4),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: InkWell(
-                        onTap: _pickTime,
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 12),
-                          decoration: BoxDecoration(
-                            color: cs.primaryContainer.withValues(alpha: 0.5),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                                color: cs.primary.withValues(alpha: 0.35)),
-                          ),
-                          child: Row(children: [
-                            Icon(Icons.access_time_rounded,
-                                size: 20, color: cs.primary),
-                            const SizedBox(width: 12),
-                            Expanded(
-                                child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                  Text('Remind me at',
-                                      style: TextStyle(
-                                          fontSize: 11,
-                                          color: cs.onSurface
-                                              .withValues(alpha: 0.55))),
-                                  Text(_creditReminderTime.format(context),
-                                      style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w700,
-                                          color: cs.primary)),
-                                ])),
-                            Icon(Icons.chevron_right_rounded,
-                                color: cs.primary),
-                          ]),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    SwitchListTile.adaptive(
-                      contentPadding:
-                          const EdgeInsets.only(left: 12, right: 12),
-                      secondary: Icon(
-                        _creditEarlyReminderEnabled
-                            ? Icons.notifications_active_outlined
-                            : Icons.notifications_outlined,
-                        color:
-                            _creditEarlyReminderEnabled ? cs.secondary : null,
-                        size: 22,
-                      ),
-                      title: Text('Remind 2 days before',
-                          style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: _creditEarlyReminderEnabled
-                                  ? cs.secondary
-                                  : null)),
-                      subtitle: Text(
-                        _creditEarlyReminderEnabled
-                            ? 'Extra heads-up 2 days early at the same time'
-                            : 'Also get notified 2 days before the due date',
-                        style: TextStyle(
-                            fontSize: 11,
-                            color: cs.onSurface.withValues(alpha: 0.5)),
-                      ),
-                      value: _creditEarlyReminderEnabled,
-                      onChanged: (v) =>
-                          setState(() => _creditEarlyReminderEnabled = v),
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                ],
-              ),
+            _CreditReminderSection(
+              enabled: _creditReminderEnabled,
+              earlyEnabled: _creditEarlyReminderEnabled,
+              time: _creditReminderTime,
+              onEnabledChanged: (v) => setState(() => _creditReminderEnabled = v),
+              onEarlyEnabledChanged: (v) => setState(() => _creditEarlyReminderEnabled = v),
+              onPickTime: _pickTime,
             ),
           ],
 
@@ -2564,7 +2344,7 @@ class _GoldPreviewCard extends StatelessWidget {
             _InfoRow(
               label: 'Weight Ã— purity',
               value:
-                  '${grams!.toStringAsFixed(2)} g Ã— ${(karat / 24 * 100).toStringAsFixed(1)}%',
+                  '${grams!.toStringAsFixed(2)} g Ã— ${(karat / 24 * 140).toStringAsFixed(1)}%',
               color: cs.onSurface.withValues(alpha: 0.6),
             ),
           ],
@@ -2640,5 +2420,124 @@ class _GoldRatesUnavailableBanner extends StatelessWidget {
   }
 }
 
+class _CreditReminderSection extends StatelessWidget {
+  final bool enabled;
+  final bool earlyEnabled;
+  final TimeOfDay time;
+  final ValueChanged<bool> onEnabledChanged;
+  final ValueChanged<bool> onEarlyEnabledChanged;
+  final VoidCallback onPickTime;
+
+  const _CreditReminderSection({
+    required this.enabled,
+    required this.earlyEnabled,
+    required this.time,
+    required this.onEnabledChanged,
+    required this.onEarlyEnabledChanged,
+    required this.onPickTime,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      decoration: BoxDecoration(
+        color: enabled ? cs.primaryContainer.withValues(alpha: 0.2) : null,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: enabled ? cs.primary.withValues(alpha: 0.3) : Colors.transparent,
+        ),
+      ),
+      child: Column(
+        children: [
+          SwitchListTile.adaptive(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+            secondary: Icon(
+              enabled ? Icons.notifications_active_rounded : Icons.notifications_none_rounded,
+              color: enabled ? cs.primary : null,
+            ),
+            title: Text('Payment Reminder',
+                style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: enabled ? cs.primary : null)),
+            subtitle: Text(
+              enabled
+                  ? 'You\'ll be notified on the due date'
+                  : 'Get notified when payment is due',
+              style: TextStyle(
+                  fontSize: 12,
+                  color: cs.onSurface.withValues(alpha: 0.5)),
+            ),
+            value: enabled,
+            onChanged: onEnabledChanged,
+          ),
+          if (enabled) ...[
+            const SizedBox(height: 4),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: InkWell(
+                onTap: onPickTime,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: cs.primaryContainer.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: cs.primary.withValues(alpha: 0.35)),
+                  ),
+                  child: Row(children: [
+                    Icon(Icons.access_time_rounded, size: 20, color: cs.primary),
+                    const SizedBox(width: 12),
+                    Expanded(
+                        child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                          Text('Remind me at',
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  color: cs.onSurface.withValues(alpha: 0.55))),
+                          Text(time.format(context),
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: cs.primary)),
+                        ])),
+                    Icon(Icons.chevron_right_rounded, color: cs.primary),
+                  ]),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            SwitchListTile.adaptive(
+              contentPadding: const EdgeInsets.only(left: 12, right: 12),
+              secondary: Icon(
+                earlyEnabled
+                    ? Icons.notifications_active_outlined
+                    : Icons.notifications_outlined,
+                color: earlyEnabled ? cs.secondary : null,
+                size: 22,
+              ),
+              title: Text('Remind 2 days before',
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: earlyEnabled ? cs.secondary : null)),
+              subtitle: Text('Get an advance heads-up 2 days before due date',
+                  style: TextStyle(
+                      fontSize: 11,
+                      color: cs.onSurface.withValues(alpha: 0.45))),
+              value: earlyEnabled,
+              onChanged: onEarlyEnabledChanged,
+            ),
+            const SizedBox(height: 8),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 // â”€â”€ Gold value live preview card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+
 

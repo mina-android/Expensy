@@ -10,6 +10,7 @@ import '../widgets/shared_widgets.dart';
 import 'add_transaction_screen.dart';
 import 'lended_person_screen.dart';
 import 'savings_goal_detail_screen.dart';
+import 'loan_detail_screen.dart';
 import '../utils/snackbar.dart';
 
 class TransactionsScreen extends StatefulWidget {
@@ -29,11 +30,18 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   double? _maxAmount;
   String? _advCategoryFilter;
 
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
     final cs  = Theme.of(context).colorScheme;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (context.mounted) {
+        context.read<AppProvider>().setTransactionSelectionMode(_selectedIds.isNotEmpty);
+      }
+    });
 
     // ── Build item list ─────────────────────────────────────────────────
     final List<_TxItem> allItems = [];
@@ -51,7 +59,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           final cat = app.categoryById(t.categoryId)?.name.toLowerCase() ?? '';
           final acc = app.accountById(t.accountId)?.name.toLowerCase() ?? '';
           if (!t.description.toLowerCase().contains(q) &&
-              !cat.contains(q) && !acc.contains(q)) continue;
+              !cat.contains(q) && !acc.contains(q)) {
+            continue;
+          }
         }
         allItems.add(_TxItem.fromTx(t));
       }
@@ -75,7 +85,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           if (!l.notes.toLowerCase().contains(q) &&
               !person.contains(q) &&
               !acc.contains(q) &&
-              !typeStr.contains(q)) continue;
+              !typeStr.contains(q)) {
+            continue;
+          }
         }
         allItems.add(_TxItem.fromLended(l));
       }
@@ -93,10 +105,29 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         if (_search.isNotEmpty) {
           final q = _search.toLowerCase();
           final goal = app.savingsGoals.where((g) => g.id == c.goalId).firstOrNull?.name.toLowerCase() ?? '';
-          final note = (c.note ?? '').toLowerCase();
+          final note = c.note.toLowerCase();
           if (!goal.contains(q) && !note.contains(q)) continue;
         }
         allItems.add(_TxItem.fromContribution(c));
+      }
+    }
+
+    // 4. Add loan payments
+    if (_filter == 'all' || _filter == 'expense') {
+      for (final p in app.loanPayments) {
+        if (_accFilter != null && p.accountId != _accFilter) continue;
+        if (_minAmount != null && p.amount < _minAmount!) continue;
+        if (_maxAmount != null && p.amount > _maxAmount!) continue;
+        if (_advCategoryFilter != null) continue;
+        if (_search.isNotEmpty) {
+          final q = _search.toLowerCase();
+          final loan = app.loans.where((l) => l.id == p.loanId).firstOrNull?.name.toLowerCase() ?? '';
+          final acc = p.accountId != null
+              ? (app.accountById(p.accountId!)?.name.toLowerCase() ?? '')
+              : '';
+          if (!loan.contains(q) && !acc.contains(q) && !p.notes.toLowerCase().contains(q)) continue;
+        }
+        allItems.add(_TxItem.fromLoanPayment(p));
       }
     }
 
@@ -202,7 +233,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 ('income',   l10n.transactions_income,           0xFF2E7D32),
                 ('expense',  l10n.transactions_expenses,         0xFFC62828),
                 ('lent',     l10n.transactions_lent,             0xFF1565C0),
-                ('borrowed', l10n.transactions_borrowed,         0xFFE65100),
+                ('borrowed', l10n.transactions_borrowed,         0xFFE65140),
               ])
                 Padding(
                   padding: const EdgeInsets.only(right: 6),
@@ -238,7 +269,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                   subMessage: l10n.transactions_tapPlusToAddOne,
                 )
               : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(14, 4, 14, 100),
+                  padding: const EdgeInsets.fromLTRB(14, 4, 14, 140),
                   itemCount: keys.length,
                   itemBuilder: (_, i) {
                     final key   = keys[i];
@@ -258,12 +289,13 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(2, 10, 0, 4),
+                          padding: EdgeInsets.fromLTRB(2, i == 0 ? 6 : 12, 0, 7),
                           child: Text(label, style: TextStyle(
                               fontSize: 12, fontWeight: FontWeight.w700,
                               color: cs.primary)),
                         ),
                         ListView.builder(
+                            padding: EdgeInsets.zero,
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: items.length,
@@ -279,8 +311,11 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                   onTap: () {
                                     if (_selectedIds.isNotEmpty) {
                                       setState(() {
-                                        if (isSelected) _selectedIds.remove(item.tx!.id);
-                                        else _selectedIds.add(item.tx!.id);
+                                        if (isSelected) {
+                                          _selectedIds.remove(item.tx!.id);
+                                        } else {
+                                          _selectedIds.add(item.tx!.id);
+                                        }
                                       });
                                     } else {
                                       Navigator.push(context, ExpensySlideUpRoute(
@@ -289,8 +324,11 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                   },
                                   onLongPress: () {
                                     setState(() {
-                                      if (isSelected) _selectedIds.remove(item.tx!.id);
-                                      else _selectedIds.add(item.tx!.id);
+                                      if (isSelected) {
+                                        _selectedIds.remove(item.tx!.id);
+                                      } else {
+                                        _selectedIds.add(item.tx!.id);
+                                      }
                                     });
                                   }
                                 );
@@ -304,8 +342,11 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                   onTap: () {
                                     if (_selectedIds.isNotEmpty) {
                                       setState(() {
-                                        if (isSelected) _selectedIds.remove(item.lended!.id);
-                                        else _selectedIds.add(item.lended!.id);
+                                        if (isSelected) {
+                                          _selectedIds.remove(item.lended!.id);
+                                        } else {
+                                          _selectedIds.add(item.lended!.id);
+                                        }
                                       });
                                     } else {
                                       final person = app.personById(item.lended!.personId);
@@ -319,13 +360,49 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                   },
                                   onLongPress: () {
                                     setState(() {
-                                      if (isSelected) _selectedIds.remove(item.lended!.id);
-                                      else _selectedIds.add(item.lended!.id);
+                                      if (isSelected) {
+                                        _selectedIds.remove(item.lended!.id);
+                                      } else {
+                                        _selectedIds.add(item.lended!.id);
+                                      }
                                     });
                                   }
                                 );
                               } else if (item.isContribution) {
                                 return _ContributionTile(c: item.contribution!, app: app);
+                              } else if (item.isLoanPayment) {
+                                final isSelected = _selectedIds.contains(item.loanPayment!.id);
+                                return _LoanPaymentTile(
+                                  p: item.loanPayment!,
+                                  app: app,
+                                  isSelected: isSelected,
+                                  selectionMode: _selectedIds.isNotEmpty,
+                                  onTap: () {
+                                    if (_selectedIds.isNotEmpty) {
+                                      setState(() {
+                                        if (isSelected) {
+                                          _selectedIds.remove(item.loanPayment!.id);
+                                        } else {
+                                          _selectedIds.add(item.loanPayment!.id);
+                                        }
+                                      });
+                                    } else {
+                                      final loan = app.loans.where((l) => l.id == item.loanPayment!.loanId).firstOrNull;
+                                      if (loan != null) {
+                                        Navigator.push(context, ExpensyRoute(builder: (_) => LoanDetailScreen(loan: loan)));
+                                      }
+                                    }
+                                  },
+                                  onLongPress: () {
+                                    setState(() {
+                                      if (isSelected) {
+                                        _selectedIds.remove(item.loanPayment!.id);
+                                      } else {
+                                        _selectedIds.add(item.loanPayment!.id);
+                                      }
+                                    });
+                                  },
+                                );
                               }
                               return const SizedBox.shrink();
                             }),
@@ -335,11 +412,21 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 ),
         ),
       ]),
-      floatingActionButton: FloatingActionButton(
-        heroTag: null,
-        onPressed: () => Navigator.push(context,
-            ExpensySlideUpRoute(builder: (_) => const AddTransactionScreen())),
-        child: const Icon(Icons.add),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 76),
+        child: ExpandableFab(
+          label: l10n.home_add,
+          onIncome: () => Navigator.push(
+              context,
+              ExpensySlideUpRoute(
+                  builder: (_) =>
+                      const AddTransactionScreen(initialType: 'income'))),
+          onExpense: () => Navigator.push(
+              context,
+              ExpensySlideUpRoute(
+                  builder: (_) =>
+                      const AddTransactionScreen(initialType: 'expense'))),
+        ),
       ),
       ),
     );
@@ -355,6 +442,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         undoActions.add(await app.deleteTransactionWithUndo(id));
       } else if (app.lended.any((l) => l.id == id)) {
         undoActions.add(await app.deleteLendedWithUndo(id));
+      } else if (app.loanPayments.any((p) => p.id == id)) {
+        undoActions.add(await app.deleteLoanPaymentWithUndo(id));
       }
     }
 
@@ -383,7 +472,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Change Category', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const Text('Change Category', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             Flexible(
               child: SingleChildScrollView(
@@ -471,7 +560,7 @@ class _TxTile extends StatelessWidget {
     final displayCurrency = t.currency.isNotEmpty ? t.currency : accCurrency;
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 6),
+      margin: const EdgeInsets.only(bottom: 4),
       color: isSelected ? cs.primaryContainer : null,
       child: ListTile(
         contentPadding:
@@ -586,11 +675,11 @@ class _LendedTile extends StatelessWidget {
     final displayCurrency = accCurrency;
 
     final personColor = Color(
-        person?.colorValue ?? (isLent ? 0xFF1565C0 : 0xFFE65100));
-    final amountColor = isLent ? const Color(0xFF1565C0) : const Color(0xFFE65100);
+        person?.colorValue ?? (isLent ? 0xFF1565C0 : 0xFFE65140));
+    final amountColor = isLent ? const Color(0xFF1565C0) : const Color(0xFFE65140);
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 6),
+      margin: const EdgeInsets.only(bottom: 4),
       color: isSelected ? cs.primaryContainer : null,
       child: ListTile(
         contentPadding:
@@ -675,15 +764,70 @@ class _TxItem {
   final AppTransaction? tx;
   final LendedMoney? lended;
   final SavingsContribution? contribution;
+  final LoanPayment? loanPayment;
   final DateTime date;
 
-  _TxItem.fromTx(this.tx) : lended = null, contribution = null, date = tx!.date;
-  _TxItem.fromLended(this.lended) : tx = null, contribution = null, date = lended!.date;
-  _TxItem.fromContribution(this.contribution) : tx = null, lended = null, date = contribution!.date;
+  _TxItem.fromTx(this.tx) : lended = null, contribution = null, loanPayment = null, date = tx!.date;
+  _TxItem.fromLended(this.lended) : tx = null, contribution = null, loanPayment = null, date = lended!.date;
+  _TxItem.fromContribution(this.contribution) : tx = null, lended = null, loanPayment = null, date = contribution!.date;
+  _TxItem.fromLoanPayment(this.loanPayment) : tx = null, lended = null, contribution = null, date = loanPayment!.date;
 
   bool get isTx => tx != null;
   bool get isLended => lended != null;
   bool get isContribution => contribution != null;
+  bool get isLoanPayment => loanPayment != null;
+}
+
+class _LoanPaymentTile extends StatelessWidget {
+  final LoanPayment p;
+  final AppProvider app;
+  final bool isSelected;
+  final bool selectionMode;
+  final VoidCallback onTap;
+  final VoidCallback onLongPress;
+
+  const _LoanPaymentTile({
+    required this.p,
+    required this.app,
+    required this.isSelected,
+    required this.selectionMode,
+    required this.onTap,
+    required this.onLongPress,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final loan = app.loans.where((l) => l.id == p.loanId).firstOrNull;
+    final acc = p.accountId != null ? app.accountById(p.accountId!) : null;
+    final displayCurrency = acc?.currency ?? p.currency;
+    const loanColor = Color(0xFF4A148C);
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 4),
+      color: isSelected ? Theme.of(context).colorScheme.primaryContainer : null,
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        leading: selectionMode
+            ? Checkbox(value: isSelected, onChanged: (_) => onTap())
+            : Container(
+                width: 40, height: 40,
+                decoration: BoxDecoration(
+                    color: loanColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12)),
+                child: const Icon(Icons.account_balance_outlined, color: loanColor, size: 22),
+              ),
+        title: Text(loan?.name ?? 'Loan', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+        subtitle: Text(
+          [if (acc != null) acc.name, 'Loan Payment'].join('  ·  '),
+          style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
+        ),
+        trailing: Text('-${formatAmount(p.amount, displayCurrency)}',
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: loanColor)),
+        onTap: onTap,
+        onLongPress: onLongPress,
+      ),
+    );
+  }
 }
 
 // ── Contribution Tile ─────────────────────────────────────────────────────────
@@ -704,7 +848,7 @@ class _ContributionTile extends StatelessWidget {
     final amountColor = isContrib ? cs.error : const Color(0xFF2E7D32); // Contrib is money OUT of account
     
     return Card(
-      margin: const EdgeInsets.only(bottom: 6),
+      margin: const EdgeInsets.only(bottom: 4),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         leading: Container(
@@ -728,7 +872,7 @@ class _ContributionTile extends StatelessWidget {
           [
             if (goal != null) goal.name,
             if (acc != null) acc.name,
-            if (c.note != null && c.note!.isNotEmpty) c.note!,
+            if (c.note.isNotEmpty) c.note,
           ].join('  ·  '),
           style: TextStyle(
             fontSize: 11,
@@ -747,7 +891,7 @@ class _ContributionTile extends StatelessWidget {
           if (goal != null) {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => SavingsGoalDetailScreen(goal: goal)),
+              ExpensyRoute(builder: (_) => SavingsGoalDetailScreen(goal: goal)),
             );
           }
         },
@@ -877,3 +1021,5 @@ class _AdvancedFilterSheetState extends State<_AdvancedFilterSheet> {
     );
   }
 }
+
+

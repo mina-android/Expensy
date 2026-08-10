@@ -56,7 +56,7 @@ class AssetsScreen extends StatelessWidget {
                   subMessage: l10n.assets_noAssetsYetSub,
                 )
               : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(14, 14, 14, 100),
+                  padding: const EdgeInsets.fromLTRB(14, 14, 14, 140),
                   itemCount: app.assets.length,
                   itemBuilder: (_, i) => _AssetCard(
                     asset: app.assets[i],
@@ -80,7 +80,6 @@ class AssetsScreen extends StatelessWidget {
     showModalBottomSheet(
       context: ctx,
       isScrollControlled: true,
-      useSafeArea: true,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => _AssetSheet(existing: existing),
@@ -384,3 +383,4 @@ class _AssetSheetState extends State<_AssetSheet> {
     );
   }
 }
+

@@ -3097,6 +3097,330 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save Goal'**
   String get savings_saveGoal;
+
+  /// No description provided for @more_loans.
+  ///
+  /// In en, this message translates to:
+  /// **'Loans'**
+  String get more_loans;
+
+  /// No description provided for @more_loansSub.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 active loan} other{{count} active loans}}'**
+  String more_loansSub(num count);
+
+  /// No description provided for @loans_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Loans'**
+  String get loans_title;
+
+  /// No description provided for @loans_addLoan.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Loan'**
+  String get loans_addLoan;
+
+  /// No description provided for @loans_editLoan.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Loan'**
+  String get loans_editLoan;
+
+  /// No description provided for @loans_loanName.
+  ///
+  /// In en, this message translates to:
+  /// **'Loan Name'**
+  String get loans_loanName;
+
+  /// No description provided for @loans_amount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get loans_amount;
+
+  /// No description provided for @loans_startDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Date'**
+  String get loans_startDate;
+
+  /// No description provided for @loans_endDate.
+  ///
+  /// In en, this message translates to:
+  /// **'End Date'**
+  String get loans_endDate;
+
+  /// No description provided for @loans_interestRateOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest Rate (Optional)'**
+  String get loans_interestRateOptional;
+
+  /// No description provided for @loans_account.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked Account'**
+  String get loans_account;
+
+  /// No description provided for @loans_monthlyPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly Payment'**
+  String get loans_monthlyPayment;
+
+  /// No description provided for @loans_totalPayable.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Payable'**
+  String get loans_totalPayable;
+
+  /// No description provided for @loans_remaining.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining'**
+  String get loans_remaining;
+
+  /// No description provided for @loans_paid.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get loans_paid;
+
+  /// No description provided for @loans_logPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Log Payment'**
+  String get loans_logPayment;
+
+  /// No description provided for @loans_paymentReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Reminder'**
+  String get loans_paymentReminder;
+
+  /// No description provided for @loans_reminderDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder Day'**
+  String get loans_reminderDay;
+
+  /// No description provided for @loans_notes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get loans_notes;
+
+  /// No description provided for @loans_saveLoan.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Loan'**
+  String get loans_saveLoan;
+
+  /// No description provided for @loans_deleteLoan.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Loan'**
+  String get loans_deleteLoan;
+
+  /// No description provided for @loans_settled.
+  ///
+  /// In en, this message translates to:
+  /// **'Settled'**
+  String get loans_settled;
+
+  /// No description provided for @loans_durationMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 month} other{{count} months}}'**
+  String loans_durationMonths(num count);
+
+  /// No description provided for @loans_paymentHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment History'**
+  String get loans_paymentHistory;
+
+  /// No description provided for @loans_noPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'No payments logged yet'**
+  String get loans_noPayments;
+
+  /// No description provided for @loans_outstandingDebt.
+  ///
+  /// In en, this message translates to:
+  /// **'Outstanding Debt'**
+  String get loans_outstandingDebt;
+
+  /// No description provided for @loans_monthlyObligation.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly Obligation'**
+  String get loans_monthlyObligation;
+
+  /// No description provided for @insights_loans.
+  ///
+  /// In en, this message translates to:
+  /// **'Loans'**
+  String get insights_loans;
+
+  /// No description provided for @backup_loans.
+  ///
+  /// In en, this message translates to:
+  /// **'Loans'**
+  String get backup_loans;
+
+  /// No description provided for @backup_loanPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Loan Payments'**
+  String get backup_loanPayments;
+
+  /// No description provided for @more_yearlyAnalysis.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly Analysis'**
+  String get more_yearlyAnalysis;
+
+  /// No description provided for @more_yearlyAnalysisSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Month-by-month cash flow forecast'**
+  String get more_yearlyAnalysisSub;
+
+  /// No description provided for @yearly_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly Analysis'**
+  String get yearly_title;
+
+  /// No description provided for @yearly_recurringExp.
+  ///
+  /// In en, this message translates to:
+  /// **'Recurring Expenses'**
+  String get yearly_recurringExp;
+
+  /// No description provided for @yearly_recurringInc.
+  ///
+  /// In en, this message translates to:
+  /// **'Recurring Income'**
+  String get yearly_recurringInc;
+
+  /// No description provided for @yearly_loans.
+  ///
+  /// In en, this message translates to:
+  /// **'Loan Payments'**
+  String get yearly_loans;
+
+  /// No description provided for @yearly_borrowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Borrowed Due'**
+  String get yearly_borrowed;
+
+  /// No description provided for @yearly_lentDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Lent Due Back'**
+  String get yearly_lentDue;
+
+  /// No description provided for @yearly_inflow.
+  ///
+  /// In en, this message translates to:
+  /// **'Inflows'**
+  String get yearly_inflow;
+
+  /// No description provided for @yearly_outflow.
+  ///
+  /// In en, this message translates to:
+  /// **'Outflows'**
+  String get yearly_outflow;
+
+  /// No description provided for @yearly_netFlow.
+  ///
+  /// In en, this message translates to:
+  /// **'Net Flow'**
+  String get yearly_netFlow;
+
+  /// No description provided for @yearly_totalInflow.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Inflow'**
+  String get yearly_totalInflow;
+
+  /// No description provided for @yearly_totalOutflow.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Outflow'**
+  String get yearly_totalOutflow;
+
+  /// No description provided for @yearly_netCashFlow.
+  ///
+  /// In en, this message translates to:
+  /// **'Net Cash Flow'**
+  String get yearly_netCashFlow;
+
+  /// No description provided for @yearly_noData.
+  ///
+  /// In en, this message translates to:
+  /// **'No projected activity yet'**
+  String get yearly_noData;
+
+  /// No description provided for @yearly_noDataSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Add recurring payments, loans, or lent money with due dates to see a forecast'**
+  String get yearly_noDataSub;
+
+  /// No description provided for @budget_addBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Budget'**
+  String get budget_addBudget;
+
+  /// No description provided for @budget_addGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Savings Goal'**
+  String get budget_addGoal;
+
+  /// No description provided for @add_transaction_possibleDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Possible duplicate'**
+  String get add_transaction_possibleDuplicate;
+
+  /// No description provided for @add_transaction_goBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Go back'**
+  String get add_transaction_goBack;
+
+  /// No description provided for @add_transaction_saveAnyway.
+  ///
+  /// In en, this message translates to:
+  /// **'Save anyway'**
+  String get add_transaction_saveAnyway;
+
+  /// No description provided for @loans_confirmDeleteLoan.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this loan and all its payments?'**
+  String get loans_confirmDeleteLoan;
+
+  /// No description provided for @loans_deletePayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Payment'**
+  String get loans_deletePayment;
+
+  /// No description provided for @loans_confirmDeletePayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this payment record?'**
+  String get loans_confirmDeletePayment;
 }
 
 class _AppLocalizationsDelegate

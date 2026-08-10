@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.1.0] - 2026-08-10
+### Added
+- Floating Material 3 Navigation Bar: Modern floating pill navigation bar (`extendBody: true`) with circular active tab selection indicator (`CircleBorder()`), 24px icon-only destinations (`alwaysHide` labels), and 48px horizontal margins.
+- Expanded `ExpandableFab` (`ExpandableFabItem` list model) to the Transactions screen (Income/Expense actions) and the Budgets & Goals screen (Add Budget / Add Savings Goal actions, with matching green `0xFF2E7D32` buttons).
+- Redesigned Yearly Analysis monthly cards: month-by-month planned cash flow forecast for a 24-month horizon, featuring visually readable summary grid cards for inflows and outflows, net cash flow balance pills, custom section icons, larger typography, and smooth expand animations.
+- Multi-language support (English, Arabic, French, German, Hindi) for the new Yearly Analysis and Budgets & Goals ExpandableFab features.
+- Loan Transfer Account feature: Setting up a loan automatically deposits the principal into a selected account, and deleting the loan (or undoing it) reverses the deposit.
+- Redesigned Recurring Payment UI: payment history and recurring payment details are now shown in a dedicated `RecurringDetailScreen` with stats grids and card-based payment history lists.
+- Restored progress bars inside the installment recurring cards on the main screen list and on the detail screen.
+- Swipe/press back behavior on the Transactions screen multi-selection mode: pressing/swiping back now gracefully exits the selection mode instead of popping back to the home page.
+- Added Undo button snackbar support when deleting budgets and savings goals, aligning them with the rest of the application's delete-undo pattern.
+
+### Changed
+- Shifted all Floating Action Buttons (FABs) down to a 76px bottom padding offset to float cleanly right above the new floating navigation bar.
+- Updated main screen scroll view bottom paddings to 140px to ensure full scrolling space above the floating bar.
+- Moved the delete button in the loan sheet form from the sheet header to a dedicated AppBar action in `LoanDetailScreen`.
+- Restored the "Left to Spend" calculation on the budgets tab to show the subtraction between total monthly recurring income and total monthly budgeted amount.
+- Restyled the budgets and goals cards to match the exact card style used in recurring payments.
+- Changed the summary strip backgrounds in the budgets and goals tab to transparent to cleanly blend with the black AMOLED theme.
+- Updated the Savings Goal sheet target date text field to open a native calendar date picker dialog instead of manual text input.
+
+### Fixed
+- **ProGuard / R8 Hardening**: Resolved app crashes and black-screen issues in Release builds by configuring `proguard-rules.pro` to keep GSON type parameters (resolving alarm manager trigger crash) and protecting `home_widget` communications from obfuscation.
+- **Resource Shrinking Protection**: Prevented background service crashes by creating `keep.xml` to protect custom notification icons (`ic_notification`) from resource shrinking, and updating reminder services to use proper resource paths.
+- **Savings Goal Detail Screen**: Fixed a white screen rendering crash caused by an invalid runtime cast of `DateTime` targetDate to `String?`.
+- **UI Spacing Adjustments**: Optimized layout item spacing on the Transactions list screen to clean up empty spaces around date headers.
+- **Codebase Cleanups**: Resolved 30+ compiler warnings and linting issues.
+
 ## [1.0.9] - 2026-08-07
 ### Added
 - Linked Accounts feature: Cards can now be linked directly to Bank accounts.

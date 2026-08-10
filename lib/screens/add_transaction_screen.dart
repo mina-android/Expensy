@@ -96,10 +96,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   }
 
   Future<bool?> _showDuplicateWarningDialog(List<AppTransaction> dupes) {
+    final l10n = AppLocalizations.of(context)!;
     return showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Possible duplicate'),
+        title: Text(l10n.add_transaction_possibleDuplicate),
         content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -117,10 +118,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Go back')),
+              child: Text(l10n.add_transaction_goBack)),
           FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Save anyway')),
+              child: Text(l10n.add_transaction_saveAnyway)),
         ],
       ),
     );

@@ -154,14 +154,39 @@ class _SavingsGoalSheetState extends State<SavingsGoalSheet> {
               const SizedBox(height: 16),
               TextField(
                 controller: _dateCtrl,
-                textInputAction: TextInputAction.done,
-                onSubmitted: (_) => _save(),
+                readOnly: true,
+                onTap: () async {
+                  final initial = _dateCtrl.text.isNotEmpty
+                      ? DateTime.tryParse(_dateCtrl.text) ?? DateTime.now()
+                      : DateTime.now();
+                  final res = await showDatePicker(
+                    context: context,
+                    initialDate: initial,
+                    firstDate: DateTime.now(),
+                    lastDate: DateTime.now().add(const Duration(days: 36500)),
+                  );
+                  if (res != null) {
+                    setState(() {
+                      _dateCtrl.text = DateFormat('yyyy-MM-dd').format(res);
+                    });
+                  }
+                },
                 decoration: InputDecoration(
                   labelText: 'Target Date (Optional)',
-                  hintText: 'YYYY-MM-DD',
+                  hintText: 'Select date',
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12)),
                   prefixIcon: const Icon(Icons.date_range_outlined),
+                  suffixIcon: _dateCtrl.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            setState(() {
+                              _dateCtrl.clear();
+                            });
+                          },
+                        )
+                      : null,
                 ),
               ),
               const SizedBox(height: 24),

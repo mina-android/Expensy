@@ -1697,4 +1697,185 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get savings_saveGoal => 'लक्ष्य सहेजें';
+
+  @override
+  String get more_loans => 'Loans';
+
+  @override
+  String more_loansSub(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count active loans',
+      one: '1 active loan',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get loans_title => 'Loans';
+
+  @override
+  String get loans_addLoan => 'Add Loan';
+
+  @override
+  String get loans_editLoan => 'Edit Loan';
+
+  @override
+  String get loans_loanName => 'Loan Name';
+
+  @override
+  String get loans_amount => 'Amount';
+
+  @override
+  String get loans_startDate => 'Start Date';
+
+  @override
+  String get loans_endDate => 'End Date';
+
+  @override
+  String get loans_interestRateOptional => 'Interest Rate (Optional)';
+
+  @override
+  String get loans_account => 'Linked Account';
+
+  @override
+  String get loans_monthlyPayment => 'Monthly Payment';
+
+  @override
+  String get loans_totalPayable => 'Total Payable';
+
+  @override
+  String get loans_remaining => 'Remaining';
+
+  @override
+  String get loans_paid => 'Paid';
+
+  @override
+  String get loans_logPayment => 'Log Payment';
+
+  @override
+  String get loans_paymentReminder => 'Payment Reminder';
+
+  @override
+  String get loans_reminderDay => 'Reminder Day';
+
+  @override
+  String get loans_notes => 'Notes';
+
+  @override
+  String get loans_saveLoan => 'Save Loan';
+
+  @override
+  String get loans_deleteLoan => 'Delete Loan';
+
+  @override
+  String get loans_settled => 'Settled';
+
+  @override
+  String loans_durationMonths(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count months',
+      one: '1 month',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get loans_paymentHistory => 'Payment History';
+
+  @override
+  String get loans_noPayments => 'No payments logged yet';
+
+  @override
+  String get loans_outstandingDebt => 'Outstanding Debt';
+
+  @override
+  String get loans_monthlyObligation => 'Monthly Obligation';
+
+  @override
+  String get insights_loans => 'Loans';
+
+  @override
+  String get backup_loans => 'Loans';
+
+  @override
+  String get backup_loanPayments => 'Loan Payments';
+
+  @override
+  String get more_yearlyAnalysis => 'वार्षिक विश्लेषण';
+
+  @override
+  String get more_yearlyAnalysisSub => 'माह-दर-माह कैश फ्लो पूर्वानुमान';
+
+  @override
+  String get yearly_title => 'वार्षिक विश्लेषण';
+
+  @override
+  String get yearly_recurringExp => 'आवर्ती खर्च';
+
+  @override
+  String get yearly_recurringInc => 'आवर्ती आय';
+
+  @override
+  String get yearly_loans => 'ऋण भुगतान';
+
+  @override
+  String get yearly_borrowed => 'देय ऋण';
+
+  @override
+  String get yearly_lentDue => 'प्राप्य धन';
+
+  @override
+  String get yearly_inflow => 'आवक';
+
+  @override
+  String get yearly_outflow => 'जावक';
+
+  @override
+  String get yearly_netFlow => 'शुद्ध प्रवाह';
+
+  @override
+  String get yearly_totalInflow => 'कुल आवक';
+
+  @override
+  String get yearly_totalOutflow => 'कुल जावक';
+
+  @override
+  String get yearly_netCashFlow => 'शुद्ध कैश फ्लो';
+
+  @override
+  String get yearly_noData => 'अभी तक कोई अनुमानित गतिविधि नहीं';
+
+  @override
+  String get yearly_noDataSub =>
+      'पूर्वानुमान देखने के लिए आवर्ती भुगतान, ऋण या नियत तिथि वाले उधार जोड़ें';
+
+  @override
+  String get budget_addBudget => 'बजट जोड़ें';
+
+  @override
+  String get budget_addGoal => 'बचत लक्ष्य जोड़ें';
+
+  @override
+  String get add_transaction_possibleDuplicate => 'Possible duplicate';
+
+  @override
+  String get add_transaction_goBack => 'Go back';
+
+  @override
+  String get add_transaction_saveAnyway => 'Save anyway';
+
+  @override
+  String get loans_confirmDeleteLoan =>
+      'Are you sure you want to delete this loan and all its payments?';
+
+  @override
+  String get loans_deletePayment => 'Delete Payment';
+
+  @override
+  String get loans_confirmDeletePayment =>
+      'Are you sure you want to delete this payment record?';
 }

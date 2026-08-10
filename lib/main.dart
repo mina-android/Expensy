@@ -14,6 +14,8 @@ import 'screens/add_transaction_screen.dart';
 import 'services/notification_service.dart';
 import 'services/lended_notification_service.dart';
 import 'services/quick_add_service.dart';
+import 'services/loan_reminder_service.dart';
+import 'services/credit_reminder_service.dart';
 
 /// Root navigator key so the "Quick Add Transaction" home screen widget can
 /// push [AddTransactionScreen] on top of whatever's currently showing,
@@ -35,6 +37,8 @@ void main() async {
   await LendedNotificationService().initialize();
   await BudgetNotificationService().initialize();
   await DailyReminderService().initialize();
+  await LoanReminderService().initialize();
+  await CreditReminderService().initialize();
 
   final provider = AppProvider();
   await provider.load(); // DB reads finish before Flutter draws anything

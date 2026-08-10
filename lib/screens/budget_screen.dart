@@ -9,6 +9,7 @@ import '../widgets/shared_widgets.dart';
 import '../widgets/savings_goal_sheet.dart';
 import 'savings_goal_detail_screen.dart';
 import '../utils/haptics.dart';
+import '../utils/snackbar.dart';
 
 class BudgetScreen extends StatefulWidget {
   const BudgetScreen({super.key});
@@ -17,7 +18,6 @@ class BudgetScreen extends StatefulWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      useSafeArea: true,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => _BudgetSheet(existing: existing),
@@ -104,37 +104,49 @@ class _BudgetScreenState extends State<BudgetScreen> with SingleTickerProviderSt
             // ── Summary strip ───────────────────────────────────────
             Container(
               width: double.infinity,
-              color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+              color: Colors.transparent,
               padding: const EdgeInsets.symmetric(vertical: 10),
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(children: [
-                  _SumChip(
-                    label: l10n.budget_budgeted,
-                    value: formatAmount(totalBudgeted, cur),
-                    color: cs.primary,
+                  SizedBox(
+                    width: 130,
+                    child: _SumChip(
+                      label: l10n.budget_budgeted,
+                      value: formatAmount(totalBudgeted, cur),
+                      color: cs.primary,
+                    ),
                   ),
                   const SizedBox(width: 8),
-                  _SumChip(
-                    label: l10n.budget_spent,
-                    value: formatAmount(totalSpent, cur),
-                    color: totalSpent > totalBudgeted
-                        ? cs.error
-                        : const Color(0xFF2E7D32),
+                  SizedBox(
+                    width: 130,
+                    child: _SumChip(
+                      label: l10n.budget_spent,
+                      value: formatAmount(totalSpent, cur),
+                      color: totalSpent > totalBudgeted
+                          ? cs.error
+                          : const Color(0xFF2E7D32),
+                    ),
                   ),
                   const SizedBox(width: 8),
-                  _SumChip(
-                    label: l10n.budget_leftToSpend,
-                    value: formatAmount(leftToSpend, cur),
-                    color: leftToSpend < 0 ? cs.error : const Color(0xFF2E7D32),
+                  SizedBox(
+                    width: 130,
+                    child: _SumChip(
+                      label: l10n.budget_leftToSpend,
+                      value: formatAmount(leftToSpend, cur),
+                      color: leftToSpend < 0 ? cs.error : const Color(0xFF2E7D32),
+                    ),
                   ),
                   if (overCount > 0) ...[
                     const SizedBox(width: 8),
-                    _SumChip(
-                      label: l10n.budget_overLimit,
-                      value: '$overCount',
-                      color: cs.error,
+                    SizedBox(
+                      width: 130,
+                      child: _SumChip(
+                        label: l10n.budget_overLimit,
+                        value: '$overCount',
+                        color: cs.error,
+                      ),
                     ),
                   ],
                 ]),
@@ -143,7 +155,7 @@ class _BudgetScreenState extends State<BudgetScreen> with SingleTickerProviderSt
             // ── Budget list ─────────────────────────────────────────
             Expanded(
               child: ListView.builder(
-                padding: const EdgeInsets.fromLTRB(14, 10, 14, 100),
+                padding: const EdgeInsets.fromLTRB(14, 10, 14, 140),
                 itemCount: app.budgets.length,
                 itemBuilder: (_, i) => _BudgetCard(
                   budget: app.budgets[i], app: app,
@@ -159,25 +171,29 @@ class _BudgetScreenState extends State<BudgetScreen> with SingleTickerProviderSt
             subMessage: 'Tap + to set a new goal')
         : Column(children: [
             Container(
-              color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+              color: Colors.transparent,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               child: Row(children: [
-                _SumChip(
-                  label: 'Target',
-                  value: formatAmount(totalTarget, cur),
-                  color: cs.primary,
+                Expanded(
+                  child: _SumChip(
+                    label: 'Target',
+                    value: formatAmount(totalTarget, cur),
+                    color: cs.primary,
+                  ),
                 ),
                 const SizedBox(width: 8),
-                _SumChip(
-                  label: 'Saved',
-                  value: formatAmount(totalSaved, cur),
-                  color: const Color(0xFF2E7D32),
+                Expanded(
+                  child: _SumChip(
+                    label: 'Saved',
+                    value: formatAmount(totalSaved, cur),
+                    color: const Color(0xFF2E7D32),
+                  ),
                 ),
               ]),
             ),
             Expanded(
               child: ListView.builder(
-                padding: const EdgeInsets.fromLTRB(14, 10, 14, 100),
+                padding: const EdgeInsets.fromLTRB(14, 10, 14, 140),
                 itemCount: goals.length,
                 itemBuilder: (_, i) => _GoalCard(
                   goal: goals[i], app: app,
@@ -245,23 +261,31 @@ class _BudgetScreenState extends State<BudgetScreen> with SingleTickerProviderSt
           emptyGoals,
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        heroTag: null,
-        onPressed: () {
-          if (_tabCtrl.index == 0) {
-            BudgetScreen._openSheet(context);
-          } else {
-            showModalBottomSheet(
-              context: context,
-              isScrollControlled: true,
-              useSafeArea: true,
-              shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-              builder: (_) => const SavingsGoalSheet(),
-            );
-          }
-        },
-        child: const Icon(Icons.add),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 76),
+        child: ExpandableFab(
+          label: l10n.home_add,
+          items: [
+            ExpandableFabItem(
+              label: l10n.budget_addBudget,
+              icon: Icons.pie_chart_rounded,
+              color: const Color(0xFF2E7D32),
+              onTap: () => BudgetScreen._openSheet(context),
+            ),
+            ExpandableFabItem(
+              label: l10n.budget_addGoal,
+              icon: Icons.savings_rounded,
+              color: const Color(0xFF2E7D32),
+              onTap: () => showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+                builder: (_) => const SavingsGoalSheet(),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -274,27 +298,41 @@ class _SumChip extends StatelessWidget {
   const _SumChip({required this.label, required this.value, required this.color});
 
   @override
-  Widget build(BuildContext context) => Expanded(
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: color.withValues(alpha: 0.25)),
-          ),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(label,
-                style: TextStyle(
-                    fontSize: 10, fontWeight: FontWeight.w600, color: color)),
-            const SizedBox(height: 1),
-            Text(value,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                    fontSize: 13, fontWeight: FontWeight.w800, color: color)),
-          ]),
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Card(
+      elevation: 1,
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: cs.onSurface.withValues(alpha: 0.5),
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+          ],
         ),
-      );
+      ),
+    );
+  }
 }
 
 // ── Budget card ───────────────────────────────────────────────────────────────
@@ -321,18 +359,25 @@ class _BudgetCard extends StatelessWidget {
     final cur      = app.settings.currency;
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: const EdgeInsets.only(bottom: 12),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
         onTap: () => BudgetScreen._openSheet(context, existing: budget),
         onLongPress: () async {
           if (await showDeleteConfirm(context, cat?.name ?? l10n.budget_budget) &&
               context.mounted) {
-            context.read<AppProvider>().deleteBudget(budget.id);
+            final undo = await context.read<AppProvider>().deleteBudgetWithUndo(budget.id);
+            if (context.mounted) {
+              showAppSnackbar(
+                context,
+                'Deleted ${cat?.name ?? 'Budget'}',
+                onUndo: undo,
+              );
+            }
           }
         },
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(16),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
               CategoryDot(category: cat, size: 40),
@@ -398,7 +443,7 @@ class _BudgetCard extends StatelessWidget {
             const SizedBox(height: 5),
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
               Text(
-                l10n.budget_percentUsed((progress * 100).toStringAsFixed(0)),
+                l10n.budget_percentUsed((progress * 140).toStringAsFixed(0)),
                 style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
@@ -441,22 +486,29 @@ class _GoalCard extends StatelessWidget {
     final color = Color(goal.colorValue);
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: const EdgeInsets.only(bottom: 12),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => SavingsGoalDetailScreen(goal: goal)),
+            ExpensyRoute(builder: (_) => SavingsGoalDetailScreen(goal: goal)),
           );
         },
         onLongPress: () async {
           if (await showDeleteConfirm(context, goal.name) && context.mounted) {
-            context.read<AppProvider>().deleteSavingsGoal(goal.id);
+            final undo = await context.read<AppProvider>().deleteSavingsGoalWithUndo(goal.id);
+            if (context.mounted) {
+              showAppSnackbar(
+                context,
+                'Deleted ${goal.name}',
+                onUndo: undo,
+              );
+            }
           }
         },
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(16),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
               Container(
@@ -547,8 +599,9 @@ class _BudgetSheetState extends State<_BudgetSheet> {
       final expCats = app.categories.where((c) => c.type == 'expense').toList();
       final budgetedIds = app.budgets.map((b) => b.categoryId).toSet();
       final free = expCats.where((c) => !budgetedIds.contains(c.id)).toList();
-      if (free.isNotEmpty) _categoryId = free.first.id;
-      else if (expCats.isNotEmpty) _categoryId = expCats.first.id;
+      if (free.isNotEmpty) {
+        _categoryId = free.first.id;
+      } else if (expCats.isNotEmpty) _categoryId = expCats.first.id;
     }
   }
 
@@ -570,9 +623,7 @@ class _BudgetSheetState extends State<_BudgetSheet> {
       final existing = app.budgetForCategory(_categoryId!);
       if (existing != null) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.budget_thisCategoryAlreadyH)),
-        );
+        showAppSnackbar(context, l10n.budget_thisCategoryAlreadyH);
         return;
       }
     }
@@ -647,7 +698,7 @@ class _BudgetSheetState extends State<_BudgetSheet> {
                 child: GestureDetector(
                   onTap: () => setState(() => _period = 'monthly'),
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 100),
+                    duration: const Duration(milliseconds: 140),
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(
                       color: _period == 'monthly'
@@ -671,7 +722,7 @@ class _BudgetSheetState extends State<_BudgetSheet> {
                 child: GestureDetector(
                   onTap: () => setState(() => _period = 'weekly'),
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 100),
+                    duration: const Duration(milliseconds: 140),
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(
                       color: _period == 'weekly'
@@ -790,3 +841,5 @@ class _BudgetSheetState extends State<_BudgetSheet> {
     );
   }
 }
+
+

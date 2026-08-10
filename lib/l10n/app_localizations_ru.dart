@@ -1703,4 +1703,173 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get savings_saveGoal => 'Сохранить цель';
+
+  @override
+  String get more_loans => 'Займы и кредиты';
+
+  @override
+  String more_loansSub(num count) {
+    return 'Активные кредиты';
+  }
+
+  @override
+  String get loans_title => 'Займы и кредиты';
+
+  @override
+  String get loans_addLoan => 'Добавить кредит';
+
+  @override
+  String get loans_editLoan => 'Редактировать кредит';
+
+  @override
+  String get loans_loanName => 'Название кредита';
+
+  @override
+  String get loans_amount => 'Сумма';
+
+  @override
+  String get loans_startDate => 'Дата начала';
+
+  @override
+  String get loans_endDate => 'Дата окончания';
+
+  @override
+  String get loans_interestRateOptional => 'Процентная ставка (опционально)';
+
+  @override
+  String get loans_account => 'Связанный счет';
+
+  @override
+  String get loans_monthlyPayment => 'Ежемесячный платеж';
+
+  @override
+  String get loans_totalPayable => 'Всего к выплате';
+
+  @override
+  String get loans_remaining => 'Осталось';
+
+  @override
+  String get loans_paid => 'Выплачено';
+
+  @override
+  String get loans_logPayment => 'Внести платеж';
+
+  @override
+  String get loans_paymentReminder => 'Напоминание о платеже';
+
+  @override
+  String get loans_reminderDay => 'День напоминания';
+
+  @override
+  String get loans_notes => 'Заметки';
+
+  @override
+  String get loans_saveLoan => 'Сохранить кредит';
+
+  @override
+  String get loans_deleteLoan => 'Удалить кредит';
+
+  @override
+  String get loans_settled => 'Погашено';
+
+  @override
+  String loans_durationMonths(num count) {
+    return 'Месяцев';
+  }
+
+  @override
+  String get loans_paymentHistory => 'История платежей';
+
+  @override
+  String get loans_noPayments => 'Платежей пока нет';
+
+  @override
+  String get loans_outstandingDebt => 'Остаток долга';
+
+  @override
+  String get loans_monthlyObligation => 'Ежемесячный платеж';
+
+  @override
+  String get insights_loans => 'Кредиты';
+
+  @override
+  String get backup_loans => 'Кредиты';
+
+  @override
+  String get backup_loanPayments => 'Платежи по кредитам';
+
+  @override
+  String get more_yearlyAnalysis => 'Годовой анализ';
+
+  @override
+  String get more_yearlyAnalysisSub => 'Прогноз денежного потока по месяцах';
+
+  @override
+  String get yearly_title => 'Годовой анализ';
+
+  @override
+  String get yearly_recurringExp => 'Регулярные расходы';
+
+  @override
+  String get yearly_recurringInc => 'Регулярные доходы';
+
+  @override
+  String get yearly_loans => 'Платежи по кредитам';
+
+  @override
+  String get yearly_borrowed => 'Срок возврата долгов';
+
+  @override
+  String get yearly_lentDue => 'Ожидаемый возврат долгов';
+
+  @override
+  String get yearly_inflow => 'Доходы';
+
+  @override
+  String get yearly_outflow => 'Расходы';
+
+  @override
+  String get yearly_netFlow => 'Чистый поток';
+
+  @override
+  String get yearly_totalInflow => 'Всего доходов';
+
+  @override
+  String get yearly_totalOutflow => 'Всего расходов';
+
+  @override
+  String get yearly_netCashFlow => 'Чистый денежный поток';
+
+  @override
+  String get yearly_noData => 'Нет запланированных операций';
+
+  @override
+  String get yearly_noDataSub =>
+      'Добавьте регулярные платежи или кредиты для просмотра прогноза';
+
+  @override
+  String get budget_addBudget => 'Добавить бюджет';
+
+  @override
+  String get budget_addGoal => 'Добавить финансовую цель';
+
+  @override
+  String get add_transaction_possibleDuplicate => 'Possible duplicate';
+
+  @override
+  String get add_transaction_goBack => 'Go back';
+
+  @override
+  String get add_transaction_saveAnyway => 'Save anyway';
+
+  @override
+  String get loans_confirmDeleteLoan =>
+      'Are you sure you want to delete this loan and all its payments?';
+
+  @override
+  String get loans_deletePayment => 'Delete Payment';
+
+  @override
+  String get loans_confirmDeletePayment =>
+      'Are you sure you want to delete this payment record?';
 }

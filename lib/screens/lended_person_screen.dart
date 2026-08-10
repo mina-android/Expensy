@@ -161,7 +161,6 @@ class LendedPersonScreen extends StatelessWidget {
     showModalBottomSheet(
       context: ctx,
       isScrollControlled: true,
-      useSafeArea: true,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => _EditPersonInlineSheet(person: p),
@@ -181,7 +180,6 @@ class LendedPersonScreen extends StatelessWidget {
     showModalBottomSheet(
       context: ctx,
       isScrollControlled: true,
-      useSafeArea: true,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => _EntrySheet(person: person, existing: existing),
@@ -540,10 +538,7 @@ class _EntrySheetState extends State<_EntrySheet> {
     final l10n = AppLocalizations.of(context)!;
     if (_dueDate == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(l10n.lended_person_setADueDateFirstToEn),
-          duration: const Duration(seconds: 3),
-        ));
+        showAppSnackbar(context, l10n.lended_person_setADueDateFirstToEn);
       }
       return;
     }
@@ -552,10 +547,7 @@ class _EntrySheetState extends State<_EntrySheet> {
       final granted = await LendedNotificationService().requestPermissions();
       if (!granted) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(l10n.lended_person_notificationPermissionDenied),
-            duration: const Duration(seconds: 4),
-          ));
+          showAppSnackbar(context, l10n.lended_person_notificationPermissionDenied);
         }
         return;
       }

@@ -10,6 +10,7 @@ import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
 import '../services/notification_service.dart';
 import '../utils/haptics.dart';
+import 'recurring_detail_screen.dart';
 
 class RecurringScreen extends StatefulWidget {
   const RecurringScreen({super.key});
@@ -210,21 +211,23 @@ class _RecurringScreenState extends State<RecurringScreen>
               empty: l10n.recurring_noRecurringIncome),
         ])),
       ]),
-      floatingActionButton: ExpandableFab(
-        label: l10n.home_add,
-        onIncome: () => _openRecurringSheet(context, defaultType: 'income'),
-        onExpense: () => _openRecurringSheet(context, defaultType: 'expense'),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 76),
+        child: ExpandableFab(
+          label: l10n.home_add,
+          onIncome: () => openRecurringSheet(context, defaultType: 'income'),
+          onExpense: () => openRecurringSheet(context, defaultType: 'expense'),
+        ),
       ),
     );
   }
 }
 
-void _openRecurringSheet(BuildContext ctx,
+void openRecurringSheet(BuildContext ctx,
     {RecurringPayment? existing, String defaultType = 'expense'}) {
   showModalBottomSheet(
     context: ctx,
     isScrollControlled: true,
-    useSafeArea: true,
     shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
     builder: (_) =>
@@ -342,7 +345,7 @@ class _RecurringList extends StatelessWidget {
           subMessage: l10n.recurring_tapPlusToAddOne);
     }
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(14, 4, 14, 100),
+      padding: const EdgeInsets.fromLTRB(14, 4, 14, 140),
       itemCount: items.length,
       itemBuilder: (_, i) => _RecurringCard(
           key: ValueKey(items[i].id), r: items[i], app: app, fmt: fmt),
@@ -367,15 +370,6 @@ class _RecurringCard extends StatefulWidget {
 
 class _RecurringCardState extends State<_RecurringCard> {
   AppLocalizations get l10n => AppLocalizations.of(context)!;
-  List<RecurringHistoryEntry>? _history;
-  bool _expanded = false;
-
-  Future<void> _loadHistory() async {
-    final entries =
-        await context.read<AppProvider>().getHistoryFor(widget.r.id);
-    if (mounted) setState(() => _history = entries);
-  }
-
   @override
   Widget build(BuildContext context) {
     final r = widget.r;
@@ -383,21 +377,31 @@ class _RecurringCardState extends State<_RecurringCard> {
     final fmt = widget.fmt;
     final cs = Theme.of(context).colorScheme;
     final cat = app.categoryById(r.categoryId);
-    final catColor = cat != null ? Color(cat.colorValue) : cs.primary;
     final total = r.totalPayments;
     final progress = (total != null && total > 0)
         ? (r.paidPayments / total).clamp(0.0, 1.0)
         : null;
+    final catColor = cat != null ? Color(cat.colorValue) : cs.primary;
     final days = r.nextDate.difference(DateTime.now()).inDays;
     final overdue = days < 0;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          // ── Header row ──────────────────────────────────────────────
-          Row(children: [
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            ExpensyRoute(
+              builder: (_) => RecurringDetailScreen(recurring: r, fmt: fmt),
+            ),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            // ── Header row ──────────────────────────────────────────────
+            Row(children: [
             CategoryDot(category: cat, size: 46),
             const SizedBox(width: 12),
             Expanded(
@@ -477,27 +481,28 @@ class _RecurringCardState extends State<_RecurringCard> {
               ],
             ]),
           ]),
-
-          // ── Progress bar ─────────────────────────────────────────────
-          if (total != null && total > 0) ...[
+          if (total != null && total > 0 && progress != null) ...[
             const SizedBox(height: 10),
-            LinearProgressCard(value: progress ?? 0, color: catColor),
-            const SizedBox(height: 5),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Text(
-                  l10n.recurring_paidPayments(
-                      r.paidPayments.toString(), total.toString()),
-                  style: TextStyle(
-                      fontSize: 11,
-                      color: cs.onSurface.withValues(alpha: 0.55))),
-              Text(l10n.recurring_totalAmount(fmt(r.totalAmount)),
-                  style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: cs.primary)),
-            ]),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  l10n.recurring_paidPayments(r.paidPayments.toString(), total.toString()),
+                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
+                ),
+                Text(
+                  '${(progress * 140).toStringAsFixed(0)}%',
+                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            LinearProgressCard(
+              value: progress,
+              color: catColor,
+            ),
           ],
-
+          
           // ── Action buttons ───────────────────────────────────────────
           const SizedBox(height: 10),
           Row(children: [
@@ -524,12 +529,6 @@ class _RecurringCardState extends State<_RecurringCard> {
             ),
             const Spacer(),
             _Btn(
-                icon: Icons.edit_outlined,
-                label: l10n.recurring_edit,
-                color: cs.secondary,
-                onTap: () => _openRecurringSheet(context, existing: r)),
-            const SizedBox(width: 6),
-            _Btn(
                 icon: Icons.skip_next_outlined,
                 label: l10n.recurring_skipBtn,
                 color: const Color(0xFF785900),
@@ -552,8 +551,6 @@ class _RecurringCardState extends State<_RecurringCard> {
                           ));
                   if (ok == true && context.mounted) {
                     await context.read<AppProvider>().skipNextRecurring(r);
-                    // Invalidate history so it reloads on next expand
-                    if (mounted) setState(() => _history = null);
                   }
                 }),
             const SizedBox(width: 6),
@@ -563,128 +560,16 @@ class _RecurringCardState extends State<_RecurringCard> {
                 color: cs.primary,
                 onTap: () async {
                   await context.read<AppProvider>().markRecurringPaid(r);
-                  // Invalidate history so it reloads on next expand
-                  if (mounted) setState(() => _history = null);
-                }),
-            const SizedBox(width: 6),
-            _Btn(
-                icon: Icons.delete_outline_rounded,
-                label: l10n.recurring_del,
-                color: const Color(0xFFC62828),
-                onTap: () async {
-                  AppHaptics.tap(context, HapticStrength.medium);
-                  final undo = await context
-                      .read<AppProvider>()
-                      .deleteRecurringWithUndo(r.id);
-                  if (context.mounted) {
-                    showAppSnackbar(context, '${r.name} deleted', onUndo: undo);
-                  }
                 }),
           ]),
-
-          // ── History expansion ─────────────────────────────────────────
-          const SizedBox(height: 4),
-          Theme(
-            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-            child: ExpansionTile(
-              tilePadding: EdgeInsets.zero,
-              childrenPadding: EdgeInsets.zero,
-              dense: true,
-              leading: Icon(Icons.history_rounded,
-                  size: 16, color: cs.onSurface.withValues(alpha: 0.45)),
-              title: Text(
-                _expanded && _history != null
-                    ? l10n.recurring_historyCount(_history!.length.toString())
-                    : l10n.recurring_paymentHistory,
-                style: TextStyle(
-                    fontSize: 12, color: cs.onSurface.withValues(alpha: 0.55)),
-              ),
-              trailing: Icon(
-                _expanded
-                    ? Icons.expand_less_rounded
-                    : Icons.expand_more_rounded,
-                size: 18,
-                color: cs.onSurface.withValues(alpha: 0.4),
-              ),
-              onExpansionChanged: (expanded) {
-                setState(() {
-                  _expanded = expanded;
-                  if (expanded && _history == null) _loadHistory();
-                });
-              },
-              children: [
-                if (_history == null && _expanded)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    child: Center(
-                        child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2))),
-                  )
-                else if (_history != null && _history!.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: Text(l10n.recurring_noHistoryYet,
-                        style: TextStyle(
-                            fontSize: 12,
-                            color: cs.onSurface.withValues(alpha: 0.4))),
-                  )
-                else if (_history != null)
-                  ..._history!.map((e) => _HistoryRow(entry: e, fmt: fmt)),
-              ],
-            ),
-          ),
         ]),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
-// ── History row ───────────────────────────────────────────────────────────────
-class _HistoryRow extends StatelessWidget {
-  final RecurringHistoryEntry entry;
-  final String Function(double) fmt;
-  const _HistoryRow({required this.entry, required this.fmt});
 
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final isPaid = entry.action == 'paid';
-    final color = isPaid ? const Color(0xFF2E7D32) : const Color(0xFF785900);
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 4, 0, 4),
-      child: Row(children: [
-        Container(
-          width: 28,
-          height: 28,
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            isPaid ? Icons.check_rounded : Icons.skip_next_rounded,
-            size: 14,
-            color: color,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-            child: Text(
-          DateFormat('d MMM yyyy · HH:mm').format(entry.date),
-          style: TextStyle(
-              fontSize: 12, color: cs.onSurface.withValues(alpha: 0.6)),
-        )),
-        Text(
-          '${isPaid ? '' : ''}${formatAmount(entry.amount, entry.currency)}',
-          style: TextStyle(
-              fontSize: 12, fontWeight: FontWeight.w700, color: color),
-        ),
-      ]),
-    );
-  }
-}
 
 // ── Small action button ───────────────────────────────────────────────────────
 class _Btn extends StatelessWidget {
@@ -831,10 +716,7 @@ class _RecurringSheetState extends State<_RecurringSheet> {
       final granted = await NotificationService().requestPermissions();
       if (!granted) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(l10n.recurring_notificationPermissionDenied),
-            duration: const Duration(seconds: 4),
-          ));
+          showAppSnackbar(context, l10n.recurring_notificationPermissionDenied);
         }
         return;
       }
@@ -930,7 +812,7 @@ class _RecurringSheetState extends State<_RecurringSheet> {
                 child: GestureDetector(
               onTap: () => _setPayType('expense'),
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 100),
+                duration: const Duration(milliseconds: 140),
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
                     color: _payType == 'expense'
@@ -951,7 +833,7 @@ class _RecurringSheetState extends State<_RecurringSheet> {
                 child: GestureDetector(
               onTap: () => _setPayType('income'),
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 100),
+                duration: const Duration(milliseconds: 140),
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
                     color: _payType == 'income'
@@ -976,7 +858,7 @@ class _RecurringSheetState extends State<_RecurringSheet> {
                   child: GestureDetector(
                 onTap: () => setState(() => _recurringType = 'subscription'),
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 100),
+                  duration: const Duration(milliseconds: 140),
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   decoration: BoxDecoration(
                       color: _recurringType == 'subscription'
@@ -997,7 +879,7 @@ class _RecurringSheetState extends State<_RecurringSheet> {
                   child: GestureDetector(
                 onTap: () => setState(() => _recurringType = 'installment'),
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 100),
+                  duration: const Duration(milliseconds: 140),
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   decoration: BoxDecoration(
                       color: _recurringType == 'installment'
@@ -1100,7 +982,7 @@ class _RecurringSheetState extends State<_RecurringSheet> {
                   context: context,
                   initialDate: _first,
                   firstDate: DateTime(2000),
-                  lastDate: DateTime(2100));
+                  lastDate: DateTime(2140));
               if (p != null) {
                 setState(() {
                   _first = p;
@@ -1147,7 +1029,7 @@ class _RecurringSheetState extends State<_RecurringSheet> {
                     context: context,
                     initialDate: _last ?? _first.add(const Duration(days: 365)),
                     firstDate: _first,
-                    lastDate: DateTime(2100));
+                    lastDate: DateTime(2140));
                 if (p != null) setState(() => _last = p);
               },
             ),
@@ -1334,3 +1216,5 @@ class _RecurringSheetState extends State<_RecurringSheet> {
     );
   }
 }
+
+

@@ -2,12 +2,13 @@
 import 'package:sqflite/sqflite.dart' hide Transaction;
 import 'package:intl/intl.dart';
 import 'package:path/path.dart';
+import 'package:flutter/foundation.dart';
 import '../models/models.dart';
 
 class DBHelper {
   static Database? _db;
   static const String _dbName = 'expensy.db';
-  static const int _version = 18;
+  static const int _version = 20;
 
   /// Public accessor for the current DB/backup schema version, so UI code
   /// (e.g. the Backup screen) never has to hardcode a copy that can drift
@@ -30,23 +31,31 @@ class DBHelper {
       try {
         await db.execute(
             'ALTER TABLE accounts ADD COLUMN exclude_from_total INTEGER NOT NULL DEFAULT 0');
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
       try {
         await db.execute(
             "ALTER TABLE recurring_payments ADD COLUMN payment_type TEXT NOT NULL DEFAULT 'expense'");
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
     }
     if (oldV < 3) {
       try {
         await db.execute(
             "ALTER TABLE recurring_payments ADD COLUMN reminder_time TEXT NOT NULL DEFAULT '09:00'");
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
     }
     if (oldV < 4) {
       try {
         await db.execute(
             "ALTER TABLE transactions ADD COLUMN currency TEXT NOT NULL DEFAULT ''");
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
     }
     if (oldV < 5) {
       try {
@@ -56,21 +65,29 @@ class DBHelper {
             currency TEXT NOT NULL DEFAULT 'EGP',
             notes TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL
           )''');
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
     }
     if (oldV < 6) {
       try {
         await db.execute('ALTER TABLE accounts ADD COLUMN gold_karat INTEGER');
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
       try {
         await db.execute('ALTER TABLE accounts ADD COLUMN gold_grams REAL');
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
     }
     if (oldV < 7) {
       try {
         await db.execute(
             'ALTER TABLE recurring_payments ADD COLUMN early_reminder_enabled INTEGER NOT NULL DEFAULT 0');
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
     }
     if (oldV < 8) {
       try {
@@ -82,7 +99,9 @@ class DBHelper {
             period TEXT NOT NULL DEFAULT 'monthly',
             created_at TEXT NOT NULL
           )''');
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
       try {
         await db.execute('''
           CREATE TABLE IF NOT EXISTS recurring_history (
@@ -93,26 +112,36 @@ class DBHelper {
             amount REAL NOT NULL,
             currency TEXT NOT NULL
           )''');
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
       try {
         await db.execute(
             'CREATE INDEX IF NOT EXISTS idx_rh_recurring_id ON recurring_history(recurring_id)');
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
     }
     // v8 → v9: category icon + lended_money reminders
     if (oldV < 9) {
       try {
         await db.execute(
             'ALTER TABLE categories ADD COLUMN icon_code_point INTEGER NOT NULL DEFAULT 0');
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
       try {
         await db.execute(
             'ALTER TABLE lended_money ADD COLUMN reminder_enabled INTEGER NOT NULL DEFAULT 0');
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
       try {
         await db.execute(
             "ALTER TABLE lended_money ADD COLUMN reminder_time TEXT NOT NULL DEFAULT '09:00'");
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
     }
     // v9 → v10: lended money becomes account-based (per-person ledger)
     if (oldV < 10) {
@@ -125,10 +154,14 @@ class DBHelper {
             notes TEXT NOT NULL DEFAULT '',
             created_at TEXT NOT NULL
           )''');
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
       try {
         await db.execute('ALTER TABLE lended_money ADD COLUMN person_id TEXT');
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
       // Backfill: create one LendedPerson per distinct legacy person_name,
       // then point every lended_money row at the matching person_id.
       try {
@@ -169,7 +202,9 @@ class DBHelper {
               where: 'person_name = ? AND person_id IS NULL',
               whereArgs: [entry.key]);
         }
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
 
       // Catch-all: any row that still has no person_id (e.g. a null/blank
       // legacy person_name) gets bucketed into a single "Unknown" person
@@ -191,7 +226,9 @@ class DBHelper {
           await db.update('lended_money', {'person_id': unknownId},
               where: 'person_id IS NULL');
         }
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
 
       // The upgraded `lended_money` table still physically carries the old
       // `person_name TEXT NOT NULL` column (SQLite can't drop a NOT NULL
@@ -254,7 +291,9 @@ class DBHelper {
             is_completed INTEGER NOT NULL DEFAULT 0,
             created_at TEXT NOT NULL, completed_at TEXT
           )''');
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
       try {
         await db.execute('''
           CREATE TABLE IF NOT EXISTS savings_contributions (
@@ -262,14 +301,18 @@ class DBHelper {
             account_id TEXT NOT NULL, type TEXT NOT NULL, date TEXT NOT NULL,
             note TEXT NOT NULL DEFAULT ''
           )''');
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
     }
     // v11 → v12: recurring subscriptions vs installments
     if (oldV < 12) {
       try {
         await db.execute(
             "ALTER TABLE recurring_payments ADD COLUMN recurring_type TEXT NOT NULL DEFAULT 'subscription'");
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
     }
     if (oldV < 13) {
       try {
@@ -284,74 +327,154 @@ class DBHelper {
           )''');
         await db.execute(
             'CREATE UNIQUE INDEX idx_nws_date ON net_worth_snapshots(date)');
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
     }
     if (oldV < 14) {
       try {
         await db
             .execute("ALTER TABLE accounts ADD COLUMN card_holder_name TEXT");
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
       try {
         await db
             .execute("ALTER TABLE accounts ADD COLUMN card_number_last4 TEXT");
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
       try {
         await db.execute("ALTER TABLE accounts ADD COLUMN card_expiry TEXT");
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
       try {
         await db
             .execute("ALTER TABLE accounts ADD COLUMN statement_day INTEGER");
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
       try {
         await db.execute("ALTER TABLE accounts ADD COLUMN due_day INTEGER");
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
       try {
         await db.execute("ALTER TABLE accounts ADD COLUMN credit_limit REAL");
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
       try {
         await db
             .execute("ALTER TABLE accounts ADD COLUMN min_payment_amount REAL");
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
       try {
         await db.execute(
             "ALTER TABLE accounts ADD COLUMN min_payment_percent REAL");
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
       try {
         await db.execute(
             "ALTER TABLE accounts ADD COLUMN credit_reminder_enabled INTEGER NOT NULL DEFAULT 0");
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
       try {
         await db.execute(
             "ALTER TABLE accounts ADD COLUMN credit_reminder_time TEXT NOT NULL DEFAULT '09:00'");
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
     }
     if (oldV < 15) {
       try {
         await db.execute(
             "ALTER TABLE categories ADD COLUMN order_index INTEGER NOT NULL DEFAULT 0");
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
     }
     if (oldV < 16) {
       try {
         await db.execute(
             "ALTER TABLE accounts ADD COLUMN credit_early_reminder_enabled INTEGER NOT NULL DEFAULT 0");
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
     }
     if (oldV < 17) {
       try {
         await db
             .execute('ALTER TABLE accounts ADD COLUMN linked_account_id TEXT');
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
       try {
         await db.execute(
             'ALTER TABLE accounts ADD COLUMN order_index INTEGER DEFAULT 0');
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
     }
     if (oldV < 18) {
       try {
         await db.execute(
             'ALTER TABLE accounts ADD COLUMN exclude_from_bank_total INTEGER NOT NULL DEFAULT 0');
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
+    }
+    if (oldV < 19) {
+      try {
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS loans (
+            id TEXT PRIMARY KEY, name TEXT NOT NULL, principal REAL NOT NULL,
+            currency TEXT NOT NULL DEFAULT 'EGP',
+            start_date TEXT NOT NULL, end_date TEXT NOT NULL,
+            interest_rate REAL,
+            account_id TEXT,
+            reminder_enabled INTEGER NOT NULL DEFAULT 0,
+            reminder_day INTEGER NOT NULL DEFAULT 1,
+            reminder_time TEXT NOT NULL DEFAULT '09:00',
+            is_settled INTEGER NOT NULL DEFAULT 0,
+            notes TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL
+          )''');
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
+      try {
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS loan_payments (
+            id TEXT PRIMARY KEY,
+            loan_id TEXT NOT NULL,
+            date TEXT NOT NULL,
+            amount REAL NOT NULL,
+            currency TEXT NOT NULL,
+            account_id TEXT,
+            notes TEXT NOT NULL DEFAULT ''
+          )''');
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
+      try {
+        await db.execute(
+            'CREATE INDEX IF NOT EXISTS idx_lp_loan_id ON loan_payments(loan_id)');
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
+    }
+    if (oldV < 20) {
+      try {
+        await db.execute(
+            'ALTER TABLE loans ADD COLUMN transfer_account_id TEXT');
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
     }
   }
 
@@ -414,6 +537,9 @@ class DBHelper {
         priority TEXT NOT NULL, is_purchased INTEGER NOT NULL DEFAULT 0,
         notes TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL
       )''');
+    // LEGACY: orphaned table from pre-v5 schema. Not used by any live CRUD —
+    // all asset operations target the 'assets' table (created in v5 migration).
+    // Retained here because SQLite cannot safely DROP TABLE mid-migration-chain.
     await db.execute('''
       CREATE TABLE asset_items (
         id TEXT PRIMARY KEY, name TEXT NOT NULL, value REAL NOT NULL,
@@ -483,6 +609,34 @@ class DBHelper {
       )''');
     await db.execute(
         'CREATE INDEX idx_rh_recurring_id ON recurring_history(recurring_id)');
+
+    await db.execute('''
+      CREATE TABLE loans (
+        id TEXT PRIMARY KEY, name TEXT NOT NULL, principal REAL NOT NULL,
+        currency TEXT NOT NULL DEFAULT 'EGP',
+        start_date TEXT NOT NULL, end_date TEXT NOT NULL,
+        interest_rate REAL,
+        account_id TEXT,
+        transfer_account_id TEXT,
+        reminder_enabled INTEGER NOT NULL DEFAULT 0,
+        reminder_day INTEGER NOT NULL DEFAULT 1,
+        reminder_time TEXT NOT NULL DEFAULT '09:00',
+        is_settled INTEGER NOT NULL DEFAULT 0,
+        notes TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL
+      )''');
+    await db.execute('''
+      CREATE TABLE loan_payments (
+        id TEXT PRIMARY KEY,
+        loan_id TEXT NOT NULL,
+        date TEXT NOT NULL,
+        amount REAL NOT NULL,
+        currency TEXT NOT NULL,
+        account_id TEXT,
+        notes TEXT NOT NULL DEFAULT ''
+      )''');
+    await db.execute(
+        'CREATE INDEX idx_lp_loan_id ON loan_payments(loan_id)');
 
     await _insertDefaults(db);
   }
@@ -760,6 +914,53 @@ class DBHelper {
       (await database).delete('recurring_history',
           where: 'recurring_id = ?', whereArgs: [recurringId]);
 
+  // ── Loans ────────────────────────────────────────────────────────────
+  static Future<List<Loan>> getLoans() async {
+    final db = await database;
+    final rows = await db.query('loans', orderBy: 'created_at ASC');
+    return rows.map(Loan.fromMap).toList();
+  }
+
+  static Future<void> insertLoan(Loan l) async =>
+      (await database).insert('loans', l.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace);
+
+  static Future<void> updateLoan(Loan l) async => (await database)
+      .update('loans', l.toMap(), where: 'id=?', whereArgs: [l.id]);
+
+  static Future<void> deleteLoan(String id) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.delete('loan_payments', where: 'loan_id=?', whereArgs: [id]);
+      await txn.delete('loans', where: 'id=?', whereArgs: [id]);
+    });
+  }
+
+  // ── Loan Payments ───────────────────────────────────────────────────
+  static Future<List<LoanPayment>> getLoanPayments(String loanId) async {
+    final db = await database;
+    final rows = await db.query('loan_payments',
+        where: 'loan_id = ?', whereArgs: [loanId], orderBy: 'date DESC');
+    return rows.map(LoanPayment.fromMap).toList();
+  }
+
+  static Future<List<LoanPayment>> getAllLoanPayments() async {
+    final db = await database;
+    final rows = await db.query('loan_payments', orderBy: 'date DESC');
+    return rows.map(LoanPayment.fromMap).toList();
+  }
+
+  static Future<void> insertLoanPayment(LoanPayment p) async =>
+      (await database).insert('loan_payments', p.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace);
+
+  static Future<void> deleteLoanPayment(String id) async =>
+      (await database).delete('loan_payments', where: 'id=?', whereArgs: [id]);
+
+  static Future<void> deleteLoanPaymentsFor(String loanId) async =>
+      (await database)
+          .delete('loan_payments', where: 'loan_id=?', whereArgs: [loanId]);
+
   // ── Aggregations ─────────────────────────────────────────────────────
   static Future<double> getMonthlySpentForCategory(String categoryId, DateTime month) async {
     final db = await database;
@@ -824,6 +1025,8 @@ class DBHelper {
       db.query('recurring_history'),
       db.query('savings_goals'),
       db.query('savings_contributions'),
+      db.query('loans'),
+      db.query('loan_payments'),
     ]);
     return {
       'accounts': results[0],
@@ -838,6 +1041,8 @@ class DBHelper {
       'recurring_history': results[9],
       'savings_goals': results[10],
       'savings_contributions': results[11],
+      'loans': results[12],
+      'loan_payments': results[13],
       'version': _version,
     };
   }
@@ -860,6 +1065,8 @@ class DBHelper {
         'recurring_history',
         'savings_goals',
         'savings_contributions',
+        'loans',
+        'loan_payments',
       ]) {
         await txn.delete(table);
         final rows = (data[table] as List?)?.cast<Map<String, dynamic>>() ?? [];
@@ -1023,6 +1230,24 @@ class DBHelper {
     for (final row in _rows(data, 'savings_contributions')) {
       row.putIfAbsent('note', () => '');
       row.putIfAbsent('type', () => 'contribution');
+    }
+
+    // v19: loans and loan_payments
+    data.putIfAbsent('loans', () => <dynamic>[]);
+    for (final row in _rows(data, 'loans')) {
+      row.putIfAbsent('interest_rate', () => null);
+      row.putIfAbsent('account_id', () => null);
+      row.putIfAbsent('reminder_enabled', () => 0);
+      row.putIfAbsent('reminder_day', () => 1);
+      row.putIfAbsent('reminder_time', () => '09:00');
+      row.putIfAbsent('is_settled', () => 0);
+      row.putIfAbsent('notes', () => '');
+      row.putIfAbsent('created_at', () => DateTime.now().toIso8601String());
+    }
+    data.putIfAbsent('loan_payments', () => <dynamic>[]);
+    for (final row in _rows(data, 'loan_payments')) {
+      row.putIfAbsent('account_id', () => null);
+      row.putIfAbsent('notes', () => '');
     }
 
     data['_originalVersion'] = backupVersion;

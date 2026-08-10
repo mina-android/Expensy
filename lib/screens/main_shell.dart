@@ -30,6 +30,26 @@ class _MainShellState extends State<MainShell> {
   ];
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final app = context.read<AppProvider>();
+    app.tabIndexNotifier.removeListener(_onTabChange);
+    app.tabIndexNotifier.addListener(_onTabChange);
+    if (_index != app.tabIndexNotifier.value) {
+      _index = app.tabIndexNotifier.value;
+    }
+  }
+
+  void _onTabChange() {
+    final app = context.read<AppProvider>();
+    if (_index != app.tabIndexNotifier.value && mounted) {
+      setState(() {
+        _index = app.tabIndexNotifier.value;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return PopScope(
@@ -44,46 +64,67 @@ class _MainShellState extends State<MainShell> {
         });
       },
       child: Scaffold(
+        extendBody: true,
         body: FadeIndexedStack(index: _index, children: _screens),
-        bottomNavigationBar: ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          child: NavigationBar(
-            selectedIndex: _index,
-            animationDuration: const Duration(milliseconds: 120),
-            onDestinationSelected: (i) {
-              AppHaptics.tap(context, HapticStrength.selection);
-              final app = context.read<AppProvider>();
-              setState(() {
-                _index = i;
-                app.tabIndexNotifier.value = i;
-              });
-            },
-            destinations: [
-              NavigationDestination(
-                  icon: const Icon(Icons.home_outlined),
-                  selectedIcon: const Icon(Icons.home),
-                  label: l10n.main_home),
-              NavigationDestination(
-                  icon: const Icon(Icons.receipt_long_outlined),
-                  selectedIcon: const Icon(Icons.receipt_long),
-                  label: l10n.main_transactions),
-              NavigationDestination(
-                  icon: const Icon(Icons.repeat_rounded),
-                  selectedIcon: const Icon(Icons.repeat_rounded),
-                  label: l10n.main_recurring),
-              NavigationDestination(
-                  icon: const Icon(Icons.account_balance_wallet_outlined),
-                  selectedIcon: const Icon(Icons.account_balance_wallet),
-                  label: l10n.main_accounts),
-              NavigationDestination(
-                  icon: const Icon(Icons.pie_chart_outline_rounded),
-                  selectedIcon: const Icon(Icons.pie_chart_rounded),
-                  label: l10n.main_budgets),
-              NavigationDestination(
-                  icon: const Icon(Icons.more_horiz_outlined),
-                  selectedIcon: const Icon(Icons.more_horiz),
-                  label: l10n.main_more),
-            ],
+        bottomNavigationBar: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(48, 0, 48, 16),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(40),
+              child: NavigationBarTheme(
+                data: NavigationBarThemeData(
+                  height: 54,
+                  indicatorShape: const CircleBorder(),
+                  iconTheme: WidgetStateProperty.resolveWith((states) {
+                    return IconThemeData(
+                      size: 24,
+                      color: states.contains(WidgetState.selected)
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.onSurfaceVariant,
+                    );
+                  }),
+                ),
+                child: NavigationBar(
+                  labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+                  selectedIndex: _index,
+                  animationDuration: const Duration(milliseconds: 120),
+                  onDestinationSelected: (i) {
+                    AppHaptics.tap(context, HapticStrength.selection);
+                    final app = context.read<AppProvider>();
+                    setState(() {
+                      _index = i;
+                      app.tabIndexNotifier.value = i;
+                    });
+                  },
+                  destinations: [
+                    NavigationDestination(
+                        icon: const Icon(Icons.home_outlined),
+                        selectedIcon: const Icon(Icons.home),
+                        label: l10n.main_home),
+                    NavigationDestination(
+                        icon: const Icon(Icons.receipt_long_outlined),
+                        selectedIcon: const Icon(Icons.receipt_long),
+                        label: l10n.main_transactions),
+                    NavigationDestination(
+                        icon: const Icon(Icons.repeat_rounded),
+                        selectedIcon: const Icon(Icons.repeat_rounded),
+                        label: l10n.main_recurring),
+                    NavigationDestination(
+                        icon: const Icon(Icons.account_balance_wallet_outlined),
+                        selectedIcon: const Icon(Icons.account_balance_wallet),
+                        label: l10n.main_accounts),
+                    NavigationDestination(
+                        icon: const Icon(Icons.pie_chart_outline_rounded),
+                        selectedIcon: const Icon(Icons.pie_chart_rounded),
+                        label: l10n.main_budgets),
+                    NavigationDestination(
+                        icon: const Icon(Icons.more_horiz_outlined),
+                        selectedIcon: const Icon(Icons.more_horiz),
+                        label: l10n.main_more),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),

@@ -121,7 +121,7 @@ class SavingsGoalDetailScreen extends StatelessWidget {
                     if (currentGoal.targetDate != null)
                       Text(
                           l10n.savings_targetDate(
-                              currentGoal.targetDate as String? ?? ''),
+                              DateFormat('MMM d, yyyy').format(currentGoal.targetDate!)),
                           style: TextStyle(
                               fontSize: 13,
                               color: cs.onSurface.withValues(alpha: 0.6))),
@@ -253,11 +253,11 @@ class _ContributionSheetState extends State<_ContributionSheet> {
     super.initState();
     // Preselect the primary account or the first one with matching currency
     final matches =
-        widget.app.accounts.where((a) => a.currency == widget.goal.currency);
+        widget.app.nonBankAccounts.where((a) => a.currency == widget.goal.currency);
     if (matches.isNotEmpty) {
       _selectedAccountId = matches.first.id;
-    } else if (widget.app.accounts.isNotEmpty) {
-      _selectedAccountId = widget.app.accounts.first.id;
+    } else if (widget.app.nonBankAccounts.isNotEmpty) {
+      _selectedAccountId = widget.app.nonBankAccounts.first.id;
     }
   }
 
@@ -305,7 +305,7 @@ class _ContributionSheetState extends State<_ContributionSheet> {
               style:
                   const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
           const SizedBox(height: 20),
-          if (widget.app.accounts.isEmpty)
+          if (widget.app.nonBankAccounts.isEmpty)
             Text(l10n.savings_noAccounts)
           else ...[
             DropdownButtonFormField<String>(
@@ -316,7 +316,7 @@ class _ContributionSheetState extends State<_ContributionSheet> {
                 border:
                     OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              items: widget.app.accounts
+              items: widget.app.nonBankAccounts
                   .map((a) => DropdownMenuItem(
                         value: a.id,
                         child: Text('${a.name} (${a.currency})'),

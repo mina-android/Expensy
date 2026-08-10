@@ -1680,4 +1680,185 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get savings_saveGoal => 'حفظ الهدف';
+
+  @override
+  String get more_loans => 'القروض';
+
+  @override
+  String more_loansSub(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count قروض نشطة',
+      one: 'قرض نشط واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get loans_title => 'القروض';
+
+  @override
+  String get loans_addLoan => 'إضافة قرض';
+
+  @override
+  String get loans_editLoan => 'تعديل القرض';
+
+  @override
+  String get loans_loanName => 'اسم القرض';
+
+  @override
+  String get loans_amount => 'المبلغ';
+
+  @override
+  String get loans_startDate => 'تاريخ البدء';
+
+  @override
+  String get loans_endDate => 'تاريخ الانتهاء';
+
+  @override
+  String get loans_interestRateOptional => 'نسبة الفائدة (اختياري)';
+
+  @override
+  String get loans_account => 'الحساب المرتبط';
+
+  @override
+  String get loans_monthlyPayment => 'القسط الشهري';
+
+  @override
+  String get loans_totalPayable => 'إجمالي المستحق';
+
+  @override
+  String get loans_remaining => 'المتبقي';
+
+  @override
+  String get loans_paid => 'المدفوع';
+
+  @override
+  String get loans_logPayment => 'تسجيل دفعة';
+
+  @override
+  String get loans_paymentReminder => 'تذكير الدفع';
+
+  @override
+  String get loans_reminderDay => 'يوم التذكير';
+
+  @override
+  String get loans_notes => 'ملاحظات';
+
+  @override
+  String get loans_saveLoan => 'حفظ القرض';
+
+  @override
+  String get loans_deleteLoan => 'حذف القرض';
+
+  @override
+  String get loans_settled => 'تم تسديده';
+
+  @override
+  String loans_durationMonths(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count أشهر',
+      one: 'شهر واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get loans_paymentHistory => 'سجل الدفعات';
+
+  @override
+  String get loans_noPayments => 'لم يتم تسجيل أي دفعات بعد';
+
+  @override
+  String get loans_outstandingDebt => 'الديون المستحقة';
+
+  @override
+  String get loans_monthlyObligation => 'الالتزام الشهري';
+
+  @override
+  String get insights_loans => 'القروض';
+
+  @override
+  String get backup_loans => 'القروض';
+
+  @override
+  String get backup_loanPayments => 'دفعات القروض';
+
+  @override
+  String get more_yearlyAnalysis => 'التحليل السنوي';
+
+  @override
+  String get more_yearlyAnalysisSub => 'توقعات التدفق النقدي شهرياً';
+
+  @override
+  String get yearly_title => 'التحليل السنوي';
+
+  @override
+  String get yearly_recurringExp => 'المصروفات المتكررة';
+
+  @override
+  String get yearly_recurringInc => 'الدخل المتكرر';
+
+  @override
+  String get yearly_loans => 'أقساط القروض';
+
+  @override
+  String get yearly_borrowed => 'ديون مستحقة';
+
+  @override
+  String get yearly_lentDue => 'أموال مستردة';
+
+  @override
+  String get yearly_inflow => 'التدفقات الداخلة';
+
+  @override
+  String get yearly_outflow => 'التدفقات الخارجة';
+
+  @override
+  String get yearly_netFlow => 'صافي التدفق';
+
+  @override
+  String get yearly_totalInflow => 'إجمالي الداخل';
+
+  @override
+  String get yearly_totalOutflow => 'إجمالي الخارج';
+
+  @override
+  String get yearly_netCashFlow => 'صافي التدفق النقدي';
+
+  @override
+  String get yearly_noData => 'لا يوجد نشاط متوقع حتى الآن';
+
+  @override
+  String get yearly_noDataSub =>
+      'أضف مدفوعات متكررة أو قروض أو أموالاً مسبقة بتاريخ استحقاق لرؤية التوقعات';
+
+  @override
+  String get budget_addBudget => 'إضافة ميزانية';
+
+  @override
+  String get budget_addGoal => 'إضافة هدف إدّخار';
+
+  @override
+  String get add_transaction_possibleDuplicate => 'Possible duplicate';
+
+  @override
+  String get add_transaction_goBack => 'Go back';
+
+  @override
+  String get add_transaction_saveAnyway => 'Save anyway';
+
+  @override
+  String get loans_confirmDeleteLoan =>
+      'Are you sure you want to delete this loan and all its payments?';
+
+  @override
+  String get loans_deletePayment => 'Delete Payment';
+
+  @override
+  String get loans_confirmDeletePayment =>
+      'Are you sure you want to delete this payment record?';
 }

@@ -277,9 +277,10 @@ class AccountCardPicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final filtered = accounts.where((a) => a.type != 'bank').toList();
     final items = allowNone
-        ? [null, ...accounts.map((a) => a as Account?)]
-        : accounts.map((a) => a as Account?).toList();
+        ? [null, ...filtered.map((a) => a as Account?)]
+        : filtered.map((a) => a as Account?).toList();
 
     return SizedBox(
       height: 76,
@@ -689,16 +690,32 @@ class _TypeOptionCard extends StatelessWidget {
 
 // ── Expandable FAB ────────────────────────────────────────────────────────────
 
+class ExpandableFabItem {
+  final String label;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const ExpandableFabItem({
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+}
+
 class ExpandableFab extends StatefulWidget {
   final String label;
-  final VoidCallback onIncome;
-  final VoidCallback onExpense;
+  final VoidCallback? onIncome;
+  final VoidCallback? onExpense;
+  final List<ExpandableFabItem>? items;
 
   const ExpandableFab({
     super.key,
     required this.label,
-    required this.onIncome,
-    required this.onExpense,
+    this.onIncome,
+    this.onExpense,
+    this.items,
   });
 
   @override
@@ -768,31 +785,40 @@ class _ExpandableFabState extends State<ExpandableFab>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final List<ExpandableFabItem> actions = widget.items ?? [
+      ExpandableFabItem(
+        label: l10n.add_transaction_expense,
+        icon: Icons.arrow_upward_rounded,
+        color: const Color(0xFFC62828),
+        onTap: widget.onExpense ?? () {},
+      ),
+      ExpandableFabItem(
+        label: l10n.add_transaction_income,
+        icon: Icons.arrow_downward_rounded,
+        color: const Color(0xFF2E7D32),
+        onTap: widget.onIncome ?? () {},
+      ),
+    ];
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        _buildAction(
-          color: const Color(0xFFC62828),
-          icon: Icons.arrow_upward_rounded,
-          label: l10n.add_transaction_expense,
-          onTap: () {
-            _toggle();
-            widget.onExpense();
-          },
-          animation: _expandAnimation0,
-        ),
-        _buildAction(
-          color: const Color(0xFF2E7D32),
-          icon: Icons.arrow_downward_rounded,
-          label: l10n.add_transaction_income,
-          onTap: () {
-            _toggle();
-            widget.onIncome();
-          },
-          animation: _expandAnimation1,
-        ),
+        ...actions.asMap().entries.map((entry) {
+          final idx = entry.key;
+          final item = entry.value;
+          final anim = idx == 0 ? _expandAnimation0 : _expandAnimation1;
+          return _buildAction(
+            color: item.color,
+            icon: item.icon,
+            label: item.label,
+            onTap: () {
+              _toggle();
+              item.onTap();
+            },
+            animation: anim,
+          );
+        }),
         FloatingActionButton.extended(
           heroTag: null,
           onPressed: _toggle,

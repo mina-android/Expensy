@@ -41,7 +41,7 @@ class NotificationService {
     tz_data.initializeTimeZones();
 
     const androidSettings =
-        AndroidInitializationSettings('@drawable/ic_notification');
+        AndroidInitializationSettings('ic_notification');
     await _plugin
         .initialize(const InitializationSettings(android: androidSettings));
     _initialized = true;

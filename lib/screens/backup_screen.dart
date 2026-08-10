@@ -162,6 +162,10 @@ class _BackupScreenState extends State<BackupScreen> {
           Icons.handshake_outlined, l10n.backup_lentRecords, app.lended.length),
       _CountRow(
           Icons.inventory_2_outlined, l10n.backup_assets, app.assets.length),
+      _CountRow(
+          Icons.account_balance_outlined, l10n.backup_loans, app.loans.length),
+      _CountRow(Icons.payments_outlined, l10n.backup_loanPayments,
+          app.loanPayments.length),
       _CountRow(Icons.label_outline_rounded, l10n.backup_categories,
           app.categories.length),
       _CountRow(

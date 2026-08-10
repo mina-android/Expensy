@@ -1665,4 +1665,172 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get savings_saveGoal => '目標を保存する';
+
+  @override
+  String get more_loans => 'ローン';
+
+  @override
+  String more_loansSub(num count) {
+    return 'アクティブなローン';
+  }
+
+  @override
+  String get loans_title => 'ローン';
+
+  @override
+  String get loans_addLoan => 'ローンを追加';
+
+  @override
+  String get loans_editLoan => 'ローンを編集';
+
+  @override
+  String get loans_loanName => 'ローン名';
+
+  @override
+  String get loans_amount => '金額';
+
+  @override
+  String get loans_startDate => '開始日';
+
+  @override
+  String get loans_endDate => '終了日';
+
+  @override
+  String get loans_interestRateOptional => '金利（任意）';
+
+  @override
+  String get loans_account => '連携口座';
+
+  @override
+  String get loans_monthlyPayment => '月々の返済額';
+
+  @override
+  String get loans_totalPayable => '返済総額';
+
+  @override
+  String get loans_remaining => '残高';
+
+  @override
+  String get loans_paid => '返済済み';
+
+  @override
+  String get loans_logPayment => '返済を記録';
+
+  @override
+  String get loans_paymentReminder => '返済リマインダー';
+
+  @override
+  String get loans_reminderDay => 'リマインダー日';
+
+  @override
+  String get loans_notes => 'メモ';
+
+  @override
+  String get loans_saveLoan => 'ローンを保存';
+
+  @override
+  String get loans_deleteLoan => 'ローンを削除';
+
+  @override
+  String get loans_settled => '完済済み';
+
+  @override
+  String loans_durationMonths(num count) {
+    return 'ヶ月';
+  }
+
+  @override
+  String get loans_paymentHistory => '返済履歴';
+
+  @override
+  String get loans_noPayments => '返済記録がまだありません';
+
+  @override
+  String get loans_outstandingDebt => '未払い債務';
+
+  @override
+  String get loans_monthlyObligation => '月々の返済義務';
+
+  @override
+  String get insights_loans => 'ローン';
+
+  @override
+  String get backup_loans => 'ローン';
+
+  @override
+  String get backup_loanPayments => 'ローン返済';
+
+  @override
+  String get more_yearlyAnalysis => '年間分析';
+
+  @override
+  String get more_yearlyAnalysisSub => '月ごとのキャッシュフロー予測';
+
+  @override
+  String get yearly_title => '年間分析';
+
+  @override
+  String get yearly_recurringExp => '定期支出';
+
+  @override
+  String get yearly_recurringInc => '定期収入';
+
+  @override
+  String get yearly_loans => 'ローン返済';
+
+  @override
+  String get yearly_borrowed => '借入期日';
+
+  @override
+  String get yearly_lentDue => '貸付回収期日';
+
+  @override
+  String get yearly_inflow => '流入';
+
+  @override
+  String get yearly_outflow => '流出';
+
+  @override
+  String get yearly_netFlow => '純フロー';
+
+  @override
+  String get yearly_totalInflow => '総流入';
+
+  @override
+  String get yearly_totalOutflow => '総流出';
+
+  @override
+  String get yearly_netCashFlow => '純キャッシュフロー';
+
+  @override
+  String get yearly_noData => '予測アクティビティがありません';
+
+  @override
+  String get yearly_noDataSub => '定期的な支払いやローンを追加して予測を表示';
+
+  @override
+  String get budget_addBudget => '予算を追加';
+
+  @override
+  String get budget_addGoal => '貯蓄目標を追加';
+
+  @override
+  String get add_transaction_possibleDuplicate => 'Possible duplicate';
+
+  @override
+  String get add_transaction_goBack => 'Go back';
+
+  @override
+  String get add_transaction_saveAnyway => 'Save anyway';
+
+  @override
+  String get loans_confirmDeleteLoan =>
+      'Are you sure you want to delete this loan and all its payments?';
+
+  @override
+  String get loans_deletePayment => 'Delete Payment';
+
+  @override
+  String get loans_confirmDeletePayment =>
+      'Are you sure you want to delete this payment record?';
 }

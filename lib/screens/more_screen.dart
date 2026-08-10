@@ -6,12 +6,14 @@ import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
 import 'statistics_screen.dart';
 import 'insights_screen.dart';
+import 'yearly_analysis_screen.dart';
 
 import 'currency_converter_screen.dart';
 import 'wishlist_screen.dart';
 import 'lended_screen.dart';
 import 'assets_screen.dart';
 import 'categories_screen.dart';
+import 'loans_screen.dart';
 import 'export_screen.dart';
 import 'backup_screen.dart';
 import 'settings_screen.dart';
@@ -28,6 +30,7 @@ class MoreScreen extends StatelessWidget {
     final lendedLen = context.select<AppProvider, int>((a) => a.lended.where((l) => !l.isSettled).length);
     final assetsLen = context.select<AppProvider, int>((a) => a.assets.length);
     final categoriesLen = context.select<AppProvider, int>((a) => a.categories.length);
+    final loansLen = context.select<AppProvider, int>((a) => a.loans.where((l) => !l.isSettled).length);
 
     final items = [
       _Item(
@@ -42,6 +45,12 @@ class MoreScreen extends StatelessWidget {
           sub: l10n.more_insightsSub,
           color: const Color(0xFF00838F),
           screen: const InsightsScreen()),
+      _Item(
+          icon: Icons.calendar_month_outlined,
+          label: l10n.more_yearlyAnalysis,
+          sub: l10n.more_yearlyAnalysisSub,
+          color: const Color(0xFF2E7D32),
+          screen: const YearlyAnalysisScreen()),
       _Item(
           icon: Icons.currency_exchange_rounded,
           label: l10n.more_currencyConverter,
@@ -58,7 +67,7 @@ class MoreScreen extends StatelessWidget {
           icon: Icons.handshake_outlined,
           label: l10n.more_lentMoney,
           sub: l10n.more_lentMoneySub(lendedLen),
-          color: const Color(0xFFE65100),
+          color: const Color(0xFFE65140),
           screen: const LendedScreen()),
       _Item(
           icon: Icons.inventory_2_outlined,
@@ -66,6 +75,12 @@ class MoreScreen extends StatelessWidget {
           sub: l10n.more_assetsSub(assetsLen),
           color: const Color(0xFF1565C0),
           screen: const AssetsScreen()),
+      _Item(
+          icon: Icons.account_balance_outlined,
+          label: l10n.more_loans,
+          sub: l10n.more_loansSub(loansLen),
+          color: const Color(0xFF4A148C),
+          screen: const LoansScreen()),
       _Item(
           icon: Icons.label_outline_rounded,
           label: l10n.more_categories,
@@ -101,7 +116,7 @@ class MoreScreen extends StatelessWidget {
         foregroundColor: cs.onPrimary,
       ),
       body: ListView.separated(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.fromLTRB(14, 14, 14, 140),
         itemCount: items.length,
         separatorBuilder: (_, __) => const SizedBox(height: 8),
         itemBuilder: (_, i) {
@@ -146,3 +161,4 @@ class _Item {
       required this.color,
       required this.screen});
 }
+

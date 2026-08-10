@@ -27,7 +27,7 @@ class CategoriesScreen extends StatelessWidget {
         foregroundColor: cs.onPrimary,
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(14, 14, 14, 100),
+        padding: const EdgeInsets.fromLTRB(14, 14, 14, 140),
         children: [
           SectionHeader(title: l10n.categories_expenseCategories),
           ReorderableListView.builder(
@@ -79,7 +79,6 @@ class CategoriesScreen extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      useSafeArea: true,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => _CategorySheet(existing: existing),
@@ -247,7 +246,7 @@ class _CategorySheetState extends State<_CategorySheet> {
                           ?.copyWith(fontWeight: FontWeight.w800)),
                 ),
                 AnimatedContainer(
-                  duration: const Duration(milliseconds: 100),
+                  duration: const Duration(milliseconds: 140),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
@@ -292,7 +291,7 @@ class _CategorySheetState extends State<_CategorySheet> {
                       child: GestureDetector(
                     onTap: () => setState(() => _type = 'expense'),
                     child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 100),
+                      duration: const Duration(milliseconds: 140),
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       decoration: BoxDecoration(
                           color: _type == 'expense'
@@ -313,7 +312,7 @@ class _CategorySheetState extends State<_CategorySheet> {
                       child: GestureDetector(
                     onTap: () => setState(() => _type = 'income'),
                     child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 100),
+                      duration: const Duration(milliseconds: 140),
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       decoration: BoxDecoration(
                           color: _type == 'income'
@@ -379,7 +378,7 @@ class _CategorySheetState extends State<_CategorySheet> {
               GestureDetector(
                 onTap: () => setState(() => _iconIndex = 0),
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 100),
+                  duration: const Duration(milliseconds: 140),
                   margin: const EdgeInsets.only(bottom: 10),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -431,7 +430,7 @@ class _CategorySheetState extends State<_CategorySheet> {
                     child: GestureDetector(
                       onTap: () => setState(() => _iconIndex = oneBasedIndex),
                       child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 100),
+                        duration: const Duration(milliseconds: 140),
                         decoration: BoxDecoration(
                           color: selected
                               ? Color(_color)
@@ -473,4 +472,5 @@ class _CategorySheetState extends State<_CategorySheet> {
     );
   }
 }
+
 
