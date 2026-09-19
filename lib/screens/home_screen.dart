@@ -86,7 +86,11 @@ class _HomeScreenState extends State<HomeScreen> {
     final app = context.read<AppProvider>();
     final cs = Theme.of(context).colorScheme;
 
-    context.select<AppProvider, int>((a) => a.transactions.length);
+    // Watched by reference: DBHelper.getTransactions() always returns a
+    // fresh List instance, so this changes on every add/edit/delete --
+    // unlike .length, which misses an edit that doesn't change the count
+    // (e.g. editing a transaction's category/date without its amount).
+    context.select<AppProvider, List<AppTransaction>>((a) => a.transactions);
     context.select<AppProvider, int>((a) => a.accounts.length);
     final hideBalance =
         context.select<AppProvider, bool>((a) => a.settings.hideBalance);
