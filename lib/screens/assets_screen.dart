@@ -7,6 +7,8 @@ import '../providers/app_provider.dart';
 import '../models/models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
+import '../widgets/fintech_components.dart';
+import '../widgets/app_numeric_keypad.dart';
 import '../utils/haptics.dart';
 
 class AssetsScreen extends StatelessWidget {
@@ -16,35 +18,41 @@ class AssetsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
-    final cs  = Theme.of(context).colorScheme;
-
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final total = app.totalAssetsValue;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.assets_assets, style: const TextStyle(fontWeight: FontWeight.w800)),
-        backgroundColor: cs.primary,
-        foregroundColor: cs.onPrimary,
       ),
       body: Column(children: [
-        // ── Summary card (same style as lended_screen) ──────────────────
-        Container(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-          color: cs.primary,
-          child: Row(children: [
-            Expanded(child: _SumCol(
-              label: l10n.assets_totalAssets,
-              value: formatAmount(total, app.settings.currency),
-              color: cs.onPrimary,
-              labelColor: cs.onPrimary.withValues(alpha: 0.65),
-            )),
-            Expanded(child: _SumCol(
-              label: l10n.assets_items,
-              value: '${app.assets.length}',
-              color: cs.onPrimary.withValues(alpha: 0.9),
-              labelColor: cs.onPrimary.withValues(alpha: 0.65),
-            )),
-          ]),
+        // ── Summary card ────────────────────────────────────────────────
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+              ),
+            ),
+            child: Row(children: [
+              Expanded(child: _SumCol(
+                label: l10n.assets_totalAssets,
+                value: formatAmount(total, app.settings.currency),
+                color: const Color(0xFF1565C0),
+              )),
+              Container(width: 1, height: 28, color: cs.outlineVariant.withValues(alpha: 0.2)),
+              Expanded(child: _SumCol(
+                label: l10n.assets_items,
+                value: '${app.assets.length}',
+                color: cs.onSurface,
+              )),
+            ]),
+          ),
         ),
 
         // ── Asset list ──────────────────────────────────────────────────
@@ -56,7 +64,7 @@ class AssetsScreen extends StatelessWidget {
                   subMessage: l10n.assets_noAssetsYetSub,
                 )
               : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(14, 14, 14, 140),
+                  padding: const EdgeInsets.fromLTRB(14, 8, 14, 110),
                   itemCount: app.assets.length,
                   itemBuilder: (_, i) => _AssetCard(
                     asset: app.assets[i],
@@ -68,10 +76,9 @@ class AssetsScreen extends StatelessWidget {
                 ),
         ),
       ]),
-      floatingActionButton: FloatingActionButton(
-        heroTag: null,
-        onPressed: () { AppHaptics.tap(context, HapticStrength.light); _openSheet(context); },
-        child: const Icon(Icons.add),
+      floatingActionButton: FintechFab(
+        tooltip: l10n.assets_addAsset,
+        onPressed: () => _openSheet(context),
       ),
     );
   }
@@ -87,21 +94,18 @@ class AssetsScreen extends StatelessWidget {
   }
 }
 
-// ── Summary column (same pattern as lended_screen's _SumCol) ─────────────────
+// ── Summary column ───────────────────────────────────────────────────────────
 class _SumCol extends StatelessWidget {
   final String label, value;
   final Color color;
-  final Color? labelColor;
-  const _SumCol({required this.label, required this.value,
-      required this.color, this.labelColor});
+  const _SumCol({required this.label, required this.value, required this.color});
 
   @override
   Widget build(BuildContext context) => Column(children: [
-    Text(label, style: TextStyle(fontSize: 10,
-        color: labelColor ?? Theme.of(context).colorScheme.onPrimaryContainer
-            .withValues(alpha: 0.6))),
-    const SizedBox(height: 2),
-    Text(value, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800,
+    Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600,
+        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55))),
+    const SizedBox(height: 3),
+    Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800,
         color: color), textAlign: TextAlign.center),
   ]);
 }
@@ -120,11 +124,20 @@ class _AssetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     const assetColor = Color(0xFF1565C0);
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainer.withValues(alpha: isDark ? 0.35 : 0.55),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04),
+        ),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Row(children: [
@@ -187,7 +200,8 @@ class _AssetCard extends StatelessWidget {
                     .read<AppProvider>()
                     .deleteAssetWithUndo(asset.id);
                 if (context.mounted) {
-                  showAppSnackbar(context, '${asset.name} deleted',
+                  showAppSnackbar(
+                      context, l10n.common_itemDeleted(asset.name),
                       onUndo: undo);
                 }
               },
@@ -214,6 +228,7 @@ class _AssetSheetState extends State<_AssetSheet> {
   final _notesCtrl = TextEditingController();
   String _currency = 'EGP';
   bool _submitted  = false;
+  bool _showKeypad = false;
 
   bool get isEdit => widget.existing != null;
 
@@ -269,14 +284,20 @@ class _AssetSheetState extends State<_AssetSheet> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final sym = currencyInfo(_currency).symbol;
+    final kbOpen = MediaQuery.of(context).viewInsets.bottom > 100;
+    final showPad = _showKeypad && !kbOpen;
 
     return Padding(
-      padding: const EdgeInsets.only(
-          bottom: 16,
+      padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
           left: 20,
           right: 20,
           top: 20),
-      child: SingleChildScrollView(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
+        child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -295,6 +316,9 @@ class _AssetSheetState extends State<_AssetSheet> {
                 prefixIcon: const Icon(Icons.inventory_2_outlined),
                 errorText: _submitted && _nameCtrl.text.trim().isEmpty ? l10n.error_required : null,
               ),
+              onTap: () {
+                if (_showKeypad) setState(() => _showKeypad = false);
+              },
               onChanged: (_) {
                 if (_submitted) setState(() {});
               },
@@ -307,12 +331,29 @@ class _AssetSheetState extends State<_AssetSheet> {
                 flex: 3,
                 child: TextField(
                   controller: _valueCtrl,
-                  textInputAction: TextInputAction.next,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
+                  readOnly: true,
+                  showCursor: true,
+                  onTap: () {
+                    FocusScope.of(context).unfocus();
+                    setState(() => _showKeypad = true);
+                  },
                   decoration: InputDecoration(
                     labelText: l10n.assets_value,
                     prefixText: '$sym ',
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        showPad
+                            ? Icons.keyboard_hide_outlined
+                            : Icons.dialpad_outlined,
+                        size: 20,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      onPressed: () {
+                        AppHaptics.tap(context, HapticStrength.light);
+                        FocusScope.of(context).unfocus();
+                        setState(() => _showKeypad = !_showKeypad);
+                      },
+                    ),
                     errorText: _submitted && (double.tryParse(_valueCtrl.text) == null || double.parse(_valueCtrl.text) < 0) ? l10n.error_required : null,
                     helperText: _submitted && (double.tryParse(_valueCtrl.text) == null || double.parse(_valueCtrl.text) < 0) ? null : ' ',
                   ),
@@ -366,7 +407,18 @@ class _AssetSheetState extends State<_AssetSheet> {
                 labelText: l10n.assets_notesOptional,
                 prefixIcon: const Icon(Icons.sticky_note_2_outlined),
               ),
+              onTap: () {
+                if (_showKeypad) setState(() => _showKeypad = false);
+              },
             ),
+            if (showPad) ...[
+              const SizedBox(height: 12),
+              AppNumericKeypad(
+                controller: _valueCtrl,
+                compact: true,
+                onDone: () => setState(() => _showKeypad = false),
+              ),
+            ],
             const SizedBox(height: 24),
 
             FilledButton(
@@ -379,6 +431,7 @@ class _AssetSheetState extends State<_AssetSheet> {
             ),
             ],
           ),
+        ),
       ),
     );
   }

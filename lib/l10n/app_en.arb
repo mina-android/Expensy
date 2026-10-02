@@ -329,6 +329,146 @@
   "budget_ofAmount": "of {amount}",
   "budget_saveChanges": "Save Changes",
   "budget_budget": "Budget",
+  "budget_rollover": "Rollover (Envelope)",
+  "budget_rolloverDesc": "Carry forward unused surplus or deficits to the next period",
+  "budget_rolloverBadge": "Rollover",
+  "budget_base": "Base: {amount}",
+  "@budget_base": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "budget_rolloverFrom": "Rollover ({period}): {amount}",
+  "@budget_rolloverFrom": {
+    "placeholders": {
+      "period": {},
+      "amount": {}
+    }
+  },
+  "budget_totalAvailable": "Total Available: {amount}",
+  "@budget_totalAvailable": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "budget_lastWeek": "Last Week",
+  "pacing_dailyBudget": "Safe-to-Spend",
+  "pacing_safeToSpend": "Safe to spend: {amount}/day ({days} left)",
+  "@pacing_safeToSpend": {
+    "placeholders": {
+      "amount": {},
+      "days": {}
+    }
+  },
+  "pacing_caution": "Pacing fast — limit to {amount}/day",
+  "@pacing_caution": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "pacing_overPaced": "Pace Alert — slow down to stay in budget",
+  "pacing_budgetExhausted": "Budget reached — no daily allowance left",
+  "pacing_onTrack": "On track",
+  "pacing_fast": "Pacing fast",
+  "pacing_alert": "Pace alert",
+  "pacing_daysLeft": "{days} days left",
+  "@pacing_daysLeft": {
+    "placeholders": {
+      "days": {}
+    }
+  },
+  "pacing_setBudgetPrompt": "Tap to set budget limits →",
+  "pacing_dailyAvgPace": "Daily Pace",
+  "pacing_perDay": "{amount} / day",
+  "@pacing_perDay": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "calendar_title": "Financial Calendar",
+  "calendar_subtitle": "Daily spending heatmap & due dates",
+  "calendar_zeroSpendDays": "{count} Zero-Spend Days",
+  "@calendar_zeroSpendDays": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "calendar_zeroSpendDayTitle": "Zero-Spend Day! 🎉",
+  "calendar_zeroSpendDayDesc": "Great job maintaining financial discipline with no expenses today.",
+  "calendar_billsDue": "Bills & Subscriptions Due",
+  "calendar_loansDue": "Loan Payments Due",
+  "calendar_lendedDue": "Expected Repayments",
+  "calendar_dayTransactions": "Transactions ({count})",
+  "@calendar_dayTransactions": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "calendar_noActivity": "No transactions or obligations on this date",
+  "calendar_today": "Today",
+  "calendar_averageDaily": "Daily avg: {amount}",
+  "@calendar_averageDaily": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "wrapped_title": "Expensy Wrapped",
+  "wrapped_bannerTitle": "Your {month} Wrapped is ready!",
+  "@wrapped_bannerTitle": {
+    "placeholders": {
+      "month": {}
+    }
+  },
+  "wrapped_bannerSub": "Tap to explore your monthly financial story",
+  "wrapped_theBigPicture": "The Big Picture",
+  "wrapped_howMoneyMoved": "Here is how your money moved in {month}",
+  "@wrapped_howMoneyMoved": {
+    "placeholders": {
+      "month": {}
+    }
+  },
+  "wrapped_totalInflow": "Total Inflow",
+  "wrapped_totalOutflow": "Total Outflow",
+  "wrapped_netSavings": "Net Saved",
+  "wrapped_savingsRate": "Savings Rate: {rate}%",
+  "@wrapped_savingsRate": {
+    "placeholders": {
+      "rate": {}
+    }
+  },
+  "wrapped_topCategoryTitle": "Where Did It Go?",
+  "wrapped_topCategorySub": "Your top spending category was {category}",
+  "@wrapped_topCategorySub": {
+    "placeholders": {
+      "category": {}
+    }
+  },
+  "wrapped_topCategoryShare": "{percent}% of your total spending",
+  "@wrapped_topCategoryShare": {
+    "placeholders": {
+      "percent": {}
+    }
+  },
+  "wrapped_biggestSplurgeTitle": "Biggest Splurge",
+  "wrapped_biggestSplurgeSub": "Your single largest expense of the month",
+  "wrapped_noSplurge": "No splurges! You had zero expenses this month.",
+  "wrapped_heroHabitTitle": "Hero Habit",
+  "wrapped_zeroSpendAchieved": "{count} Zero-Spend Days",
+  "@wrapped_zeroSpendAchieved": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "wrapped_heroHabitDesc": "You achieved {count} days with zero expenses. Outstanding financial discipline!",
+  "@wrapped_heroHabitDesc": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "wrapped_receiptTitle": "Monthly Statement",
+  "wrapped_obscureToggle": "Hide amounts for sharing",
+  "wrapped_showToggle": "Show amounts",
+  "wrapped_replay": "Replay Story",
   "insights_other": "Other",
   "insights_noDataYet": "No data yet",
   "insights_addSomeTransactions": "Add some transactions to see insights",
@@ -389,6 +529,9 @@
   "more_backupRestoreSub": "Save or load your data",
   "more_settings": "Settings",
   "more_settingsSub": "Theme, currency & preferences",
+  "more_sectionTools": "Financial Tools",
+  "more_sectionAnalytics": "Analytics & Insights",
+  "more_sectionPreferences": "Preferences & Data",
   "home_greeting": "Hi, {name} 👋",
   "home_there": "there",
   "home_income": "Income",
@@ -406,6 +549,44 @@
   "wishlist_notesOptional": "Notes (optional)",
   "wishlist_saveChanges": "Save Changes",
   "wishlist_addItem": "Add Item",
+  "wishlist_fundThisItem": "Fund Item",
+  "wishlist_funded": "{percent}% funded ({saved} / {target})",
+  "@wishlist_funded": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      },
+      "saved": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "wishlist_goalAchieved": "Goal Achieved — Ready to Buy!",
+  "wishlist_buyNow": "Buy Now",
+  "wishlist_purchaseTitle": "Purchase Wishlist Item",
+  "wishlist_purchasePrompt": "Do you want to record an expense transaction to deduct this purchase from an account?",
+  "wishlist_recordAndDeduct": "Record & Deduct",
+  "wishlist_markPurchasedOnly": "Mark Purchased Only",
+  "wishlist_itemPurchased": "\"{name}\" marked as purchased!",
+  "@wishlist_itemPurchased": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "wishlist_viewGoal": "View Savings Goal",
+  "savings_linkedWishlist": "Linked to Wishlist: {item}",
+  "@savings_linkedWishlist": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
   "lended_theyOweMe": "They Owe Me",
   "lended_iOweThem": "I Owe Them",
   "lended_net": "Net",
@@ -461,6 +642,14 @@
   "accounts_goldPurityKarat": "Gold Purity (Karat)",
   "accounts_weight": "Weight",
   "accounts_excludeFromTotalBala": "Exclude from Total Balance",
+  "accounts_dontLinkToCard": "Don't link to Card",
+  "@accounts_dontLinkToCard": {
+    "description": "Toggle to prevent bank account from linking with a card and restore manual balance and exclude toggle"
+  },
+  "accounts_dontLinkToCardDesc": "Manage this account's balance manually and prevent cards from linking to it",
+  "@accounts_dontLinkToCardDesc": {
+    "description": "Subtitle describing the Don't link to Card toggle"
+  },
   "accounts_color": "Color",
   "accounts_liveGoldValue": "Live Gold Value",
   "accounts_enterWeightAboveToSe": "Enter weight above to see value",
@@ -503,11 +692,38 @@
   "export_exportTransactions": "Export Transactions",
   "export_dateRange": "Date Range",
   "export_formatExcelXlsx": "Format: Excel (.xlsx)",
+  "export_exportAsPdf": "Export as PDF Report",
+  "export_formatPdf": "Format: PDF Financial Report (.pdf)",
+  "export_pdfGenerating": "Generating PDF...",
+  "export_pdfTitle": "Financial Report",
+  "export_pdfSummary": "Executive Summary",
+  "export_pdfInflow": "Total Inflow",
+  "export_pdfOutflow": "Total Outflow",
+  "export_pdfNet": "Net Savings",
+  "export_pdfSavingsRate": "Savings Rate",
+  "export_pdfCategoryBreakdown": "Category Breakdown",
+  "export_pdfTransactions": "Itemized Transactions",
+  "export_pdfNetWorthBreakdown": "Assets & Liabilities",
+  "export_pdfShare": "Share Report",
+  "export_pdfPrint": "Print / Preview",
+  "export_pdfGeneratedBy": "Generated by Expensy • Private & Offline",
   "home_totalBalance": "Total Balance",
   "home_accounts": "Accounts",
   "home_recentTransactions": "Recent Transactions",
   "home_noTransactionsYet": "No transactions yet",
   "home_add": "Add",
+  "home_goodMorning": "Good morning",
+  "home_goodAfternoon": "Good afternoon",
+  "home_goodEvening": "Good evening",
+  "home_transferAction": "Transfer",
+  "home_insightsAction": "Insights",
+  "home_calendarAction": "Calendar",
+  "home_forecastAction": "Forecast",
+  "home_manage": "Manage",
+  "home_seeAll": "See All",
+  "home_addAccount": "Add Account",
+  "home_monthlyOverview": "Monthly Overview",
+  "home_savingsRate": "Savings Rate",
   "insights_insights": "Insights",
   "lended_person_deletePerson": "Delete person",
   "lended_person_editPerson": "Edit Person",
@@ -710,5 +926,192 @@
   "add_transaction_saveAnyway": "Save anyway",
   "loans_confirmDeleteLoan": "Are you sure you want to delete this loan and all its payments?",
   "loans_deletePayment": "Delete Payment",
-  "loans_confirmDeletePayment": "Are you sure you want to delete this payment record?"
+  "loans_confirmDeletePayment": "Are you sure you want to delete this payment record?",
+  "split_transactions_title": "Split Categories",
+  "split_transactions_badge": "Split",
+  "split_transactions_addSplit": "Add Split",
+  "split_transactions_removeSplit": "Remove Split",
+  "split_transactions_allocated": "Allocated",
+  "split_transactions_remaining": "Remaining",
+  "split_transactions_fillRemaining": "Fill Remaining",
+  "split_transactions_breakdown": "Split Breakdown",
+  "split_transactions_mismatchError": "Split amounts must equal the total amount.",
+  "netWorth_title": "Net Worth",
+  "netWorth_subtitle": "Track total assets, liabilities & wealth over time",
+  "netWorth_current": "Current Net Worth",
+  "netWorth_trend": "Net Worth Trend",
+  "netWorth_totalAssets": "Total Assets",
+  "netWorth_totalLiabilities": "Total Liabilities",
+  "netWorth_liquidCash": "Cash & Bank Accounts",
+  "netWorth_goldValuation": "Physical Gold",
+  "netWorth_fixedAssets": "Property & Investments",
+  "netWorth_moneyLent": "Money Lent (Receivables)",
+  "netWorth_creditDebt": "Credit Cards & Overdraft",
+  "netWorth_loanDebt": "Loans Payable",
+  "netWorth_moneyBorrowed": "Money Borrowed (Payables)",
+  "netWorth_assetBreakdown": "Assets Breakdown",
+  "netWorth_liabilityBreakdown": "Liabilities Breakdown",
+  "netWorth_noHistory": "Net worth history will build up automatically over time as daily snapshots are recorded.",
+  "netWorth_debtRatio": "Debt Ratio",
+  "netWorth_quickActions": "Quick Actions",
+  "netWorth_history": "Snapshot History",
+  "creditCard_utilization": "Credit Utilization",
+  "creditCard_availableCredit": "Available",
+  "creditCard_limit": "Limit",
+  "creditCard_statementBalance": "Statement Balance",
+  "creditCard_unbilledBalance": "Unbilled",
+  "creditCard_payBill": "Pay Card Bill",
+  "creditCard_allCaughtUp": "All caught up! No balance due",
+  "creditCard_payBillTitle": "Pay Credit Card Bill",
+  "creditCard_payFromAccount": "Pay From Account",
+  "creditCard_paymentAmount": "Payment Amount",
+  "creditCard_fullStatement": "Statement Balance",
+  "creditCard_fullBalance": "Total Balance",
+  "creditCard_minPayment": "Minimum Payment",
+  "creditCard_customAmount": "Custom Amount",
+  "creditCard_paymentSuccess": "Paid {amount} towards {cardName}",
+  "@creditCard_paymentSuccess": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "cardName": {
+        "type": "String"
+      }
+    }
+  },
+  "creditCard_insufficientFunds": "Amount exceeds available balance",
+  "creditCard_invalidAmount": "Please enter a valid payment amount",
+  "onboarding_skipForNow": "Skip for now",
+  "onboarding_addCard": "Add a Card",
+  "onboarding_skipCardDesc": "You can skip this if you don't want to add a card right now.",
+  "onboarding_cardNameLabel": "Card Name (e.g. Visa Platinum)",
+  "onboarding_debitCard": "Debit Card",
+  "onboarding_creditLimit": "Credit Limit",
+  "onboarding_amountUsed": "Amount Used",
+  "accounts_cardHolderOptional": "Card Holder Name (Optional)",
+  "accounts_last4Digits": "Last 4 Digits",
+  "accounts_expiryDate": "Expiry Date (MM/YY)",
+  "accounts_creditLimitOptional": "Credit Limit (Optional)",
+  "accounts_minPaymentOptional": "Min. Payment (Optional)",
+  "accounts_statementDayOptional": "Statement Day (Optional)",
+  "accounts_statementDayExample": "e.g. 20",
+  "accounts_dueDayOptional": "Due Day (Optional)",
+  "accounts_dueDayExample": "e.g. 10",
+  "accounts_linkedAccountOptional": "Linked Bank Account (Optional)",
+  "accounts_excludeCardBalance": "Exclude card balance from account balance",
+  "accounts_excludeCardBalanceDesc": "This card's balance will not be added to its linked bank account.",
+  "accounts_cardHolderHeader": "CARD HOLDER",
+  "accounts_expHeader": "EXP",
+  "accounts_notifyOnDueDate": "You'll be notified on the due date",
+  "accounts_notifyWhenDue": "Get notified when payment is due",
+  "accounts_remind2DaysBeforeDesc": "Get an advance heads-up 2 days before due date",
+  "accounts_targetSaved": "Target / Saved",
+  "transactions_selectedCount": "{count, plural, =1{1 selected} other{{count} selected}}",
+  "transactions_changeCategory": "Change Category",
+  "transactions_deleteSelected": "Delete Selected",
+  "transactions_advancedFilters": "Advanced Filters",
+  "transactions_clearAll": "Clear All",
+  "transactions_amountRange": "Amount Range",
+  "transactions_minAmount": "Min Amount",
+  "transactions_maxAmount": "Max Amount",
+  "transactions_applyFilters": "Apply Filters",
+  "presets_new": "New",
+  "presets_presetName": "Preset Name (e.g. Morning Coffee)",
+  "presets_defaultAmount": "Default Amount",
+  "savings_goalName": "Goal Name",
+  "savings_goalNameHint": "e.g. New Car, Vacation",
+  "savings_targetAmount": "Target Amount",
+  "savings_targetDateOptional": "Target Date (Optional)",
+  "savings_selectDate": "Select date",
+  "savings_amountRequired": "Amount is required",
+  "savings_noteOptional": "Note (Optional)",
+  "loans_skipInstallment": "Skip the next loan installment?",
+  "recurring_confirmDelete": "Are you sure you want to delete this recurring payment?",
+  "export_formatExcelOption": "Excel (.xlsx)",
+  "export_formatPdfOption": "PDF Report",
+  "export_pdfNoTransactions": "No transactions recorded within this date range.",
+  "savings_saved": "Saved",
+  "export_pdfDate": "Date",
+  "export_pdfDescription": "Description",
+  "accounts_noCardsYet": "No Cards",
+  "accounts_tapToAddCard": "Tap + to add your first card",
+  "savings_noGoalsYet": "No Savings Goals",
+  "savings_tapToAddGoal": "Tap + to set a new goal",
+  "netWorth_recordSnapshot": "Record Snapshot",
+  "netWorth_snapshotRecorded": "Snapshot recorded",
+  "savings_noContributionsYet": "No contributions yet",
+  "creditCard_closesStatementBillingCycle": "Closes current statement billing cycle",
+  "creditCard_clearsTotalDebt": "Clears total card debt in full",
+  "creditCard_requiredMinPayment": "Required minimum payment",
+  "creditCard_specifyCustomAmount": "Specify custom payment amount",
+  "common_itemDeleted": "\"{name}\" deleted",
+  "@common_itemDeleted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "common_accountDeleted": "Account deleted",
+  "common_cardDeleted": "Card deleted",
+  "common_transactionDeleted": "Transaction deleted",
+  "common_recordDeleted": "Record deleted",
+  "common_paymentDeleted": "Payment deleted",
+  "loans_skippedInstallment": "Skipped loan installment",
+  "loans_loggedPayment": "Logged payment of {amount}",
+  "@loans_loggedPayment": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "loans_notificationsPermissionRequired": "Notifications permission required",
+  "creditCard_selectFundingAccount": "Please select a funding account",
+  "presets_presetUpdated": "Preset updated",
+  "presets_presetAdded": "Preset added",
+  "presets_presetDeleted": "Preset deleted",
+  "transactions_deletedCount": "{count, plural, =1{Deleted 1 item} other{Deleted {count} items}}",
+  "@transactions_deletedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "split_atLeastTwoCategories": "At least 2 categories required for split.",
+  "split_categoryAndAmountRequired": "Each split item must have a category and amount > 0.",
+  "presets_addQuickPresets": "Add 1-Tap Quick Presets",
+  "presets_quickPresetsDesc": "Log frequent coffees, commute, or meals with one tap",
+  "presets_loggedPreset": "Logged {title} ({amount})",
+  "@presets_loggedPreset": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "presets_createPreset": "Create Preset",
+  "presets_editQuickPreset": "Edit Quick Preset",
+  "presets_newQuickPreset": "New Quick Preset",
+  "savings_addContribution": "Add Contribution",
+  "savings_withdrawFromGoal": "Withdraw from Goal",
+  "savings_contribution": "Contribution",
+  "savings_withdrawal": "Withdrawal",
+  "savings_unknownAccount": "Unknown Account",
+  "savings_fromAccount": "From Account",
+  "savings_toAccount": "To Account",
+  "presets_quickLog": "Quick Log",
+  "accounts_dueOnDay": "Due on {day}",
+  "@accounts_dueOnDay": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -1,8 +1,10 @@
 // lib/theme/app_theme.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import '../widgets/rounded_square_border.dart';
 
 // ── Seed colors ─────────────────────────────────────────────────────────────
 const Map<String, Color> kSeedColors = {
@@ -183,8 +185,25 @@ ThemeData _base(ColorScheme cs, String appFont) {
       TargetPlatform.android: CupertinoPageTransitionsBuilder(),
       TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
     }),
-    appBarTheme: const AppBarTheme(centerTitle: false, elevation: 0),
+    appBarTheme: AppBarTheme(
+      centerTitle: false,
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      foregroundColor: cs.onSurface,
+      systemOverlayStyle: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness:
+            cs.brightness == Brightness.dark ? Brightness.light : Brightness.dark,
+        statusBarBrightness:
+            cs.brightness == Brightness.dark ? Brightness.dark : Brightness.light,
+      ),
+    ),
     navigationBarTheme: NavigationBarThemeData(
+      indicatorShape: const RoundedSquareBorder(
+        borderRadius: 14,
+        size: 40,
+      ),
+      overlayColor: WidgetStateProperty.all(Colors.transparent),
       labelTextStyle: WidgetStateProperty.resolveWith((states) {
         final style = fontTextTheme.labelMedium ?? const TextStyle();
         if (states.contains(WidgetState.selected)) {

@@ -4,10 +4,21 @@ import '../providers/app_provider.dart';
 import '../models/models.dart';
 import 'package:intl/intl.dart';
 import '../l10n/app_localizations.dart';
+import 'app_numeric_keypad.dart';
 
 class SavingsGoalSheet extends StatefulWidget {
   final SavingsGoal? existing;
-  const SavingsGoalSheet({super.key, this.existing});
+  final String? initialName;
+  final double? initialTargetAmount;
+  final String? wishlistItemId;
+
+  const SavingsGoalSheet({
+    super.key,
+    this.existing,
+    this.initialName,
+    this.initialTargetAmount,
+    this.wishlistItemId,
+  });
 
   @override
   State<SavingsGoalSheet> createState() => _SavingsGoalSheetState();
@@ -18,6 +29,7 @@ class _SavingsGoalSheetState extends State<SavingsGoalSheet> {
   int? _colorValue;
   late List<int> _colors;
   bool _submitted = false;
+  bool _showAmountKeypad = false;
 
   @override
   void didChangeDependencies() {
@@ -42,11 +54,16 @@ class _SavingsGoalSheetState extends State<SavingsGoalSheet> {
   void initState() {
     super.initState();
     final e = widget.existing;
-    _nameCtrl = TextEditingController(text: e?.name);
+    _nameCtrl = TextEditingController(text: e?.name ?? widget.initialName);
     _amountCtrl = TextEditingController(
         text: e != null
             ? e.targetAmount.toStringAsFixed(2).replaceAll('.00', '')
-            : '');
+            : (widget.initialTargetAmount != null &&
+                    widget.initialTargetAmount! > 0
+                ? widget.initialTargetAmount!
+                    .toStringAsFixed(2)
+                    .replaceAll('.00', '')
+                : ''));
     _dateCtrl = TextEditingController(
         text: e?.targetDate != null
             ? DateFormat('yyyy-MM-dd').format(e!.targetDate!)
@@ -61,7 +78,7 @@ class _SavingsGoalSheetState extends State<SavingsGoalSheet> {
     super.dispose();
   }
 
-  void _save() {
+  Future<void> _save() async {
     setState(() => _submitted = true);
     final name = _nameCtrl.text.trim();
     final amount = double.tryParse(_amountCtrl.text.replaceAll(',', '')) ?? 0.0;
@@ -69,6 +86,9 @@ class _SavingsGoalSheetState extends State<SavingsGoalSheet> {
 
     final app = context.read<AppProvider>();
     final isNew = widget.existing == null;
+    final linkedWishlistItemId =
+        widget.existing?.wishlistItemId ?? widget.wishlistItemId;
+
     final goal = SavingsGoal(
       id: widget.existing?.id ?? app.newId(),
       name: name,
@@ -82,14 +102,26 @@ class _SavingsGoalSheetState extends State<SavingsGoalSheet> {
       isCompleted: widget.existing?.isCompleted ?? false,
       createdAt: widget.existing?.createdAt ?? DateTime.now(),
       completedAt: widget.existing?.completedAt,
+      wishlistItemId: linkedWishlistItemId,
     );
 
     if (isNew) {
-      app.addSavingsGoal(goal);
+      if (linkedWishlistItemId != null) {
+        final w = app.wishlist
+            .where((item) => item.id == linkedWishlistItemId)
+            .firstOrNull;
+        if (w != null) {
+          await app.createGoalForWishlist(w, goal);
+        } else {
+          await app.addSavingsGoal(goal);
+        }
+      } else {
+        await app.addSavingsGoal(goal);
+      }
     } else {
-      app.updateSavingsGoal(goal);
+      await app.updateSavingsGoal(goal);
     }
-    Navigator.pop(context);
+    if (mounted) Navigator.pop(context);
   }
 
   @override
@@ -113,15 +145,50 @@ class _SavingsGoalSheetState extends State<SavingsGoalSheet> {
               Text(isNew ? 'New Savings Goal' : 'Edit Savings Goal',
                   style: const TextStyle(
                       fontSize: 20, fontWeight: FontWeight.w800)),
-              const SizedBox(height: 20),
+              if (widget.wishlistItemId != null ||
+                  widget.existing?.wishlistItemId != null) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2E7D32).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                        color: const Color(0xFF2E7D32).withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.star_rounded,
+                          size: 16, color: Color(0xFF2E7D32)),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          l10n.savings_linkedWishlist(widget.initialName ??
+                              widget.existing?.name ??
+                              ''),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF2E7D32),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              const SizedBox(height: 16),
               TextField(
                 controller: _nameCtrl,
                 textInputAction: TextInputAction.next,
-               
                 textCapitalization: TextCapitalization.words,
+                onTap: () {
+                  if (_showAmountKeypad) setState(() => _showAmountKeypad = false);
+                },
                 decoration: InputDecoration(
-                  labelText: 'Goal Name',
-                  hintText: 'e.g. New Car, Vacation',
+                  labelText: l10n.savings_goalName,
+                  hintText: l10n.savings_goalNameHint,
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12)),
                   prefixIcon: const Icon(Icons.stars_rounded),
@@ -133,15 +200,24 @@ class _SavingsGoalSheetState extends State<SavingsGoalSheet> {
               const SizedBox(height: 16),
               TextField(
                 controller: _amountCtrl,
-                textInputAction: TextInputAction.next,
-               
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                readOnly: true,
+                showCursor: true,
+                onTap: () {
+                  FocusScope.of(context).unfocus();
+                  setState(() => _showAmountKeypad = true);
+                },
                 decoration: InputDecoration(
-                  labelText: 'Target Amount',
+                  labelText: l10n.savings_targetAmount,
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12)),
                   prefixIcon: const Icon(Icons.monetization_on_outlined),
+                  suffixIcon: _showAmountKeypad
+                      ? IconButton(
+                          icon: const Icon(Icons.keyboard_hide_outlined),
+                          onPressed: () =>
+                              setState(() => _showAmountKeypad = false),
+                        )
+                      : null,
                   errorText: _submitted &&
                           (double.tryParse(
                                       _amountCtrl.text.replaceAll(',', '')) ??
@@ -151,6 +227,16 @@ class _SavingsGoalSheetState extends State<SavingsGoalSheet> {
                       : null,
                 ),
               ),
+              if (_showAmountKeypad &&
+                  MediaQuery.of(context).viewInsets.bottom < 100) ...[
+                const SizedBox(height: 8),
+                AppNumericKeypad(
+                  compact: true,
+                  controller: _amountCtrl,
+                  onChanged: (_) => setState(() {}),
+                  onDone: () => setState(() => _showAmountKeypad = false),
+                ),
+              ],
               const SizedBox(height: 16),
               TextField(
                 controller: _dateCtrl,
@@ -172,8 +258,8 @@ class _SavingsGoalSheetState extends State<SavingsGoalSheet> {
                   }
                 },
                 decoration: InputDecoration(
-                  labelText: 'Target Date (Optional)',
-                  hintText: 'Select date',
+                  labelText: l10n.savings_targetDateOptional,
+                  hintText: l10n.savings_selectDate,
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12)),
                   prefixIcon: const Icon(Icons.date_range_outlined),

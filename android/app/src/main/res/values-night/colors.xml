@@ -8,4 +8,7 @@
     <color name="widget_bg">#1D1B20</color>
     <color name="widget_text">#E6E1E5</color>
     <color name="widget_progress_bg">#49454F</color>
+    <color name="shortcut_background">#1D1B20</color>
+    <color name="shortcut_icon_color">#FFFFFF</color>
+    <color name="quick_tile_icon_color">#FFFFFF</color>
 </resources>

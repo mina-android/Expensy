@@ -51,7 +51,7 @@ class LendedNotificationService {
     const androidSettings =
         AndroidInitializationSettings('ic_notification');
     await _plugin
-        .initialize(const InitializationSettings(android: androidSettings));
+        .initialize(settings: const InitializationSettings(android: androidSettings));
     _initialized = true;
 
     // Eagerly create the Android notification channel so it appears in
@@ -138,14 +138,12 @@ class LendedNotificationService {
         : '$amount you borrowed from $personName is due today';
 
     await _plugin.zonedSchedule(
-      _notifId(l.id),
-      '$emoji Due: $personName',
-      body,
-      tzDate,
-      details,
+      id: _notifId(l.id),
+      title: '$emoji Due: $personName',
+      body: body,
+      scheduledDate: tzDate,
+      notificationDetails: details,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
       payload: l.id,
     );
   }
@@ -153,7 +151,7 @@ class LendedNotificationService {
   /// Cancel the lended reminder for [lendedId].
   Future<void> cancelLendedReminder(String lendedId) async {
     await _ensureInit();
-    await _plugin.cancel(_notifId(lendedId));
+    await _plugin.cancel(id: _notifId(lendedId));
   }
 
   /// Cancel all pending lended notifications and reschedule only the enabled,
@@ -174,7 +172,7 @@ class LendedNotificationService {
     // our own — recurring notifications use different IDs and a different
     // plugin instance, so they are untouched.
     for (final l in lended) {
-      await _plugin.cancel(_notifId(l.id));
+      await _plugin.cancel(id: _notifId(l.id));
     }
     // Re-schedule enabled reminders
     for (final l in lended

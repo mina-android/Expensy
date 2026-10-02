@@ -1,5 +1,4 @@
 {
-  "@@locale": "es",
   "appTitle": "Caro",
   "settings_title": "Ajustes",
   "settings_appearance": "Apariencia",
@@ -39,17 +38,7 @@
   "settings_cancel": "Cancelar",
   "settings_save": "Ahorrar",
   "recurring_expenses": "Gastos ({count})",
-  "@recurring_expenses": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "recurring_incomeList": "Ingresos ({count})",
-  "@recurring_incomeList": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "recurring_monthly": "Mensual",
   "recurring_weekly": "Semanalmente",
   "recurring_noRecurringExpenses": "Sin gastos recurrentes",
@@ -58,48 +47,17 @@
   "recurring_addIncome": "Agregar ingresos",
   "recurring_tapPlusToAddOne": "Toca + para agregar uno",
   "recurring_fromOngoing": "Desde{date}· En curso",
-  "@recurring_fromOngoing": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "recurring_paidPayments": "{paid}/{total}pagado",
-  "@recurring_paidPayments": {
-    "placeholders": {
-      "paid": {},
-      "total": {}
-    }
-  },
   "recurring_totalAmount": "Total:{amount}",
-  "@recurring_totalAmount": {
-    "placeholders": {
-      "amount": {}
-    }
-  },
   "recurring_overdue": "¡Atrasado!",
   "recurring_dueToday": "Vencimiento hoy",
   "recurring_dueInDays": "Vencimiento en{days}d",
-  "@recurring_dueInDays": {
-    "placeholders": {
-      "days": {}
-    }
-  },
   "recurring_edit": "Editar",
   "recurring_skipBtn": "Saltar",
   "recurring_nextDate": "Siguiente:{date}",
-  "@recurring_nextDate": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "recurring_pay": "Pagar",
   "recurring_del": "Del",
   "recurring_historyCount": "Historial ({count})",
-  "@recurring_historyCount": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "recurring_paymentHistory": "Historial de pagos",
   "recurring_notificationPermissionDenied": "Permiso de notificación denegado. Habilítelo en Configuración → Aplicaciones → Expensy → Notificaciones.",
   "recurring_remindMeAt": "Recuérdamelo a",
@@ -108,17 +66,7 @@
   "recurring_name": "Nombre",
   "recurring_amountPerPayment": "Monto por pago",
   "recurring_firstDate": "Primero:{date}",
-  "@recurring_firstDate": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "recurring_lastDate": "Último:{date}",
-  "@recurring_lastDate": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "recurring_noLastPaymentOngoing": "Sin último pago (en curso)",
   "accounts_refreshExchangeRates": "Actualizar tipos de cambio",
   "accounts_noAccounts": "Sin cuentas",
@@ -127,11 +75,6 @@
   "accounts_exchangeRatesUnavailable": "Tipos de cambio no disponibles (fuera de línea). Saldos mostrados en moneda nativa.",
   "accounts_unknown": "Desconocido",
   "accounts_ratesUpdated": "Tarifas actualizadas{timeStr}· Toque ↺ para actualizar",
-  "@accounts_ratesUpdated": {
-    "placeholders": {
-      "timeStr": {}
-    }
-  },
   "accounts_goldCaps": "ORO",
   "accounts_balance": "Saldo",
   "accounts_income": "Ingreso",
@@ -140,11 +83,6 @@
   "accounts_value": "Valor",
   "accounts_karat": "Quilate",
   "accounts_pure": "{percentage}% puro",
-  "@accounts_pure": {
-    "placeholders": {
-      "percentage": {}
-    }
-  },
   "accounts_weightLabel": "Peso",
   "accounts_perGram": "Por gramo",
   "accounts_bank": "Banco",
@@ -164,17 +102,7 @@
   "accounts_fetchingGoldPrice": "Obteniendo el precio del oro...",
   "accounts_goldPriceUnavailable": "Precio del oro no disponible: comprueba tu conexión",
   "lended_person_owesYou": "{name}te debe",
-  "@lended_person_owesYou": {
-    "placeholders": {
-      "name": {}
-    }
-  },
   "lended_person_youOwe": "Le debes{name}",
-  "@lended_person_youOwe": {
-    "placeholders": {
-      "name": {}
-    }
-  },
   "lended_person_allSettledUp": "Todo arreglado",
   "lended_person_noRecordsYet": "Aún no hay registros",
   "lended_person_tapPlusToLog": "Toca + para registrar dinero prestado o prestado",
@@ -184,40 +112,19 @@
   "lended_person_borrowed": "Prestado",
   "lended_person_overdue": "¡Atrasado!",
   "lended_person_due": "Vencimiento{date}",
-  "@lended_person_due": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "lended_person_reminderAt": "Recordatorio en{time}",
-  "@lended_person_reminderAt": {
-    "placeholders": {
-      "time": {}
-    }
-  },
   "lended_person_notificationPermissionDenied": "Permiso de notificación denegado. Habilítelo en Configuración → Aplicaciones → Expensy → Notificaciones.",
   "lended_person_remindMeAtPrompt": "Recuérdamelo a",
   "lended_person_editRecord": "Editar registro",
   "lended_person_addRecord": "Agregar registro",
   "lended_person_amount": "Cantidad",
   "lended_person_dueColon": "Vencimiento:{date}",
-  "@lended_person_dueColon": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "lended_person_noDueDate": "Sin fecha de vencimiento",
   "lended_person_setDueFirst": "Primero establezca una fecha de vencimiento",
   "lended_person_notifiedOnDue": "Se le notificará la fecha de vencimiento",
   "lended_person_getNotifiedWhenDue": "Recibir una notificación cuando esto venza",
   "lended_person_thatTimePassed": "Esa hora de hoy ya pasó; en su lugar, se te notificará en breve.",
   "lended_person_notificationFiresOn": "La notificación se activa en{date}a las{time}.",
-  "@lended_person_notificationFiresOn": {
-    "placeholders": {
-      "date": {},
-      "time": {}
-    }
-  },
   "lended_person_saveChangesBtn": "Guardar cambios",
   "lended_person_addRecordBtn": "Agregar registro",
   "transactions_searchTransactions": "Buscar transacciones...",
@@ -231,24 +138,9 @@
   "transactions_today": "Hoy",
   "transactions_yesterday": "Ayer",
   "transactions_lentTo": "Prestado a{name}",
-  "@transactions_lentTo": {
-    "placeholders": {
-      "name": {}
-    }
-  },
   "transactions_borrowedFrom": "Tomado prestado de{name}",
-  "@transactions_borrowedFrom": {
-    "placeholders": {
-      "name": {}
-    }
-  },
   "transactions_unknown": "Desconocido",
   "transactions_due": "Vencimiento{date}",
-  "@transactions_due": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "transactions_unsettled": "Inestable",
   "onboarding_restoreFailed": "Error de restauración: el archivo puede estar dañado o no ser una copia de seguridad de Expensy.",
   "onboarding_continue": "Continuar",
@@ -310,6 +202,59 @@
   "budget_ofAmount": "de{amount}",
   "budget_saveChanges": "Guardar cambios",
   "budget_budget": "Presupuesto",
+  "budget_rollover": "Transferencia (Sobres)",
+  "budget_rolloverDesc": "Transferir excedentes no utilizados o déficits al siguiente período",
+  "budget_rolloverBadge": "Rollover",
+  "budget_base": "Base: {amount}",
+  "budget_rolloverFrom": "Rollover ({period}): {amount}",
+  "budget_totalAvailable": "Total disponible: {amount}",
+  "budget_lastWeek": "Semana pasada",
+  "pacing_dailyBudget": "Gasto seguro",
+  "pacing_safeToSpend": "Gasto seguro: {amount}/día ({days} días restantes)",
+  "pacing_caution": "Ritmo acelerado — limita a {amount}/día",
+  "pacing_overPaced": "Alerta de ritmo — reduce gastos para no exceder",
+  "pacing_budgetExhausted": "Presupuesto agotado — sin margen diario",
+  "pacing_onTrack": "En buen ritmo",
+  "pacing_fast": "Ritmo rápido",
+  "pacing_alert": "Alerta de ritmo",
+  "pacing_daysLeft": "{days} días restantes",
+  "pacing_setBudgetPrompt": "Toca para fijar límites de presupuesto →",
+  "pacing_dailyAvgPace": "Ritmo diario",
+  "pacing_perDay": "{amount} / día",
+  "calendar_title": "Calendario financiero",
+  "calendar_subtitle": "Mapa de calor de gastos y vencimientos",
+  "calendar_zeroSpendDays": "{count} días sin gastos",
+  "calendar_zeroSpendDayTitle": "¡Día de cero gastos! 🎉",
+  "calendar_zeroSpendDayDesc": "Excelente disciplina financiera sin gastos hoy.",
+  "calendar_billsDue": "Facturas y suscripciones pendientes",
+  "calendar_loansDue": "Cuotas de préstamos pendientes",
+  "calendar_lendedDue": "Reembolsos esperados",
+  "calendar_dayTransactions": "Transacciones ({count})",
+  "calendar_noActivity": "Sin transacciones ni compromisos en esta fecha",
+  "calendar_today": "Hoy",
+  "calendar_averageDaily": "Promedio diario: {amount}",
+  "wrapped_title": "Expensy Wrapped",
+  "wrapped_bannerTitle": "¡Tu resumen de {month} está listo!",
+  "wrapped_bannerSub": "Toca para ver tu historia financiera mensual",
+  "wrapped_theBigPicture": "El panorama general",
+  "wrapped_howMoneyMoved": "Así se movió tu dinero en {month}",
+  "wrapped_totalInflow": "Ingresos totales",
+  "wrapped_totalOutflow": "Gastos totales",
+  "wrapped_netSavings": "Ahorro neto",
+  "wrapped_savingsRate": "Tasa de ahorro: {rate}%",
+  "wrapped_topCategoryTitle": "¿A dónde se fue?",
+  "wrapped_topCategorySub": "Tu categoría con más gastos fue {category}",
+  "wrapped_topCategoryShare": "{percent}% de tus gastos totales",
+  "wrapped_biggestSplurgeTitle": "Mayor gasto",
+  "wrapped_biggestSplurgeSub": "Tu mayor gasto individual del mes",
+  "wrapped_noSplurge": "¡Sin lujos! No tuviste gastos este mes.",
+  "wrapped_heroHabitTitle": "Hábito heroico",
+  "wrapped_zeroSpendAchieved": "{count} días sin gastos",
+  "wrapped_heroHabitDesc": "Lograste {count} días con cero gastos. ¡Excelente disciplina financiera!",
+  "wrapped_receiptTitle": "Estado mensual",
+  "wrapped_obscureToggle": "Ocultar montos para compartir",
+  "wrapped_showToggle": "Mostrar montos",
+  "wrapped_replay": "Repetir historia",
   "insights_other": "Otro",
   "insights_noDataYet": "Aún no hay datos",
   "insights_addSomeTransactions": "Agregue algunas transacciones para ver información valiosa",
@@ -387,6 +332,17 @@
   "wishlist_notesOptional": "Notas (opcional)",
   "wishlist_saveChanges": "Guardar cambios",
   "wishlist_addItem": "Agregar artículo",
+  "wishlist_fundThisItem": "Financiar artículo",
+  "wishlist_funded": "{percent}% financiado ({saved} / {target})",
+  "wishlist_goalAchieved": "¡Meta alcanzada — listo para comprar!",
+  "wishlist_buyNow": "Comprar ahora",
+  "wishlist_purchaseTitle": "Comprar artículo de la lista",
+  "wishlist_purchasePrompt": "¿Desea registrar una transacción de gasto y deducir el importe de una cuenta?",
+  "wishlist_recordAndDeduct": "Registrar y deducir",
+  "wishlist_markPurchasedOnly": "Solo marcar como comprado",
+  "wishlist_itemPurchased": "¡\"{name}\" marcado como comprado!",
+  "wishlist_viewGoal": "Ver meta de ahorro",
+  "savings_linkedWishlist": "Vinculado a lista de deseos: {item}",
   "lended_theyOweMe": "Me deben",
   "lended_iOweThem": "les debo",
   "lended_net": "Neto",
@@ -442,6 +398,8 @@
   "accounts_goldPurityKarat": "Pureza del oro (quilates)",
   "accounts_weight": "Peso",
   "accounts_excludeFromTotalBala": "Excluir del saldo total",
+  "accounts_dontLinkToCard": "No vincular a tarjeta",
+  "accounts_dontLinkToCardDesc": "Administrar el saldo manualmente y evitar que las tarjetas se vinculen",
   "accounts_color": "Color",
   "accounts_liveGoldValue": "Valor del oro vivo",
   "accounts_enterWeightAboveToSe": "Ingrese el peso arriba para ver el valor",
@@ -484,11 +442,38 @@
   "export_exportTransactions": "Transacciones de exportación",
   "export_dateRange": "Rango de fechas",
   "export_formatExcelXlsx": "Formato: Excel (.xlsx)",
+  "export_exportAsPdf": "Exportar como informe PDF",
+  "export_formatPdf": "Formato: Informe financiero PDF (.pdf)",
+  "export_pdfGenerating": "Generando PDF...",
+  "export_pdfTitle": "Informe Financiero",
+  "export_pdfSummary": "Resumen Ejecutivo",
+  "export_pdfInflow": "Ingresos totales",
+  "export_pdfOutflow": "Gastos totales",
+  "export_pdfNet": "Ahorro neto",
+  "export_pdfSavingsRate": "Tasa de ahorro",
+  "export_pdfCategoryBreakdown": "Desglose por categorías",
+  "export_pdfTransactions": "Transacciones detalladas",
+  "export_pdfNetWorthBreakdown": "Activos y Pasivos",
+  "export_pdfShare": "Compartir informe",
+  "export_pdfPrint": "Imprimir / Vista previa",
+  "export_pdfGeneratedBy": "Generado por Expensy • Privado y sin conexión",
   "home_totalBalance": "Saldo total",
   "home_accounts": "Cuentas",
   "home_recentTransactions": "Transacciones recientes",
   "home_noTransactionsYet": "Aún no hay transacciones",
   "home_add": "Agregar",
+  "home_goodMorning": "Buenos días",
+  "home_goodAfternoon": "Buenas tardes",
+  "home_goodEvening": "Buenas noches",
+  "home_transferAction": "Transferir",
+  "home_insightsAction": "Estadísticas",
+  "home_calendarAction": "Calendario",
+  "home_forecastAction": "Pronóstico",
+  "home_manage": "Gestionar",
+  "home_seeAll": "Ver todo",
+  "home_addAccount": "Añadir cuenta",
+  "home_monthlyOverview": "Resumen mensual",
+  "home_savingsRate": "Tasa de ahorro",
   "insights_insights": "Perspectivas",
   "lended_person_deletePerson": "Eliminar persona",
   "lended_person_editPerson": "Editar persona",
@@ -568,17 +553,7 @@
   "onboarding_chooseLanguage": "Elija idioma",
   "error_required": "Este campo es obligatorio",
   "recurring_subscriptions": "Suscripciones ({count})",
-  "@recurring_subscriptions": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "recurring_installments": "Cuotas ({count})",
-  "@recurring_installments": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "recurring_recurringType": "Tipo recurrente",
   "recurring_subscription": "Suscripción",
   "recurring_installment": "Entrega",
@@ -660,5 +635,154 @@
   "yearly_noData": "Sin actividad proyectada",
   "yearly_noDataSub": "Añada pagos recurrentes o préstamos para ver un pronóstico",
   "budget_addBudget": "Añadir presupuesto",
-  "budget_addGoal": "Añadir meta de ahorro"
+  "budget_addGoal": "Añadir meta de ahorro",
+  "split_transactions_title": "Dividir categorías",
+  "split_transactions_badge": "Dividida",
+  "split_transactions_addSplit": "Añadir división",
+  "split_transactions_removeSplit": "Eliminar división",
+  "split_transactions_allocated": "Asignado",
+  "split_transactions_remaining": "Restante",
+  "split_transactions_fillRemaining": "Llenar restante",
+  "split_transactions_breakdown": "Desglose de división",
+  "split_transactions_mismatchError": "Los importes divididos deben coincidir exactamente con el total.",
+  "netWorth_title": "Patrimonio neto",
+  "netWorth_subtitle": "Rastrea activos, pasivos y riqueza a lo largo del tiempo",
+  "netWorth_current": "Patrimonio neto actual",
+  "netWorth_trend": "Tendencia del patrimonio neto",
+  "netWorth_totalAssets": "Total de activos",
+  "netWorth_totalLiabilities": "Total de pasivos",
+  "netWorth_liquidCash": "Efectivo y cuentas bancarias",
+  "netWorth_goldValuation": "Oro físico",
+  "netWorth_fixedAssets": "Propiedades e inversiones",
+  "netWorth_moneyLent": "Dinero prestado (Por cobrar)",
+  "netWorth_creditDebt": "Tarjetas de crédito y sobregiros",
+  "netWorth_loanDebt": "Préstamos por pagar",
+  "netWorth_moneyBorrowed": "Dinero pedido prestado (Por pagar)",
+  "netWorth_assetBreakdown": "Desglose de activos",
+  "netWorth_liabilityBreakdown": "Desglose de pasivos",
+  "netWorth_noHistory": "El historial de patrimonio neto se acumulará automáticamente con los registros diarios.",
+  "netWorth_debtRatio": "Ratio de endeudamiento",
+  "netWorth_quickActions": "Acciones rápidas",
+  "netWorth_history": "Historial de instantáneas",
+  "creditCard_utilization": "Uso del crédito",
+  "creditCard_availableCredit": "Disponible",
+  "creditCard_limit": "Límite",
+  "creditCard_statementBalance": "Saldo del estado de cuenta",
+  "creditCard_unbilledBalance": "No facturado",
+  "creditCard_payBill": "Pagar tarjeta",
+  "creditCard_allCaughtUp": "¡Todo al día! Sin saldo pendiente",
+  "creditCard_payBillTitle": "Pagar estado de cuenta",
+  "creditCard_payFromAccount": "Pagar desde cuenta",
+  "creditCard_paymentAmount": "Monto a pagar",
+  "creditCard_fullStatement": "Saldo del estado de cuenta",
+  "creditCard_fullBalance": "Saldo total",
+  "creditCard_minPayment": "Pago mínimo",
+  "creditCard_customAmount": "Monto personalizado",
+  "creditCard_paymentSuccess": "Se pagaron {amount} a {cardName}",
+  "creditCard_insufficientFunds": "El monto supera el saldo disponible",
+  "creditCard_invalidAmount": "Por favor ingresa un monto válido",
+  "onboarding_skipForNow": "Omitir por ahora",
+  "add_transaction_possibleDuplicate": "Posible duplicado",
+  "add_transaction_goBack": "Volver",
+  "add_transaction_saveAnyway": "Guardar de todos modos",
+  "loans_confirmDeleteLoan": "¿Seguro que deseas eliminar este préstamo y todos sus pagos?",
+  "loans_deletePayment": "Eliminar pago",
+  "loans_confirmDeletePayment": "¿Seguro que deseas eliminar este registro de pago?",
+  "budget_leftToSpend": "Restante por gastar",
+  "more_sectionTools": "Herramientas financieras",
+  "more_sectionAnalytics": "Análisis y estadísticas",
+  "more_sectionPreferences": "Preferencias y datos",
+  "onboarding_addCard": "Añadir tarjeta",
+  "onboarding_skipCardDesc": "Puedes omitir esto si no deseas añadir una tarjeta ahora mismo.",
+  "onboarding_cardNameLabel": "Nombre de la tarjeta (ej. Visa Platinum)",
+  "onboarding_debitCard": "Tarjeta de débito",
+  "onboarding_creditLimit": "Límite de crédito",
+  "onboarding_amountUsed": "Monto utilizado",
+  "accounts_cardHolderOptional": "Titular de la tarjeta (Opcional)",
+  "accounts_last4Digits": "Últimos 4 dígitos",
+  "accounts_expiryDate": "Fecha de vencimiento (MM/AA)",
+  "accounts_creditLimitOptional": "Límite de crédito (Opcional)",
+  "accounts_minPaymentOptional": "Pago mínimo (Opcional)",
+  "accounts_statementDayOptional": "Día de corte (Opcional)",
+  "accounts_statementDayExample": "ej. 20",
+  "accounts_dueDayOptional": "Día de pago (Opcional)",
+  "accounts_dueDayExample": "ej. 10",
+  "accounts_linkedAccountOptional": "Cuenta bancaria vinculada (Opcional)",
+  "accounts_excludeCardBalance": "Excluir saldo de la tarjeta del total de la cuenta",
+  "accounts_excludeCardBalanceDesc": "El saldo de esta tarjeta no se sumará a la cuenta bancaria vinculada.",
+  "accounts_cardHolderHeader": "TITULAR",
+  "accounts_expHeader": "VENCE",
+  "accounts_notifyOnDueDate": "Se te notificará en la fecha de vencimiento",
+  "accounts_notifyWhenDue": "Recibir recordatorio cuando venza el pago",
+  "accounts_remind2DaysBeforeDesc": "Recibir aviso 2 días antes de la fecha de vencimiento",
+  "accounts_targetSaved": "Meta / Ahorrado",
+  "transactions_selectedCount": "{count, plural, =1{1 seleccionado} other{{count} seleccionados}}",
+  "transactions_changeCategory": "Cambiar categoría",
+  "transactions_deleteSelected": "Eliminar seleccionados",
+  "transactions_advancedFilters": "Filtros avanzados",
+  "transactions_clearAll": "Limpiar todo",
+  "transactions_amountRange": "Rango de monto",
+  "transactions_minAmount": "Monto mínimo",
+  "transactions_maxAmount": "Monto máximo",
+  "transactions_applyFilters": "Aplicar filtros",
+  "presets_new": "Nuevo",
+  "presets_presetName": "Nombre de plantilla (ej. Café matutino)",
+  "presets_defaultAmount": "Monto predeterminado",
+  "savings_goalName": "Nombre de la meta",
+  "savings_goalNameHint": "ej. Auto nuevo, Vacaciones",
+  "savings_targetAmount": "Monto objetivo",
+  "savings_targetDateOptional": "Fecha objetivo (Opcional)",
+  "savings_selectDate": "Seleccionar fecha",
+  "savings_amountRequired": "El monto es obligatorio",
+  "savings_noteOptional": "Nota (Opcional)",
+  "loans_skipInstallment": "¿Omitir la próxima cuota del préstamo?",
+  "recurring_confirmDelete": "¿Estás seguro de que deseas eliminar este pago recurrente?",
+  "export_formatExcelOption": "Excel (.xlsx)",
+  "export_formatPdfOption": "Informe PDF",
+  "export_pdfNoTransactions": "No hay transacciones registradas en este rango de fechas.",
+  "savings_saved": "Ahorrado",
+  "export_pdfDate": "Fecha",
+  "export_pdfDescription": "Descripción",
+  "accounts_noCardsYet": "Sin tarjetas",
+  "accounts_tapToAddCard": "Toca + para agregar tu primera tarjeta",
+  "savings_noGoalsYet": "Sin objetivos de ahorro",
+  "savings_tapToAddGoal": "Toca + para establecer una nueva meta",
+  "netWorth_recordSnapshot": "Registrar instantánea",
+  "netWorth_snapshotRecorded": "Instantánea registrada",
+  "savings_noContributionsYet": "Aún no hay contribuciones",
+  "creditCard_closesStatementBillingCycle": "Cierra el ciclo de facturación del estado actual",
+  "creditCard_clearsTotalDebt": "Liquida la deuda total de la tarjeta por completo",
+  "creditCard_requiredMinPayment": "Pago mínimo requerido",
+  "creditCard_specifyCustomAmount": "Especificar monto de pago personalizado",
+  "common_itemDeleted": "\"{name}\" eliminado",
+  "common_accountDeleted": "Cuenta eliminada",
+  "common_cardDeleted": "Tarjeta eliminada",
+  "common_transactionDeleted": "Transacción eliminada",
+  "common_recordDeleted": "Registro eliminado",
+  "common_paymentDeleted": "Pago eliminado",
+  "loans_skippedInstallment": "Cuota del préstamo omitida",
+  "loans_loggedPayment": "Pago registrado de {amount}",
+  "loans_notificationsPermissionRequired": "Se requiere permiso de notificaciones",
+  "creditCard_selectFundingAccount": "Por favor, seleccione una cuenta de origen",
+  "presets_presetUpdated": "Plantilla actualizada",
+  "presets_presetAdded": "Plantilla agregada",
+  "presets_presetDeleted": "Plantilla eliminada",
+  "transactions_deletedCount": "{count, plural, =1{1 elemento eliminado} other{{count} elementos eliminados}}",
+  "split_atLeastTwoCategories": "Se requieren al menos 2 categorías para dividir.",
+  "split_categoryAndAmountRequired": "Cada elemento dividido debe tener una categoría y un monto > 0.",
+  "presets_addQuickPresets": "Agregar preajustes rápidos de 1 toque",
+  "presets_quickPresetsDesc": "Registra café frecuente, transporte o comidas con un solo toque",
+  "presets_loggedPreset": "Registrado {title} ({amount})",
+  "presets_createPreset": "Crear plantilla",
+  "presets_editQuickPreset": "Editar preajuste rápido",
+  "presets_newQuickPreset": "Nuevo preajuste rápido",
+  "savings_addContribution": "Agregar contribución",
+  "savings_withdrawFromGoal": "Retirar del objetivo",
+  "savings_contribution": "Contribución",
+  "savings_withdrawal": "Retiro",
+  "savings_unknownAccount": "Cuenta desconocida",
+  "savings_fromAccount": "Desde cuenta",
+  "savings_toAccount": "A cuenta",
+  "presets_quickLog": "Registro rápido",
+  "accounts_dueOnDay": "Vence el {day}"
 }

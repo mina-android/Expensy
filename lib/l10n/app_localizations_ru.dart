@@ -652,7 +652,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get budget_budgeted => 'В бюджете';
 
   @override
-  String get budget_leftToSpend => 'Left to Spend';
+  String get budget_leftToSpend => 'Остаток на расходы';
 
   @override
   String get budget_spent => 'Потрачено';
@@ -713,6 +713,206 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get budget_budget => 'Бюджет';
+
+  @override
+  String get budget_rollover => 'Перенос остатка (Конверты)';
+
+  @override
+  String get budget_rolloverDesc =>
+      'Переносить неизрасходованный остаток или перерасход на следующий период';
+
+  @override
+  String get budget_rolloverBadge => 'Перенос';
+
+  @override
+  String budget_base(Object amount) {
+    return 'Базовый: $amount';
+  }
+
+  @override
+  String budget_rolloverFrom(Object period, Object amount) {
+    return 'Перенос ($period): $amount';
+  }
+
+  @override
+  String budget_totalAvailable(Object amount) {
+    return 'Всего доступно: $amount';
+  }
+
+  @override
+  String get budget_lastWeek => 'Прошлая неделя';
+
+  @override
+  String get pacing_dailyBudget => 'Безопасный расход';
+
+  @override
+  String pacing_safeToSpend(Object amount, Object days) {
+    return 'Безопасный расход: $amount/день (осталось $days дн.)';
+  }
+
+  @override
+  String pacing_caution(Object amount) {
+    return 'Быстрый темп — ограничьте до $amount/день';
+  }
+
+  @override
+  String get pacing_overPaced =>
+      'Предупреждение о темпе — снизьте траты, чтобы уложиться в бюджет';
+
+  @override
+  String get pacing_budgetExhausted =>
+      'Бюджет исчерпан — дневной лимит отсутствует';
+
+  @override
+  String get pacing_onTrack => 'По графику';
+
+  @override
+  String get pacing_fast => 'Быстрый темп';
+
+  @override
+  String get pacing_alert => 'Контроль темпа';
+
+  @override
+  String pacing_daysLeft(Object days) {
+    return 'Осталось $days дн.';
+  }
+
+  @override
+  String get pacing_setBudgetPrompt =>
+      'Нажмите, чтобы установить лимит бюджета →';
+
+  @override
+  String get pacing_dailyAvgPace => 'Дневной темп';
+
+  @override
+  String pacing_perDay(Object amount) {
+    return '$amount / день';
+  }
+
+  @override
+  String get calendar_title => 'Финансовый календарь';
+
+  @override
+  String get calendar_subtitle => 'Тепловая карта расходов и сроки платежей';
+
+  @override
+  String calendar_zeroSpendDays(Object count) {
+    return '$count дней без трат';
+  }
+
+  @override
+  String get calendar_zeroSpendDayTitle => 'День без расходов! 🎉';
+
+  @override
+  String get calendar_zeroSpendDayDesc =>
+      'Отличная финансовая дисциплина: сегодня расходов нет.';
+
+  @override
+  String get calendar_billsDue => 'Предстоящие счета и подписки';
+
+  @override
+  String get calendar_loansDue => 'Сроки платежей по кредитам';
+
+  @override
+  String get calendar_lendedDue => 'Ожидаемые возвраты долгов';
+
+  @override
+  String calendar_dayTransactions(Object count) {
+    return 'Транзакции ($count)';
+  }
+
+  @override
+  String get calendar_noActivity => 'В этот день операций и платежей не было';
+
+  @override
+  String get calendar_today => 'Сегодня';
+
+  @override
+  String calendar_averageDaily(Object amount) {
+    return 'Среднесуточно: $amount';
+  }
+
+  @override
+  String get wrapped_title => 'Expensy Wrapped';
+
+  @override
+  String wrapped_bannerTitle(Object month) {
+    return 'Ваш итог за $month готов!';
+  }
+
+  @override
+  String get wrapped_bannerSub =>
+      'Нажмите, чтобы увидеть вашу финансовую историю';
+
+  @override
+  String get wrapped_theBigPicture => 'Общая картина';
+
+  @override
+  String wrapped_howMoneyMoved(Object month) {
+    return 'Вот как двигались ваши деньги в $month';
+  }
+
+  @override
+  String get wrapped_totalInflow => 'Всего доходов';
+
+  @override
+  String get wrapped_totalOutflow => 'Всего расходов';
+
+  @override
+  String get wrapped_netSavings => 'Чистые сбережения';
+
+  @override
+  String wrapped_savingsRate(Object rate) {
+    return 'Норма сбережений: $rate%';
+  }
+
+  @override
+  String get wrapped_topCategoryTitle => 'Куда ушли деньги?';
+
+  @override
+  String wrapped_topCategorySub(Object category) {
+    return 'Главной категорией расходов была $category';
+  }
+
+  @override
+  String wrapped_topCategoryShare(Object percent) {
+    return '$percent% от общих расходов';
+  }
+
+  @override
+  String get wrapped_biggestSplurgeTitle => 'Крупнейшая трата';
+
+  @override
+  String get wrapped_biggestSplurgeSub => 'Ваш самый крупный расход за месяц';
+
+  @override
+  String get wrapped_noSplurge =>
+      'Без лишних трат! В этом месяце не было расходов.';
+
+  @override
+  String get wrapped_heroHabitTitle => 'Геройская привычка';
+
+  @override
+  String wrapped_zeroSpendAchieved(Object count) {
+    return '$count дней без трат';
+  }
+
+  @override
+  String wrapped_heroHabitDesc(Object count) {
+    return 'Вы провели $count дней с нулевыми тратами. Отличная финансовая дисциплина!';
+  }
+
+  @override
+  String get wrapped_receiptTitle => 'Месячная выписка';
+
+  @override
+  String get wrapped_obscureToggle => 'Скрыть суммы для отправки';
+
+  @override
+  String get wrapped_showToggle => 'Показать суммы';
+
+  @override
+  String get wrapped_replay => 'Повторить историю';
 
   @override
   String get insights_other => 'Другое';
@@ -944,6 +1144,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get more_settingsSub => 'Тема, валюта и настройки';
 
   @override
+  String get more_sectionTools => 'Финансовые инструменты';
+
+  @override
+  String get more_sectionAnalytics => 'Аналитика и отчеты';
+
+  @override
+  String get more_sectionPreferences => 'Настройки и данные';
+
+  @override
   String home_greeting(Object name) {
     return 'Hi, $name 👋';
   }
@@ -996,6 +1205,46 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get wishlist_addItem => 'Добавить элемент';
+
+  @override
+  String get wishlist_fundThisItem => 'Копить на товар';
+
+  @override
+  String wishlist_funded(int percent, String saved, String target) {
+    return '$percent% накоплено ($saved / $target)';
+  }
+
+  @override
+  String get wishlist_goalAchieved => 'Цель достигнута — готово к покупке!';
+
+  @override
+  String get wishlist_buyNow => 'Купить сейчас';
+
+  @override
+  String get wishlist_purchaseTitle => 'Купить товар из вишлиста';
+
+  @override
+  String get wishlist_purchasePrompt =>
+      'Хотите записать расход и списать сумму со счета?';
+
+  @override
+  String get wishlist_recordAndDeduct => 'Записать и списать';
+
+  @override
+  String get wishlist_markPurchasedOnly => 'Только отметить как купленное';
+
+  @override
+  String wishlist_itemPurchased(String name) {
+    return '«$name» отмечено как купленное!';
+  }
+
+  @override
+  String get wishlist_viewGoal => 'Открыть цель накопления';
+
+  @override
+  String savings_linkedWishlist(String item) {
+    return 'Связано с вишлистом: $item';
+  }
 
   @override
   String get lended_theyOweMe => 'Они мне должны';
@@ -1200,6 +1449,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get accounts_excludeFromTotalBala => 'Исключить из общего баланса';
 
   @override
+  String get accounts_dontLinkToCard => 'Не связывать с картой';
+
+  @override
+  String get accounts_dontLinkToCardDesc =>
+      'Управлять балансом вручную и запретить привязку карт';
+
+  @override
   String get accounts_color => 'Цвет';
 
   @override
@@ -1331,6 +1587,52 @@ class AppLocalizationsRu extends AppLocalizations {
   String get export_formatExcelXlsx => 'Формат: Excel (.xlsx)';
 
   @override
+  String get export_exportAsPdf => 'Экспорт в отчет PDF';
+
+  @override
+  String get export_formatPdf => 'Формат: Финансовый отчет PDF (.pdf)';
+
+  @override
+  String get export_pdfGenerating => 'Создание PDF...';
+
+  @override
+  String get export_pdfTitle => 'Финансовый отчет';
+
+  @override
+  String get export_pdfSummary => 'Общая сводка';
+
+  @override
+  String get export_pdfInflow => 'Всего доходов';
+
+  @override
+  String get export_pdfOutflow => 'Всего расходов';
+
+  @override
+  String get export_pdfNet => 'Чистые сбережения';
+
+  @override
+  String get export_pdfSavingsRate => 'Норма сбережений';
+
+  @override
+  String get export_pdfCategoryBreakdown => 'Распределение по категориям';
+
+  @override
+  String get export_pdfTransactions => 'Детализированные операции';
+
+  @override
+  String get export_pdfNetWorthBreakdown => 'Активы и обязательства';
+
+  @override
+  String get export_pdfShare => 'Поделиться отчетом';
+
+  @override
+  String get export_pdfPrint => 'Печать / Предпросмотр';
+
+  @override
+  String get export_pdfGeneratedBy =>
+      'Создано в Expensy • Конфиденциально и офлайн';
+
+  @override
   String get home_totalBalance => 'Общий баланс';
 
   @override
@@ -1344,6 +1646,42 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get home_add => 'Добавить';
+
+  @override
+  String get home_goodMorning => 'Доброе утро';
+
+  @override
+  String get home_goodAfternoon => 'Добрый день';
+
+  @override
+  String get home_goodEvening => 'Добрый вечер';
+
+  @override
+  String get home_transferAction => 'Перевод';
+
+  @override
+  String get home_insightsAction => 'Аналитика';
+
+  @override
+  String get home_calendarAction => 'Календарь';
+
+  @override
+  String get home_forecastAction => 'Прогноз';
+
+  @override
+  String get home_manage => 'Управление';
+
+  @override
+  String get home_seeAll => 'Все';
+
+  @override
+  String get home_addAccount => 'Добавить счет';
+
+  @override
+  String get home_monthlyOverview => 'Ежемесячный обзор';
+
+  @override
+  String get home_savingsRate => 'Норма сбережений';
 
   @override
   String get insights_insights => 'Аналитика';
@@ -1854,22 +2192,491 @@ class AppLocalizationsRu extends AppLocalizations {
   String get budget_addGoal => 'Добавить финансовую цель';
 
   @override
-  String get add_transaction_possibleDuplicate => 'Possible duplicate';
+  String get add_transaction_possibleDuplicate => 'Возможный дубликат';
 
   @override
-  String get add_transaction_goBack => 'Go back';
+  String get add_transaction_goBack => 'Назад';
 
   @override
-  String get add_transaction_saveAnyway => 'Save anyway';
+  String get add_transaction_saveAnyway => 'Все равно сохранить';
 
   @override
   String get loans_confirmDeleteLoan =>
-      'Are you sure you want to delete this loan and all its payments?';
+      'Вы уверены, что хотите удалить этот кредит и все платежи по нему?';
 
   @override
-  String get loans_deletePayment => 'Delete Payment';
+  String get loans_deletePayment => 'Удалить платеж';
 
   @override
   String get loans_confirmDeletePayment =>
-      'Are you sure you want to delete this payment record?';
+      'Вы уверены, что хотите удалить эту запись о платеже?';
+
+  @override
+  String get split_transactions_title => 'Разделить категории';
+
+  @override
+  String get split_transactions_badge => 'Разделено';
+
+  @override
+  String get split_transactions_addSplit => 'Добавить часть';
+
+  @override
+  String get split_transactions_removeSplit => 'Удалить часть';
+
+  @override
+  String get split_transactions_allocated => 'Распределено';
+
+  @override
+  String get split_transactions_remaining => 'Остаток';
+
+  @override
+  String get split_transactions_fillRemaining => 'Заполнить остаток';
+
+  @override
+  String get split_transactions_breakdown => 'Детали разделения';
+
+  @override
+  String get split_transactions_mismatchError =>
+      'Сумма частей должна быть равна общей сумме.';
+
+  @override
+  String get netWorth_title => 'Чистый капитал';
+
+  @override
+  String get netWorth_subtitle =>
+      'Отслеживайте активы, обязательства и капитал со временем';
+
+  @override
+  String get netWorth_current => 'Текущий чистый капитал';
+
+  @override
+  String get netWorth_trend => 'Динамика чистого капитала';
+
+  @override
+  String get netWorth_totalAssets => 'Всего активов';
+
+  @override
+  String get netWorth_totalLiabilities => 'Всего обязательств';
+
+  @override
+  String get netWorth_liquidCash => 'Наличные и банковские счета';
+
+  @override
+  String get netWorth_goldValuation => 'Физическое золото';
+
+  @override
+  String get netWorth_fixedAssets => 'Имущество и инвестиции';
+
+  @override
+  String get netWorth_moneyLent => 'Одолженные деньги (Дебиторка)';
+
+  @override
+  String get netWorth_creditDebt => 'Кредитные карты и овердрафт';
+
+  @override
+  String get netWorth_loanDebt => 'Кредиты к выплате';
+
+  @override
+  String get netWorth_moneyBorrowed => 'Взятые в долг деньги (Кредиторка)';
+
+  @override
+  String get netWorth_assetBreakdown => 'Структура активов';
+
+  @override
+  String get netWorth_liabilityBreakdown => 'Структура обязательств';
+
+  @override
+  String get netWorth_noHistory =>
+      'История капитала будет накапливаться автоматически по мере сохранения ежедневных снимков.';
+
+  @override
+  String get netWorth_debtRatio => 'Коэффициент долга';
+
+  @override
+  String get netWorth_quickActions => 'Быстрые действия';
+
+  @override
+  String get netWorth_history => 'История снимков';
+
+  @override
+  String get creditCard_utilization => 'Использование кредита';
+
+  @override
+  String get creditCard_availableCredit => 'Доступно';
+
+  @override
+  String get creditCard_limit => 'Лимит';
+
+  @override
+  String get creditCard_statementBalance => 'Сумма к оплате по выписке';
+
+  @override
+  String get creditCard_unbilledBalance => 'Не выставлено';
+
+  @override
+  String get creditCard_payBill => 'Оплатить долг по карте';
+
+  @override
+  String get creditCard_allCaughtUp =>
+      'Все оплачено! Задолженность отсутствует';
+
+  @override
+  String get creditCard_payBillTitle => 'Оплата задолженности по карте';
+
+  @override
+  String get creditCard_payFromAccount => 'Счет списания';
+
+  @override
+  String get creditCard_paymentAmount => 'Сумма платежа';
+
+  @override
+  String get creditCard_fullStatement => 'Сумма по выписке';
+
+  @override
+  String get creditCard_fullBalance => 'Общий долг';
+
+  @override
+  String get creditCard_minPayment => 'Минимальный платеж';
+
+  @override
+  String get creditCard_customAmount => 'Другая сумма';
+
+  @override
+  String creditCard_paymentSuccess(String amount, String cardName) {
+    return 'Оплачено $amount по карте $cardName';
+  }
+
+  @override
+  String get creditCard_insufficientFunds =>
+      'Сумма превышает доступный остаток';
+
+  @override
+  String get creditCard_invalidAmount => 'Пожалуйста, введите корректную сумму';
+
+  @override
+  String get onboarding_skipForNow => 'Пропустить сейчас';
+
+  @override
+  String get onboarding_addCard => 'Добавить карту';
+
+  @override
+  String get onboarding_skipCardDesc =>
+      'Вы можете пропустить этот шаг, если не хотите добавлять карту прямо сейчас.';
+
+  @override
+  String get onboarding_cardNameLabel =>
+      'Название карты (напр., Visa Platinum)';
+
+  @override
+  String get onboarding_debitCard => 'Дебетовая карта';
+
+  @override
+  String get onboarding_creditLimit => 'Кредитный лимит';
+
+  @override
+  String get onboarding_amountUsed => 'Использовано';
+
+  @override
+  String get accounts_cardHolderOptional =>
+      'Имя держателя карты (необязательно)';
+
+  @override
+  String get accounts_last4Digits => 'Последние 4 цифры';
+
+  @override
+  String get accounts_expiryDate => 'Срок действия (ММ/ГГ)';
+
+  @override
+  String get accounts_creditLimitOptional => 'Кредитный лимит (необязательно)';
+
+  @override
+  String get accounts_minPaymentOptional =>
+      'Минимальный платеж (необязательно)';
+
+  @override
+  String get accounts_statementDayOptional => 'День выписки (необязательно)';
+
+  @override
+  String get accounts_statementDayExample => 'напр. 20';
+
+  @override
+  String get accounts_dueDayOptional => 'День платежа (необязательно)';
+
+  @override
+  String get accounts_dueDayExample => 'напр. 10';
+
+  @override
+  String get accounts_linkedAccountOptional =>
+      'Связанный банковский счет (необязательно)';
+
+  @override
+  String get accounts_excludeCardBalance =>
+      'Исключить баланс карты из баланса счета';
+
+  @override
+  String get accounts_excludeCardBalanceDesc =>
+      'Баланс этой карты не будет прибавляться к связанному банковскому счету.';
+
+  @override
+  String get accounts_cardHolderHeader => 'ДЕРЖАТЕЛЬ КАРТЫ';
+
+  @override
+  String get accounts_expHeader => 'ДЕЙСТВИТЕЛЬНА ДО';
+
+  @override
+  String get accounts_notifyOnDueDate =>
+      'Вы получите напоминание в день платежа';
+
+  @override
+  String get accounts_notifyWhenDue => 'Получать напоминания о сроках оплаты';
+
+  @override
+  String get accounts_remind2DaysBeforeDesc =>
+      'Получить предварительное напоминание за 2 дня до срока оплаты';
+
+  @override
+  String get accounts_targetSaved => 'Цель / Накоплено';
+
+  @override
+  String transactions_selectedCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Выбрано: $count',
+      one: 'Выбран 1',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get transactions_changeCategory => 'Изменить категорию';
+
+  @override
+  String get transactions_deleteSelected => 'Удалить выбранные';
+
+  @override
+  String get transactions_advancedFilters => 'Расширенные фильтры';
+
+  @override
+  String get transactions_clearAll => 'Сбросить все';
+
+  @override
+  String get transactions_amountRange => 'Диапазон суммы';
+
+  @override
+  String get transactions_minAmount => 'Мин. сумма';
+
+  @override
+  String get transactions_maxAmount => 'Макс. сумма';
+
+  @override
+  String get transactions_applyFilters => 'Применить фильтры';
+
+  @override
+  String get presets_new => 'Новый';
+
+  @override
+  String get presets_presetName => 'Название шаблона (напр., Утренний кофе)';
+
+  @override
+  String get presets_defaultAmount => 'Сумма по умолчанию';
+
+  @override
+  String get savings_goalName => 'Название цели';
+
+  @override
+  String get savings_goalNameHint => 'напр., Новая машина, Отпуск';
+
+  @override
+  String get savings_targetAmount => 'Целевая сумма';
+
+  @override
+  String get savings_targetDateOptional => 'Целевая дата (необязательно)';
+
+  @override
+  String get savings_selectDate => 'Выбрать дату';
+
+  @override
+  String get savings_amountRequired => 'Необходимо указать сумму';
+
+  @override
+  String get savings_noteOptional => 'Заметка (необязательно)';
+
+  @override
+  String get loans_skipInstallment => 'Пропустить следующий платеж по кредиту?';
+
+  @override
+  String get recurring_confirmDelete =>
+      'Вы уверены, что хотите удалить этот регулярный платеж?';
+
+  @override
+  String get export_formatExcelOption => 'Excel (.xlsx)';
+
+  @override
+  String get export_formatPdfOption => 'Отчет PDF';
+
+  @override
+  String get export_pdfNoTransactions =>
+      'За указанный период операций не обнаружено.';
+
+  @override
+  String get savings_saved => 'Сэкономлено';
+
+  @override
+  String get export_pdfDate => 'Дата';
+
+  @override
+  String get export_pdfDescription => 'Описание';
+
+  @override
+  String get accounts_noCardsYet => 'Нет карт';
+
+  @override
+  String get accounts_tapToAddCard => 'Нажмите +, чтобы добавить первую карту';
+
+  @override
+  String get savings_noGoalsYet => 'Нет целей накопления';
+
+  @override
+  String get savings_tapToAddGoal => 'Нажмите +, чтобы установить новую цель';
+
+  @override
+  String get netWorth_recordSnapshot => 'Записать снимок';
+
+  @override
+  String get netWorth_snapshotRecorded => 'Снимок записан';
+
+  @override
+  String get savings_noContributionsYet => 'Взносов пока нет';
+
+  @override
+  String get creditCard_closesStatementBillingCycle =>
+      'Закрывает текущий расчетный период выписки';
+
+  @override
+  String get creditCard_clearsTotalDebt =>
+      'Полностью погашает общую задолженность по карте';
+
+  @override
+  String get creditCard_requiredMinPayment => 'Обязательный минимальный платеж';
+
+  @override
+  String get creditCard_specifyCustomAmount =>
+      'Укажите произвольную сумму платежа';
+
+  @override
+  String common_itemDeleted(String name) {
+    return '\"$name\" удалено';
+  }
+
+  @override
+  String get common_accountDeleted => 'Счет удален';
+
+  @override
+  String get common_cardDeleted => 'Карта удалена';
+
+  @override
+  String get common_transactionDeleted => 'Транзакция удалена';
+
+  @override
+  String get common_recordDeleted => 'Запись удалена';
+
+  @override
+  String get common_paymentDeleted => 'Платеж удален';
+
+  @override
+  String get loans_skippedInstallment => 'Взнос по кредиту пропущен';
+
+  @override
+  String loans_loggedPayment(String amount) {
+    return 'Зафиксирован платеж на сумму $amount';
+  }
+
+  @override
+  String get loans_notificationsPermissionRequired =>
+      'Требуется разрешение на уведомления';
+
+  @override
+  String get creditCard_selectFundingAccount =>
+      'Пожалуйста, выберите счет списания';
+
+  @override
+  String get presets_presetUpdated => 'Шаблон обновлен';
+
+  @override
+  String get presets_presetAdded => 'Шаблон добавлен';
+
+  @override
+  String get presets_presetDeleted => 'Шаблон удален';
+
+  @override
+  String transactions_deletedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Удалено $count элементов',
+      many: 'Удалено $count элементов',
+      few: 'Удалено $count элемента',
+      one: 'Удален 1 элемент',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get split_atLeastTwoCategories =>
+      'Для разделения требуется не менее 2 категорий.';
+
+  @override
+  String get split_categoryAndAmountRequired =>
+      'Каждая позиция разделения должна иметь категорию и сумму > 0.';
+
+  @override
+  String get presets_addQuickPresets => 'Добавить быстрые шаблоны в 1 касание';
+
+  @override
+  String get presets_quickPresetsDesc =>
+      'Записывайте частые траты (кофе, транспорт, обед) одним касанием';
+
+  @override
+  String presets_loggedPreset(String title, String amount) {
+    return 'Записано: $title ($amount)';
+  }
+
+  @override
+  String get presets_createPreset => 'Создать шаблон';
+
+  @override
+  String get presets_editQuickPreset => 'Редактировать быстрый шаблон';
+
+  @override
+  String get presets_newQuickPreset => 'Новый быстрый шаблон';
+
+  @override
+  String get savings_addContribution => 'Добавить взнос';
+
+  @override
+  String get savings_withdrawFromGoal => 'Вывести из цели';
+
+  @override
+  String get savings_contribution => 'Взнос';
+
+  @override
+  String get savings_withdrawal => 'Снятие';
+
+  @override
+  String get savings_unknownAccount => 'Неизвестный счет';
+
+  @override
+  String get savings_fromAccount => 'Со счета';
+
+  @override
+  String get savings_toAccount => 'На счет';
+
+  @override
+  String get presets_quickLog => 'Быстрая запись';
+
+  @override
+  String accounts_dueOnDay(int day) {
+    return 'Срок: $day-го числа';
+  }
 }

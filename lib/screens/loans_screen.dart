@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../models/models.dart';
 import '../providers/app_provider.dart';
 import '../widgets/shared_widgets.dart';
+import '../widgets/fintech_components.dart';
 import '../theme/app_theme.dart';
 import '../l10n/app_localizations.dart';
 import '../utils/snackbar.dart';
@@ -46,15 +47,13 @@ class _LoansScreenState extends State<LoansScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.loans_title, style: const TextStyle(fontWeight: FontWeight.w800)),
-        backgroundColor: cs.primary,
-        foregroundColor: cs.onPrimary,
       ),
       body: Column(
         children: [
           // Summary row
           if (app.loans.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.fromLTRB(14, 14, 14, 8),
+              padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
               child: Row(
                 children: [
                   _SumChip(
@@ -84,7 +83,7 @@ class _LoansScreenState extends State<LoansScreen> {
                     ),
                   )
                 : ListView(
-                    padding: const EdgeInsets.fromLTRB(14, 6, 14, 100),
+                    padding: const EdgeInsets.fromLTRB(14, 6, 14, 110),
                     children: [
                       if (activeLoans.isNotEmpty) ...[
                         ...activeLoans.map((l) => _LoanCard(
@@ -130,9 +129,9 @@ class _LoansScreenState extends State<LoansScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FintechFab(
+        tooltip: l10n.loans_addLoan,
         onPressed: () => _openSheet(context),
-        child: const Icon(Icons.add),
       ),
     );
   }
@@ -144,40 +143,43 @@ class _SumChip extends StatelessWidget {
   const _SumChip({required this.label, required this.value, required this.color});
 
   @override
-  Widget build(BuildContext context) => Expanded(
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: color.withValues(alpha: 0.25)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: color,
-                ),
-              ),
-              const SizedBox(height: 1),
-              Text(
-                value,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: color,
-                ),
-              ),
-            ],
-          ),
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: isDark ? 0.15 : 0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withValues(alpha: 0.25)),
         ),
-      );
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _LoanCard extends StatelessWidget {
@@ -198,6 +200,7 @@ class _LoanCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final cur = loan.currency;
     final l10n = AppLocalizations.of(context)!;
     final progress = app.loanProgress(loan);
@@ -205,14 +208,23 @@ class _LoanCard extends StatelessWidget {
 
     final df = DateFormat('MMM dd, yyyy');
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 10),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        onLongPress: onLongPress,
-        child: Padding(
-          padding: const EdgeInsets.all(14),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: onTap,
+          onLongPress: onLongPress,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -319,7 +331,7 @@ class _LoanCard extends StatelessWidget {
                                   context: context,
                                   builder: (ctx) => AlertDialog(
                                         title: Text(l10n.recurring_skipNextPayment),
-                                        content: const Text('Skip the next loan installment?'),
+                                        content: Text(l10n.loans_skipInstallment),
                                         actions: [
                                           TextButton(
                                               onPressed: () => Navigator.pop(ctx, false),
@@ -332,7 +344,7 @@ class _LoanCard extends StatelessWidget {
                               if (ok == true && context.mounted) {
                                 await app.skipLoanInstallment(loan);
                                 if (context.mounted) {
-                                  showAppSnackbar(context, 'Skipped loan installment');
+                                  showAppSnackbar(context, l10n.loans_skippedInstallment);
                                 }
                               }
                             }),
@@ -344,7 +356,7 @@ class _LoanCard extends StatelessWidget {
                             onTap: () async {
                               await app.payLoanInstallment(loan);
                               if (context.mounted) {
-                                showAppSnackbar(context, 'Logged payment of ${formatAmount(loan.monthlyPayment, cur)}');
+                                showAppSnackbar(context, l10n.loans_loggedPayment(formatAmount(loan.monthlyPayment, cur)));
                               }
                             }),
                       ],
@@ -355,6 +367,7 @@ class _LoanCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
       ),
     );
   }
@@ -706,7 +719,7 @@ class _LoanSheetState extends State<LoanSheet> {
                     final granted = await LoanReminderService().hasPermission();
                     if (!granted) {
                       if (context.mounted) {
-                        showAppSnackbar(context, 'Notifications permission required');
+                        showAppSnackbar(context, l10n.loans_notificationsPermissionRequired);
                       }
                       return;
                     }
@@ -754,9 +767,9 @@ class _LoanSheetState extends State<LoanSheet> {
                           }
                         },
                         child: InputDecorator(
-                          decoration: const InputDecoration(
-                            labelText: 'Reminder Time',
-                            prefixIcon: Icon(Icons.access_time),
+                          decoration: InputDecoration(
+                            labelText: l10n.settings_reminderTime,
+                            prefixIcon: const Icon(Icons.access_time),
                           ),
                           child: Text(_reminderTime),
                         ),

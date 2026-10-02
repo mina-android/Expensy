@@ -1,6 +1,8 @@
 // lib/providers/app_provider.dart
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
@@ -98,8 +100,12 @@ class AppSettings {
     if (j.containsKey('themeMode') && j['themeMode'] != null) {
       mode = j['themeMode'] as String;
       // Migrate legacy 'amoled' themeMode → 'dark' + amoledSurfaces:true
-      if (mode == 'amoled') { mode = 'dark'; legacyAmoled = true; }
-      else if (!_validThemeModes.contains(mode)) mode = 'dark';
+      if (mode == 'amoled') {
+        mode = 'dark';
+        legacyAmoled = true;
+      } else if (!_validThemeModes.contains(mode)) {
+        mode = 'dark';
+      }
     } else {
       mode = (j['darkMode'] as bool? ?? false) ? 'dark' : 'system';
     }
@@ -149,6 +155,9 @@ class AppProvider extends ChangeNotifier {
   List<SavingsGoal>           savingsGoals = [];
   List<SavingsContribution>   savingsContributions = [];
   List<NetWorthSnapshot>      netWorthSnapshots = [];
+  List<TransactionPreset>     presets      = [];
+  List<TransactionSplit>      splits       = [];
+  Map<String, List<TransactionSplit>> _splitsByTxId = {};
 
   /// Total row count in `recurring_history` — kept for display purposes
   /// (e.g. the Backup screen's "what's included" list) without needing to
@@ -177,6 +186,8 @@ class AppProvider extends ChangeNotifier {
   bool _loaded = false;
   bool get loaded => _loaded;
 
+  Timer? _autoPayTimer;
+
   final _uuid = const Uuid();
   String newId() => _uuid.v4();
 
@@ -202,13 +213,12 @@ class AppProvider extends ChangeNotifier {
     loanPayments = await DBHelper.getAllLoanPayments();
     netWorthSnapshots = await DBHelper.getNetWorthSnapshots();
     recurringHistoryCount = await DBHelper.getRecurringHistoryCount();
+    presets      = await DBHelper.getPresets();
+    splits       = await DBHelper.getAllSplits();
+    _rebuildSplitsCache();
     _loaded = true;
     notifyListeners();
 
-    _lendedNotif.rescheduleAllLended(lended, settings.currency);
-    _notif.rescheduleAll(recurring, settings.currency);
-    _loanNotif.rescheduleAllLoans(loans, settings.currency);
-    CreditReminderService().rescheduleAll(accounts);
     if (settings.dailyReminderEnabled) {
       await _dailyNotif.scheduleDailyReminder(settings.dailyReminderTime);
     } else {
@@ -217,7 +227,19 @@ class AppProvider extends ChangeNotifier {
 
     _loadRates();
     await _recordNetWorthSnapshot();
+    await checkAndProcessAutoPay();
     await updateHomeWidgets();
+
+    _autoPayTimer?.cancel();
+    _autoPayTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      checkAndProcessAutoPay();
+    });
+  }
+
+  @override
+  void dispose() {
+    _autoPayTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> updateHomeWidgets() async {
@@ -235,15 +257,14 @@ class AppProvider extends ChangeNotifier {
       await HomeWidget.updateWidget(name: 'AccountsWidgetProvider');
 
       final budgetData = budgets.map((b) {
-        final spent = transactions
-            .where((t) => t.type == 'expense' && t.categoryId == b.categoryId)
-            .fold(0.0, (s, t) => s + t.amount);
+        final spent = budgetSpent(b);
+        final allowance = budgetEffectiveAllowance(b);
         return {
           'category': categoryById(b.categoryId)?.name ?? 'Budget',
           'spent': spent,
-          'amount': b.amount,
-          'progress': b.amount > 0 ? spent / b.amount : 0.0,
-          'exceeded': spent > b.amount,
+          'amount': allowance,
+          'progress': budgetProgress(b),
+          'exceeded': budgetExceeded(b),
           'currency': settings.currency,
         };
       }).toList();
@@ -254,25 +275,33 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> _recordNetWorthSnapshot() async {
+  Future<void> recordNetWorthSnapshot() async {
     try {
       final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
       final existing = await DBHelper.getNetWorthSnapshotForDate(today);
-      if (existing != null) return;
       final snap = NetWorthSnapshot(
-        id: const Uuid().v4(),
+        id: existing?.id ?? const Uuid().v4(),
         date: today,
-        totalAccounts: totalBalanceAll,
-        totalAssets: totalAssetsValue,
-        netWorth: totalBalanceAll + totalAssetsValue,
+        totalAccounts: totalLiquidAccountsValue + totalGoldValue,
+        totalAssets: totalAssetsValue + totalLentMoneyValue,
+        netWorth: liveNetWorth,
         currency: settings.currency,
       );
       await DBHelper.insertNetWorthSnapshot(snap);
-      netWorthSnapshots.add(snap);
+      final idx = netWorthSnapshots.indexWhere((s) => s.date == today);
+      if (idx != -1) {
+        netWorthSnapshots[idx] = snap;
+      } else {
+        netWorthSnapshots.add(snap);
+        netWorthSnapshots.sort((a, b) => a.date.compareTo(b.date));
+      }
+      notifyListeners();
     } catch (e) {
       debugPrint('Error recording net worth snapshot: $e');
     }
   }
+
+  Future<void> _recordNetWorthSnapshot() => recordNetWorthSnapshot();
 
   Future<void> _loadRates({bool forceNetwork = false}) async {
     ratesFetching = true;
@@ -372,7 +401,10 @@ class AppProvider extends ChangeNotifier {
       accounts[i] = updated;
       changed = true;
     }
-    if (changed) notifyListeners();
+    if (changed) {
+      notifyListeners();
+      await recordNetWorthSnapshot();
+    }
   }
 
   Future<void> _saveSettings() async {
@@ -406,6 +438,7 @@ class AppProvider extends ChangeNotifier {
 
     _saveSettings();
     notifyListeners();
+    updateHomeWidgets();
 
     if (oldLang != settings.languageCode) {
       // Handled in main by restarting or notifying.
@@ -456,6 +489,57 @@ class AppProvider extends ChangeNotifier {
                     absBalance, a.currency, settings.currency, exchangeRates) ??
                 absBalance);
       });
+
+  // ── Wealth Management & Net Worth Helpers ──────────────────────────────
+
+  /// Liquid Cash and Bank accounts with positive balances converted to main currency.
+  double get totalLiquidAccountsValue => accounts
+      .where((a) => a.balance > 0 && !a.isGold)
+      .fold(0.0, (sum, a) => sum + convertToMain(a.balance, a.currency));
+
+  /// Physical Gold holding value converted to main currency.
+  double get totalGoldValue => accounts
+      .where((a) => a.balance > 0 && a.isGold)
+      .fold(0.0, (sum, a) => sum + convertToMain(a.balance, a.currency));
+
+  /// Unsettled money lent to others (receivables) converted to main currency.
+  double get totalLentMoneyValue => lended
+      .where((l) => !l.isSettled && l.type == 'lent')
+      .fold(0.0, (sum, l) {
+        final cur = l.accountId != null
+            ? (accountById(l.accountId!)?.currency ?? settings.currency)
+            : settings.currency;
+        return sum + convertToMain(l.amount, cur);
+      });
+
+  /// Total combined assets: liquid accounts + gold + fixed/investment assets + lent money.
+  double get totalWealthAssets =>
+      totalLiquidAccountsValue +
+      totalGoldValue +
+      totalAssetsValue +
+      totalLentMoneyValue;
+
+  /// Credit card debt and overdraft accounts (accounts with negative balances) converted to main currency.
+  double get totalDebtAccounts => accounts
+      .where((a) => a.balance < 0)
+      .fold(0.0, (sum, a) => sum + convertToMain(-a.balance, a.currency));
+
+  /// Unsettled money borrowed from others (payables) converted to main currency.
+  double get totalBorrowedMoneyValue => lended
+      .where((l) => !l.isSettled && l.type == 'borrowed')
+      .fold(0.0, (sum, l) {
+        final cur = l.accountId != null
+            ? (accountById(l.accountId!)?.currency ?? settings.currency)
+            : settings.currency;
+        return sum + convertToMain(l.amount, cur);
+      });
+
+  /// Total combined liabilities: credit/overdraft debt + outstanding loan debt + borrowed money.
+  double get totalWealthLiabilities =>
+      totalDebtAccounts + totalOutstandingLoanDebt + totalBorrowedMoneyValue;
+
+  /// Real net worth = Total Assets - Total Liabilities.
+  double get liveNetWorth => totalWealthAssets - totalWealthLiabilities;
 
   double convertToMain(double amount, String fromCurrency) {
     if (fromCurrency == settings.currency || exchangeRates.isEmpty) {
@@ -526,11 +610,22 @@ class AppProvider extends ChangeNotifier {
       await CreditReminderService().scheduleReminder(a);
     }
     notifyListeners();
+    updateHomeWidgets();
+    recordNetWorthSnapshot();
   }
 
   Future<void> updateAccount(Account a) async {
     await DBHelper.updateAccount(a);
     accounts = await DBHelper.getAccounts();
+    if (a.dontLinkToCard) {
+      final linkedCards = accounts.where((acc) => acc.linkedAccountId == a.id).toList();
+      for (final card in linkedCards) {
+        await DBHelper.updateAccount(card.copyWith(clearLinkedAccount: true));
+      }
+      if (linkedCards.isNotEmpty) {
+        accounts = await DBHelper.getAccounts();
+      }
+    }
     if (a.type == 'credit') {
       await CreditReminderService().cancelReminder(a.id);
       if (a.creditReminderEnabled) {
@@ -538,6 +633,8 @@ class AppProvider extends ChangeNotifier {
       }
     }
     notifyListeners();
+    updateHomeWidgets();
+    recordNetWorthSnapshot();
   }
 
   Future<VoidCallback> deleteAccountWithUndo(String id) async {
@@ -554,6 +651,8 @@ class AppProvider extends ChangeNotifier {
     accounts     = await DBHelper.getAccounts();
     transactions = await DBHelper.getTransactions();
     notifyListeners();
+    updateHomeWidgets();
+    recordNetWorthSnapshot();
   }
 
   Future<void> _updateAccountBalance(String id, double delta) async {
@@ -562,6 +661,174 @@ class AppProvider extends ChangeNotifier {
     if (acc.isGold) return;
     await DBHelper.updateAccount(acc.copyWith(balance: acc.balance + delta));
     accounts = await DBHelper.getAccounts();
+  }
+
+  /// Calculates the billing cycle, statement balance, unbilled charges, and utilization for a credit card.
+  CreditCardStatement getCreditCardStatement(Account acc) {
+    assert(acc.type == 'credit', 'Account must be of type credit');
+
+    final debt = acc.balance < 0 ? -acc.balance : 0.0;
+    final isFullyPaid = debt <= 0.0;
+    final limit = acc.creditLimit ?? 0.0;
+    final availableCredit =
+        limit > 0 ? (limit - debt).clamp(0.0, double.infinity) : 0.0;
+    final utilization = limit > 0 ? (debt / limit) * 100.0 : 0.0;
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    DateTime? statementDate;
+    DateTime? prevStatementDate;
+    DateTime? dueDate;
+    int? daysUntilDue;
+    bool isDueSoon = false;
+    bool isOverdue = false;
+
+    if (acc.statementDay != null) {
+      final sDay = acc.statementDay!;
+      final daysInThisMonth = DateTime(now.year, now.month + 1, 0).day;
+      final thisMonthStatement =
+          DateTime(now.year, now.month, sDay.clamp(1, daysInThisMonth));
+
+      if (today.isBefore(thisMonthStatement)) {
+        // Latest closed statement was previous month
+        final prevYear = now.month == 1 ? now.year - 1 : now.year;
+        final prevMonth = now.month == 1 ? 12 : now.month - 1;
+        final prevDays = DateTime(prevYear, prevMonth + 1, 0).day;
+        statementDate = DateTime(prevYear, prevMonth, sDay.clamp(1, prevDays));
+
+        final p2Year = prevMonth == 1 ? prevYear - 1 : prevYear;
+        final p2Month = prevMonth == 1 ? 12 : prevMonth - 1;
+        final p2Days = DateTime(p2Year, p2Month + 1, 0).day;
+        prevStatementDate = DateTime(p2Year, p2Month, sDay.clamp(1, p2Days));
+      } else {
+        // Latest closed statement is this month
+        statementDate = thisMonthStatement;
+
+        final prevYear = now.month == 1 ? now.year - 1 : now.year;
+        final prevMonth = now.month == 1 ? 12 : now.month - 1;
+        final prevDays = DateTime(prevYear, prevMonth + 1, 0).day;
+        prevStatementDate = DateTime(prevYear, prevMonth, sDay.clamp(1, prevDays));
+      }
+    } else {
+      // Default statement period to start of calendar month
+      statementDate = DateTime(now.year, now.month, 1);
+      final prevYear = now.month == 1 ? now.year - 1 : now.year;
+      final prevMonth = now.month == 1 ? 12 : now.month - 1;
+      prevStatementDate = DateTime(prevYear, prevMonth, 1);
+    }
+
+    if (acc.dueDay != null) {
+      final dDay = acc.dueDay!;
+      final sDate = statementDate;
+      final sYear = sDate.year;
+      final sMonth = sDate.month;
+      final sDays = DateTime(sYear, sMonth + 1, 0).day;
+      final sameMonthDue = DateTime(sYear, sMonth, dDay.clamp(1, sDays));
+
+      if (sameMonthDue.isAfter(sDate)) {
+        dueDate = sameMonthDue;
+      } else {
+        final nYear = sMonth == 12 ? sYear + 1 : sYear;
+        final nMonth = sMonth == 12 ? 1 : sMonth + 1;
+        final nDays = DateTime(nYear, nMonth + 1, 0).day;
+        dueDate = DateTime(nYear, nMonth, dDay.clamp(1, nDays));
+      }
+
+      daysUntilDue = dueDate.difference(today).inDays;
+      isOverdue = daysUntilDue < 0 && debt > 0.0;
+      isDueSoon = daysUntilDue >= 0 && daysUntilDue <= 5 && debt > 0.0;
+    }
+
+    // Isolate statement window vs unbilled charges
+    double cycleNetExpenses = 0.0;
+
+    final cardTxs = transactions.where((t) => t.accountId == acc.id);
+    final stmtEnd = DateTime(statementDate.year, statementDate.month,
+        statementDate.day, 23, 59, 59);
+
+    for (final t in cardTxs) {
+      final sign = t.type == 'expense' ? 1.0 : -1.0;
+      final amt = convertBetween(t.amount,
+              t.currency.isEmpty ? acc.currency : t.currency, acc.currency) ??
+          t.amount;
+      final delta = amt * sign;
+
+      if (!t.date.isAfter(stmtEnd) && t.date.isAfter(prevStatementDate)) {
+        cycleNetExpenses += delta;
+      }
+    }
+
+    double statementBalance = 0.0;
+    double unbilledBalance = 0.0;
+
+    if (isFullyPaid) {
+      statementBalance = 0.0;
+      unbilledBalance = 0.0;
+    } else {
+      if (cycleNetExpenses > 0.0) {
+        statementBalance = math.min(cycleNetExpenses, debt);
+        unbilledBalance = (debt - statementBalance).clamp(0.0, double.infinity);
+      } else {
+        statementBalance = debt;
+        unbilledBalance = 0.0;
+      }
+    }
+
+    double minPayment = 0.0;
+    if (!isFullyPaid) {
+      if (acc.minPaymentAmount != null && acc.minPaymentAmount! > 0) {
+        minPayment = math.min(acc.minPaymentAmount!, debt);
+      } else if (acc.minPaymentPercent != null &&
+          acc.minPaymentPercent! > 0) {
+        minPayment = math.min(debt * (acc.minPaymentPercent! / 100.0), debt);
+      } else {
+        minPayment =
+            math.min(math.max(debt * 0.05, math.min(25.0, debt)), debt);
+      }
+    }
+
+    return CreditCardStatement(
+      account: acc,
+      statementDate: statementDate,
+      previousStatementDate: prevStatementDate,
+      dueDate: dueDate,
+      statementBalance: statementBalance,
+      unbilledBalance: unbilledBalance,
+      totalOutstandingDebt: debt,
+      creditLimit: limit,
+      availableCredit: availableCredit,
+      utilizationPercent: utilization,
+      minPaymentAmount: minPayment,
+      daysUntilDue: daysUntilDue,
+      isDueSoon: isDueSoon,
+      isOverdue: isOverdue,
+      isFullyPaid: isFullyPaid,
+    );
+  }
+
+  /// Settles a credit card bill from a funding account.
+  Future<void> settleCreditCard({
+    required Account cardAccount,
+    required Account fromAccount,
+    required double amount,
+    String? note,
+  }) async {
+    assert(amount > 0, 'Payment amount must be greater than zero');
+    await addTransfer(
+      fromId: fromAccount.id,
+      toId: cardAccount.id,
+      fromAmount: amount,
+      note: note ?? 'Credit card bill payment — ${cardAccount.name}',
+    );
+
+    final refreshedCard = accountById(cardAccount.id);
+    if (refreshedCard != null && refreshedCard.creditReminderEnabled) {
+      await CreditReminderService().cancelReminder(refreshedCard.id);
+      if (refreshedCard.balance < 0) {
+        await CreditReminderService().scheduleReminder(refreshedCard);
+      }
+    }
   }
 
   // ── Categories ────────────────────────────────────────────────────────
@@ -605,6 +872,8 @@ class AppProvider extends ChangeNotifier {
     transactions = await DBHelper.getTransactions();
     notifyListeners();
     await _checkBudgetAlert(t);
+    updateHomeWidgets();
+    recordNetWorthSnapshot();
   }
 
   Future<void> updateTransaction(AppTransaction updated,
@@ -616,17 +885,34 @@ class AppProvider extends ChangeNotifier {
     accounts     = await DBHelper.getAccounts();
     notifyListeners();
     await _checkBudgetAlert(updated);
+    updateHomeWidgets();
+    recordNetWorthSnapshot();
   }
 
   Future<void> _checkBudgetAlert(AppTransaction t) async {
     if (!settings.budgetAlertsEnabled) return;
     if (t.type != 'expense') return;
-    final b = budgetForCategory(t.categoryId);
-    if (b == null) return;
-    if (budgetExceeded(b)) {
-      final cat = categoryById(t.categoryId);
-      if (cat != null) {
-        await _budgetNotif.showBudgetExceeded(b, cat, budgetSpent(b));
+    if (isTransactionSplit(t.id)) {
+      final txSplits = getSplits(t.id);
+      for (final s in txSplits) {
+        final b = budgetForCategory(s.categoryId);
+        if (b != null && budgetExceeded(b)) {
+          final cat = categoryById(s.categoryId);
+          if (cat != null) {
+            await _budgetNotif.showBudgetExceeded(
+                b, cat, budgetSpent(b), budgetEffectiveAllowance(b));
+          }
+        }
+      }
+    } else {
+      final b = budgetForCategory(t.categoryId);
+      if (b == null) return;
+      if (budgetExceeded(b)) {
+        final cat = categoryById(t.categoryId);
+        if (cat != null) {
+          await _budgetNotif.showBudgetExceeded(
+              b, cat, budgetSpent(b), budgetEffectiveAllowance(b));
+        }
       }
     }
   }
@@ -636,9 +922,13 @@ class AppProvider extends ChangeNotifier {
     if (t == null) return;
     await _updateAccountBalance(t.accountId, _txDelta(t, reverse: true));
     await DBHelper.deleteTransaction(id);
+    splits.removeWhere((s) => s.transactionId == id);
+    _splitsByTxId.remove(id);
     transactions = await DBHelper.getTransactions();
     accounts     = await DBHelper.getAccounts();
     notifyListeners();
+    updateHomeWidgets();
+    recordNetWorthSnapshot();
   }
 
   Future<void> addTransfer({
@@ -687,6 +977,77 @@ class AppProvider extends ChangeNotifier {
     transactions = await DBHelper.getTransactions();
     accounts     = await DBHelper.getAccounts();
     notifyListeners();
+    updateHomeWidgets();
+    recordNetWorthSnapshot();
+  }
+
+  // ── Presets ───────────────────────────────────────────────────────────
+  Future<void> addPreset(TransactionPreset p) async {
+    await DBHelper.insertPreset(p);
+    presets = await DBHelper.getPresets();
+    notifyListeners();
+  }
+
+  Future<void> updatePreset(TransactionPreset p) async {
+    await DBHelper.updatePreset(p);
+    presets = await DBHelper.getPresets();
+    notifyListeners();
+  }
+
+  Future<void> deletePreset(String id) async {
+    await DBHelper.deletePreset(id);
+    presets.removeWhere((p) => p.id == id);
+    notifyListeners();
+  }
+
+  /// 1-Tap Log a Transaction from a Preset for the current time
+  Future<AppTransaction> logPreset(TransactionPreset preset) async {
+    final acc = accountById(preset.accountId);
+    final accCurrency = acc?.currency ?? settings.currency;
+    final storeCurrency = preset.currency == accCurrency ? '' : preset.currency;
+
+    final tx = AppTransaction(
+      id: newId(),
+      type: preset.type,
+      amount: preset.amount,
+      description: preset.title,
+      accountId: preset.accountId,
+      categoryId: preset.categoryId,
+      date: DateTime.now(),
+      note: preset.note,
+      currency: storeCurrency,
+    );
+
+    await addTransaction(tx);
+    return tx;
+  }
+
+  // ── Splits ────────────────────────────────────────────────────────────
+  void _rebuildSplitsCache() {
+    _splitsByTxId = {};
+    for (final s in splits) {
+      _splitsByTxId.putIfAbsent(s.transactionId, () => []).add(s);
+    }
+  }
+
+  @visibleForTesting
+  void rebuildSplitsCache() => _rebuildSplitsCache();
+
+  bool isTransactionSplit(String txId) =>
+      _splitsByTxId.containsKey(txId) && _splitsByTxId[txId]!.isNotEmpty;
+
+  List<TransactionSplit> getSplits(String txId) =>
+      _splitsByTxId[txId] ?? const [];
+
+  Future<List<TransactionSplit>> getSplitsForTransaction(String transactionId) =>
+      DBHelper.getSplitsForTransaction(transactionId);
+
+  Future<void> saveTransactionSplits(
+      String transactionId, List<TransactionSplit> newSplits) async {
+    await DBHelper.saveTransactionSplits(transactionId, newSplits);
+    splits = await DBHelper.getAllSplits();
+    _rebuildSplitsCache();
+    notifyListeners();
   }
 
   // ── Recurring ─────────────────────────────────────────────────────────
@@ -697,6 +1058,9 @@ class AppProvider extends ChangeNotifier {
     if (r.reminderEnabled) {
       await _notif.scheduleReminder(r, settings.currency);
     }
+    if (r.autoPayEnabled) {
+      await checkAndProcessAutoPay();
+    }
   }
 
   Future<void> updateRecurring(RecurringPayment r) async {
@@ -706,6 +1070,9 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
     if (r.reminderEnabled) {
       await _notif.scheduleReminder(r, settings.currency);
+    }
+    if (r.autoPayEnabled) {
+      await checkAndProcessAutoPay();
     }
   }
 
@@ -739,6 +1106,9 @@ class AppProvider extends ChangeNotifier {
       reminderTime: r.reminderTime,
       earlyReminderEnabled: r.earlyReminderEnabled,
       notes: r.notes,
+      recurringType: r.recurringType,
+      autoPayEnabled: r.autoPayEnabled,
+      autoPayTime: r.autoPayTime,
     );
     await DBHelper.updateRecurring(updated);
     recurring = await DBHelper.getRecurring();
@@ -760,12 +1130,41 @@ class AppProvider extends ChangeNotifier {
       reminderTime: r.reminderTime,
       earlyReminderEnabled: r.earlyReminderEnabled,
       notes: r.notes,
+      recurringType: r.recurringType,
+      autoPayEnabled: r.autoPayEnabled,
+      autoPayTime: r.autoPayTime,
     );
     await DBHelper.updateRecurring(updated);
     recurring = await DBHelper.getRecurring();
     notifyListeners();
     await _notif.cancelReminder(r.id);
     await _notif.scheduleReminder(updated, settings.currency);
+  }
+
+  /// Automatically marks any recurring items paid if they are due today or overdue
+  /// and have auto-pay enabled.
+  Future<void> checkAndProcessAutoPay() async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final autoPayList = recurring.where((r) {
+      if (!r.autoPayEnabled) return false;
+      final dueDate = DateTime(r.nextDate.year, r.nextDate.month, r.nextDate.day);
+      if (dueDate.isBefore(today)) return true;
+      if (dueDate.isAtSameMomentAs(today)) {
+        // Compare autoPayTime with current time
+        final parts = r.autoPayTime.split(':');
+        final targetHour = int.tryParse(parts[0]) ?? 9;
+        final targetMinute = parts.length > 1 ? (int.tryParse(parts[1]) ?? 0) : 0;
+        final currentMinutes = now.hour * 60 + now.minute;
+        final targetMinutes = targetHour * 60 + targetMinute;
+        return currentMinutes >= targetMinutes;
+      }
+      return false;
+    }).toList();
+
+    for (final r in autoPayList) {
+      await markRecurringPaid(r);
+    }
   }
 
   // ── Recurring History ─────────────────────────────────────────────────
@@ -810,9 +1209,91 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> deleteWishlist(String id) async {
+    for (final g in savingsGoals.where((g) => g.wishlistItemId == id)) {
+      await DBHelper.updateSavingsGoal(g.copyWith(clearWishlistItemId: true));
+    }
+    savingsGoals = await DBHelper.getSavingsGoals();
     await DBHelper.deleteWishlist(id);
     wishlist = await DBHelper.getWishlist();
     notifyListeners();
+  }
+
+  SavingsGoal? goalForWishlist(WishlistItem item) {
+    if (item.goalId == null) return null;
+    return savingsGoals.where((g) => g.id == item.goalId).firstOrNull;
+  }
+
+  WishlistItem? wishlistForGoal(SavingsGoal goal) {
+    if (goal.wishlistItemId == null) return null;
+    return wishlist.where((w) => w.id == goal.wishlistItemId).firstOrNull;
+  }
+
+  Future<void> createGoalForWishlist(WishlistItem item, SavingsGoal goal) async {
+    final updatedGoal = goal.copyWith(wishlistItemId: item.id);
+    final updatedItem = item.copyWith(goalId: goal.id);
+    await DBHelper.insertSavingsGoal(updatedGoal);
+    await DBHelper.updateWishlist(updatedItem);
+    savingsGoals = await DBHelper.getSavingsGoals();
+    wishlist = await DBHelper.getWishlist();
+    notifyListeners();
+  }
+
+  Future<void> unlinkWishlistAndGoal({
+    required String wishlistItemId,
+    required String goalId,
+  }) async {
+    final w = wishlist.where((x) => x.id == wishlistItemId).firstOrNull;
+    if (w != null) {
+      await DBHelper.updateWishlist(w.copyWith(clearGoalId: true));
+    }
+    final g = savingsGoals.where((x) => x.id == goalId).firstOrNull;
+    if (g != null) {
+      await DBHelper.updateSavingsGoal(g.copyWith(clearWishlistItemId: true));
+    }
+    wishlist = await DBHelper.getWishlist();
+    savingsGoals = await DBHelper.getSavingsGoals();
+    notifyListeners();
+  }
+
+  Future<void> purchaseWishlistItem({
+    required WishlistItem item,
+    String? accountId,
+    String? categoryId,
+    double? amount,
+    String? note,
+  }) async {
+    if (accountId != null) {
+      final txAmount = amount ?? item.targetPrice;
+      final defaultCat =
+          categories.where((c) => c.type == 'expense').firstOrNull?.id ?? '';
+      final tx = AppTransaction(
+        id: newId(),
+        type: 'expense',
+        amount: txAmount,
+        description: item.name,
+        accountId: accountId,
+        categoryId: (categoryId != null && categoryId.isNotEmpty)
+            ? categoryId
+            : defaultCat,
+        date: DateTime.now(),
+        note: note ?? (item.notes.isNotEmpty ? item.notes : ''),
+      );
+      await addTransaction(tx);
+    }
+
+    final updatedItem = item.copyWith(isPurchased: true);
+    await updateWishlist(updatedItem);
+
+    if (item.goalId != null) {
+      final goal = savingsGoals.where((g) => g.id == item.goalId).firstOrNull;
+      if (goal != null && !goal.isCompleted) {
+        final completedGoal = goal.copyWith(
+          isCompleted: true,
+          completedAt: DateTime.now(),
+        );
+        await updateSavingsGoal(completedGoal);
+      }
+    }
   }
 
   // ── Lended People (per-person ledger "accounts") ────────────────────────
@@ -873,6 +1354,7 @@ class AppProvider extends ChangeNotifier {
     lended   = await DBHelper.getLended();
     accounts = await DBHelper.getAccounts();
     notifyListeners();
+    recordNetWorthSnapshot();
     if (l.reminderEnabled && l.dueDate != null) {
       await _lendedNotif.scheduleLendedReminder(l, settings.currency,
           personName: personById(l.personId)?.name ?? '');
@@ -892,6 +1374,7 @@ class AppProvider extends ChangeNotifier {
     lended   = await DBHelper.getLended();
     accounts = await DBHelper.getAccounts();
     notifyListeners();
+    recordNetWorthSnapshot();
     // Always cancel old reminder, then reschedule if still enabled
     await _lendedNotif.cancelLendedReminder(original.id);
     if (updated.reminderEnabled && updated.dueDate != null && !updated.isSettled) {
@@ -910,6 +1393,7 @@ class AppProvider extends ChangeNotifier {
     lended   = await DBHelper.getLended();
     accounts = await DBHelper.getAccounts();
     notifyListeners();
+    recordNetWorthSnapshot();
     await _lendedNotif.cancelLendedReminder(l.id); // no reminder needed after settlement
   }
 
@@ -918,6 +1402,7 @@ class AppProvider extends ChangeNotifier {
     await DBHelper.deleteLended(id);
     lended = await DBHelper.getLended();
     notifyListeners();
+    recordNetWorthSnapshot();
   }
 
   Future<VoidCallback> deleteLendedWithUndo(String id) async {
@@ -939,18 +1424,21 @@ class AppProvider extends ChangeNotifier {
     await DBHelper.insertAsset(a);
     assets = await DBHelper.getAssets();
     notifyListeners();
+    recordNetWorthSnapshot();
   }
 
   Future<void> updateAsset(AssetItem a) async {
     await DBHelper.updateAsset(a);
     assets = await DBHelper.getAssets();
     notifyListeners();
+    recordNetWorthSnapshot();
   }
 
   Future<void> deleteAsset(String id) async {
     await DBHelper.deleteAsset(id);
     assets = await DBHelper.getAssets();
     notifyListeners();
+    recordNetWorthSnapshot();
   }
 
   Future<VoidCallback> deleteAssetWithUndo(String id) async {
@@ -960,6 +1448,7 @@ class AppProvider extends ChangeNotifier {
       await DBHelper.insertAsset(asset);
       assets = await DBHelper.getAssets();
       notifyListeners();
+      recordNetWorthSnapshot();
     };
   }
 
@@ -977,18 +1466,21 @@ class AppProvider extends ChangeNotifier {
     await DBHelper.insertBudget(b);
     budgets = await DBHelper.getBudgets();
     notifyListeners();
+    updateHomeWidgets();
   }
 
   Future<void> updateBudget(Budget b) async {
     await DBHelper.updateBudget(b);
     budgets = await DBHelper.getBudgets();
     notifyListeners();
+    updateHomeWidgets();
   }
 
   Future<void> deleteBudget(String id) async {
     await DBHelper.deleteBudget(id);
     budgets = await DBHelper.getBudgets();
     notifyListeners();
+    updateHomeWidgets();
   }
 
   Future<VoidCallback> deleteBudgetWithUndo(String id) async {
@@ -1002,25 +1494,259 @@ class AppProvider extends ChangeNotifier {
   Budget? budgetForCategory(String categoryId) =>
       budgets.where((b) => b.categoryId == categoryId).firstOrNull;
 
-  /// Sum of all expenses for [budget]'s category in the current period,
-  /// converted to the main currency.
-  double budgetSpent(Budget budget) {
-    final now = DateTime.now();
-    final DateTime periodStart;
+  DateTime getCurrentPeriodStart(Budget budget, [DateTime? referenceDate]) {
+    final now = referenceDate ?? DateTime.now();
     if (budget.period == 'weekly') {
       final dow = now.weekday; // 1=Mon, 7=Sun
       final offset = settings.weekStart == 'monday' ? (dow - 1) : (dow % 7);
-      periodStart = DateTime(now.year, now.month, now.day - offset);
+      return DateTime(now.year, now.month, now.day - offset);
     } else {
-      periodStart = DateTime(now.year, now.month, 1);
+      return DateTime(now.year, now.month, 1);
     }
+  }
 
+  DateTime getPreviousPeriodStart(Budget budget, [DateTime? referenceDate]) {
+    final now = referenceDate ?? DateTime.now();
+    if (budget.period == 'weekly') {
+      final currentStart = getCurrentPeriodStart(budget, now);
+      return currentStart.subtract(const Duration(days: 7));
+    } else {
+      return DateTime(now.year, now.month - 1, 1);
+    }
+  }
+
+  /// Calculates spending for a budget's category within the half-open date interval [start, end).
+  double budgetSpentInPeriod(Budget budget, DateTime start, DateTime end) {
     return transactions
         .where((t) =>
             t.type == 'expense' &&
-            t.categoryId == budget.categoryId &&
-            !t.date.isBefore(periodStart))
+            !t.date.isBefore(start) &&
+            t.date.isBefore(end))
         .fold(0.0, (sum, t) {
+      final acct = accountById(t.accountId);
+      final txCur = t.currency.isNotEmpty
+          ? t.currency
+          : (acct?.currency ?? settings.currency);
+      if (isTransactionSplit(t.id)) {
+        final txSplits =
+            getSplits(t.id).where((s) => s.categoryId == budget.categoryId);
+        if (txSplits.isEmpty) return sum;
+        final splitSum = txSplits.fold(0.0, (s, item) => s + item.amount);
+        return sum + convertToMain(splitSum, txCur);
+      } else {
+        if (t.categoryId != budget.categoryId) return sum;
+        return sum + convertToMain(t.amount, txCur);
+      }
+    });
+  }
+
+  /// Sum of all expenses for [budget]'s category in the current period,
+  /// converted to the main currency.
+  double budgetSpent(Budget budget, [DateTime? referenceDate]) {
+    final now = referenceDate ?? DateTime.now();
+    final periodStart = getCurrentPeriodStart(budget, now);
+    final periodEnd = budget.period == 'weekly'
+        ? periodStart.add(const Duration(days: 7))
+        : DateTime(now.year, now.month + 1, 1);
+    return budgetSpentInPeriod(budget, periodStart, periodEnd);
+  }
+
+  /// Computes the rollover surplus (positive) or overspending deficit (negative)
+  /// from the previous period if [budget.allowRollover] is true.
+  /// If rollover is disabled, returns 0.0.
+  double budgetRollover(Budget budget, [DateTime? referenceDate]) {
+    if (!budget.allowRollover) return 0.0;
+    final now = referenceDate ?? DateTime.now();
+    final prevStart = getPreviousPeriodStart(budget, now);
+    final currentStart = getCurrentPeriodStart(budget, now);
+
+    final prevSpent = budgetSpentInPeriod(budget, prevStart, currentStart);
+
+    // If the budget was created in the current period and there was no spending
+    // in the previous period, don't generate an unearned rollover surplus.
+    if (!budget.createdAt.isBefore(currentStart) && prevSpent == 0.0) {
+      return 0.0;
+    }
+
+    return budget.amount - prevSpent;
+  }
+
+  /// Effective budget allowance for the current period:
+  /// Base Budget + Rollover (if enabled). Clamped to at least 0.
+  double budgetEffectiveAllowance(Budget budget, [DateTime? referenceDate]) {
+    if (!budget.allowRollover) return budget.amount;
+    final rollover = budgetRollover(budget, referenceDate);
+    final effective = budget.amount + rollover;
+    return effective < 0 ? 0.0 : effective;
+  }
+
+  /// Progress against the effective budget allowance (0.0 to 1.0).
+  double budgetProgress(Budget b) {
+    final allowance = budgetEffectiveAllowance(b);
+    if (allowance <= 0) {
+      return budgetSpent(b) > 0 ? 1.0 : 0.0;
+    }
+    return (budgetSpent(b) / allowance).clamp(0.0, 1.0);
+  }
+
+  /// Remaining amount of effective budget allowance.
+  double budgetRemaining(Budget b) {
+    final allowance = budgetEffectiveAllowance(b);
+    final rem = allowance - budgetSpent(b);
+    return rem < 0 ? 0.0 : rem;
+  }
+
+  /// True if current spending exceeds the effective budget allowance.
+  bool budgetExceeded(Budget b) =>
+      budgetSpent(b) > budgetEffectiveAllowance(b);
+
+  /// Label of the previous period (e.g. "Aug", "Last Week") for rollover subheaders.
+  String previousPeriodName(Budget budget,
+      [String? lastWeekLabel, DateTime? referenceDate]) {
+    final now = referenceDate ?? DateTime.now();
+    if (budget.period == 'weekly') {
+      return lastWeekLabel ?? 'Last Week';
+    } else {
+      final prevMonthDate = DateTime(now.year, now.month - 1, 1);
+      return DateFormat.MMM().format(prevMonthDate);
+    }
+  }
+
+  /// Computes the daily Safe-to-Spend pacing analysis for [budget].
+  BudgetPacingInfo budgetPacing(Budget budget, [DateTime? referenceDate]) {
+    final now = referenceDate ?? DateTime.now();
+    final periodStart = getCurrentPeriodStart(budget, now);
+    final int totalDays;
+    final int elapsedDays;
+
+    if (budget.period == 'weekly') {
+      totalDays = 7;
+      final diff = now.difference(periodStart).inDays + 1;
+      elapsedDays = diff.clamp(1, 7);
+    } else {
+      totalDays = DateTime(now.year, now.month + 1, 0).day;
+      elapsedDays = now.day.clamp(1, totalDays);
+    }
+
+    final daysRemaining = (totalDays - elapsedDays + 1).clamp(1, totalDays);
+    final allowance = budgetEffectiveAllowance(budget, now);
+    final spent = budgetSpent(budget, now);
+    final remaining = allowance - spent;
+    final safeDaily = (allowance > 0 && remaining > 0)
+        ? remaining / daysRemaining
+        : 0.0;
+
+    final double pacingRatio;
+    if (allowance <= 0) {
+      pacingRatio = spent > 0 ? 999.0 : 1.0;
+    } else {
+      final spentFrac = spent / allowance;
+      final timeFrac = elapsedDays / totalDays;
+      pacingRatio = timeFrac > 0 ? (spentFrac / timeFrac) : 1.0;
+    }
+
+    final BudgetPacingStatus status;
+    if (spent > allowance) {
+      status = BudgetPacingStatus.exceeded;
+    } else if (pacingRatio > 1.25) {
+      status = BudgetPacingStatus.overPaced;
+    } else if (pacingRatio > 1.0) {
+      status = BudgetPacingStatus.caution;
+    } else {
+      status = BudgetPacingStatus.onTrack;
+    }
+
+    return BudgetPacingInfo(
+      safeDailyAllowance: safeDaily,
+      pacingRatio: pacingRatio,
+      daysRemaining: daysRemaining,
+      totalDaysInPeriod: totalDays,
+      elapsedDays: elapsedDays,
+      spent: spent,
+      allowance: allowance,
+      remainingAmount: remaining < 0 ? 0.0 : remaining,
+      status: status,
+    );
+  }
+
+  /// Aggregated Safe-to-Spend daily pacing analysis across all monthly category budgets.
+  /// Returns null if no monthly budgets are configured.
+  BudgetPacingInfo? overallMonthlyBudgetPacing([DateTime? referenceDate]) {
+    final monthlyBudgets =
+        budgets.where((b) => b.period == 'monthly').toList();
+    if (monthlyBudgets.isEmpty) return null;
+
+    final now = referenceDate ?? DateTime.now();
+    final totalDays = DateTime(now.year, now.month + 1, 0).day;
+    final elapsedDays = now.day.clamp(1, totalDays);
+    final daysRemaining = (totalDays - elapsedDays + 1).clamp(1, totalDays);
+
+    double totalAllowance = 0.0;
+    double totalSpent = 0.0;
+
+    for (final b in monthlyBudgets) {
+      totalAllowance += budgetEffectiveAllowance(b, now);
+      totalSpent += budgetSpent(b, now);
+    }
+
+    final remaining = totalAllowance - totalSpent;
+    final safeDaily = (totalAllowance > 0 && remaining > 0)
+        ? remaining / daysRemaining
+        : 0.0;
+
+    final double pacingRatio;
+    if (totalAllowance <= 0) {
+      pacingRatio = totalSpent > 0 ? 999.0 : 1.0;
+    } else {
+      final spentFrac = totalSpent / totalAllowance;
+      final timeFrac = elapsedDays / totalDays;
+      pacingRatio = timeFrac > 0 ? (spentFrac / timeFrac) : 1.0;
+    }
+
+    final BudgetPacingStatus status;
+    if (totalSpent > totalAllowance) {
+      status = BudgetPacingStatus.exceeded;
+    } else if (pacingRatio > 1.25) {
+      status = BudgetPacingStatus.overPaced;
+    } else if (pacingRatio > 1.0) {
+      status = BudgetPacingStatus.caution;
+    } else {
+      status = BudgetPacingStatus.onTrack;
+    }
+
+    return BudgetPacingInfo(
+      safeDailyAllowance: safeDaily,
+      pacingRatio: pacingRatio,
+      daysRemaining: daysRemaining,
+      totalDaysInPeriod: totalDays,
+      elapsedDays: elapsedDays,
+      spent: totalSpent,
+      allowance: totalAllowance,
+      remainingAmount: remaining < 0 ? 0.0 : remaining,
+      status: status,
+    );
+  }
+
+  // ── Financial Calendar & Spending Heatmap ──────────────────────────────────
+
+  /// Returns all transactions recorded on [day] (matching year, month, and day).
+  List<AppTransaction> transactionsForDay(DateTime day) {
+    return transactions.where((t) =>
+        t.date.year == day.year &&
+        t.date.month == day.month &&
+        t.date.day == day.day).toList()
+      ..sort((a, b) => b.date.compareTo(a.date));
+  }
+
+  /// Total expense for [day] converted to main currency, correctly handling split transactions.
+  double dayExpense(DateTime day) {
+    final dayTxs = transactions.where((t) =>
+        t.type == 'expense' &&
+        t.date.year == day.year &&
+        t.date.month == day.month &&
+        t.date.day == day.day);
+
+    return dayTxs.fold(0.0, (sum, t) {
       final acct = accountById(t.accountId);
       final txCur = t.currency.isNotEmpty
           ? t.currency
@@ -1029,15 +1755,178 @@ class AppProvider extends ChangeNotifier {
     });
   }
 
-  double budgetProgress(Budget b) =>
-      (budgetSpent(b) / b.amount).clamp(0.0, 1.0);
+  /// Total income for [day] converted to main currency.
+  double dayIncome(DateTime day) {
+    final dayTxs = transactions.where((t) =>
+        t.type == 'income' &&
+        t.date.year == day.year &&
+        t.date.month == day.month &&
+        t.date.day == day.day);
 
-  double budgetRemaining(Budget b) {
-    final rem = b.amount - budgetSpent(b);
-    return rem < 0 ? 0 : rem;
+    return dayTxs.fold(0.0, (sum, t) {
+      final acct = accountById(t.accountId);
+      final txCur = t.currency.isNotEmpty
+          ? t.currency
+          : (acct?.currency ?? settings.currency);
+      return sum + convertToMain(t.amount, txCur);
+    });
   }
 
-  bool budgetExceeded(Budget b) => budgetSpent(b) > b.amount;
+  /// Recurring payments due on [day].
+  List<RecurringPayment> recurringDueOnDay(DateTime day) {
+    return recurring.where((r) =>
+        r.nextDate.year == day.year &&
+        r.nextDate.month == day.month &&
+        r.nextDate.day == day.day).toList();
+  }
+
+  /// Active loans with a payment due on [day].
+  List<Loan> loansDueOnDay(DateTime day) {
+    return loans.where((l) =>
+        !l.isSettled &&
+        !day.isBefore(DateTime(l.startDate.year, l.startDate.month, l.startDate.day)) &&
+        !day.isAfter(DateTime(l.endDate.year, l.endDate.month, l.endDate.day)) &&
+        l.reminderDay == day.day).toList();
+  }
+
+  /// Unsettled lent money records expected to be repaid on [day].
+  List<LendedMoney> lendedDueOnDay(DateTime day) {
+    return lended.where((m) =>
+        !m.isSettled &&
+        m.dueDate != null &&
+        m.dueDate!.year == day.year &&
+        m.dueDate!.month == day.month &&
+        m.dueDate!.day == day.day).toList();
+  }
+
+  /// Number of zero-spend days in [month] up to [referenceDate] (or end of month).
+  int zeroSpendDaysCount(DateTime month, [DateTime? referenceDate]) {
+    final now = referenceDate ?? DateTime.now();
+    final totalDaysInMonth = DateTime(month.year, month.month + 1, 0).day;
+    final int maxDay;
+    if (month.year == now.year && month.month == now.month) {
+      maxDay = now.day.clamp(1, totalDaysInMonth);
+    } else if (month.isBefore(DateTime(now.year, now.month, 1))) {
+      maxDay = totalDaysInMonth;
+    } else {
+      return 0;
+    }
+
+    int zeroDays = 0;
+    for (int d = 1; d <= maxDay; d++) {
+      final dayDate = DateTime(month.year, month.month, d);
+      if (dayExpense(dayDate) <= 0.001) {
+        zeroDays++;
+      }
+    }
+    return zeroDays;
+  }
+
+  /// Total expense for the whole [month] converted to main currency.
+  double monthTotalExpense(DateTime month) {
+    final start = DateTime(month.year, month.month, 1);
+    final end = DateTime(month.year, month.month + 1, 1);
+    return transactions.where((t) =>
+        t.type == 'expense' &&
+        !t.date.isBefore(start) &&
+        t.date.isBefore(end)).fold(0.0, (sum, t) {
+      final acct = accountById(t.accountId);
+      final txCur = t.currency.isNotEmpty
+          ? t.currency
+          : (acct?.currency ?? settings.currency);
+      return sum + convertToMain(t.amount, txCur);
+    });
+  }
+
+  /// Total income for the whole [month] converted to main currency.
+  double monthTotalIncome(DateTime month) {
+    final start = DateTime(month.year, month.month, 1);
+    final end = DateTime(month.year, month.month + 1, 1);
+    return transactions.where((t) =>
+        t.type == 'income' &&
+        !t.date.isBefore(start) &&
+        t.date.isBefore(end)).fold(0.0, (sum, t) {
+      final acct = accountById(t.accountId);
+      final txCur = t.currency.isNotEmpty
+          ? t.currency
+          : (acct?.currency ?? settings.currency);
+      return sum + convertToMain(t.amount, txCur);
+    });
+  }
+
+  /// Computes monthly story digest metrics for Expensy Wrapped.
+  ExpensyWrappedData getWrappedData(DateTime month) {
+    final start = DateTime(month.year, month.month, 1);
+    final end = DateTime(month.year, month.month + 1, 1);
+    final totalDays = DateTime(month.year, month.month + 1, 0).day;
+    final inflow = monthTotalIncome(month);
+    final outflow = monthTotalExpense(month);
+    final net = inflow - outflow;
+    final savingsRate =
+        inflow > 0 ? ((net / inflow) * 100).clamp(0.0, 100.0) : 0.0;
+    final zeroDays = zeroSpendDaysCount(month);
+
+    final monthExpenses = transactions
+        .where((t) =>
+            t.type == 'expense' &&
+            !t.date.isBefore(start) &&
+            t.date.isBefore(end))
+        .toList();
+
+    // Top spending category
+    final Map<String, double> catTotals = {};
+    for (final t in monthExpenses) {
+      if (t.categoryId.isNotEmpty) {
+        final acct = accountById(t.accountId);
+        final txCur = t.currency.isNotEmpty
+            ? t.currency
+            : (acct?.currency ?? settings.currency);
+        final amt = convertToMain(t.amount, txCur);
+        catTotals[t.categoryId] = (catTotals[t.categoryId] ?? 0.0) + amt;
+      }
+    }
+
+    String? topCatId;
+    double topCatAmt = 0.0;
+    for (final entry in catTotals.entries) {
+      if (entry.value > topCatAmt) {
+        topCatAmt = entry.value;
+        topCatId = entry.key;
+      }
+    }
+    final topCatPct =
+        outflow > 0 ? (topCatAmt / outflow * 100).clamp(0.0, 100.0) : 0.0;
+
+    // Single biggest splurge
+    AppTransaction? biggest;
+    double biggestAmt = 0.0;
+    for (final t in monthExpenses) {
+      final acct = accountById(t.accountId);
+      final txCur = t.currency.isNotEmpty
+          ? t.currency
+          : (acct?.currency ?? settings.currency);
+      final amt = convertToMain(t.amount, txCur);
+      if (amt > biggestAmt) {
+        biggestAmt = amt;
+        biggest = t;
+      }
+    }
+
+    return ExpensyWrappedData(
+      month: month,
+      totalInflow: inflow,
+      totalOutflow: outflow,
+      netSaved: net,
+      savingsRate: savingsRate,
+      topCategoryId: topCatId,
+      topCategoryAmount: topCatAmt,
+      topCategoryPercent: topCatPct,
+      biggestSplurge: biggest,
+      biggestSplurgeAmount: biggestAmt,
+      zeroSpendDays: zeroDays,
+      totalDaysInMonth: totalDays,
+    );
+  }
 
   // ── Savings Goals ──────────────────────────────────────────────────────────
 
@@ -1067,6 +1956,10 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> deleteSavingsGoal(String id) async {
+    for (final w in wishlist.where((w) => w.goalId == id)) {
+      await DBHelper.updateWishlist(w.copyWith(clearGoalId: true));
+    }
+    wishlist = await DBHelper.getWishlist();
     await DBHelper.deleteSavingsGoal(id);
     savingsGoals = await DBHelper.getSavingsGoals();
     notifyListeners();
@@ -1177,6 +2070,7 @@ class AppProvider extends ChangeNotifier {
     loans = await DBHelper.getLoans();
     accounts = await DBHelper.getAccounts();
     notifyListeners();
+    recordNetWorthSnapshot();
     if (l.reminderEnabled) await _loanNotif.scheduleReminder(l);
   }
 
@@ -1197,6 +2091,7 @@ class AppProvider extends ChangeNotifier {
     loans = await DBHelper.getLoans();
     accounts = await DBHelper.getAccounts();
     notifyListeners();
+    recordNetWorthSnapshot();
     if (l.reminderEnabled) await _loanNotif.scheduleReminder(l);
   }
 
@@ -1219,6 +2114,7 @@ class AppProvider extends ChangeNotifier {
     loanPayments = await DBHelper.getAllLoanPayments();
     accounts = await DBHelper.getAccounts();
     notifyListeners();
+    recordNetWorthSnapshot();
   }
 
   Future<VoidCallback> deleteLoanWithUndo(String id) async {
@@ -1240,6 +2136,7 @@ class AppProvider extends ChangeNotifier {
       loanPayments = await DBHelper.getAllLoanPayments();
       accounts = await DBHelper.getAccounts();
       notifyListeners();
+      recordNetWorthSnapshot();
       if (l.reminderEnabled) await _loanNotif.scheduleReminder(l);
     };
   }
@@ -1273,6 +2170,7 @@ class AppProvider extends ChangeNotifier {
       await _loanNotif.cancelReminder(l.id);
     }
     notifyListeners();
+    recordNetWorthSnapshot();
   }
 
   Future<void> skipLoanInstallment(Loan l, {String notes = 'Skipped'}) async {
@@ -1299,6 +2197,7 @@ class AppProvider extends ChangeNotifier {
     loanPayments = await DBHelper.getAllLoanPayments();
     accounts = await DBHelper.getAccounts();
     notifyListeners();
+    recordNetWorthSnapshot();
   }
 
   Future<VoidCallback> deleteLoanPaymentWithUndo(String id) async {
@@ -1312,6 +2211,7 @@ class AppProvider extends ChangeNotifier {
       loanPayments = await DBHelper.getAllLoanPayments();
       accounts = await DBHelper.getAccounts();
       notifyListeners();
+      recordNetWorthSnapshot();
     };
   }
 
@@ -1338,7 +2238,9 @@ class AppProvider extends ChangeNotifier {
 
   // ── Export ────────────────────────────────────────────────────────────
   Future<String?> exportTransactionsExcel({
-    required DateTime from, required DateTime to,
+    required DateTime from,
+    required DateTime to,
+    String? dialogTitle,
   }) async {
     final fromStart = DateTime(from.year, from.month, from.day);
     final toEnd     = DateTime(to.year, to.month, to.day, 23, 59, 59);
@@ -1385,53 +2287,49 @@ class AppProvider extends ChangeNotifier {
         'expensy_${from.year}-${from.month.toString().padLeft(2,'0')}'
         '_to_${to.year}-${to.month.toString().padLeft(2,'0')}.xlsx';
 
-    final savePath = await FilePicker.platform.saveFile(
-      dialogTitle: 'Save transactions as Excel',
+    final saveUri = await FilePickerPlatform.instance.saveFile(
+      dialogTitle: dialogTitle,
       fileName: fileName,
-      type: FileType.custom,
-      allowedExtensions: ['xlsx'],
       bytes: uint8,
+      mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     );
-    return savePath;
+    return saveUri?.toString();
   }
 
   // ── Backup ────────────────────────────────────────────────────────────
-  Future<String?> createBackup() async {
+  Future<String?> createBackup({String? dialogTitle}) async {
     final data = await DBHelper.exportAll();
     data['settings'] = settings.toJson();
     final json  = const JsonEncoder.withIndent('  ').convert(data);
     final uint8 = Uint8List.fromList(utf8.encode(json));
     final ts    = DateTime.now().millisecondsSinceEpoch;
 
-    final savePath = await FilePicker.platform.saveFile(
-      dialogTitle: 'Save Expensy Backup',
+    final saveUri = await FilePickerPlatform.instance.saveFile(
+      dialogTitle: dialogTitle,
       fileName: 'expensy_backup_$ts.json',
-      type: FileType.custom,
-      allowedExtensions: ['json'],
       bytes: uint8,
+      mimeType: 'application/json',
     );
-    return savePath;
+    return saveUri?.toString();
   }
 
   Future<int> restoreBackup() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.any,
-      withData: true,
+    final pickedFiles = await FilePickerPlatform.instance.pickFiles(
     );
-    if (result == null || result.files.isEmpty) return 0;
-    final ext = result.files.first.extension?.toLowerCase();
+    if (pickedFiles.isEmpty) return 0;
+    final picked = pickedFiles.first;
+    final ext = picked.extension?.toLowerCase();
     if (ext != 'json') {
       throw const FormatException('Please select a .json file.');
     }
 
-    final bytes = result.files.first.bytes;
     String jsonStr;
-    if (bytes != null) {
-      jsonStr = utf8.decode(bytes);
-    } else {
-      final path = result.files.first.path;
-      if (path == null) return 0;
+    final path = picked.path;
+    if (path != null) {
       jsonStr = await File(path).readAsString();
+    } else {
+      final bytes = await picked.readAsBytes();
+      jsonStr = utf8.decode(bytes);
     }
 
     final dynamic decoded = jsonDecode(jsonStr);
@@ -1475,23 +2373,26 @@ class AppProvider extends ChangeNotifier {
 
   // ── External Backups ──────────────────────────────────────────────────
   Future<bool> restoreExternalBackup(String source) async {
-    final result = await FilePicker.platform.pickFiles(
+    final pickedFiles = await FilePickerPlatform.instance.pickFiles(
       type: source == 'greenstash' ? FileType.custom : FileType.any,
       allowedExtensions: source == 'greenstash' ? ['json'] : null,
     );
-    if (result == null || result.files.isEmpty) return false;
+    if (pickedFiles.isEmpty) return false;
 
-    final ext = result.files.first.extension?.toLowerCase();
+    final ext = pickedFiles.first.extension?.toLowerCase();
     if (source == 'greenstash' && ext != 'json') {
       throw const FormatException('Please select a .json file.');
     }
 
-    final bytes = result.files.first.bytes;
-    if (bytes == null && result.files.first.path == null) return false;
-
-    String contentStr = bytes != null 
-        ? utf8.decode(bytes) 
-        : await File(result.files.first.path!).readAsString();
+    final picked = pickedFiles.first;
+    String contentStr;
+    final path = picked.path;
+    if (path != null) {
+      contentStr = await File(path).readAsString();
+    } else {
+      final bytes = await picked.readAsBytes();
+      contentStr = utf8.decode(bytes);
+    }
 
     if (source == 'greenstash') {
       await _restoreGreenStash(contentStr);
@@ -1553,7 +2454,7 @@ class AppProvider extends ChangeNotifier {
     await load();
   }
 
-  Future<void> _restoreSay(String csvContent) async {
+  Future<void> restoreSay(String csvContent) async {
     final lines = csvContent.split('\n');
     // Say CSVs typically have a summary in the first ~9 lines, followed by empty line, then headers at line 10.
     // We'll just look for the header row 'Date,Description,Amount,Currency,Account,Category,Type,Hint'
@@ -1725,9 +2626,13 @@ class AppProvider extends ChangeNotifier {
 
   Future<VoidCallback> deleteTransactionWithUndo(String id) async {
     final tx = transactions.firstWhere((t) => t.id == id);
+    final txSplits = List<TransactionSplit>.from(getSplits(id));
     await deleteTransaction(id);
     return () async {
       await addTransaction(tx);
+      if (txSplits.isNotEmpty) {
+        await saveTransactionSplits(tx.id, txSplits);
+      }
     };
   }
 

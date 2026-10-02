@@ -8,6 +8,8 @@ import '../providers/app_provider.dart';
 import '../models/models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
+import '../widgets/fintech_components.dart';
+import '../widgets/app_numeric_keypad.dart';
 import '../services/lended_notification_service.dart';
 import 'lended_screen.dart' show kLendedPersonColors;
 import '../utils/haptics.dart';
@@ -46,12 +48,12 @@ class LendedPersonScreen extends StatelessWidget {
             ? l10n.lended_person_youOwe(current.name)
             : l10n.lended_person_allSettledUp;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(current.name,
             style: const TextStyle(fontWeight: FontWeight.w800)),
-        backgroundColor: cs.primary,
-        foregroundColor: cs.onPrimary,
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_outlined),
@@ -66,7 +68,8 @@ class LendedPersonScreen extends StatelessWidget {
                     .read<AppProvider>()
                     .deleteLendedPersonWithUndo(current.id);
                 if (context.mounted) {
-                  showAppSnackbar(context, '${current.name} deleted',
+                  showAppSnackbar(
+                      context, l10n.common_itemDeleted(current.name),
                       onUndo: undo);
                   Navigator.pop(context);
                 }
@@ -86,45 +89,54 @@ class LendedPersonScreen extends StatelessWidget {
         ],
       ),
       body: Column(children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-          color: cs.primary,
-          child: Column(children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.25),
-                  borderRadius: BorderRadius.circular(28)),
-              child: Center(
-                  child: Text(
-                current.name.isNotEmpty ? current.name[0].toUpperCase() : '?',
-                style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 22,
-                    color: Colors.white),
-              )),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+            decoration: BoxDecoration(
+              color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+              ),
             ),
-            const SizedBox(height: 10),
-            Text(fmt(balance.abs()),
-                style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w800,
-                    color: cs.onPrimary)),
-            const SizedBox(height: 4),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                  color: balColor.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(10)),
-              child: Text(balLabel,
+            child: Column(children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(28)),
+                child: Center(
+                    child: Text(
+                  current.name.isNotEmpty ? current.name[0].toUpperCase() : '?',
                   style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: balColor)),
-            ),
-          ]),
+                      fontWeight: FontWeight.w800,
+                      fontSize: 22,
+                      color: color),
+                )),
+              ),
+              const SizedBox(height: 10),
+              Text(fmt(balance.abs()),
+                  style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w900,
+                      color: cs.onSurface)),
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                    color: balColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10)),
+                child: Text(balLabel,
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: balColor)),
+              ),
+            ]),
+          ),
         ),
         Expanded(
             child: entries.isEmpty
@@ -133,7 +145,7 @@ class LendedPersonScreen extends StatelessWidget {
                     message: l10n.lended_person_noRecordsYet,
                     subMessage: l10n.lended_person_tapPlusToLog)
                 : ListView(
-                    padding: const EdgeInsets.fromLTRB(14, 14, 14, 100),
+                    padding: const EdgeInsets.fromLTRB(14, 14, 14, 110),
                     children: [
                       if (active.isNotEmpty) ...[
                         SectionHeader(title: l10n.lended_person_active),
@@ -146,13 +158,9 @@ class LendedPersonScreen extends StatelessWidget {
                     ],
                   )),
       ]),
-      floatingActionButton: FloatingActionButton(
-        heroTag: null,
-        onPressed: () {
-          AppHaptics.tap(context, HapticStrength.light);
-          _openEntrySheet(context, current);
-        },
-        child: const Icon(Icons.add),
+      floatingActionButton: FintechFab(
+        tooltip: l10n.home_add,
+        onPressed: () => _openEntrySheet(context, current),
       ),
     );
   }
@@ -330,9 +338,17 @@ class _EntryCard extends StatelessWidget {
     final isOverdue = l.dueDate != null &&
         !l.isSettled &&
         l.dueDate!.isBefore(DateTime(now.year, now.month, now.day));
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainer.withValues(alpha: isDark ? 0.35 : 0.55),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04),
+        ),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -447,10 +463,11 @@ class _EntryCard extends StatelessWidget {
                     size: 18, color: cs.error),
                 onPressed: () async {
                   final app = context.read<AppProvider>();
-                  final person = app.personById(l.personId);
                   final undo = await app.deleteLendedWithUndo(l.id);
                   if (context.mounted) {
-                    showAppSnackbar(context, 'Record deleted', onUndo: undo);
+                    showAppSnackbar(
+                        context, l10n.common_recordDeleted,
+                        onUndo: undo);
                   }
                 }),
           ]),
@@ -480,6 +497,7 @@ class _EntrySheetState extends State<_EntrySheet> {
   TimeOfDay _reminderTime = const TimeOfDay(hour: 9, minute: 0);
 
   bool _submitted = false;
+  bool _showKeypad = true;
 
   bool get isEdit => widget.existing != null;
 
@@ -684,18 +702,36 @@ class _EntrySheetState extends State<_EntrySheet> {
 
           TextField(
             controller: _amtCtrl,
-            autofocus: !isEdit,
-            textInputAction: TextInputAction.next,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            readOnly: true,
+            showCursor: true,
+            onTap: () {
+              FocusScope.of(context).unfocus();
+              setState(() => _showKeypad = true);
+            },
             decoration: InputDecoration(
               labelText: l10n.lended_person_amount,
               prefixText: '$sym ',
+              suffixIcon: _showKeypad
+                  ? IconButton(
+                      icon: const Icon(Icons.keyboard_hide_outlined),
+                      onPressed: () => setState(() => _showKeypad = false),
+                    )
+                  : null,
               errorText:
                   _submitted && (double.tryParse(_amtCtrl.text) ?? 0) <= 0
                       ? l10n.error_required
                       : null,
             ),
           ),
+          if (_showKeypad && MediaQuery.of(context).viewInsets.bottom < 100) ...[
+            const SizedBox(height: 8),
+            AppNumericKeypad(
+              compact: true,
+              controller: _amtCtrl,
+              onChanged: (_) => setState(() {}),
+              onDone: () => setState(() => _showKeypad = false),
+            ),
+          ],
           const SizedBox(height: 14),
 
           Text(l10n.lended_person_accountOptional,
@@ -823,6 +859,9 @@ class _EntrySheetState extends State<_EntrySheet> {
               controller: _notesCtrl,
               maxLines: 2,
               textInputAction: TextInputAction.done,
+              onTap: () {
+                if (_showKeypad) setState(() => _showKeypad = false);
+              },
               onSubmitted: (_) => _submit(),
               decoration: InputDecoration(
                   labelText: l10n.lended_person_notesOptional,

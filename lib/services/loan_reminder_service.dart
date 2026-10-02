@@ -21,7 +21,7 @@ class LoanReminderService {
     const androidSettings =
         AndroidInitializationSettings('ic_notification');
     await _plugin
-        .initialize(const InitializationSettings(android: androidSettings));
+        .initialize(settings: const InitializationSettings(android: androidSettings));
     _initialized = true;
 
     final android = _plugin.resolvePlatformSpecificImplementation<
@@ -115,14 +115,12 @@ class LoanReminderService {
     final tzDate = _nextReminderDate(l.reminderDay, 0, hour, minute);
     if (tzDate != null) {
       await _plugin.zonedSchedule(
-        _notifId(l.id),
-        '🏦 Loan Payment Due',
-        '${l.name} installment is due today.',
-        tzDate,
-        _buildDetails(),
+        id: _notifId(l.id),
+        title: '🏦 Loan Payment Due',
+        body: '${l.name} installment is due today.',
+        scheduledDate: tzDate,
+        notificationDetails: _buildDetails(),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
         payload: l.id,
       );
     }
@@ -130,7 +128,7 @@ class LoanReminderService {
 
   Future<void> cancelReminder(String loanId) async {
     await _ensureInit();
-    await _plugin.cancel(_notifId(loanId));
+    await _plugin.cancel(id: _notifId(loanId));
   }
 
   Future<void> rescheduleAllLoans(List<Loan> loans, String mainCurrency) async {

@@ -7,4 +7,7 @@
     <color name="widget_bg">#F3EDF7</color>
     <color name="widget_text">#1D1B20</color>
     <color name="widget_progress_bg">#E6E0E9</color>
+    <color name="shortcut_background">#F3EDF7</color>
+    <color name="shortcut_icon_color">#000000</color>
+    <color name="quick_tile_icon_color">#000000</color>
 </resources>

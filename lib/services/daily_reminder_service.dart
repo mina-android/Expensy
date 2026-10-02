@@ -16,7 +16,7 @@ class DailyReminderService {
     const androidInit =
         AndroidInitializationSettings('ic_notification');
     const initSettings = InitializationSettings(android: androidInit);
-    await _plugin.initialize(initSettings);
+    await _plugin.initialize(settings: initSettings);
     _initialized = true;
   }
 
@@ -75,19 +75,17 @@ class DailyReminderService {
     const details = NotificationDetails(android: androidDetails);
 
     await _plugin.zonedSchedule(
-      dailyReminderId,
-      '📝 Daily Reminder',
-      "Don't forget to log today's spending.",
-      scheduledDate,
-      details,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
+      id: dailyReminderId,
+      title: '📝 Daily Reminder',
+      body: "Don't forget to log today's spending.",
+      scheduledDate: scheduledDate,
+      notificationDetails: details,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
     );
   }
 
   Future<void> cancelDailyReminder() async {
-    await _plugin.cancel(dailyReminderId);
+    await _plugin.cancel(id: dailyReminderId);
   }
 }

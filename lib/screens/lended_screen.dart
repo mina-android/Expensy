@@ -6,6 +6,7 @@ import '../providers/app_provider.dart';
 import '../models/models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
+import '../widgets/fintech_components.dart';
 import 'lended_person_screen.dart';
 import '../utils/haptics.dart';
 
@@ -64,38 +65,46 @@ class LendedScreen extends StatelessWidget {
       return a.name.toLowerCase().compareTo(b.name.toLowerCase());
     });
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.lended_lentMoney,
             style: const TextStyle(fontWeight: FontWeight.w800)),
-        backgroundColor: cs.primary,
-        foregroundColor: cs.onPrimary,
       ),
       body: Column(children: [
         if (app.lendedPeople.isNotEmpty)
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-            color: cs.primary,
-            child: Row(children: [
-              Expanded(
-                  child: _SumCol(
-                      label: l10n.lended_theyOweMe,
-                      value: fmt(theyOwe),
-                      color: cs.onPrimary.withValues(alpha: 0.9),
-                      labelColor: cs.onPrimary.withValues(alpha: 0.65))),
-              Expanded(
-                  child: _SumCol(
-                      label: l10n.lended_iOweThem,
-                      value: fmt(iOwe),
-                      color: cs.onPrimary.withValues(alpha: 0.9),
-                      labelColor: cs.onPrimary.withValues(alpha: 0.65))),
-              Expanded(
-                  child: _SumCol(
-                      label: l10n.lended_net,
-                      value: fmt(theyOwe - iOwe),
-                      color: cs.onPrimary,
-                      labelColor: cs.onPrimary.withValues(alpha: 0.65))),
-            ]),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                ),
+              ),
+              child: Row(children: [
+                Expanded(
+                    child: _SumCol(
+                        label: l10n.lended_theyOweMe,
+                        value: fmt(theyOwe),
+                        color: const Color(0xFF2E7D32))),
+                Container(width: 1, height: 28, color: cs.outlineVariant.withValues(alpha: 0.2)),
+                Expanded(
+                    child: _SumCol(
+                        label: l10n.lended_iOweThem,
+                        value: fmt(iOwe),
+                        color: const Color(0xFFC62828))),
+                Container(width: 1, height: 28, color: cs.outlineVariant.withValues(alpha: 0.2)),
+                Expanded(
+                    child: _SumCol(
+                        label: l10n.lended_net,
+                        value: fmt(theyOwe - iOwe),
+                        color: (theyOwe - iOwe) >= 0 ? cs.primary : const Color(0xFFC62828))),
+              ]),
+            ),
           ),
         Expanded(
             child: people.isEmpty
@@ -104,19 +113,16 @@ class LendedScreen extends StatelessWidget {
                     message: l10n.lended_noOneYet,
                     subMessage: l10n.lended_noOneYetSub)
                 : ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(14, 14, 14, 100),
+                    padding: const EdgeInsets.fromLTRB(14, 8, 14, 110),
                     itemCount: people.length,
                     itemBuilder: (_, i) =>
                         _PersonCard(person: people[i], fmt: fmt),
                   )),
       ]),
-      floatingActionButton: FloatingActionButton(
-        heroTag: null,
-        onPressed: () {
-          AppHaptics.tap(context, HapticStrength.light);
-          _openPersonSheet(context);
-        },
-        child: const Icon(Icons.person_add_alt_1_rounded),
+      floatingActionButton: FintechFab(
+        tooltip: l10n.lended_addPerson,
+        icon: Icons.person_add_alt_1_rounded,
+        onPressed: () => _openPersonSheet(context),
       ),
     );
   }
@@ -139,23 +145,15 @@ class LendedScreen extends StatelessWidget {
 class _SumCol extends StatelessWidget {
   final String label, value;
   final Color color;
-  final Color? labelColor;
-  const _SumCol(
-      {required this.label,
-      required this.value,
-      required this.color,
-      this.labelColor});
+  const _SumCol({required this.label, required this.value, required this.color});
   @override
   Widget build(BuildContext context) => Column(children: [
         Text(label,
             style: TextStyle(
                 fontSize: 10,
-                color: labelColor ??
-                    Theme.of(context)
-                        .colorScheme
-                        .onPrimaryContainer
-                        .withValues(alpha: 0.6))),
-        const SizedBox(height: 2),
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55))),
+        const SizedBox(height: 3),
         Text(value,
             style: TextStyle(
                 fontSize: 13, fontWeight: FontWeight.w800, color: color)),
@@ -173,6 +171,7 @@ class _PersonCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
     final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final color = Color(person.colorValue);
     final balance = app.personBalance(person.id);
     final entries = app.lendedFor(person.id);
@@ -190,79 +189,90 @@ class _PersonCard extends StatelessWidget {
             ? l10n.lended_youOwe
             : l10n.lended_settledUp;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => Navigator.push(context,
-            ExpensyRoute(builder: (_) => LendedPersonScreen(person: person))),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(children: [
-            Container(
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(23)),
-              child: Center(
-                  child: Text(
-                person.name.isNotEmpty ? person.name[0].toUpperCase() : '?',
-                style: TextStyle(
-                    fontWeight: FontWeight.w800, fontSize: 18, color: color),
-              )),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                  Row(children: [
-                    Flexible(
-                        child: Text(person.name,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w700, fontSize: 15))),
-                    if (overdue) ...[
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                            color: cs.errorContainer,
-                            borderRadius: BorderRadius.circular(6)),
-                        child: Text(l10n.lended_overdue,
-                            style: TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.w700,
-                                color: cs.onErrorContainer)),
-                      ),
-                    ],
-                  ]),
-                  const SizedBox(height: 2),
-                  Text(
-                    activeCount == 0
-                        ? l10n.lended_noActiveRecords
-                        : l10n.lended_activeRecords(activeCount),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () => Navigator.push(context,
+              ExpensyRoute(builder: (_) => LendedPersonScreen(person: person))),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(children: [
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(23)),
+                child: Center(
+                    child: Text(
+                  person.name.isNotEmpty ? person.name[0].toUpperCase() : '?',
+                  style: TextStyle(
+                      fontWeight: FontWeight.w800, fontSize: 18, color: color),
+                )),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                    Row(children: [
+                      Flexible(
+                          child: Text(person.name,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w700, fontSize: 15))),
+                      if (overdue) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                              color: cs.errorContainer,
+                              borderRadius: BorderRadius.circular(6)),
+                          child: Text(l10n.lended_overdue,
+                              style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w700,
+                                  color: cs.onErrorContainer)),
+                        ),
+                      ],
+                    ]),
+                    const SizedBox(height: 2),
+                    Text(
+                      activeCount == 0
+                          ? l10n.lended_noActiveRecords
+                          : l10n.lended_activeRecords(activeCount),
+                      style: TextStyle(
+                          fontSize: 11,
+                          color: cs.onSurface.withValues(alpha: 0.5)),
+                    ),
+                  ])),
+              Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                Text(fmt(balance.abs()),
                     style: TextStyle(
-                        fontSize: 11,
-                        color: cs.onSurface.withValues(alpha: 0.5)),
-                  ),
-                ])),
-            Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-              Text(fmt(balance.abs()),
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: balColor)),
-              Text(balLabel,
-                  style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: balColor)),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: balColor)),
+                Text(balLabel,
+                    style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: balColor)),
+              ]),
+              const SizedBox(width: 4),
+              Icon(Icons.chevron_right_rounded, color: cs.onSurface.withValues(alpha: 0.4)),
             ]),
-            const Icon(Icons.chevron_right_rounded),
-          ]),
+          ),
         ),
       ),
     );

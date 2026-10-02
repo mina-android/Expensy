@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="add_expense"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_expense"
+        android:shortcutShortLabel="@string/shortcut_add_expense_short"
+        android:shortcutLongLabel="@string/shortcut_add_expense_long">
+        <intent
+            android:action="com.ma.expensy.ACTION_ADD_EXPENSE"
+            android:targetPackage="com.ma.expensy"
+            android:targetClass="com.ma.expensy.MainActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="add_income"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_income"
+        android:shortcutShortLabel="@string/shortcut_add_income_short"
+        android:shortcutLongLabel="@string/shortcut_add_income_long">
+        <intent
+            android:action="com.ma.expensy.ACTION_ADD_INCOME"
+            android:targetPackage="com.ma.expensy"
+            android:targetClass="com.ma.expensy.MainActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="transfer"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_transfer"
+        android:shortcutShortLabel="@string/shortcut_transfer_short"
+        android:shortcutLongLabel="@string/shortcut_transfer_long">
+        <intent
+            android:action="com.ma.expensy.ACTION_TRANSFER"
+            android:targetPackage="com.ma.expensy"
+            android:targetClass="com.ma.expensy.MainActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="presets"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_presets"
+        android:shortcutShortLabel="@string/shortcut_presets_short"
+        android:shortcutLongLabel="@string/shortcut_presets_long">
+        <intent
+            android:action="com.ma.expensy.ACTION_PRESETS"
+            android:targetPackage="com.ma.expensy"
+            android:targetClass="com.ma.expensy.MainActivity" />
+    </shortcut>
+</shortcuts>

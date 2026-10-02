@@ -43,7 +43,7 @@ class NotificationService {
     const androidSettings =
         AndroidInitializationSettings('ic_notification');
     await _plugin
-        .initialize(const InitializationSettings(android: androidSettings));
+        .initialize(settings: const InitializationSettings(android: androidSettings));
     _initialized = true;
 
     // Eagerly register the recurring payment notification channel so it's
@@ -119,14 +119,12 @@ class NotificationService {
           ? '$amount due today'
           : '$amount expected today';
       await _plugin.zonedSchedule(
-        _notifId(r.id),
-        '$emoji ${r.name}',
-        body,
-        tzDate,
-        details,
+        id: _notifId(r.id),
+        title: '$emoji ${r.name}',
+        body: body,
+        scheduledDate: tzDate,
+        notificationDetails: details,
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
         payload: r.id,
       );
     }
@@ -140,14 +138,12 @@ class NotificationService {
             ? '$amount due in 2 days'
             : '$amount expected in 2 days';
         await _plugin.zonedSchedule(
-          _advanceId(r.id),
-          '$emoji ${r.name}',
-          body,
-          advTzDate,
-          details,
+          id: _advanceId(r.id),
+          title: '$emoji ${r.name}',
+          body: body,
+          scheduledDate: advTzDate,
+          notificationDetails: details,
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          uiLocalNotificationDateInterpretation:
-              UILocalNotificationDateInterpretation.absoluteTime,
           payload: r.id,
         );
       }
@@ -157,8 +153,8 @@ class NotificationService {
   /// Cancel both the on-day and the advance notification for [paymentId].
   Future<void> cancelReminder(String paymentId) async {
     await _ensureInit();
-    await _plugin.cancel(_notifId(paymentId));
-    await _plugin.cancel(_advanceId(paymentId)); // safe even when not scheduled
+    await _plugin.cancel(id: _notifId(paymentId));
+    await _plugin.cancel(id: _advanceId(paymentId)); // safe even when not scheduled
   }
 
   /// Cancel all pending recurring payment notifications and reschedule only

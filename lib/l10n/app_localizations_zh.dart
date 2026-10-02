@@ -635,7 +635,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get budget_budgeted => '预算';
 
   @override
-  String get budget_leftToSpend => 'Left to Spend';
+  String get budget_leftToSpend => '剩余可用额度';
 
   @override
   String get budget_spent => '已用';
@@ -696,6 +696,199 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get budget_budget => '预算';
+
+  @override
+  String get budget_rollover => '滚存 (信封预算)';
+
+  @override
+  String get budget_rolloverDesc => '将未使用的结余或超支顺延至下一周期';
+
+  @override
+  String get budget_rolloverBadge => '滚存';
+
+  @override
+  String budget_base(Object amount) {
+    return '基础: $amount';
+  }
+
+  @override
+  String budget_rolloverFrom(Object period, Object amount) {
+    return '滚存 ($period): $amount';
+  }
+
+  @override
+  String budget_totalAvailable(Object amount) {
+    return '总可用: $amount';
+  }
+
+  @override
+  String get budget_lastWeek => '上周';
+
+  @override
+  String get pacing_dailyBudget => '每日安全消费';
+
+  @override
+  String pacing_safeToSpend(Object amount, Object days) {
+    return '安全消费额度：每天 $amount（剩余 $days 天）';
+  }
+
+  @override
+  String pacing_caution(Object amount) {
+    return '消费节奏偏快 — 建议控制在每天 $amount';
+  }
+
+  @override
+  String get pacing_overPaced => '节奏预警 — 请放缓开支以保持在预算内';
+
+  @override
+  String get pacing_budgetExhausted => '预算已达上限 — 无剩余每日额度';
+
+  @override
+  String get pacing_onTrack => '节奏良好';
+
+  @override
+  String get pacing_fast => '节奏偏快';
+
+  @override
+  String get pacing_alert => '节奏预警';
+
+  @override
+  String pacing_daysLeft(Object days) {
+    return '剩余 $days 天';
+  }
+
+  @override
+  String get pacing_setBudgetPrompt => '点击设置预算限额 →';
+
+  @override
+  String get pacing_dailyAvgPace => '每日节奏';
+
+  @override
+  String pacing_perDay(Object amount) {
+    return '$amount / 天';
+  }
+
+  @override
+  String get calendar_title => '财务日历';
+
+  @override
+  String get calendar_subtitle => '每日支出热力图与到期提醒';
+
+  @override
+  String calendar_zeroSpendDays(Object count) {
+    return '$count 个零支出日';
+  }
+
+  @override
+  String get calendar_zeroSpendDayTitle => '零支出日达成！ 🎉';
+
+  @override
+  String get calendar_zeroSpendDayDesc => '非常棒的自律表现，今天没有任何支出。';
+
+  @override
+  String get calendar_billsDue => '到期账单与订阅';
+
+  @override
+  String get calendar_loansDue => '到期贷款还款';
+
+  @override
+  String get calendar_lendedDue => '预计收到的还款';
+
+  @override
+  String calendar_dayTransactions(Object count) {
+    return '交易明细 ($count)';
+  }
+
+  @override
+  String get calendar_noActivity => '该日期无交易或待办事项';
+
+  @override
+  String get calendar_today => '今天';
+
+  @override
+  String calendar_averageDaily(Object amount) {
+    return '日均消费：$amount';
+  }
+
+  @override
+  String get wrapped_title => 'Expensy Wrapped';
+
+  @override
+  String wrapped_bannerTitle(Object month) {
+    return '您的 $month 月度账单已生成！';
+  }
+
+  @override
+  String get wrapped_bannerSub => '点击查看您的月度财务回顾';
+
+  @override
+  String get wrapped_theBigPicture => '总体概况';
+
+  @override
+  String wrapped_howMoneyMoved(Object month) {
+    return '以下是您在 $month 的资金流动';
+  }
+
+  @override
+  String get wrapped_totalInflow => '总收入';
+
+  @override
+  String get wrapped_totalOutflow => '总支出';
+
+  @override
+  String get wrapped_netSavings => '净结余';
+
+  @override
+  String wrapped_savingsRate(Object rate) {
+    return '储蓄率: $rate%';
+  }
+
+  @override
+  String get wrapped_topCategoryTitle => '钱花在哪了？';
+
+  @override
+  String wrapped_topCategorySub(Object category) {
+    return '您的最高支出类别是 $category';
+  }
+
+  @override
+  String wrapped_topCategoryShare(Object percent) {
+    return '占总支出的 $percent%';
+  }
+
+  @override
+  String get wrapped_biggestSplurgeTitle => '最大单笔支出';
+
+  @override
+  String get wrapped_biggestSplurgeSub => '本月单笔最高支出';
+
+  @override
+  String get wrapped_noSplurge => '无大额支出！本月没有支出记录。';
+
+  @override
+  String get wrapped_heroHabitTitle => '优秀习惯';
+
+  @override
+  String wrapped_zeroSpendAchieved(Object count) {
+    return '$count 天零支出';
+  }
+
+  @override
+  String wrapped_heroHabitDesc(Object count) {
+    return '您达成了 $count 天零支出记录。财务自律非常出色！';
+  }
+
+  @override
+  String get wrapped_receiptTitle => '月度账单';
+
+  @override
+  String get wrapped_obscureToggle => '隐藏金额以便分享';
+
+  @override
+  String get wrapped_showToggle => '显示金额';
+
+  @override
+  String get wrapped_replay => '重播回顾';
 
   @override
   String get insights_other => '其他';
@@ -920,6 +1113,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get more_settingsSub => '主题、货币和偏好';
 
   @override
+  String get more_sectionTools => '金融工具';
+
+  @override
+  String get more_sectionAnalytics => '分析与洞察';
+
+  @override
+  String get more_sectionPreferences => '偏好与数据';
+
+  @override
   String home_greeting(Object name) {
     return '嗨，$name 👋';
   }
@@ -971,6 +1173,45 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get wishlist_addItem => '添加项目';
+
+  @override
+  String get wishlist_fundThisItem => '为心愿存钱';
+
+  @override
+  String wishlist_funded(int percent, String saved, String target) {
+    return '已完成 $percent% ($saved / $target)';
+  }
+
+  @override
+  String get wishlist_goalAchieved => '目标已达成 — 可以购买啦！';
+
+  @override
+  String get wishlist_buyNow => '立即购买';
+
+  @override
+  String get wishlist_purchaseTitle => '购买心愿单物品';
+
+  @override
+  String get wishlist_purchasePrompt => '是否要记录一笔支出交易并从账户扣除该金额？';
+
+  @override
+  String get wishlist_recordAndDeduct => '记账并扣款';
+
+  @override
+  String get wishlist_markPurchasedOnly => '仅标记为已购买';
+
+  @override
+  String wishlist_itemPurchased(String name) {
+    return '已将「$name」标记为已购买！';
+  }
+
+  @override
+  String get wishlist_viewGoal => '查看储蓄目标';
+
+  @override
+  String savings_linkedWishlist(String item) {
+    return '已关联心愿单物品: $item';
+  }
 
   @override
   String get lended_theyOweMe => '他们欠我';
@@ -1170,6 +1411,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get accounts_excludeFromTotalBala => '从总余额中排除';
 
   @override
+  String get accounts_dontLinkToCard => '不与卡关联';
+
+  @override
+  String get accounts_dontLinkToCardDesc => '手动管理此账户余额并阻止卡与此账户关联';
+
+  @override
   String get accounts_color => '颜色';
 
   @override
@@ -1296,6 +1543,51 @@ class AppLocalizationsZh extends AppLocalizations {
   String get export_formatExcelXlsx => '格式：Excel (.xlsx)';
 
   @override
+  String get export_exportAsPdf => '导出为 PDF 报告';
+
+  @override
+  String get export_formatPdf => '格式: PDF 财务报告 (.pdf)';
+
+  @override
+  String get export_pdfGenerating => '正在生成 PDF...';
+
+  @override
+  String get export_pdfTitle => '财务报告';
+
+  @override
+  String get export_pdfSummary => '财务摘要';
+
+  @override
+  String get export_pdfInflow => '总收入';
+
+  @override
+  String get export_pdfOutflow => '总支出';
+
+  @override
+  String get export_pdfNet => '净结余';
+
+  @override
+  String get export_pdfSavingsRate => '储蓄率';
+
+  @override
+  String get export_pdfCategoryBreakdown => '分类支出明细';
+
+  @override
+  String get export_pdfTransactions => '交易流水明细';
+
+  @override
+  String get export_pdfNetWorthBreakdown => '资产与负债概览';
+
+  @override
+  String get export_pdfShare => '分享报告';
+
+  @override
+  String get export_pdfPrint => '打印 / 预览';
+
+  @override
+  String get export_pdfGeneratedBy => '由 Expensy 生成 • 私密且离线';
+
+  @override
   String get home_totalBalance => '总余额';
 
   @override
@@ -1309,6 +1601,42 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get home_add => '添加';
+
+  @override
+  String get home_goodMorning => '早上好';
+
+  @override
+  String get home_goodAfternoon => '下午好';
+
+  @override
+  String get home_goodEvening => '晚上好';
+
+  @override
+  String get home_transferAction => '转账';
+
+  @override
+  String get home_insightsAction => '洞察';
+
+  @override
+  String get home_calendarAction => '日历';
+
+  @override
+  String get home_forecastAction => '预测';
+
+  @override
+  String get home_manage => '管理';
+
+  @override
+  String get home_seeAll => '查看全部';
+
+  @override
+  String get home_addAccount => '添加账户';
+
+  @override
+  String get home_monthlyOverview => '月度概览';
+
+  @override
+  String get home_savingsRate => '储蓄率';
 
   @override
   String get insights_insights => '洞察';
@@ -1804,22 +2132,456 @@ class AppLocalizationsZh extends AppLocalizations {
   String get budget_addGoal => '添加储蓄目标';
 
   @override
-  String get add_transaction_possibleDuplicate => 'Possible duplicate';
+  String get add_transaction_possibleDuplicate => '可能是重复交易';
 
   @override
-  String get add_transaction_goBack => 'Go back';
+  String get add_transaction_goBack => '返回';
 
   @override
-  String get add_transaction_saveAnyway => 'Save anyway';
+  String get add_transaction_saveAnyway => '仍然保存';
 
   @override
-  String get loans_confirmDeleteLoan =>
-      'Are you sure you want to delete this loan and all its payments?';
+  String get loans_confirmDeleteLoan => '确定要删除此贷款及其所有还款记录吗？';
 
   @override
-  String get loans_deletePayment => 'Delete Payment';
+  String get loans_deletePayment => '删除还款';
 
   @override
-  String get loans_confirmDeletePayment =>
-      'Are you sure you want to delete this payment record?';
+  String get loans_confirmDeletePayment => '确定要删除此还款记录吗？';
+
+  @override
+  String get split_transactions_title => '拆分分类';
+
+  @override
+  String get split_transactions_badge => '拆分';
+
+  @override
+  String get split_transactions_addSplit => '添加拆分';
+
+  @override
+  String get split_transactions_removeSplit => '删除拆分';
+
+  @override
+  String get split_transactions_allocated => '已分配';
+
+  @override
+  String get split_transactions_remaining => '剩余';
+
+  @override
+  String get split_transactions_fillRemaining => '填满剩余';
+
+  @override
+  String get split_transactions_breakdown => '拆分明细';
+
+  @override
+  String get split_transactions_mismatchError => '拆分金额必须等于总金额。';
+
+  @override
+  String get netWorth_title => '净资产';
+
+  @override
+  String get netWorth_subtitle => '跟踪总资产、负债和财富随时间的变化';
+
+  @override
+  String get netWorth_current => '当前净资产';
+
+  @override
+  String get netWorth_trend => '净资产走势';
+
+  @override
+  String get netWorth_totalAssets => '总资产';
+
+  @override
+  String get netWorth_totalLiabilities => '总负债';
+
+  @override
+  String get netWorth_liquidCash => '现金与银行账户';
+
+  @override
+  String get netWorth_goldValuation => '实物黄金';
+
+  @override
+  String get netWorth_fixedAssets => '房产与投资';
+
+  @override
+  String get netWorth_moneyLent => '借出款项（应收款）';
+
+  @override
+  String get netWorth_creditDebt => '信用卡与透支';
+
+  @override
+  String get netWorth_loanDebt => '应付贷款';
+
+  @override
+  String get netWorth_moneyBorrowed => '借入款项（应付款）';
+
+  @override
+  String get netWorth_assetBreakdown => '资产分布';
+
+  @override
+  String get netWorth_liabilityBreakdown => '负债分布';
+
+  @override
+  String get netWorth_noHistory => '随着记录每日快照，净资产历史将随时间自动建立。';
+
+  @override
+  String get netWorth_debtRatio => '负债率';
+
+  @override
+  String get netWorth_quickActions => '快捷操作';
+
+  @override
+  String get netWorth_history => '快照历史';
+
+  @override
+  String get creditCard_utilization => '额度使用率';
+
+  @override
+  String get creditCard_availableCredit => '可用额度';
+
+  @override
+  String get creditCard_limit => '信用额度';
+
+  @override
+  String get creditCard_statementBalance => '账单金额';
+
+  @override
+  String get creditCard_unbilledBalance => '未出账单';
+
+  @override
+  String get creditCard_payBill => '偿还信用卡';
+
+  @override
+  String get creditCard_allCaughtUp => '已全额还清！暂无待还账单';
+
+  @override
+  String get creditCard_payBillTitle => '还款信用卡账单';
+
+  @override
+  String get creditCard_payFromAccount => '扣款账户';
+
+  @override
+  String get creditCard_paymentAmount => '还款金额';
+
+  @override
+  String get creditCard_fullStatement => '账单金额';
+
+  @override
+  String get creditCard_fullBalance => '总欠款';
+
+  @override
+  String get creditCard_minPayment => '最低还款额';
+
+  @override
+  String get creditCard_customAmount => '自定义金额';
+
+  @override
+  String creditCard_paymentSuccess(String amount, String cardName) {
+    return '已向 $cardName 还款 $amount';
+  }
+
+  @override
+  String get creditCard_insufficientFunds => '还款金额超过可用余额';
+
+  @override
+  String get creditCard_invalidAmount => '请输入有效的还款金额';
+
+  @override
+  String get onboarding_skipForNow => '暂时跳过';
+
+  @override
+  String get onboarding_addCard => '添加卡片';
+
+  @override
+  String get onboarding_skipCardDesc => '如果您现在不想添加卡片，可以跳过此步骤。';
+
+  @override
+  String get onboarding_cardNameLabel => '卡片名称（例如：Visa 白金卡）';
+
+  @override
+  String get onboarding_debitCard => '借记卡';
+
+  @override
+  String get onboarding_creditLimit => '信用额度';
+
+  @override
+  String get onboarding_amountUsed => '已用金额';
+
+  @override
+  String get accounts_cardHolderOptional => '持卡人姓名（可选）';
+
+  @override
+  String get accounts_last4Digits => '卡号后4位';
+
+  @override
+  String get accounts_expiryDate => '到期日 (MM/YY)';
+
+  @override
+  String get accounts_creditLimitOptional => '信用额度（可选）';
+
+  @override
+  String get accounts_minPaymentOptional => '最低还款额（可选）';
+
+  @override
+  String get accounts_statementDayOptional => '账单日（可选）';
+
+  @override
+  String get accounts_statementDayExample => '例如：20';
+
+  @override
+  String get accounts_dueDayOptional => '还款日（可选）';
+
+  @override
+  String get accounts_dueDayExample => '例如：10';
+
+  @override
+  String get accounts_linkedAccountOptional => '关联银行账户（可选）';
+
+  @override
+  String get accounts_excludeCardBalance => '从账户总余额中排除卡片余额';
+
+  @override
+  String get accounts_excludeCardBalanceDesc => '此卡片的余额不会计入关联的银行账户总额。';
+
+  @override
+  String get accounts_cardHolderHeader => '持卡人';
+
+  @override
+  String get accounts_expHeader => '到期';
+
+  @override
+  String get accounts_notifyOnDueDate => '将在还款日向您发送提醒';
+
+  @override
+  String get accounts_notifyWhenDue => '在还款到期时接收提醒';
+
+  @override
+  String get accounts_remind2DaysBeforeDesc => '在还款到期前 2 天接收提前提醒';
+
+  @override
+  String get accounts_targetSaved => '目标 / 已存';
+
+  @override
+  String transactions_selectedCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已选择 $count 项',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get transactions_changeCategory => '更改分类';
+
+  @override
+  String get transactions_deleteSelected => '删除选中项';
+
+  @override
+  String get transactions_advancedFilters => '高级筛选';
+
+  @override
+  String get transactions_clearAll => '清空全部';
+
+  @override
+  String get transactions_amountRange => '金额范围';
+
+  @override
+  String get transactions_minAmount => '最小金额';
+
+  @override
+  String get transactions_maxAmount => '最大金额';
+
+  @override
+  String get transactions_applyFilters => '应用筛选';
+
+  @override
+  String get presets_new => '新建';
+
+  @override
+  String get presets_presetName => '预设名称（例如：早晨咖啡）';
+
+  @override
+  String get presets_defaultAmount => '默认金额';
+
+  @override
+  String get savings_goalName => '目标名称';
+
+  @override
+  String get savings_goalNameHint => '例如：新车、度假';
+
+  @override
+  String get savings_targetAmount => '目标金额';
+
+  @override
+  String get savings_targetDateOptional => '目标日期（可选）';
+
+  @override
+  String get savings_selectDate => '选择日期';
+
+  @override
+  String get savings_amountRequired => '金额不能为空';
+
+  @override
+  String get savings_noteOptional => '备注（可选）';
+
+  @override
+  String get loans_skipInstallment => '跳过下一次贷款还款？';
+
+  @override
+  String get recurring_confirmDelete => '确定要删除此周期性付款吗？';
+
+  @override
+  String get export_formatExcelOption => 'Excel (.xlsx)';
+
+  @override
+  String get export_formatPdfOption => 'PDF 财务报告';
+
+  @override
+  String get export_pdfNoTransactions => '在所选日期范围内未记录任何交易。';
+
+  @override
+  String get savings_saved => '已存';
+
+  @override
+  String get export_pdfDate => '日期';
+
+  @override
+  String get export_pdfDescription => '描述';
+
+  @override
+  String get accounts_noCardsYet => '无卡片';
+
+  @override
+  String get accounts_tapToAddCard => '点击 + 添加第一张卡片';
+
+  @override
+  String get savings_noGoalsYet => '暂无储蓄目标';
+
+  @override
+  String get savings_tapToAddGoal => '点击 + 设定新目标';
+
+  @override
+  String get netWorth_recordSnapshot => '记录快照';
+
+  @override
+  String get netWorth_snapshotRecorded => '快照已记录';
+
+  @override
+  String get savings_noContributionsYet => '暂无存入记录';
+
+  @override
+  String get creditCard_closesStatementBillingCycle => '结清当期对账单计费周期';
+
+  @override
+  String get creditCard_clearsTotalDebt => '全额还清卡片所有欠款';
+
+  @override
+  String get creditCard_requiredMinPayment => '最低还款额';
+
+  @override
+  String get creditCard_specifyCustomAmount => '指定自定义还款金额';
+
+  @override
+  String common_itemDeleted(String name) {
+    return '已删除 \"$name\"';
+  }
+
+  @override
+  String get common_accountDeleted => '账户已删除';
+
+  @override
+  String get common_cardDeleted => '卡片已删除';
+
+  @override
+  String get common_transactionDeleted => '交易已删除';
+
+  @override
+  String get common_recordDeleted => '记录已删除';
+
+  @override
+  String get common_paymentDeleted => '付款已删除';
+
+  @override
+  String get loans_skippedInstallment => '已跳过本期贷款分期';
+
+  @override
+  String loans_loggedPayment(String amount) {
+    return '已记录 $amount 的还款';
+  }
+
+  @override
+  String get loans_notificationsPermissionRequired => '需要通知权限';
+
+  @override
+  String get creditCard_selectFundingAccount => '请选择扣款账户';
+
+  @override
+  String get presets_presetUpdated => '预设已更新';
+
+  @override
+  String get presets_presetAdded => '预设已添加';
+
+  @override
+  String get presets_presetDeleted => '预设已删除';
+
+  @override
+  String transactions_deletedCount(int count) {
+    return '已删除 $count 个项目';
+  }
+
+  @override
+  String get split_atLeastTwoCategories => '拆分至少需要 2 个类别。';
+
+  @override
+  String get split_categoryAndAmountRequired => '每个拆分项必须有类别且金额大于 0。';
+
+  @override
+  String get presets_addQuickPresets => '添加一键快捷预设';
+
+  @override
+  String get presets_quickPresetsDesc => '一键记录日常咖啡、通勤或用餐';
+
+  @override
+  String presets_loggedPreset(String title, String amount) {
+    return '已记录 $title ($amount)';
+  }
+
+  @override
+  String get presets_createPreset => '创建预设';
+
+  @override
+  String get presets_editQuickPreset => '编辑快捷预设';
+
+  @override
+  String get presets_newQuickPreset => '新建快捷预设';
+
+  @override
+  String get savings_addContribution => '存入资金';
+
+  @override
+  String get savings_withdrawFromGoal => '从目标取出';
+
+  @override
+  String get savings_contribution => '存入';
+
+  @override
+  String get savings_withdrawal => '取款';
+
+  @override
+  String get savings_unknownAccount => '未知账户';
+
+  @override
+  String get savings_fromAccount => '转出账户';
+
+  @override
+  String get savings_toAccount => '转入账户';
+
+  @override
+  String get presets_quickLog => '快捷记录';
+
+  @override
+  String accounts_dueOnDay(int day) {
+    return '到期日：$day号';
+  }
 }

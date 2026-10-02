@@ -8,152 +8,12 @@ import '../providers/app_provider.dart';
 import '../models/models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
+import '../widgets/fintech_components.dart';
+import '../widgets/credit_card_settlement_sheet.dart';
 import '../utils/haptics.dart';
 
-class AccountsScreen extends StatelessWidget {
+class AccountsScreen extends StatefulWidget {
   const AccountsScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final app = context.watch<AppProvider>();
-    final cs = Theme.of(context).colorScheme;
-
-    final hasMultiCurrency =
-        app.accounts.any((a) => a.currency != app.settings.currency);
-
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          title: Text(l10n.accounts_accounts,
-              style: const TextStyle(fontWeight: FontWeight.w800)),
-          backgroundColor: cs.primary,
-          foregroundColor: cs.onPrimary,
-          actions: [
-            if (hasMultiCurrency)
-              IconButton(
-                icon: app.ratesFetching
-                    ? SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: cs.onPrimary),
-                      )
-                    : Icon(Icons.sync_rounded, color: cs.onPrimary),
-                tooltip: l10n.accounts_refreshExchangeRates,
-                onPressed: app.ratesFetching
-                    ? null
-                    : () => context.read<AppProvider>().refreshRates(),
-              ),
-            Padding(
-              padding: const EdgeInsets.only(right: 16),
-              child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(l10n.accounts_totalBalance,
-                        style: TextStyle(
-                            fontSize: 10,
-                            color: cs.onPrimary.withValues(alpha: 0.7))),
-                    Text(
-                        formatAmount(
-                            app.totalBalanceAll, app.settings.currency),
-                        style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: cs.onPrimary)),
-                  ]),
-            ),
-          ],
-          bottom: TabBar(
-            indicatorColor: cs.onPrimary,
-            labelColor: cs.onPrimary,
-            unselectedLabelColor: cs.onPrimary.withValues(alpha: 0.6),
-            tabs: const [
-              Tab(text: 'Accounts'),
-              Tab(text: 'Cards'),
-            ],
-          ),
-        ),
-        body: TabBarView(
-          children: [
-            // Tab 1: Accounts
-            Builder(builder: (context) {
-              final regularAccounts = app.accounts
-                  .where((a) => !['credit', 'debit'].contains(a.type))
-                  .toList();
-              if (regularAccounts.isEmpty) {
-                return EmptyState(
-                    icon: Icons.account_balance_wallet_outlined,
-                    message: l10n.accounts_noAccounts,
-                    subMessage: l10n.accounts_tapPlusToAddYourFirst);
-              }
-              return Column(
-                children: [
-                  if (hasMultiCurrency) _RatesBanner(app: app),
-                  Expanded(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(14, 14, 14, 140),
-                      itemCount: regularAccounts.length,
-                      itemBuilder: (_, i) =>
-                          _AccountCard(acc: regularAccounts[i]),
-                    ),
-                  ),
-                ],
-              );
-            }),
-            // Tab 2: Cards
-            Builder(builder: (context) {
-              final cardAccounts = app.accounts
-                  .where((a) => ['credit', 'debit'].contains(a.type))
-                  .toList();
-              if (cardAccounts.isEmpty) {
-                return const EmptyState(
-                    icon: Icons.credit_card,
-                    message: 'No Cards',
-                    subMessage: 'Tap + to add your first card');
-              }
-              return Column(
-                children: [
-                  if (hasMultiCurrency) _RatesBanner(app: app),
-                  Expanded(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(14, 14, 14, 140),
-                      itemCount: cardAccounts.length,
-                      itemBuilder: (_, i) =>
-                          _RealWorldCard(acc: cardAccounts[i]),
-                    ),
-                  ),
-                ],
-              );
-            }),
-          ],
-        ),
-        floatingActionButton: Padding(
-          padding: const EdgeInsets.only(bottom: 76),
-          child: ExpandableFab(
-            label: l10n.home_add,
-            items: [
-              ExpandableFabItem(
-                label: 'Add Account',
-                icon: Icons.account_balance_wallet_rounded,
-                color: const Color(0xFF2E7D32),
-                onTap: () => openSheet(context, isCard: false),
-              ),
-              ExpandableFabItem(
-                label: 'Add Card',
-                icon: Icons.credit_card_rounded,
-                color: const Color(0xFF2E7D32),
-                onTap: () => openSheet(context, isCard: true),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   static void openSheet(BuildContext context,
       {Account? existing, bool isCard = false}) {
@@ -165,6 +25,210 @@ class AccountsScreen extends StatelessWidget {
       builder: (_) => isCard
           ? _CardSheet(existing: existing, isCard: true)
           : _AccountSheet(existing: existing, isCard: false),
+    );
+  }
+
+  @override
+  State<AccountsScreen> createState() => _AccountsScreenState();
+}
+
+class _AccountsScreenState extends State<AccountsScreen> {
+  int _tabIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final app = context.watch<AppProvider>();
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tabOrange = isDark ? const Color(0xFFFFB74D) : const Color(0xFFF57C00);
+
+    final hasMultiCurrency =
+        app.accounts.any((a) => a.currency != app.settings.currency);
+
+    final regularAccounts = app.accounts
+        .where((a) => !['credit', 'debit'].contains(a.type))
+        .toList();
+
+    final cardAccounts = app.accounts
+        .where((a) => ['credit', 'debit'].contains(a.type))
+        .toList();
+
+    return Scaffold(
+      body: Column(
+        children: [
+          // ── Transparent Edge-to-Edge Header ────────────────────────
+          FintechHeader(
+            title: l10n.accounts_accounts,
+            subtitle: '${app.accounts.length} ${app.accounts.length == 1 ? "account" : "accounts"}',
+            actions: [
+              if (hasMultiCurrency)
+                FintechCircleButton(
+                  icon: app.ratesFetching ? null : Icons.sync_rounded,
+                  tooltip: l10n.accounts_refreshExchangeRates,
+                  color: tabOrange.withValues(alpha: isDark ? 0.2 : 0.12),
+                  iconColor: tabOrange,
+                  onPressed: app.ratesFetching
+                      ? null
+                      : () => context.read<AppProvider>().refreshRates(),
+                  child: app.ratesFetching
+                      ? SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: tabOrange,
+                          ),
+                        )
+                      : null,
+                ),
+            ],
+          ),
+
+          // ── Elevated Net Liquidity Hero Card ────────────────────────
+          FintechHeroCard(
+            accentColor: tabOrange,
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: tabOrange.withValues(alpha: isDark ? 0.25 : 0.12),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: tabOrange.withValues(alpha: isDark ? 0.4 : 0.25),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.account_balance_wallet_rounded, size: 12, color: tabOrange),
+                          const SizedBox(width: 5),
+                          Text(
+                            l10n.accounts_totalBalance.toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.5,
+                              color: tabOrange,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      app.settings.currency,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: cs.onSurface.withValues(alpha: 0.6),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  formatAmount(app.totalBalanceAll, app.settings.currency),
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
+                      ),
+                ),
+                if (hasMultiCurrency) ...[
+                  const SizedBox(height: 10),
+                  _RatesBanner(app: app),
+                ],
+              ],
+            ),
+          ),
+
+          // ── Pill Segmented Control (Accounts / Cards) ───────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 6),
+            child: FintechSegmentedControl<int>(
+              activeColor: tabOrange,
+              selectedValue: _tabIndex,
+              onValueChanged: (val) => setState(() => _tabIndex = val),
+              items: [
+                FintechSegmentItem<int>(
+                  value: 0,
+                  label: 'Accounts',
+                  icon: Icons.account_balance_wallet_outlined,
+                  badge: '${regularAccounts.length}',
+                ),
+                FintechSegmentItem<int>(
+                  value: 1,
+                  label: 'Cards',
+                  icon: Icons.credit_card_outlined,
+                  badge: '${cardAccounts.length}',
+                ),
+              ],
+            ),
+          ),
+
+          // ── Tab Content ─────────────────────────────────────────────
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: _tabIndex == 0
+                  ? (regularAccounts.isEmpty
+                      ? EmptyState(
+                          icon: Icons.account_balance_wallet_outlined,
+                          message: l10n.accounts_noAccounts,
+                          subMessage: l10n.accounts_tapPlusToAddYourFirst,
+                        )
+                      : ListView.builder(
+                          key: const ValueKey('accounts_list'),
+                          padding: const EdgeInsets.fromLTRB(14, 4, 14, 140),
+                          itemCount: regularAccounts.length,
+                          itemBuilder: (_, i) =>
+                              _AccountCard(acc: regularAccounts[i]),
+                        ))
+                  : (cardAccounts.isEmpty
+                      ? EmptyState(
+                          icon: Icons.credit_card,
+                          message: l10n.accounts_noCardsYet,
+                          subMessage: l10n.accounts_tapToAddCard,
+                        )
+                      : ListView.builder(
+                          key: const ValueKey('cards_list'),
+                          padding: const EdgeInsets.fromLTRB(14, 4, 14, 140),
+                          itemCount: cardAccounts.length,
+                          itemBuilder: (_, i) =>
+                              _RealWorldCard(acc: cardAccounts[i]),
+                        )),
+            ),
+          ),
+        ],
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 84, right: 4),
+        child: ExpandableFab(
+          label: l10n.home_add,
+          color: tabOrange,
+          items: [
+            ExpandableFabItem(
+              label: 'Add Account',
+              icon: Icons.account_balance_wallet_rounded,
+              color: tabOrange,
+              onTap: () => AccountsScreen.openSheet(context, isCard: false),
+            ),
+            ExpandableFabItem(
+              label: 'Add Card',
+              icon: Icons.credit_card_rounded,
+              color: tabOrange,
+              onTap: () => AccountsScreen.openSheet(context, isCard: true),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -207,13 +271,18 @@ class _RatesBanner extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
-      color: bgColor,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: bgColor.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(10),
+      ),
       child: Row(children: [
         Icon(icon, size: 13, color: fgColor),
         const SizedBox(width: 6),
         Expanded(
-            child: Text(label, style: TextStyle(fontSize: 11, color: fgColor))),
+            child: Text(label,
+                style: TextStyle(
+                    fontSize: 11, fontWeight: FontWeight.w500, color: fgColor))),
       ]),
     );
   }
@@ -337,8 +406,8 @@ class _AccountCard extends StatelessWidget {
                         ),
                         child: Text(
                           isDueSoon
-                              ? (diff == 0 ? 'Due Today' : 'Due in $diff days')
-                              : 'Due on ${acc.dueDay}',
+                              ? (diff == 0 ? l10n.recurring_dueToday : l10n.recurring_dueInDays(diff))
+                              : l10n.accounts_dueOnDay(acc.dueDay!),
                           style: TextStyle(
                             fontSize: 9,
                             fontWeight: FontWeight.w700,
@@ -390,7 +459,7 @@ class _AccountCard extends StatelessWidget {
                       .read<AppProvider>()
                       .deleteAccountWithUndo(acc.id);
                   if (context.mounted) {
-                    showAppSnackbar(context, 'Account deleted', onUndo: undo);
+                    showAppSnackbar(context, l10n.common_accountDeleted, onUndo: undo);
                   }
                 }),
           ]),
@@ -463,7 +532,7 @@ class _AccountCard extends StatelessWidget {
       _Stat(
         label: l10n.accounts_karat,
         value: '${karat}k',
-        subValue: l10n.accounts_pure((karat / 24 * 140).toStringAsFixed(1)),
+        subValue: l10n.accounts_pure((karat / 24 * 100).toStringAsFixed(1)),
         color: const Color(0xFFB8860B),
       ),
       _Divider(),
@@ -597,7 +666,9 @@ class _AccountSheetState extends State<_AccountSheet> {
 
   // Card specific
   final _creditLimitCtrl = TextEditingController();
+  final _statementDayCtrl = TextEditingController();
   final _dueDayCtrl = TextEditingController();
+  final _minPaymentAmountCtrl = TextEditingController();
   final _cardHolderNameCtrl = TextEditingController();
   final _cardNumberLast4Ctrl = TextEditingController();
   final _cardExpiryCtrl = TextEditingController();
@@ -608,6 +679,7 @@ class _AccountSheetState extends State<_AccountSheet> {
   int _color = 0xFF6750A4;
   bool _excludeFromTotal = false;
   bool _excludeFromBankTotal = false;
+  bool _dontLinkToCard = false;
   int _goldKarat = 24;
 
   // Reminders
@@ -636,6 +708,7 @@ class _AccountSheetState extends State<_AccountSheet> {
       _currency = e.currency;
       _color = e.colorValue;
       _excludeFromTotal = e.excludeFromTotal;
+      _dontLinkToCard = e.dontLinkToCard;
       if (e.isGold) {
         _goldKarat = e.goldKarat ?? 24;
         _gramsCtrl.text = e.goldGrams?.toStringAsFixed(2) ?? '';
@@ -650,7 +723,9 @@ class _AccountSheetState extends State<_AccountSheet> {
         _excludeFromBankTotal = e.excludeFromBankTotal;
         if (e.type == 'credit') {
           _creditLimitCtrl.text = e.creditLimit?.toString() ?? '';
+          _statementDayCtrl.text = e.statementDay?.toString() ?? '';
           _dueDayCtrl.text = e.dueDay?.toString() ?? '';
+          _minPaymentAmountCtrl.text = e.minPaymentAmount?.toString() ?? '';
           _creditReminderEnabled = e.creditReminderEnabled;
           _creditEarlyReminderEnabled = e.creditEarlyReminderEnabled;
           final parts = e.creditReminderTime.split(':');
@@ -672,9 +747,12 @@ class _AccountSheetState extends State<_AccountSheet> {
     _balCtrl.dispose();
     _gramsCtrl.dispose();
     _creditLimitCtrl.dispose();
+    _statementDayCtrl.dispose();
     _dueDayCtrl.dispose();
+    _minPaymentAmountCtrl.dispose();
     _cardHolderNameCtrl.dispose();
     _cardNumberLast4Ctrl.dispose();
+    _cardExpiryCtrl.dispose();
     super.dispose();
   }
 
@@ -761,6 +839,8 @@ class _AccountSheetState extends State<_AccountSheet> {
           (isEdit ? widget.existing!.balance : 0);
       double? creditLimit;
       int? dueDay;
+      int? statementDay;
+      double? minPaymentAmount;
       String? cardHolderName;
       String? cardNumberLast4;
       String? cardExpiry;
@@ -774,6 +854,8 @@ class _AccountSheetState extends State<_AccountSheet> {
         if (isCredit) {
           creditLimit = double.tryParse(_creditLimitCtrl.text);
           dueDay = int.tryParse(_dueDayCtrl.text);
+          statementDay = int.tryParse(_statementDayCtrl.text);
+          minPaymentAmount = double.tryParse(_minPaymentAmountCtrl.text);
         }
       }
 
@@ -781,6 +863,14 @@ class _AccountSheetState extends State<_AccountSheet> {
           '${_creditReminderTime.hour.toString().padLeft(2, '0')}:${_creditReminderTime.minute.toString().padLeft(2, '0')}';
 
       if (isEdit) {
+        if (_type == 'bank' && _dontLinkToCard) {
+          final linkedCards = app.accounts
+              .where((a) => a.linkedAccountId == widget.existing!.id)
+              .toList();
+          for (final card in linkedCards) {
+            await app.updateAccount(card.copyWith(clearLinkedAccount: true));
+          }
+        }
         await app.updateAccount(widget.existing!.copyWith(
           name: name,
           type: _type,
@@ -789,11 +879,14 @@ class _AccountSheetState extends State<_AccountSheet> {
           colorValue: _color,
           excludeFromTotal: _excludeFromTotal,
           excludeFromBankTotal: _excludeFromBankTotal,
+          dontLinkToCard: _type == 'bank' ? _dontLinkToCard : false,
           cardHolderName: cardHolderName,
           cardNumberLast4: cardNumberLast4,
           cardExpiry: cardExpiry,
           creditLimit: creditLimit,
+          statementDay: statementDay,
           dueDay: dueDay,
+          minPaymentAmount: minPaymentAmount,
           creditReminderEnabled: _creditReminderEnabled,
           creditEarlyReminderEnabled: _creditEarlyReminderEnabled,
           creditReminderTime: reminderTimeStr,
@@ -812,12 +905,15 @@ class _AccountSheetState extends State<_AccountSheet> {
           colorValue: _color,
           excludeFromTotal: _excludeFromTotal,
           excludeFromBankTotal: _excludeFromBankTotal,
+          dontLinkToCard: _type == 'bank' ? _dontLinkToCard : false,
           cardHolderName: cardHolderName,
           cardNumberLast4: cardNumberLast4,
           cardExpiry: cardExpiry,
           creditLimit: creditLimit,
           linkedAccountId: linkedAccountId,
+          statementDay: statementDay,
           dueDay: dueDay,
+          minPaymentAmount: minPaymentAmount,
           creditReminderEnabled: _creditReminderEnabled,
           creditEarlyReminderEnabled: _creditEarlyReminderEnabled,
           creditReminderTime: reminderTimeStr,
@@ -849,16 +945,20 @@ class _AccountSheetState extends State<_AccountSheet> {
           ];
 
     return Padding(
-      padding: const EdgeInsets.only(
-          bottom: 16,
+      padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
           left: 20,
           right: 20,
           top: 20),
-      child: SingleChildScrollView(
-          child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
+        child: SingleChildScrollView(
+            child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           Text(
               isEdit
                   ? (isCard ? 'Edit Card' : l10n.accounts_editAccount)
@@ -870,8 +970,8 @@ class _AccountSheetState extends State<_AccountSheet> {
           const SizedBox(height: 16),
 
           TextField(
-            textInputAction: (isCard || _type != 'bank') ? TextInputAction.next : TextInputAction.done,
-            onSubmitted: (isCard || _type != 'bank') ? null : (_) => _submit(),
+            textInputAction: (isCard || _type != 'bank' || _dontLinkToCard) ? TextInputAction.next : TextInputAction.done,
+            onSubmitted: (isCard || _type != 'bank' || _dontLinkToCard) ? null : (_) => _submit(),
             controller: _nameCtrl,
             decoration: InputDecoration(
               labelText: isCard
@@ -969,6 +1069,26 @@ class _AccountSheetState extends State<_AccountSheet> {
           ),
           const SizedBox(height: 14),
 
+          // ── Bank: Don't link to Card toggle ─────────────────────────
+          if (_type == 'bank') ...[
+            SwitchListTile.adaptive(
+              contentPadding: EdgeInsets.zero,
+              title: Text(
+                l10n.accounts_dontLinkToCard,
+                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+              ),
+              subtitle: Text(
+                l10n.accounts_dontLinkToCardDesc,
+                style: TextStyle(
+                    fontSize: 12,
+                    color: cs.onSurface.withValues(alpha: 0.5)),
+              ),
+              value: _dontLinkToCard,
+              onChanged: (v) => setState(() => _dontLinkToCard = v),
+            ),
+            const SizedBox(height: 14),
+          ],
+
           // ── Gold-specific fields ────────────────────────────────────
           if (isGold) ...[
             // Karat selector
@@ -1008,7 +1128,7 @@ class _AccountSheetState extends State<_AccountSheet> {
                               color: sel
                                   ? Colors.white
                                   : const Color(0xFFB8860B))),
-                      Text('${(k / 24 * 140).toStringAsFixed(0)}%',
+                      Text('${(k / 24 * 100).toStringAsFixed(0)}%',
                           style: TextStyle(
                               fontSize: 9,
                               color: sel
@@ -1042,6 +1162,7 @@ class _AccountSheetState extends State<_AccountSheet> {
                         ? l10n.error_required
                         : null,
               ),
+              onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 12),
 
@@ -1063,7 +1184,7 @@ class _AccountSheetState extends State<_AccountSheet> {
                     ),
             ),
             const SizedBox(height: 14),
-          ] else if (_type != 'bank') ...[
+          ] else if (_type != 'bank' || _dontLinkToCard) ...[
             // ── Regular balance field ─────────────────────────────────
             TextField(textInputAction: TextInputAction.done, onSubmitted: (_) => _submit(), 
               controller: _balCtrl,
@@ -1085,9 +1206,9 @@ class _AccountSheetState extends State<_AccountSheet> {
                 Expanded(
                   child: TextField(textInputAction: TextInputAction.next, 
                     controller: _cardHolderNameCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Card Holder Name (Optional)',
-                      prefixIcon: Icon(Icons.person_outline),
+                    decoration: InputDecoration(
+                      labelText: l10n.accounts_cardHolderOptional,
+                      prefixIcon: const Icon(Icons.person_outline),
                     ),
                   ),
                 ),
@@ -1097,9 +1218,9 @@ class _AccountSheetState extends State<_AccountSheet> {
                     controller: _cardNumberLast4Ctrl,
                     keyboardType: TextInputType.number,
                     maxLength: 4,
-                    decoration: const InputDecoration(
-                      labelText: 'Last 4 Digits',
-                      prefixIcon: Icon(Icons.numbers),
+                    decoration: InputDecoration(
+                      labelText: l10n.accounts_last4Digits,
+                      prefixIcon: const Icon(Icons.numbers),
                       counterText: '',
                     ),
                   ),
@@ -1111,9 +1232,9 @@ class _AccountSheetState extends State<_AccountSheet> {
               controller: _cardExpiryCtrl,
               keyboardType: TextInputType.datetime,
               maxLength: 5,
-              decoration: const InputDecoration(
-                labelText: 'Expiry Date (MM/YY)',
-                prefixIcon: Icon(Icons.calendar_month),
+              decoration: InputDecoration(
+                labelText: l10n.accounts_expiryDate,
+                prefixIcon: const Icon(Icons.calendar_month),
                 counterText: '',
               ),
             ),
@@ -1129,8 +1250,37 @@ class _AccountSheetState extends State<_AccountSheet> {
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
                     decoration: InputDecoration(
-                      labelText: 'Credit Limit (Optional)',
+                      labelText: l10n.accounts_creditLimitOptional,
                       prefixText: '${currencyInfo(_currency).symbol} ',
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(textInputAction: TextInputAction.next, 
+                    controller: _minPaymentAmountCtrl,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      labelText: l10n.accounts_minPaymentOptional,
+                      prefixText: '${currencyInfo(_currency).symbol} ',
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(textInputAction: TextInputAction.next, 
+                    controller: _statementDayCtrl,
+                    keyboardType: TextInputType.number,
+                    maxLength: 2,
+                    decoration: InputDecoration(
+                      labelText: l10n.accounts_statementDayOptional,
+                      hintText: l10n.accounts_statementDayExample,
+                      counterText: '',
                     ),
                   ),
                 ),
@@ -1140,9 +1290,9 @@ class _AccountSheetState extends State<_AccountSheet> {
                     controller: _dueDayCtrl,
                     keyboardType: TextInputType.number,
                     maxLength: 2,
-                    decoration: const InputDecoration(
-                      labelText: 'Due Day (Optional)',
-                      hintText: 'e.g. 25',
+                    decoration: InputDecoration(
+                      labelText: l10n.accounts_dueDayOptional,
+                      hintText: l10n.accounts_dueDayExample,
                       counterText: '',
                     ),
                   ),
@@ -1153,7 +1303,7 @@ class _AccountSheetState extends State<_AccountSheet> {
 
           if (isCard) ...[
             const SizedBox(height: 16),
-            Text('Linked Bank Account (Optional)',
+            Text(l10n.accounts_linkedAccountOptional,
                 style: Theme.of(context)
                     .textTheme
                     .labelMedium
@@ -1176,7 +1326,7 @@ class _AccountSheetState extends State<_AccountSheet> {
                             : cs.surfaceContainerHigh,
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: Text('None',
+                      child: Text(l10n.shared_widgets_none,
                           style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -1185,7 +1335,7 @@ class _AccountSheetState extends State<_AccountSheet> {
                                   : cs.onSurface)),
                     ),
                   ),
-                  ...app.accounts.where((a) => a.type == 'bank').map((a) {
+                  ...app.accounts.where((a) => a.type == 'bank' && !a.dontLinkToCard).map((a) {
                     final sel = _linkedAccountId == a.id;
                     return GestureDetector(
                       onTap: () => setState(() => _linkedAccountId = a.id),
@@ -1225,7 +1375,7 @@ class _AccountSheetState extends State<_AccountSheet> {
           ],
 
           // ── Exclude from total ──────────────────────────────────────
-          if (_type != 'bank')
+          if (_type != 'bank' || _dontLinkToCard)
             SwitchListTile.adaptive(
               contentPadding: EdgeInsets.zero,
               title: Text(l10n.accounts_excludeFromTotalBala,
@@ -1242,10 +1392,10 @@ class _AccountSheetState extends State<_AccountSheet> {
             const SizedBox(height: 14),
             SwitchListTile.adaptive(
               contentPadding: EdgeInsets.zero,
-              title: const Text('Exclude card balance from account balance',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+              title: Text(l10n.accounts_excludeCardBalance,
+                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
               subtitle: Text(
-                  'This card\'s balance will not be added to its linked bank account.',
+                  l10n.accounts_excludeCardBalanceDesc,
                   style: TextStyle(
                       fontSize: 12,
                       color: cs.onSurface.withValues(alpha: 0.5))),
@@ -1302,6 +1452,9 @@ class _AccountSheetState extends State<_AccountSheet> {
           ),
           const SizedBox(height: 24),
 
+
+          const SizedBox(height: 16),
+
           // ── Actions ─────────────────────────────────────────────────
           Row(children: [
             Expanded(
@@ -1323,6 +1476,7 @@ class _AccountSheetState extends State<_AccountSheet> {
           ]),
         ],
       )),
+      ),
     );
   }
 }
@@ -1343,7 +1497,9 @@ class _CardSheetState extends State<_CardSheet> {
 
   // Card specific
   final _creditLimitCtrl = TextEditingController();
+  final _statementDayCtrl = TextEditingController();
   final _dueDayCtrl = TextEditingController();
+  final _minPaymentAmountCtrl = TextEditingController();
   final _cardHolderNameCtrl = TextEditingController();
   final _cardNumberLast4Ctrl = TextEditingController();
   final _cardExpiryCtrl = TextEditingController();
@@ -1396,7 +1552,9 @@ class _CardSheetState extends State<_CardSheet> {
         _excludeFromBankTotal = e.excludeFromBankTotal;
         if (e.type == 'credit') {
           _creditLimitCtrl.text = e.creditLimit?.toString() ?? '';
+          _statementDayCtrl.text = e.statementDay?.toString() ?? '';
           _dueDayCtrl.text = e.dueDay?.toString() ?? '';
+          _minPaymentAmountCtrl.text = e.minPaymentAmount?.toString() ?? '';
           _creditReminderEnabled = e.creditReminderEnabled;
           _creditEarlyReminderEnabled = e.creditEarlyReminderEnabled;
           final parts = e.creditReminderTime.split(':');
@@ -1418,9 +1576,12 @@ class _CardSheetState extends State<_CardSheet> {
     _balCtrl.dispose();
     _gramsCtrl.dispose();
     _creditLimitCtrl.dispose();
+    _statementDayCtrl.dispose();
     _dueDayCtrl.dispose();
+    _minPaymentAmountCtrl.dispose();
     _cardHolderNameCtrl.dispose();
     _cardNumberLast4Ctrl.dispose();
+    _cardExpiryCtrl.dispose();
     super.dispose();
   }
 
@@ -1507,6 +1668,8 @@ class _CardSheetState extends State<_CardSheet> {
           (isEdit ? widget.existing!.balance : 0);
       double? creditLimit;
       int? dueDay;
+      int? statementDay;
+      double? minPaymentAmount;
       String? cardHolderName;
       String? cardNumberLast4;
       String? cardExpiry;
@@ -1520,6 +1683,8 @@ class _CardSheetState extends State<_CardSheet> {
         if (isCredit) {
           creditLimit = double.tryParse(_creditLimitCtrl.text);
           dueDay = int.tryParse(_dueDayCtrl.text);
+          statementDay = int.tryParse(_statementDayCtrl.text);
+          minPaymentAmount = double.tryParse(_minPaymentAmountCtrl.text);
         }
       }
 
@@ -1539,7 +1704,9 @@ class _CardSheetState extends State<_CardSheet> {
           cardNumberLast4: cardNumberLast4,
           cardExpiry: cardExpiry,
           creditLimit: creditLimit,
+          statementDay: statementDay,
           dueDay: dueDay,
+          minPaymentAmount: minPaymentAmount,
           creditReminderEnabled: _creditReminderEnabled,
           creditEarlyReminderEnabled: _creditEarlyReminderEnabled,
           creditReminderTime: reminderTimeStr,
@@ -1563,7 +1730,9 @@ class _CardSheetState extends State<_CardSheet> {
           cardExpiry: cardExpiry,
           creditLimit: creditLimit,
           linkedAccountId: linkedAccountId,
+          statementDay: statementDay,
           dueDay: dueDay,
+          minPaymentAmount: minPaymentAmount,
           creditReminderEnabled: _creditReminderEnabled,
           creditEarlyReminderEnabled: _creditEarlyReminderEnabled,
           creditReminderTime: reminderTimeStr,
@@ -1595,16 +1764,20 @@ class _CardSheetState extends State<_CardSheet> {
           ];
 
     return Padding(
-      padding: const EdgeInsets.only(
-          bottom: 16,
+      padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
           left: 20,
           right: 20,
           top: 20),
-      child: SingleChildScrollView(
-          child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
+        child: SingleChildScrollView(
+            child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           Text(
               isEdit
                   ? (isCard ? 'Edit Card' : l10n.accounts_editAccount)
@@ -1752,7 +1925,7 @@ class _CardSheetState extends State<_CardSheet> {
                               color: sel
                                   ? Colors.white
                                   : const Color(0xFFB8860B))),
-                      Text('${(k / 24 * 140).toStringAsFixed(0)}%',
+                      Text('${(k / 24 * 100).toStringAsFixed(0)}%',
                           style: TextStyle(
                               fontSize: 9,
                               color: sel
@@ -1786,6 +1959,7 @@ class _CardSheetState extends State<_CardSheet> {
                         ? l10n.error_required
                         : null,
               ),
+              onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 12),
 
@@ -1829,9 +2003,9 @@ class _CardSheetState extends State<_CardSheet> {
                 Expanded(
                   child: TextField(textInputAction: TextInputAction.next, 
                     controller: _cardHolderNameCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Card Holder Name (Optional)',
-                      prefixIcon: Icon(Icons.person_outline),
+                    decoration: InputDecoration(
+                      labelText: l10n.accounts_cardHolderOptional,
+                      prefixIcon: const Icon(Icons.person_outline),
                     ),
                   ),
                 ),
@@ -1841,9 +2015,9 @@ class _CardSheetState extends State<_CardSheet> {
                     controller: _cardNumberLast4Ctrl,
                     keyboardType: TextInputType.number,
                     maxLength: 4,
-                    decoration: const InputDecoration(
-                      labelText: 'Last 4 Digits',
-                      prefixIcon: Icon(Icons.numbers),
+                    decoration: InputDecoration(
+                      labelText: l10n.accounts_last4Digits,
+                      prefixIcon: const Icon(Icons.numbers),
                       counterText: '',
                     ),
                   ),
@@ -1855,9 +2029,9 @@ class _CardSheetState extends State<_CardSheet> {
               controller: _cardExpiryCtrl,
               keyboardType: TextInputType.datetime,
               maxLength: 5,
-              decoration: const InputDecoration(
-                labelText: 'Expiry Date (MM/YY)',
-                prefixIcon: Icon(Icons.calendar_month),
+              decoration: InputDecoration(
+                labelText: l10n.accounts_expiryDate,
+                prefixIcon: const Icon(Icons.calendar_month),
                 counterText: '',
               ),
             ),
@@ -1873,8 +2047,37 @@ class _CardSheetState extends State<_CardSheet> {
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
                     decoration: InputDecoration(
-                      labelText: 'Credit Limit (Optional)',
+                      labelText: l10n.accounts_creditLimitOptional,
                       prefixText: '${currencyInfo(_currency).symbol} ',
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(textInputAction: TextInputAction.next, 
+                    controller: _minPaymentAmountCtrl,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      labelText: l10n.accounts_minPaymentOptional,
+                      prefixText: '${currencyInfo(_currency).symbol} ',
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(textInputAction: TextInputAction.next, 
+                    controller: _statementDayCtrl,
+                    keyboardType: TextInputType.number,
+                    maxLength: 2,
+                    decoration: InputDecoration(
+                      labelText: l10n.accounts_statementDayOptional,
+                      hintText: l10n.accounts_statementDayExample,
+                      counterText: '',
                     ),
                   ),
                 ),
@@ -1884,9 +2087,9 @@ class _CardSheetState extends State<_CardSheet> {
                     controller: _dueDayCtrl,
                     keyboardType: TextInputType.number,
                     maxLength: 2,
-                    decoration: const InputDecoration(
-                      labelText: 'Due Day (Optional)',
-                      hintText: 'e.g. 25',
+                    decoration: InputDecoration(
+                      labelText: l10n.accounts_dueDayOptional,
+                      hintText: l10n.accounts_dueDayExample,
                       counterText: '',
                     ),
                   ),
@@ -1897,7 +2100,7 @@ class _CardSheetState extends State<_CardSheet> {
 
           if (isCard) ...[
             const SizedBox(height: 16),
-            Text('Linked Bank Account (Optional)',
+            Text(l10n.accounts_linkedAccountOptional,
                 style: Theme.of(context)
                     .textTheme
                     .labelMedium
@@ -1920,7 +2123,7 @@ class _CardSheetState extends State<_CardSheet> {
                             : cs.surfaceContainerHigh,
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: Text('None',
+                      child: Text(l10n.shared_widgets_none,
                           style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -1929,7 +2132,7 @@ class _CardSheetState extends State<_CardSheet> {
                                   : cs.onSurface)),
                     ),
                   ),
-                  ...app.accounts.where((a) => a.type == 'bank').map((a) {
+                  ...app.accounts.where((a) => a.type == 'bank' && !a.dontLinkToCard).map((a) {
                     final sel = _linkedAccountId == a.id;
                     return GestureDetector(
                       onTap: () => setState(() => _linkedAccountId = a.id),
@@ -1986,10 +2189,10 @@ class _CardSheetState extends State<_CardSheet> {
             const SizedBox(height: 14),
             SwitchListTile.adaptive(
               contentPadding: EdgeInsets.zero,
-              title: const Text('Exclude card balance from account balance',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+              title: Text(l10n.accounts_excludeCardBalance,
+                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
               subtitle: Text(
-                  'This card\'s balance will not be added to its linked bank account.',
+                  l10n.accounts_excludeCardBalanceDesc,
                   style: TextStyle(
                       fontSize: 12,
                       color: cs.onSurface.withValues(alpha: 0.5))),
@@ -2046,6 +2249,9 @@ class _CardSheetState extends State<_CardSheet> {
           ),
           const SizedBox(height: 24),
 
+
+          const SizedBox(height: 16),
+
           // ── Actions ─────────────────────────────────────────────────
           Row(children: [
             Expanded(
@@ -2065,6 +2271,7 @@ class _CardSheetState extends State<_CardSheet> {
           ]),
         ],
       )),
+      ),
     );
   }
 }
@@ -2077,14 +2284,15 @@ class _RealWorldCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     final color = Color(acc.colorValue);
+    final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+    final app = context.watch<AppProvider>();
 
-    return GestureDetector(
+    final cardWidget = GestureDetector(
       onTap: () =>
           AccountsScreen.openSheet(context, existing: acc, isCard: true),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
         height: 200,
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
@@ -2147,7 +2355,7 @@ class _RealWorldCard extends StatelessWidget {
                         .read<AppProvider>()
                         .deleteAccountWithUndo(acc.id);
                     if (context.mounted) {
-                      showAppSnackbar(context, 'Card deleted', onUndo: undo);
+                      showAppSnackbar(context, l10n.common_cardDeleted, onUndo: undo);
                     }
                   }
                 },
@@ -2197,8 +2405,8 @@ class _RealWorldCard extends StatelessWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('CARD HOLDER',
-                              style: TextStyle(
+                          Text(l10n.accounts_cardHolderHeader,
+                              style: const TextStyle(
                                   color: Colors.white54,
                                   fontSize: 9,
                                   letterSpacing: 1)),
@@ -2206,7 +2414,7 @@ class _RealWorldCard extends StatelessWidget {
                           Text(
                               (acc.cardHolderName?.isNotEmpty == true
                                       ? acc.cardHolderName!
-                                      : 'YOUR NAME')
+                                      : l10n.settings_yourName)
                                   .toUpperCase(),
                               style: const TextStyle(
                                   color: Colors.white,
@@ -2219,8 +2427,8 @@ class _RealWorldCard extends StatelessWidget {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            const Text('EXP',
-                                style: TextStyle(
+                            Text(l10n.accounts_expHeader,
+                                style: const TextStyle(
                                     color: Colors.white54,
                                     fontSize: 9,
                                     letterSpacing: 1)),
@@ -2239,7 +2447,7 @@ class _RealWorldCard extends StatelessWidget {
                           if (acc.type == 'credit' &&
                               (acc.creditLimit ?? 0) > 0) ...[
                             Text(
-                                'LIMIT: ${formatAmount(acc.creditLimit!, acc.currency)}',
+                                '${l10n.creditCard_limit.toUpperCase()}: ${formatAmount(acc.creditLimit!, acc.currency)}',
                                 style: TextStyle(
                                     color: Colors.white.withValues(alpha: 0.8),
                                     fontSize: 9,
@@ -2247,8 +2455,8 @@ class _RealWorldCard extends StatelessWidget {
                                     fontWeight: FontWeight.w700)),
                             const SizedBox(height: 4),
                           ],
-                          const Text('BALANCE',
-                              style: TextStyle(
+                          Text(l10n.accounts_balance.toUpperCase(),
+                              style: const TextStyle(
                                   color: Colors.white54,
                                   fontSize: 9,
                                   letterSpacing: 1)),
@@ -2265,9 +2473,296 @@ class _RealWorldCard extends StatelessWidget {
                 ],
               ),
             ),
-            // Delete button removed from here and moved into the Row above
           ],
         ),
+      ),
+    );
+
+    if (acc.type != 'credit') {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: cardWidget,
+      );
+    }
+
+    // Credit Card Statement & Settlement Workflow
+    final statement = app.getCreditCardStatement(acc);
+    final Color tierColor;
+    if (statement.utilizationPercent < 30.0) {
+      tierColor = const Color(0xFF2E7D32); // Low: Emerald Green
+    } else if (statement.utilizationPercent <= 70.0) {
+      tierColor = const Color(0xFFFFA000); // Moderate: Amber
+    } else {
+      tierColor = const Color(0xFFD32F2F); // High: Crimson Red
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          cardWidget,
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: cs.surfaceContainerHigh.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: cs.outlineVariant.withValues(alpha: 0.35),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 1. Utilization Header
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: tierColor,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          l10n.creditCard_utilization,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: cs.onSurfaceVariant,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: tierColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '${statement.utilizationPercent.toStringAsFixed(1)}%',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: tierColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // Utilization Progress Bar
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: LinearProgressIndicator(
+                    value: (statement.utilizationPercent / 100.0)
+                        .clamp(0.0, 1.0),
+                    minHeight: 7,
+                    backgroundColor: cs.surfaceContainerHighest,
+                    valueColor: AlwaysStoppedAnimation<Color>(tierColor),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // Limits & Available Details
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '${l10n.creditCard_availableCredit}: ${formatAmount(statement.availableCredit, acc.currency)}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: cs.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (statement.creditLimit > 0)
+                      Text(
+                        '${l10n.creditCard_limit}: ${formatAmount(statement.creditLimit, acc.currency)}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: cs.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                  ],
+                ),
+
+                const Divider(height: 24),
+
+                // 2. Statement & Due Info Banner
+                if (statement.totalOutstandingDebt > 0) ...[
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.creditCard_statementBalance,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: cs.onSurfaceVariant,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            formatAmount(statement.statementBalance,
+                                acc.currency),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          if (statement.unbilledBalance > 0) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              '${l10n.creditCard_unbilledBalance}: ${formatAmount(statement.unbilledBalance, acc.currency)}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color:
+                                    cs.onSurfaceVariant.withValues(alpha: 0.8),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      if (statement.dueDate != null)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: (statement.isOverdue || statement.isDueSoon)
+                                ? cs.errorContainer
+                                : cs.surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                statement.isOverdue
+                                    ? '${l10n.recurring_overdue} (${-statement.daysUntilDue!}d)'
+                                    : statement.daysUntilDue == 0
+                                        ? l10n.recurring_dueToday
+                                        : l10n.recurring_dueInDays(statement.daysUntilDue!),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  color: (statement.isOverdue ||
+                                          statement.isDueSoon)
+                                      ? cs.error
+                                      : cs.onSurfaceVariant,
+                                ),
+                              ),
+                              Text(
+                                DateFormat.MMMd().format(statement.dueDate!),
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: (statement.isOverdue ||
+                                          statement.isDueSoon)
+                                      ? cs.error.withValues(alpha: 0.8)
+                                      : cs.onSurfaceVariant
+                                          .withValues(alpha: 0.7),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  // Pay Card Bill Action Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: cs.primary,
+                        foregroundColor: cs.onPrimary,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      icon: const Icon(Icons.payments_rounded, size: 18),
+                      label: Text(
+                        l10n.creditCard_payBill,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      onPressed: () {
+                        AppHaptics.tap(context, HapticStrength.light);
+                        CreditCardSettlementSheet.show(context, acc);
+                      },
+                    ),
+                  ),
+                ] else ...[
+                  // All caught up banner
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color:
+                              const Color(0xFF2E7D32).withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.check_circle_rounded,
+                          color: Color(0xFF2E7D32),
+                          size: 18,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.creditCard_allCaughtUp,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            if (statement.statementDate != null)
+                              Text(
+                                'Next cycle closes around day ${acc.statementDay ?? 1}',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: cs.onSurfaceVariant,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          AppHaptics.tap(context, HapticStrength.light);
+                          CreditCardSettlementSheet.show(context, acc);
+                        },
+                        child: Text(l10n.creditCard_payBill),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -2342,9 +2837,9 @@ class _GoldPreviewCard extends StatelessWidget {
           ),
           if (grams != null && grams! > 0) ...[
             _InfoRow(
-              label: 'Weight Ã— purity',
+              label: 'Weight × purity',
               value:
-                  '${grams!.toStringAsFixed(2)} g Ã— ${(karat / 24 * 140).toStringAsFixed(1)}%',
+                  '${grams!.toStringAsFixed(2)} g × ${(karat / 24 * 100).toStringAsFixed(1)}%',
               color: cs.onSurface.withValues(alpha: 0.6),
             ),
           ],
@@ -2439,6 +2934,7 @@ class _CreditReminderSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
@@ -2456,14 +2952,14 @@ class _CreditReminderSection extends StatelessWidget {
               enabled ? Icons.notifications_active_rounded : Icons.notifications_none_rounded,
               color: enabled ? cs.primary : null,
             ),
-            title: Text('Payment Reminder',
+            title: Text(l10n.recurring_paymentReminder,
                 style: TextStyle(
                     fontWeight: FontWeight.w600,
                     color: enabled ? cs.primary : null)),
             subtitle: Text(
               enabled
-                  ? 'You\'ll be notified on the due date'
-                  : 'Get notified when payment is due',
+                  ? l10n.accounts_notifyOnDueDate
+                  : l10n.accounts_notifyWhenDue,
               style: TextStyle(
                   fontSize: 12,
                   color: cs.onSurface.withValues(alpha: 0.5)),
@@ -2492,7 +2988,7 @@ class _CreditReminderSection extends StatelessWidget {
                         child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                          Text('Remind me at',
+                          Text(l10n.recurring_remindMeAt,
                               style: TextStyle(
                                   fontSize: 11,
                                   color: cs.onSurface.withValues(alpha: 0.55))),
@@ -2517,12 +3013,12 @@ class _CreditReminderSection extends StatelessWidget {
                 color: earlyEnabled ? cs.secondary : null,
                 size: 22,
               ),
-              title: Text('Remind 2 days before',
+              title: Text(l10n.recurring_remind2DaysBefore,
                   style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
                       color: earlyEnabled ? cs.secondary : null)),
-              subtitle: Text('Get an advance heads-up 2 days before due date',
+              subtitle: Text(l10n.accounts_remind2DaysBeforeDesc,
                   style: TextStyle(
                       fontSize: 11,
                       color: cs.onSurface.withValues(alpha: 0.45))),

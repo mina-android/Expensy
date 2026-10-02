@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../models/models.dart';
 import '../providers/app_provider.dart';
 import '../widgets/shared_widgets.dart';
+import '../widgets/fintech_components.dart';
 import '../theme/app_theme.dart';
 import '../l10n/app_localizations.dart';
 import '../utils/snackbar.dart';
@@ -52,11 +53,11 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
 
     final df = DateFormat('MMM dd, yyyy');
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(_loan.name),
-        backgroundColor: cs.primary,
-        foregroundColor: cs.onPrimary,
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_outlined),
@@ -108,12 +109,16 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
       body: Column(
         children: [
           // Header Summary Card
-          Container(
-            color: cs.primary,
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
-            child: Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: Container(
+              decoration: BoxDecoration(
+                color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                ),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -152,7 +157,7 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
                     Text(
                       formatAmount(remaining, cur),
                       style: TextStyle(
-                        fontSize: 24,
+                        fontSize: 26,
                         fontWeight: FontWeight.w900,
                         color: remaining > 0 ? cs.primary : const Color(0xFF2E7D32),
                       ),
@@ -184,15 +189,17 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
 
           // Loan Metadata Stats Grid
           Padding(
-            padding: const EdgeInsets.all(14),
-            child: Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            child: Container(
+              decoration: BoxDecoration(
+                color: cs.surfaceContainer.withValues(alpha: isDark ? 0.35 : 0.55),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                ),
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
                 child: Column(
                   children: [
                     Row(
@@ -293,15 +300,24 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
                     ),
                   )
                 : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                    padding: const EdgeInsets.fromLTRB(14, 4, 14, 110),
                     itemCount: payments.length,
                     itemBuilder: (context, index) {
                       final p = payments[index];
                       final acc = p.accountId != null ? app.accountById(p.accountId!) : null;
 
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 6),
-                        child: Dismissible(
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        decoration: BoxDecoration(
+                          color: cs.surfaceContainer.withValues(alpha: isDark ? 0.35 : 0.55),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04),
+                          ),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Dismissible(
                           key: Key(p.id),
                           direction: DismissDirection.endToStart,
                           background: Container(
@@ -309,7 +325,7 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
                             padding: const EdgeInsets.only(right: 20),
                             decoration: BoxDecoration(
                               color: const Color(0xFFC62828),
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(16),
                             ),
                             child: const Icon(Icons.delete, color: Colors.white),
                           ),
@@ -367,6 +383,7 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
                             ),
                           ),
                         ),
+                        ),
                       );
                     },
                   ),
@@ -374,10 +391,10 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
         ],
       ),
       floatingActionButton: !_loan.isSettled
-          ? FloatingActionButton.extended(
+          ? FintechExtendedFab(
               onPressed: () => _openLogPaymentSheet(context),
-              icon: const Icon(Icons.add),
-              label: Text(l10n.loans_logPayment),
+              icon: Icons.add_rounded,
+              label: l10n.loans_logPayment,
             )
           : null,
     );
@@ -513,6 +530,9 @@ class _LogPaymentSheetState extends State<_LogPaymentSheet> {
               FilledButton(
                 onPressed: () async {
                   if (!_formKey.currentState!.validate()) return;
+                  final nav = Navigator.of(context);
+                  final messenger = ScaffoldMessenger.of(context);
+                  final msg = 'Logged payment of ${formatAmount(_amount, widget.loan.currency)}';
 
                   await app.payLoanInstallment(
                     widget.loan,
@@ -522,8 +542,10 @@ class _LogPaymentSheetState extends State<_LogPaymentSheet> {
                   );
 
                   if (mounted) {
-                    Navigator.pop(context);
-                    showAppSnackbar(context, 'Logged payment of ${formatAmount(_amount, widget.loan.currency)}');
+                    nav.pop();
+                    messenger.showSnackBar(
+                      SnackBar(content: Text(msg)),
+                    );
                   }
                 },
                 child: Text(l10n.loans_logPayment),

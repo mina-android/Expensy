@@ -1,14 +1,14 @@
 // lib/database/db_helper.dart
 import 'package:sqflite/sqflite.dart' hide Transaction;
-import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:flutter/foundation.dart';
+import 'app_database.dart';
 import '../models/models.dart';
 
 class DBHelper {
   static Database? _db;
   static const String _dbName = 'expensy.db';
-  static const int _version = 20;
+  static const int _version = 25;
 
   /// Public accessor for the current DB/backup schema version, so UI code
   /// (e.g. the Backup screen) never has to hardcode a copy that can drift
@@ -476,6 +476,49 @@ class DBHelper {
         debugPrint('Migration v$oldV step error: $e');
       }
     }
+    if (oldV < 22) {
+      try {
+        await db.execute(
+            'ALTER TABLE budgets ADD COLUMN allow_rollover INTEGER NOT NULL DEFAULT 0');
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
+    }
+    if (oldV < 23) {
+      try {
+        await db.execute('ALTER TABLE wishlist ADD COLUMN goal_id TEXT');
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
+      try {
+        await db.execute(
+            'ALTER TABLE savings_goals ADD COLUMN wishlist_item_id TEXT');
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
+    }
+    if (oldV < 24) {
+      try {
+        await db.execute(
+            'ALTER TABLE accounts ADD COLUMN dont_link_to_card INTEGER NOT NULL DEFAULT 0');
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
+    }
+    if (oldV < 25) {
+      try {
+        await db.execute(
+            'ALTER TABLE recurring_payments ADD COLUMN auto_pay_enabled INTEGER NOT NULL DEFAULT 0');
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
+      try {
+        await db.execute(
+            "ALTER TABLE recurring_payments ADD COLUMN auto_pay_time TEXT NOT NULL DEFAULT '09:00'");
+      } catch (e) {
+        debugPrint('Migration v$oldV step error: $e');
+      }
+    }
   }
 
   static Future<void> _onCreate(Database db, int version) async {
@@ -500,7 +543,8 @@ class DBHelper {
         credit_early_reminder_enabled INTEGER DEFAULT 0,
         linked_account_id TEXT,
         order_index INTEGER DEFAULT 0,
-        exclude_from_bank_total INTEGER NOT NULL DEFAULT 0
+        exclude_from_bank_total INTEGER NOT NULL DEFAULT 0,
+        dont_link_to_card INTEGER NOT NULL DEFAULT 0
       )''');
     await db.execute('''
       CREATE TABLE categories (
@@ -529,13 +573,16 @@ class DBHelper {
         reminder_time TEXT NOT NULL DEFAULT '09:00',
         early_reminder_enabled INTEGER NOT NULL DEFAULT 0,
         notes TEXT NOT NULL DEFAULT '',
-        recurring_type TEXT NOT NULL DEFAULT 'subscription'
+        recurring_type TEXT NOT NULL DEFAULT 'subscription',
+        auto_pay_enabled INTEGER NOT NULL DEFAULT 0,
+        auto_pay_time TEXT NOT NULL DEFAULT '09:00'
       )''');
     await db.execute('''
       CREATE TABLE wishlist (
         id TEXT PRIMARY KEY, name TEXT NOT NULL, target_price REAL NOT NULL,
         priority TEXT NOT NULL, is_purchased INTEGER NOT NULL DEFAULT 0,
-        notes TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL
+        notes TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL,
+        goal_id TEXT
       )''');
     // LEGACY: orphaned table from pre-v5 schema. Not used by any live CRUD —
     // all asset operations target the 'assets' table (created in v5 migration).
@@ -582,7 +629,8 @@ class DBHelper {
         category_id TEXT NOT NULL,
         amount REAL NOT NULL,
         period TEXT NOT NULL DEFAULT 'monthly',
-        created_at TEXT NOT NULL
+        created_at TEXT NOT NULL,
+        allow_rollover INTEGER NOT NULL DEFAULT 0
       )''');
     await db.execute('''
       CREATE TABLE recurring_history (
@@ -599,7 +647,8 @@ class DBHelper {
         current_amount REAL NOT NULL DEFAULT 0, currency TEXT NOT NULL,
         target_date TEXT, color_value INTEGER NOT NULL,
         is_completed INTEGER NOT NULL DEFAULT 0,
-        created_at TEXT NOT NULL, completed_at TEXT
+        created_at TEXT NOT NULL, completed_at TEXT,
+        wishlist_item_id TEXT
       )''');
     await db.execute('''
       CREATE TABLE savings_contributions (
@@ -668,634 +717,265 @@ class DBHelper {
   }
 
   // ── Accounts ─────────────────────────────────────────────────────────
-  static Future<List<Account>> getAccounts() async {
-    final db = await database;
-    final rows = await db.query('accounts', orderBy: 'order_index ASC');
-    return rows.map(Account.fromMap).toList();
-  }
+  static Future<List<Account>> getAccounts() =>
+      AppDatabase.instance.getAccounts();
 
-  static Future<void> insertAccount(Account a) async =>
-      (await database).insert('accounts', a.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace);
-  static Future<void> updateAccount(Account a) async => (await database)
-      .update('accounts', a.toMap(), where: 'id=?', whereArgs: [a.id]);
-  static Future<void> deleteAccount(String id) async {
-    final db = await database;
-    await db.transaction((txn) async {
-      await txn.delete('transactions', where: 'account_id=?', whereArgs: [id]);
-      await txn.delete('accounts', where: 'id=?', whereArgs: [id]);
-    });
-  }
+  static Future<void> insertAccount(Account a) =>
+      AppDatabase.instance.insertAccount(a);
+
+  static Future<void> updateAccount(Account a) =>
+      AppDatabase.instance.updateAccount(a);
+
+  static Future<void> deleteAccount(String id) =>
+      AppDatabase.instance.deleteAccount(id);
 
   // ── Categories ───────────────────────────────────────────────────────
-  static Future<List<AppCategory>> getCategories() async {
-    final db = await database;
-    final rows = await db.query('categories', orderBy: 'order_index ASC');
-    return rows.map(AppCategory.fromMap).toList();
-  }
+  static Future<List<AppCategory>> getCategories() =>
+      AppDatabase.instance.getCategories();
 
-  static Future<void> insertCategory(AppCategory c) async =>
-      (await database).insert('categories', c.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace);
-  static Future<void> updateCategory(AppCategory c) async => (await database)
-      .update('categories', c.toMap(), where: 'id=?', whereArgs: [c.id]);
-  static Future<void> deleteCategory(String id) async =>
-      (await database).delete('categories', where: 'id=?', whereArgs: [id]);
+  static Future<void> insertCategory(AppCategory c) =>
+      AppDatabase.instance.insertCategory(c);
+
+  static Future<void> updateCategory(AppCategory c) =>
+      AppDatabase.instance.updateCategory(c);
+
+  static Future<void> deleteCategory(String id) =>
+      AppDatabase.instance.deleteCategory(id);
 
   // ── Transactions ─────────────────────────────────────────────────────
-  static Future<List<AppTransaction>> getTransactions({int? limit, int offset = 0}) async {
-    final db = await database;
-    final rows = await db.query('transactions', orderBy: 'date DESC', limit: limit, offset: offset);
-    return rows.map(AppTransaction.fromMap).toList();
-  }
+  static Future<List<AppTransaction>> getTransactions(
+          {int? limit, int offset = 0}) =>
+      AppDatabase.instance.getTransactions(limit: limit, offset: offset);
 
-  static Future<List<AppTransaction>> getTransactionsForAccount(String accountId, {int? limit, int offset = 0}) async {
-    final db = await database;
-    final rows = await db.query('transactions',
-        where: 'account_id = ?',
-        whereArgs: [accountId],
-        orderBy: 'date DESC',
-        limit: limit,
-        offset: offset);
-    return rows.map(AppTransaction.fromMap).toList();
-  }
+  static Future<List<AppTransaction>> getTransactionsForAccount(
+          String accountId,
+          {int? limit, int offset = 0}) =>
+      AppDatabase.instance.getTransactionsForAccount(accountId,
+          limit: limit, offset: offset);
 
-  static Future<void> insertTransaction(AppTransaction t) async =>
-      (await database).insert('transactions', t.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace);
-  static Future<void> updateTransaction(AppTransaction t) async =>
-      (await database)
-          .update('transactions', t.toMap(), where: 'id=?', whereArgs: [t.id]);
-  static Future<void> deleteTransaction(String id) async =>
-      (await database).delete('transactions', where: 'id=?', whereArgs: [id]);
+  static Future<void> insertTransaction(AppTransaction t) =>
+      AppDatabase.instance.insertTransaction(t);
+
+  static Future<void> updateTransaction(AppTransaction t) =>
+      AppDatabase.instance.updateTransaction(t);
+
+  static Future<void> deleteTransaction(String id) =>
+      AppDatabase.instance.deleteTransaction(id);
 
   // ── Recurring ────────────────────────────────────────────────────────
-  static Future<List<RecurringPayment>> getRecurring() async {
-    final db = await database;
-    final rows =
-        await db.query('recurring_payments', orderBy: 'start_date ASC');
-    return rows.map(RecurringPayment.fromMap).toList();
-  }
+  static Future<List<RecurringPayment>> getRecurring() =>
+      AppDatabase.instance.getRecurring();
 
-  static Future<void> insertRecurring(RecurringPayment r) async =>
-      (await database).insert('recurring_payments', r.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace);
-  static Future<void> updateRecurring(RecurringPayment r) async =>
-      (await database).update('recurring_payments', r.toMap(),
-          where: 'id=?', whereArgs: [r.id]);
-  static Future<void> deleteRecurring(String id) async => (await database)
-      .delete('recurring_payments', where: 'id=?', whereArgs: [id]);
+  static Future<void> insertRecurring(RecurringPayment r) =>
+      AppDatabase.instance.insertRecurring(r);
+
+  static Future<void> updateRecurring(RecurringPayment r) =>
+      AppDatabase.instance.updateRecurring(r);
+
+  static Future<void> deleteRecurring(String id) =>
+      AppDatabase.instance.deleteRecurring(id);
 
   // ── Wishlist ─────────────────────────────────────────────────────────
-  static Future<List<WishlistItem>> getWishlist() async {
-    final db = await database;
-    final rows = await db.query('wishlist', orderBy: 'created_at DESC');
-    return rows.map(WishlistItem.fromMap).toList();
-  }
+  static Future<List<WishlistItem>> getWishlist() =>
+      AppDatabase.instance.getWishlist();
 
-  static Future<void> insertWishlist(WishlistItem w) async =>
-      (await database).insert('wishlist', w.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace);
-  static Future<void> updateWishlist(WishlistItem w) async => (await database)
-      .update('wishlist', w.toMap(), where: 'id=?', whereArgs: [w.id]);
-  static Future<void> deleteWishlist(String id) async =>
-      (await database).delete('wishlist', where: 'id=?', whereArgs: [id]);
+  static Future<void> insertWishlist(WishlistItem w) =>
+      AppDatabase.instance.insertWishlist(w);
+
+  static Future<void> updateWishlist(WishlistItem w) =>
+      AppDatabase.instance.updateWishlist(w);
+
+  static Future<void> deleteWishlist(String id) =>
+      AppDatabase.instance.deleteWishlist(id);
 
   // ── Lended People ────────────────────────────────────────────────────
-  static Future<List<LendedPerson>> getLendedPeople() async {
-    final db = await database;
-    final rows = await db.query('lended_people', orderBy: 'created_at ASC');
-    return rows.map(LendedPerson.fromMap).toList();
-  }
+  static Future<List<LendedPerson>> getLendedPeople() =>
+      AppDatabase.instance.getLendedPeople();
 
-  static Future<void> insertLendedPerson(LendedPerson p) async =>
-      (await database).insert('lended_people', p.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace);
-  static Future<void> updateLendedPerson(LendedPerson p) async =>
-      (await database)
-          .update('lended_people', p.toMap(), where: 'id=?', whereArgs: [p.id]);
-  static Future<void> deleteLendedPerson(String id) async {
-    final db = await database;
-    await db.transaction((txn) async {
-      await txn.delete('lended_money', where: 'person_id=?', whereArgs: [id]);
-      await txn.delete('lended_people', where: 'id=?', whereArgs: [id]);
-    });
-  }
+  static Future<void> insertLendedPerson(LendedPerson p) =>
+      AppDatabase.instance.insertLendedPerson(p);
+
+  static Future<void> updateLendedPerson(LendedPerson p) =>
+      AppDatabase.instance.updateLendedPerson(p);
+
+  static Future<void> deleteLendedPerson(String id) =>
+      AppDatabase.instance.deleteLendedPerson(id);
 
   // ── Lended Money (per-person ledger entries) ────────────────────────────
-  static Future<List<LendedMoney>> getLended() async {
-    final db = await database;
-    final rows = await db.query('lended_money', orderBy: 'date DESC');
-    return rows.map(LendedMoney.fromMap).toList();
-  }
+  static Future<List<LendedMoney>> getLended() =>
+      AppDatabase.instance.getLended();
 
-  static Future<List<LendedMoney>> getLendedForPerson(String personId) async {
-    final db = await database;
-    final rows = await db.query('lended_money',
-        where: 'person_id = ?', whereArgs: [personId], orderBy: 'date DESC');
-    return rows.map(LendedMoney.fromMap).toList();
-  }
+  static Future<List<LendedMoney>> getLendedForPerson(String personId) =>
+      AppDatabase.instance.getLendedForPerson(personId);
 
-  static Future<void> insertLended(LendedMoney l) async =>
-      (await database).insert('lended_money', l.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace);
-  static Future<void> updateLended(LendedMoney l) async => (await database)
-      .update('lended_money', l.toMap(), where: 'id=?', whereArgs: [l.id]);
-  static Future<void> deleteLended(String id) async =>
-      (await database).delete('lended_money', where: 'id=?', whereArgs: [id]);
-  static Future<void> deleteLendedForPerson(String personId) async =>
-      (await database)
-          .delete('lended_money', where: 'person_id=?', whereArgs: [personId]);
+  static Future<void> insertLended(LendedMoney l) =>
+      AppDatabase.instance.insertLended(l);
+
+  static Future<void> updateLended(LendedMoney l) =>
+      AppDatabase.instance.updateLended(l);
+
+  static Future<void> deleteLended(String id) =>
+      AppDatabase.instance.deleteLended(id);
+
+  static Future<void> deleteLendedForPerson(String personId) =>
+      AppDatabase.instance.deleteLendedForPerson(personId);
 
   // ── Assets ────────────────────────────────────────────────────────────
-  static Future<List<AssetItem>> getAssets() async {
-    final db = await database;
-    final rows = await db.query('assets', orderBy: 'created_at ASC');
-    return rows.map(AssetItem.fromMap).toList();
-  }
+  static Future<List<AssetItem>> getAssets() =>
+      AppDatabase.instance.getAssets();
 
-  static Future<void> insertAsset(AssetItem a) async =>
-      (await database).insert('assets', a.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace);
-  static Future<void> updateAsset(AssetItem a) async => (await database)
-      .update('assets', a.toMap(), where: 'id=?', whereArgs: [a.id]);
-  static Future<void> deleteAsset(String id) async =>
-      (await database).delete('assets', where: 'id=?', whereArgs: [id]);
+  static Future<void> insertAsset(AssetItem a) =>
+      AppDatabase.instance.insertAsset(a);
+
+  static Future<void> updateAsset(AssetItem a) =>
+      AppDatabase.instance.updateAsset(a);
+
+  static Future<void> deleteAsset(String id) =>
+      AppDatabase.instance.deleteAsset(id);
 
   // ── Budgets ───────────────────────────────────────────────────────────
-  static Future<List<Budget>> getBudgets() async {
-    final db = await database;
-    final rows = await db.query('budgets', orderBy: 'created_at ASC');
-    return rows.map(Budget.fromMap).toList();
-  }
+  static Future<List<Budget>> getBudgets() =>
+      AppDatabase.instance.getBudgets();
 
-  static Future<void> insertBudget(Budget b) async =>
-      (await database).insert('budgets', b.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace);
-  static Future<void> updateBudget(Budget b) async => (await database)
-      .update('budgets', b.toMap(), where: 'id=?', whereArgs: [b.id]);
-  static Future<void> deleteBudget(String id) async =>
-      (await database).delete('budgets', where: 'id=?', whereArgs: [id]);
+  static Future<void> insertBudget(Budget b) =>
+      AppDatabase.instance.insertBudget(b);
 
-  // ── Savings Goals ──────────────────────────────────────────────────────────
-  static Future<List<SavingsGoal>> getSavingsGoals() async {
-    final db = await database;
-    final rows = await db.query('savings_goals', orderBy: 'created_at ASC');
-    return rows.map(SavingsGoal.fromMap).toList();
-  }
+  static Future<void> updateBudget(Budget b) =>
+      AppDatabase.instance.updateBudget(b);
 
+  static Future<void> deleteBudget(String id) =>
+      AppDatabase.instance.deleteBudget(id);
 
-  static Future<void> insertSavingsGoal(SavingsGoal g) async =>
-      (await database).insert('savings_goals', g.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace);
-  static Future<void> updateSavingsGoal(SavingsGoal g) async => (await database)
-      .update('savings_goals', g.toMap(), where: 'id=?', whereArgs: [g.id]);
-  static Future<void> deleteSavingsGoal(String id) async {
-    final db = await database;
-    await db.transaction((txn) async {
-      await txn
-          .delete('savings_contributions', where: 'goal_id=?', whereArgs: [id]);
-      await txn.delete('savings_goals', where: 'id=?', whereArgs: [id]);
-    });
-  }
+  // ── Savings Goals ──────────────────────────────────────────────────────
+  static Future<List<SavingsGoal>> getSavingsGoals() =>
+      AppDatabase.instance.getSavingsGoals();
 
-  // ── Savings Contributions ─────────────────────────────────────────────────
+  static Future<void> insertSavingsGoal(SavingsGoal g) =>
+      AppDatabase.instance.insertSavingsGoal(g);
+
+  static Future<void> updateSavingsGoal(SavingsGoal g) =>
+      AppDatabase.instance.updateSavingsGoal(g);
+
+  static Future<void> deleteSavingsGoal(String id) =>
+      AppDatabase.instance.deleteSavingsGoal(id);
+
+  // ── Savings Contributions ─────────────────────────────────────────────
   static Future<List<SavingsContribution>> getSavingsContributionsFor(
-      String goalId) async {
-    final db = await database;
-    final rows = await db.query('savings_contributions',
-        where: 'goal_id = ?', whereArgs: [goalId], orderBy: 'date DESC');
-    return rows.map(SavingsContribution.fromMap).toList();
-  }
+          String goalId) =>
+      AppDatabase.instance.getSavingsContributionsFor(goalId);
 
-  static Future<List<SavingsContribution>> getAllSavingsContributions() async {
-    final db = await database;
-    final rows = await db.query('savings_contributions', orderBy: 'date DESC');
-    return rows.map(SavingsContribution.fromMap).toList();
-  }
+  static Future<List<SavingsContribution>> getAllSavingsContributions() =>
+      AppDatabase.instance.getAllSavingsContributions();
 
-
-  static Future<void> insertSavingsContribution(SavingsContribution c) async =>
-      (await database).insert('savings_contributions', c.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace);
+  static Future<void> insertSavingsContribution(SavingsContribution c) =>
+      AppDatabase.instance.insertSavingsContribution(c);
 
   // ── Recurring History ─────────────────────────────────────────────────
   static Future<List<RecurringHistoryEntry>> getRecurringHistory(
-      String recurringId) async {
-    final db = await database;
-    final rows = await db.query('recurring_history',
-        where: 'recurring_id = ?',
-        whereArgs: [recurringId],
-        orderBy: 'date DESC');
-    return rows.map(RecurringHistoryEntry.fromMap).toList();
-  }
+          String recurringId) =>
+      AppDatabase.instance.getRecurringHistory(recurringId);
 
-  static Future<List<RecurringHistoryEntry>> getAllRecurringHistory() async {
-    final db = await database;
-    final rows = await db.query('recurring_history', orderBy: 'date DESC');
-    return rows.map(RecurringHistoryEntry.fromMap).toList();
-  }
+  static Future<List<RecurringHistoryEntry>> getAllRecurringHistory() =>
+      AppDatabase.instance.getAllRecurringHistory();
 
-  /// Lightweight total row count for `recurring_history` — used by the
-  /// Backup screen's "what's included" list so it can show an accurate
-  /// number without loading every history row into memory.
-  static Future<int> getRecurringHistoryCount() async {
-    final db = await database;
-    final rows =
-        await db.rawQuery('SELECT COUNT(*) AS c FROM recurring_history');
-    return (rows.first['c'] as int?) ?? 0;
-  }
+  static Future<int> getRecurringHistoryCount() =>
+      AppDatabase.instance.getRecurringHistoryCount();
 
-  static Future<void> insertRecurringHistory(RecurringHistoryEntry e) async =>
-      (await database).insert('recurring_history', e.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace);
+  static Future<void> insertRecurringHistory(RecurringHistoryEntry e) =>
+      AppDatabase.instance.insertRecurringHistory(e);
 
-  static Future<void> deleteRecurringHistoryFor(String recurringId) async =>
-      (await database).delete('recurring_history',
-          where: 'recurring_id = ?', whereArgs: [recurringId]);
+  static Future<void> deleteRecurringHistoryFor(String recurringId) =>
+      AppDatabase.instance.deleteRecurringHistoryFor(recurringId);
 
-  // ── Loans ────────────────────────────────────────────────────────────
-  static Future<List<Loan>> getLoans() async {
-    final db = await database;
-    final rows = await db.query('loans', orderBy: 'created_at ASC');
-    return rows.map(Loan.fromMap).toList();
-  }
+  // ── Loans ─────────────────────────────────────────────────────────────
+  static Future<List<Loan>> getLoans() =>
+      AppDatabase.instance.getLoans();
 
-  static Future<void> insertLoan(Loan l) async =>
-      (await database).insert('loans', l.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace);
+  static Future<void> insertLoan(Loan l) =>
+      AppDatabase.instance.insertLoan(l);
 
-  static Future<void> updateLoan(Loan l) async => (await database)
-      .update('loans', l.toMap(), where: 'id=?', whereArgs: [l.id]);
+  static Future<void> updateLoan(Loan l) =>
+      AppDatabase.instance.updateLoan(l);
 
-  static Future<void> deleteLoan(String id) async {
-    final db = await database;
-    await db.transaction((txn) async {
-      await txn.delete('loan_payments', where: 'loan_id=?', whereArgs: [id]);
-      await txn.delete('loans', where: 'id=?', whereArgs: [id]);
-    });
-  }
+  static Future<void> deleteLoan(String id) =>
+      AppDatabase.instance.deleteLoan(id);
 
-  // ── Loan Payments ───────────────────────────────────────────────────
-  static Future<List<LoanPayment>> getLoanPayments(String loanId) async {
-    final db = await database;
-    final rows = await db.query('loan_payments',
-        where: 'loan_id = ?', whereArgs: [loanId], orderBy: 'date DESC');
-    return rows.map(LoanPayment.fromMap).toList();
-  }
+  // ── Loan Payments ─────────────────────────────────────────────────────
+  static Future<List<LoanPayment>> getLoanPayments(String loanId) =>
+      AppDatabase.instance.getLoanPayments(loanId);
 
-  static Future<List<LoanPayment>> getAllLoanPayments() async {
-    final db = await database;
-    final rows = await db.query('loan_payments', orderBy: 'date DESC');
-    return rows.map(LoanPayment.fromMap).toList();
-  }
+  static Future<List<LoanPayment>> getAllLoanPayments() =>
+      AppDatabase.instance.getAllLoanPayments();
 
-  static Future<void> insertLoanPayment(LoanPayment p) async =>
-      (await database).insert('loan_payments', p.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace);
+  static Future<void> insertLoanPayment(LoanPayment p) =>
+      AppDatabase.instance.insertLoanPayment(p);
 
-  static Future<void> deleteLoanPayment(String id) async =>
-      (await database).delete('loan_payments', where: 'id=?', whereArgs: [id]);
+  static Future<void> deleteLoanPayment(String id) =>
+      AppDatabase.instance.deleteLoanPayment(id);
 
-  static Future<void> deleteLoanPaymentsFor(String loanId) async =>
-      (await database)
-          .delete('loan_payments', where: 'loan_id=?', whereArgs: [loanId]);
+  static Future<void> deleteLoanPaymentsFor(String loanId) =>
+      AppDatabase.instance.deleteLoanPaymentsFor(loanId);
 
-  // ── Aggregations ─────────────────────────────────────────────────────
-  static Future<double> getMonthlySpentForCategory(String categoryId, DateTime month) async {
-    final db = await database;
-    final start = DateTime(month.year, month.month, 1).toIso8601String();
-    final end = DateTime(month.year, month.month + 1, 0, 23, 59, 59).toIso8601String();
-    final result = await db.rawQuery(
-        "SELECT SUM(amount) as total FROM transactions WHERE category_id = ? AND type = 'expense' AND date >= ? AND date <= ?",
-        [categoryId, start, end]);
-    return (result.first['total'] as num?)?.toDouble() ?? 0.0;
-  }
+  // ── Aggregations ──────────────────────────────────────────────────────
+  static Future<double> getMonthlySpentForCategory(
+          String categoryId, DateTime month) =>
+      AppDatabase.instance.getMonthlySpentForCategory(categoryId, month);
 
-  static Future<Map<String, double>> getTotalIncomeAndExpenseForMonth(DateTime month) async {
-    final db = await database;
-    final start = DateTime(month.year, month.month, 1).toIso8601String();
-    final end = DateTime(month.year, month.month + 1, 0, 23, 59, 59).toIso8601String();
-    final result = await db.rawQuery(
-        "SELECT type, SUM(amount) as total FROM transactions WHERE date >= ? AND date <= ? GROUP BY type",
-        [start, end]);
-    
-    double income = 0;
-    double expense = 0;
-    for (final row in result) {
-      if (row['type'] == 'income') {
-        income = (row['total'] as num?)?.toDouble() ?? 0.0;
-      } else if (row['type'] == 'expense') {
-        expense = (row['total'] as num?)?.toDouble() ?? 0.0;
-      }
-    }
-    return {'income': income, 'expense': expense};
-  }
+  static Future<Map<String, double>> getTotalIncomeAndExpenseForMonth(
+          DateTime month) =>
+      AppDatabase.instance.getTotalIncomeAndExpenseForMonth(month);
 
-  static Future<double> getTotalBudgetSpent(String categoryId, DateTime start, DateTime end) async {
-    final db = await database;
-    final result = await db.rawQuery(
-        "SELECT SUM(amount) as total FROM transactions WHERE category_id = ? AND type = 'expense' AND date >= ? AND date <= ?",
-        [categoryId, start.toIso8601String(), end.toIso8601String()]);
-    return (result.first['total'] as num?)?.toDouble() ?? 0.0;
-  }
+  static Future<double> getTotalBudgetSpent(
+          String categoryId, DateTime start, DateTime end) =>
+      AppDatabase.instance.getTotalBudgetSpent(categoryId, start, end);
 
-  static Future<List<Map<String, dynamic>>> getCategoryExpensesForMonth(DateTime month) async {
-    final db = await database;
-    final start = DateTime(month.year, month.month, 1).toIso8601String();
-    final end = DateTime(month.year, month.month + 1, 0, 23, 59, 59).toIso8601String();
-    return db.rawQuery(
-        "SELECT category_id, SUM(amount) as total FROM transactions WHERE type = 'expense' AND date >= ? AND date <= ? GROUP BY category_id",
-        [start, end]);
-  }
+  static Future<List<Map<String, dynamic>>> getCategoryExpensesForMonth(
+          DateTime month) =>
+      AppDatabase.instance.getCategoryExpensesForMonth(month);
+
+  // ── Transaction Presets ───────────────────────────────────────────────
+  static Future<List<TransactionPreset>> getPresets() =>
+      AppDatabase.instance.getPresets();
+
+  static Future<void> insertPreset(TransactionPreset p) =>
+      AppDatabase.instance.insertPreset(p);
+
+  static Future<void> updatePreset(TransactionPreset p) =>
+      AppDatabase.instance.updatePreset(p);
+
+  static Future<void> deletePreset(String id) =>
+      AppDatabase.instance.deletePreset(id);
+
+  // ── Transaction Splits ────────────────────────────────────────────────
+  static Future<List<TransactionSplit>> getAllSplits() =>
+      AppDatabase.instance.getAllSplits();
+
+  static Future<List<TransactionSplit>> getSplitsForTransaction(
+          String transactionId) =>
+      AppDatabase.instance.getSplitsForTransaction(transactionId);
+
+  static Future<void> saveTransactionSplits(
+          String transactionId, List<TransactionSplit> splits) =>
+      AppDatabase.instance.saveTransactionSplits(transactionId, splits);
+
+  static Future<void> deleteSplitsForTransaction(String transactionId) =>
+      AppDatabase.instance.deleteSplitsForTransaction(transactionId);
 
   // ── Backup / Restore ──────────────────────────────────────────────────
-  static Future<Map<String, dynamic>> exportAll() async {
-    final db = await database;
-    final results = await Future.wait([
-      db.query('accounts'),
-      db.query('categories'),
-      db.query('transactions'),
-      db.query('recurring_payments'),
-      db.query('wishlist'),
-      db.query('lended_people'),
-      db.query('lended_money'),
-      db.query('assets'),
-      db.query('budgets'),
-      db.query('recurring_history'),
-      db.query('savings_goals'),
-      db.query('savings_contributions'),
-      db.query('loans'),
-      db.query('loan_payments'),
-    ]);
-    return {
-      'accounts': results[0],
-      'categories': results[1],
-      'transactions': results[2],
-      'recurring_payments': results[3],
-      'wishlist': results[4],
-      'lended_people': results[5],
-      'lended_money': results[6],
-      'assets': results[7],
-      'budgets': results[8],
-      'recurring_history': results[9],
-      'savings_goals': results[10],
-      'savings_contributions': results[11],
-      'loans': results[12],
-      'loan_payments': results[13],
-      'version': _version,
-    };
-  }
+  static Future<Map<String, dynamic>> exportAll() =>
+      AppDatabase.instance.exportAll();
 
-  static Future<void> importAll(Map<String, dynamic> data) async {
-    final db = await database;
-    _normaliseBackup(data);
+  static Future<void> importAll(Map<String, dynamic> data) =>
+      AppDatabase.instance.importAll(data);
 
-    await db.transaction((txn) async {
-      for (final table in [
-        'accounts',
-        'categories',
-        'transactions',
-        'recurring_payments',
-        'wishlist',
-        'lended_people',
-        'lended_money',
-        'assets',
-        'budgets',
-        'recurring_history',
-        'savings_goals',
-        'savings_contributions',
-        'loans',
-        'loan_payments',
-      ]) {
-        await txn.delete(table);
-        final rows = (data[table] as List?)?.cast<Map<String, dynamic>>() ?? [];
-        final batch = txn.batch();
-        for (final raw in rows) {
-          final row = Map<String, dynamic>.from(raw);
-          batch.insert(table, row,
-              conflictAlgorithm: ConflictAlgorithm.replace);
-        }
-        await batch.commit(noResult: true);
-      }
-    });
-  }
-
-  static void _normaliseBackup(Map<String, dynamic> data) {
-    final backupVersion = (data['version'] as int?) ?? 1;
-
-    for (final row in _rows(data, 'accounts')) {
-      row.putIfAbsent('exclude_from_total', () => 0);
-      row.putIfAbsent('currency', () => 'EGP');
-      if (!row.containsKey('gold_karat')) row['gold_karat'] = null;
-      if (!row.containsKey('gold_grams')) row['gold_grams'] = null;
-      row.putIfAbsent('credit_early_reminder_enabled', () => 0);
-      if (!row.containsKey('linked_account_id')) {
-        row['linked_account_id'] = null;
-      }
-      row.putIfAbsent('exclude_from_bank_total', () => 0);
-      row.putIfAbsent('order_index', () => 0);
-    }
-
-    for (final row in _rows(data, 'transactions')) {
-      row.putIfAbsent('note', () => '');
-      row.putIfAbsent('currency', () => '');
-    }
-
-    for (final row in _rows(data, 'recurring_payments')) {
-      row.putIfAbsent('payment_type', () => 'expense');
-      row.putIfAbsent('reminder_enabled', () => 0);
-      row.putIfAbsent('reminder_time', () => '09:00');
-      row.putIfAbsent('early_reminder_enabled', () => 0);
-      row.putIfAbsent('notes', () => '');
-      row.putIfAbsent('paid_payments', () => 0);
-      row.putIfAbsent('recurring_type', () => 'subscription');
-      if (row.containsKey('freq_unit')) {
-        final u = row['freq_unit'] as String? ?? 'months';
-        const map = {
-          'day': 'days',
-          'week': 'weeks',
-          'month': 'months',
-          'year': 'years',
-        };
-        row['freq_unit'] = map[u] ?? u;
-      }
-    }
-
-    for (final row in _rows(data, 'wishlist')) {
-      row.putIfAbsent('is_purchased', () => 0);
-      row.putIfAbsent('notes', () => '');
-      row.putIfAbsent('priority', () => 'low');
-    }
-
-    for (final row in _rows(data, 'lended_money')) {
-      row.putIfAbsent('is_settled', () => 0);
-      row.putIfAbsent('notes', () => '');
-      row.putIfAbsent('due_date', () => null);
-      row.putIfAbsent('account_id', () => null);
-      row.putIfAbsent('reminder_enabled', () => 0); // v8→v9
-      row.putIfAbsent('reminder_time', () => '09:00'); // v8→v9
-    }
-
-    // v9 → v10: lended money becomes account-based (per-person ledger).
-    // Old backups have `person_name` on each lended_money row and no
-    // `lended_people` table at all. Synthesize a LendedPerson per distinct
-    // name and rewrite each row to carry `person_id` instead.
-    data.putIfAbsent('lended_people', () => <dynamic>[]);
-    final peopleRows = _rows(data, 'lended_people');
-    final lendedRows = _rows(data, 'lended_money');
-    final needsBackfill =
-        lendedRows.isNotEmpty && lendedRows.any((r) => r['person_id'] == null);
-    if (needsBackfill) {
-      final nameToId = <String, String>{};
-      for (final p in peopleRows) {
-        final nm = p['name'] as String?;
-        final id = p['id'] as String?;
-        if (nm != null && id != null) nameToId[nm] = id;
-      }
-      const palette = [
-        0xFF6750A4,
-        0xFF1565C0,
-        0xFF2E7D32,
-        0xFFC62828,
-        0xFFE65100,
-        0xFF00838F,
-        0xFF6A1B9A,
-        0xFF37474F,
-        0xFFAD1457,
-        0xFF827717,
-      ];
-      var colorIdx = peopleRows.length;
-      var seq = 0;
-      for (final row in lendedRows) {
-        if (row['person_id'] != null) continue;
-        final name = (row['person_name'] as String?)?.trim();
-        final key = (name == null || name.isEmpty) ? 'Unknown' : name;
-        var id = nameToId[key];
-        if (id == null) {
-          id = 'restored_${DateTime.now().microsecondsSinceEpoch}_${seq++}';
-          nameToId[key] = id;
-          peopleRows.add({
-            'id': id,
-            'name': key,
-            'color_value': palette[colorIdx % palette.length],
-            'notes': '',
-            'created_at': DateTime.now().toIso8601String(),
-          });
-          colorIdx++;
-        }
-        row['person_id'] = id;
-      }
-      data['lended_people'] = peopleRows;
-      data['lended_money'] = lendedRows;
-    }
-    // The legacy `person_name` key (if present) must never reach the raw
-    // `txn.insert()` in importAll() — the live `lended_money` table (v10+)
-    // has no such column, and sqflite would throw "no such column:
-    // person_name" for every restored row, aborting the whole restore.
-    for (final row in _rows(data, 'lended_money')) {
-      row.remove('person_name');
-    }
-    for (final row in _rows(data, 'lended_people')) {
-      row.putIfAbsent('color_value', () => 0xFF6750A4);
-      row.putIfAbsent('notes', () => '');
-    }
-
-    data.putIfAbsent('assets', () => <dynamic>[]);
-    for (final row in _rows(data, 'assets')) {
-      row.putIfAbsent('currency', () => 'EGP');
-      row.putIfAbsent('notes', () => '');
-    }
-
-    // v9: category icon
-    for (final row in _rows(data, 'categories')) {
-      row.putIfAbsent('icon_code_point', () => 0);
-      row.putIfAbsent('order_index', () => 0);
-    }
-
-    // v8: budgets and recurring_history
-    data.putIfAbsent('budgets', () => <dynamic>[]);
-    for (final row in _rows(data, 'budgets')) {
-      row.putIfAbsent('period', () => 'monthly');
-    }
-    data.putIfAbsent('recurring_history', () => <dynamic>[]);
-
-    // v11: savings goals and contributions
-    data.putIfAbsent('savings_goals', () => <dynamic>[]);
-    for (final row in _rows(data, 'savings_goals')) {
-      row.putIfAbsent('is_completed', () => 0);
-      row.putIfAbsent('current_amount', () => 0.0);
-    }
-    data.putIfAbsent('savings_contributions', () => <dynamic>[]);
-    for (final row in _rows(data, 'savings_contributions')) {
-      row.putIfAbsent('note', () => '');
-      row.putIfAbsent('type', () => 'contribution');
-    }
-
-    // v19: loans and loan_payments
-    data.putIfAbsent('loans', () => <dynamic>[]);
-    for (final row in _rows(data, 'loans')) {
-      row.putIfAbsent('interest_rate', () => null);
-      row.putIfAbsent('account_id', () => null);
-      row.putIfAbsent('reminder_enabled', () => 0);
-      row.putIfAbsent('reminder_day', () => 1);
-      row.putIfAbsent('reminder_time', () => '09:00');
-      row.putIfAbsent('is_settled', () => 0);
-      row.putIfAbsent('notes', () => '');
-      row.putIfAbsent('created_at', () => DateTime.now().toIso8601String());
-    }
-    data.putIfAbsent('loan_payments', () => <dynamic>[]);
-    for (final row in _rows(data, 'loan_payments')) {
-      row.putIfAbsent('account_id', () => null);
-      row.putIfAbsent('notes', () => '');
-    }
-
-    data['_originalVersion'] = backupVersion;
-    if (data['settings'] is Map) {
-      final settings = data['settings'] as Map;
-      settings.putIfAbsent('languageCode', () => 'system');
-    }
-  }
-
-  static List<Map<String, dynamic>> _rows(
-      Map<String, dynamic> data, String table) {
-    final raw = data[table];
-    if (raw == null) {
-      data[table] = <Map<String, dynamic>>[];
-      return data[table] as List<Map<String, dynamic>>;
-    }
-    final list = (raw as List)
-        .whereType<Map>()
-        .map((e) => Map<String, dynamic>.from(e))
-        .toList();
-    data[table] = list;
-    return list;
-  }
-  // ── Net Worth Snapshots ──────────────────────────────────────────
-
+  // ── Net Worth Snapshots ───────────────────────────────────────────────
   static Future<List<NetWorthSnapshot>> getNetWorthSnapshots(
-      {DateTime? since}) async {
-    final db = await database;
-    final rows = await db.query('net_worth_snapshots',
-        where: since != null ? 'date >= ?' : null,
-        whereArgs:
-            since != null ? [DateFormat('yyyy-MM-dd').format(since)] : null,
-        orderBy: 'date ASC');
-    return rows.map(NetWorthSnapshot.fromMap).toList();
-  }
+          {DateTime? since, int? limit}) =>
+      AppDatabase.instance.getNetWorthSnapshots(since: since, limit: limit);
 
-  static Future<NetWorthSnapshot?> getNetWorthSnapshotForDate(
-      String date) async {
-    final db = await database;
-    final rows = await db.query('net_worth_snapshots',
-        where: 'date = ?', whereArgs: [date], limit: 1);
-    if (rows.isEmpty) return null;
-    return NetWorthSnapshot.fromMap(rows.first);
-  }
+  static Future<NetWorthSnapshot?> getNetWorthSnapshotForDate(String date) =>
+      AppDatabase.instance.getNetWorthSnapshotForDate(date);
 
-  static Future<void> insertNetWorthSnapshot(NetWorthSnapshot snap) async {
-    final db = await database;
-    await db.insert('net_worth_snapshots', snap.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace);
-  }
+  static Future<void> insertNetWorthSnapshot(NetWorthSnapshot snap) =>
+      AppDatabase.instance.insertNetWorthSnapshot(snap);
 }

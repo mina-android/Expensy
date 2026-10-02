@@ -1,5 +1,6 @@
 // lib/screens/main_shell.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../l10n/app_localizations.dart';
@@ -10,6 +11,7 @@ import 'accounts_screen.dart';
 import 'budget_screen.dart';
 import 'more_screen.dart';
 import '../utils/haptics.dart';
+import '../widgets/rounded_square_border.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -49,84 +51,190 @@ class _MainShellState extends State<MainShell> {
     }
   }
 
+  static Color _getTabColor(int index, bool isDark) {
+    switch (index) {
+      case 0: // Home
+        return isDark ? const Color(0xFF64B5F6) : const Color(0xFF1972E8);
+      case 1: // Transactions
+        return isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32);
+      case 2: // Recurring
+        return isDark ? const Color(0xFFBA68C8) : const Color(0xFF8E24AA);
+      case 3: // Accounts
+        return isDark ? const Color(0xFFFFB74D) : const Color(0xFFF57C00);
+      case 4: // Budgets
+        return isDark ? const Color(0xFFF06292) : const Color(0xFFD81B60);
+      case 5: // More
+        return isDark ? const Color(0xFF4DB6AC) : const Color(0xFF00897B);
+      default:
+        return isDark ? const Color(0xFF64B5F6) : const Color(0xFF1972E8);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return PopScope(
-      canPop: _index == 0,
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop) return;
-        final app = context.read<AppProvider>();
-        if (app.isTransactionSelectionMode) return;
-        setState(() {
-          _index = 0;
-          app.tabIndexNotifier.value = 0;
-        });
-      },
-      child: Scaffold(
-        extendBody: true,
-        body: FadeIndexedStack(index: _index, children: _screens),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final overlayStyle = SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+      statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+    );
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: overlayStyle,
+      child: PopScope(
+        canPop: _index == 0,
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop) return;
+          final app = context.read<AppProvider>();
+          if (app.isTransactionSelectionMode) return;
+          setState(() {
+            _index = 0;
+            app.tabIndexNotifier.value = 0;
+          });
+        },
+        child: Scaffold(
+          extendBody: true,
+          body: FadeIndexedStack(index: _index, children: _screens),
         bottomNavigationBar: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(48, 0, 48, 16),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(40),
-              child: NavigationBarTheme(
-                data: NavigationBarThemeData(
-                  height: 54,
-                  indicatorShape: const CircleBorder(),
-                  iconTheme: WidgetStateProperty.resolveWith((states) {
-                    return IconThemeData(
-                      size: 24,
-                      color: states.contains(WidgetState.selected)
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.onSurfaceVariant,
-                    );
-                  }),
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.12)
+                      : Colors.black.withValues(alpha: 0.08),
+                  width: 1.2,
                 ),
-                child: NavigationBar(
-                  labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
-                  selectedIndex: _index,
-                  animationDuration: const Duration(milliseconds: 120),
-                  onDestinationSelected: (i) {
-                    AppHaptics.tap(context, HapticStrength.selection);
-                    final app = context.read<AppProvider>();
-                    setState(() {
-                      _index = i;
-                      app.tabIndexNotifier.value = i;
-                    });
-                  },
-                  destinations: [
-                    NavigationDestination(
-                        icon: const Icon(Icons.home_outlined),
-                        selectedIcon: const Icon(Icons.home),
-                        label: l10n.main_home),
-                    NavigationDestination(
-                        icon: const Icon(Icons.receipt_long_outlined),
-                        selectedIcon: const Icon(Icons.receipt_long),
-                        label: l10n.main_transactions),
-                    NavigationDestination(
-                        icon: const Icon(Icons.repeat_rounded),
-                        selectedIcon: const Icon(Icons.repeat_rounded),
-                        label: l10n.main_recurring),
-                    NavigationDestination(
-                        icon: const Icon(Icons.account_balance_wallet_outlined),
-                        selectedIcon: const Icon(Icons.account_balance_wallet),
-                        label: l10n.main_accounts),
-                    NavigationDestination(
-                        icon: const Icon(Icons.pie_chart_outline_rounded),
-                        selectedIcon: const Icon(Icons.pie_chart_rounded),
-                        label: l10n.main_budgets),
-                    NavigationDestination(
-                        icon: const Icon(Icons.more_horiz_outlined),
-                        selectedIcon: const Icon(Icons.more_horiz),
-                        label: l10n.main_more),
-                  ],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
+                    blurRadius: 20,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Material(
+                elevation: 0,
+                borderRadius: BorderRadius.circular(22),
+                clipBehavior: Clip.antiAlias,
+                color: Colors.transparent,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(22),
+                  child: Theme(
+                    data: Theme.of(context).copyWith(
+                      splashFactory: NoSplash.splashFactory,
+                      highlightColor: Colors.transparent,
+                      splashColor: Colors.transparent,
+                    ),
+                    child: NavigationBarTheme(
+                      data: NavigationBarThemeData(
+                        height: 64,
+                        indicatorColor: _getTabColor(_index, isDark)
+                            .withValues(alpha: isDark ? 0.22 : 0.16),
+                        indicatorShape: const RoundedSquareBorder(
+                          borderRadius: 14,
+                          size: 40,
+                        ),
+                        overlayColor: WidgetStateProperty.all(Colors.transparent),
+                        iconTheme: WidgetStateProperty.resolveWith((states) {
+                          return const IconThemeData(size: 24);
+                        }),
+                      ),
+                      child: NavigationBar(
+                    labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+                    selectedIndex: _index,
+                    animationDuration: const Duration(milliseconds: 120),
+                    onDestinationSelected: (i) {
+                      AppHaptics.tap(context, HapticStrength.selection);
+                      final app = context.read<AppProvider>();
+                      setState(() {
+                        _index = i;
+                        app.tabIndexNotifier.value = i;
+                      });
+                    },
+                    destinations: [
+                      NavigationDestination(
+                        icon: Icon(
+                          Icons.home_outlined,
+                          color: _getTabColor(0, isDark).withValues(alpha: 0.6),
+                        ),
+                        selectedIcon: Icon(
+                          Icons.home,
+                          color: _getTabColor(0, isDark),
+                        ),
+                        label: l10n.main_home,
+                      ),
+                      NavigationDestination(
+                        icon: Icon(
+                          Icons.receipt_long_outlined,
+                          color: _getTabColor(1, isDark).withValues(alpha: 0.6),
+                        ),
+                        selectedIcon: Icon(
+                          Icons.receipt_long,
+                          color: _getTabColor(1, isDark),
+                        ),
+                        label: l10n.main_transactions,
+                      ),
+                      NavigationDestination(
+                        icon: Icon(
+                          Icons.repeat_rounded,
+                          color: _getTabColor(2, isDark).withValues(alpha: 0.6),
+                        ),
+                        selectedIcon: Icon(
+                          Icons.repeat_rounded,
+                          color: _getTabColor(2, isDark),
+                        ),
+                        label: l10n.main_recurring,
+                      ),
+                      NavigationDestination(
+                        icon: Icon(
+                          Icons.account_balance_wallet_outlined,
+                          color: _getTabColor(3, isDark).withValues(alpha: 0.6),
+                        ),
+                        selectedIcon: Icon(
+                          Icons.account_balance_wallet,
+                          color: _getTabColor(3, isDark),
+                        ),
+                        label: l10n.main_accounts,
+                      ),
+                      NavigationDestination(
+                        icon: Icon(
+                          Icons.pie_chart_outline_rounded,
+                          color: _getTabColor(4, isDark).withValues(alpha: 0.6),
+                        ),
+                        selectedIcon: Icon(
+                          Icons.pie_chart_rounded,
+                          color: _getTabColor(4, isDark),
+                        ),
+                        label: l10n.main_budgets,
+                      ),
+                      NavigationDestination(
+                        icon: Icon(
+                          Icons.more_horiz_outlined,
+                          color: _getTabColor(5, isDark).withValues(alpha: 0.6),
+                        ),
+                        selectedIcon: Icon(
+                          Icons.more_horiz,
+                          color: _getTabColor(5, isDark),
+                        ),
+                        label: l10n.main_more,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
         ),
+      ),
+      ),
+      ),
       ),
     );
   }

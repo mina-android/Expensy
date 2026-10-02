@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../providers/app_provider.dart';
 import '../models/models.dart';
 import '../theme/app_theme.dart';
+import '../utils/haptics.dart';
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
@@ -97,10 +98,20 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     _expBycat = {};
     _expBycatId = {};
     for (final t in _mTxs.where((t) => t.type == 'expense')) {
-      final cat = app.categoryById(t.categoryId);
-      final key = cat?.name ?? l10n.statistics_other;
-      _expBycat[key] = (_expBycat[key] ?? 0) + t.amount;
-      if (cat != null) _expBycatId[key] = cat.id;
+      if (app.isTransactionSplit(t.id)) {
+        final splits = app.getSplits(t.id);
+        for (final s in splits) {
+          final cat = app.categoryById(s.categoryId);
+          final key = cat?.name ?? l10n.statistics_other;
+          _expBycat[key] = (_expBycat[key] ?? 0) + s.amount;
+          if (cat != null) _expBycatId[key] = cat.id;
+        }
+      } else {
+        final cat = app.categoryById(t.categoryId);
+        final key = cat?.name ?? l10n.statistics_other;
+        _expBycat[key] = (_expBycat[key] ?? 0) + t.amount;
+        if (cat != null) _expBycatId[key] = cat.id;
+      }
     }
   }
 
@@ -124,12 +135,12 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     // Non-gold accounts for filter chips
     final filterableAccounts = app.accounts.where((a) => !a.isGold).toList();
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.statistics_statistics,
             style: const TextStyle(fontWeight: FontWeight.w800)),
-        backgroundColor: cs.primary,
-        foregroundColor: cs.onPrimary,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -145,7 +156,10 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     label: l10n.statistics_allAccounts,
                     color: const Color(0xFF6750A4),
                     selected: _filterAccountId == null,
-                    onTap: () => setState(() => _filterAccountId = null),
+                    onTap: () {
+                      AppHaptics.tap(context, HapticStrength.selection);
+                      setState(() => _filterAccountId = null);
+                    },
                   ),
                   ...filterableAccounts.map((a) => Padding(
                         padding: const EdgeInsets.only(left: 8),
@@ -153,7 +167,10 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                           label: a.name,
                           color: Color(a.colorValue),
                           selected: _filterAccountId == a.id,
-                          onTap: () => setState(() => _filterAccountId = a.id),
+                          onTap: () {
+                            AppHaptics.tap(context, HapticStrength.selection);
+                            setState(() => _filterAccountId = a.id);
+                          },
                         ),
                       )),
                 ],
@@ -163,19 +180,34 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           ],
 
           // ── Month nav ────────────────────────────────────────────────
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            IconButton(
-                icon: const Icon(Icons.chevron_left_rounded),
-                onPressed: () => setState(
-                    () => _month = DateTime(_month.year, _month.month - 1))),
-            Text(DateFormat('MMMM yyyy').format(_month),
-                style:
-                    const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
-            IconButton(
-                icon: const Icon(Icons.chevron_right_rounded),
-                onPressed: () => setState(
-                    () => _month = DateTime(_month.year, _month.month + 1))),
-          ]),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+              ),
+            ),
+            child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+              IconButton(
+                  icon: const Icon(Icons.chevron_left_rounded),
+                  onPressed: () {
+                    AppHaptics.tap(context, HapticStrength.selection);
+                    setState(() => _month = DateTime(_month.year, _month.month - 1));
+                  }),
+              Text(DateFormat('MMMM yyyy').format(_month),
+                  style:
+                      const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+              IconButton(
+                  icon: const Icon(Icons.chevron_right_rounded),
+                  onPressed: () {
+                    AppHaptics.tap(context, HapticStrength.selection);
+                    setState(() => _month = DateTime(_month.year, _month.month + 1));
+                  }),
+            ]),
+          ),
+          const SizedBox(height: 12),
 
           // ── Summary cards ─────────────────────────────────────────────
           Row(children: [
@@ -183,28 +215,38 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 child: _StatCard(
                     label: l10n.statistics_income,
                     value: fmt(_income),
-                    color: const Color(0xFF2E7D32))),
+                    color: const Color(0xFF2E7D32),
+                    isDark: isDark)),
             const SizedBox(width: 8),
             Expanded(
                 child: _StatCard(
                     label: l10n.statistics_expenses,
                     value: fmt(_expense),
-                    color: const Color(0xFFC62828))),
+                    color: const Color(0xFFC62828),
+                    isDark: isDark)),
             const SizedBox(width: 8),
             Expanded(
                 child: _StatCard(
                     label: l10n.statistics_net,
                     value: fmt(_income - _expense),
                     color: _income >= _expense
-                        ? const Color(0xFF1565C0)
-                        : const Color(0xFF785900))),
+                        ? (isDark ? const Color(0xFF64B5F6) : const Color(0xFF1565C0))
+                        : (isDark ? const Color(0xFFFFB74D) : const Color(0xFF785900)),
+                    isDark: isDark)),
           ]),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
 
           // ── 6-month bar chart ─────────────────────────────────────────
-          Card(
-              child: Padding(
-            padding: const EdgeInsets.all(16),
+          Container(
+            decoration: BoxDecoration(
+              color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(
@@ -263,113 +305,121 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
           // ── Expense pie ───────────────────────────────────────────────
           if (_expBycat.isNotEmpty)
-            Card(
-                child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(l10n.statistics_expensesByCategory,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w700, fontSize: 14)),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      height: 200,
-                      child: PieChart(PieChartData(
-                        sections:
-                            _expBycat.entries.toList().asMap().entries.map((e) {
-                          final colors = [
-                            const Color(0xFF1565C0),
-                            const Color(0xFFC62828),
-                            const Color(0xFF2E7D32),
-                            const Color(0xFF785900),
-                            const Color(0xFF4527A0),
-                            const Color(0xFF00838F),
-                            const Color(0xFF880E4F),
-                            const Color(0xFF37474F),
-                          ];
-                          final color = colors[e.key % colors.length];
-                          final pct = _expense > 0
-                              ? (e.value.value / _expense * 100)
-                              : 0.0;
-                          return PieChartSectionData(
-                            value: e.value.value,
-                            color: color,
-                            radius: 60,
-                            title: '${pct.toStringAsFixed(0)}%',
-                            titleStyle: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white),
-                          );
-                        }).toList(),
-                        sectionsSpace: 2,
-                        centerSpaceRadius: 32,
-                      )),
-                    ),
-                    const SizedBox(height: 10),
+            Container(
+              decoration: BoxDecoration(
+                color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(l10n.statistics_expensesByCategory,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w700, fontSize: 14)),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        height: 200,
+                        child: PieChart(PieChartData(
+                          sections:
+                              _expBycat.entries.toList().asMap().entries.map((e) {
+                            final colors = [
+                              const Color(0xFF1565C0),
+                              const Color(0xFFC62828),
+                              const Color(0xFF2E7D32),
+                              const Color(0xFF785900),
+                              const Color(0xFF4527A0),
+                              const Color(0xFF00838F),
+                              const Color(0xFF880E4F),
+                              const Color(0xFF37474F),
+                            ];
+                            final color = colors[e.key % colors.length];
+                            final pct = _expense > 0
+                                ? (e.value.value / _expense * 100)
+                                : 0.0;
+                            return PieChartSectionData(
+                              value: e.value.value,
+                              color: color,
+                              radius: 60,
+                              title: '${pct.toStringAsFixed(0)}%',
+                              titleStyle: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white),
+                            );
+                          }).toList(),
+                          sectionsSpace: 2,
+                          centerSpaceRadius: 32,
+                        )),
+                      ),
+                      const SizedBox(height: 10),
 
-                    // Legend with optional budget bar
-                    ..._expBycat.entries.toList().asMap().entries.map((e) {
-                      final colors = [
-                        const Color(0xFF1565C0),
-                        const Color(0xFFC62828),
-                        const Color(0xFF2E7D32),
-                        const Color(0xFF785900),
-                        const Color(0xFF4527A0),
-                        const Color(0xFF00838F),
-                        const Color(0xFF880E4F),
-                        const Color(0xFF37474F),
-                      ];
-                      final pct =
-                          _expense > 0 ? (e.value.value / _expense * 100) : 0.0;
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
-                        child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(children: [
-                                Container(
-                                    width: 10,
-                                    height: 10,
-                                    decoration: BoxDecoration(
-                                        color: colors[e.key % colors.length],
-                                        shape: BoxShape.circle)),
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: Text(e.value.key,
-                                      style: const TextStyle(fontSize: 11)),
-                                ),
-                                Text(
-                                  '${pct.toStringAsFixed(0)}%',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                    color: colors[e.key % colors.length],
+                      // Legend with optional budget bar
+                      ..._expBycat.entries.toList().asMap().entries.map((e) {
+                        final colors = [
+                          const Color(0xFF1565C0),
+                          const Color(0xFFC62828),
+                          const Color(0xFF2E7D32),
+                          const Color(0xFF785900),
+                          const Color(0xFF4527A0),
+                          const Color(0xFF00838F),
+                          const Color(0xFF880E4F),
+                          const Color(0xFF37474F),
+                        ];
+                        final pct =
+                            _expense > 0 ? (e.value.value / _expense * 100) : 0.0;
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(children: [
+                                  Container(
+                                      width: 10,
+                                      height: 10,
+                                      decoration: BoxDecoration(
+                                          color: colors[e.key % colors.length],
+                                          shape: BoxShape.circle)),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(e.value.key,
+                                        style: const TextStyle(fontSize: 11)),
+                                  ),
+                                  Text(
+                                    '${pct.toStringAsFixed(0)}%',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: colors[e.key % colors.length],
+                                    ),
+                                  ),
+                                ]),
+                                const SizedBox(height: 3),
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 14),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(3),
+                                    child: LinearProgressIndicator(
+                                      value: pct / 100,
+                                      minHeight: 3,
+                                      backgroundColor:
+                                          colors[e.key % colors.length]
+                                              .withValues(alpha: 0.1),
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          colors[e.key % colors.length]),
+                                    ),
                                   ),
                                 ),
                               ]),
-                              const SizedBox(height: 3),
-                              Padding(
-                                padding: const EdgeInsets.only(left: 14),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(3),
-                                  child: LinearProgressIndicator(
-                                    value: pct / 100,
-                                    minHeight: 3,
-                                    backgroundColor:
-                                        colors[e.key % colors.length]
-                                            .withValues(alpha: 0.1),
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                        colors[e.key % colors.length]),
-                                  ),
-                                ),
-                              ),
-                            ]),
-                      );
-                    }),
-                  ]),
-            )),
+                        );
+                      }),
+                    ]),
+              ),
+            ),
           const SizedBox(height: 40),
         ]),
       ),
@@ -380,20 +430,24 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 class _StatCard extends StatelessWidget {
   final String label, value;
   final Color color;
+  final bool isDark;
   const _StatCard(
-      {required this.label, required this.value, required this.color});
+      {required this.label,
+      required this.value,
+      required this.color,
+      required this.isDark});
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
         decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: color.withValues(alpha: 0.25))),
+            color: color.withValues(alpha: isDark ? 0.16 : 0.08),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: color.withValues(alpha: isDark ? 0.35 : 0.2))),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(label,
               style: TextStyle(
-                  fontSize: 11, color: color, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 3),
+                  fontSize: 11, color: color, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 4),
           Text(value,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

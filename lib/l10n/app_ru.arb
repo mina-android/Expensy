@@ -1,5 +1,4 @@
 {
-  "@@locale": "ru",
   "appTitle": "Дорогой",
   "settings_title": "Настройки",
   "settings_appearance": "Внешний вид",
@@ -39,17 +38,7 @@
   "settings_cancel": "Отменить",
   "settings_save": "Сохранить",
   "recurring_expenses": "Расходы ({count})",
-  "@recurring_expenses": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "recurring_incomeList": "Доход ({count})",
-  "@recurring_incomeList": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "recurring_monthly": "Ежемесячно",
   "recurring_weekly": "Еженедельно",
   "recurring_noRecurringExpenses": "Никаких периодических расходов",
@@ -58,48 +47,17 @@
   "recurring_addIncome": "Добавить доход",
   "recurring_tapPlusToAddOne": "Нажмите +, чтобы добавить",
   "recurring_fromOngoing": "С {date} · Продолжается",
-  "@recurring_fromOngoing": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "recurring_paidPayments": "{paid}/{total} paid",
-  "@recurring_paidPayments": {
-    "placeholders": {
-      "paid": {},
-      "total": {}
-    }
-  },
   "recurring_totalAmount": "Total: {amount}",
-  "@recurring_totalAmount": {
-    "placeholders": {
-      "amount": {}
-    }
-  },
   "recurring_overdue": "Просрочено!",
   "recurring_dueToday": "Срок оплаты сегодня",
   "recurring_dueInDays": "Due in {days}d",
-  "@recurring_dueInDays": {
-    "placeholders": {
-      "days": {}
-    }
-  },
   "recurring_edit": "Редактировать",
   "recurring_skipBtn": "Пропустить",
   "recurring_nextDate": "Next: {date}",
-  "@recurring_nextDate": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "recurring_pay": "Платить",
   "recurring_del": "Дель",
   "recurring_historyCount": "История ({count})",
-  "@recurring_historyCount": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "recurring_paymentHistory": "История платежей",
   "recurring_notificationPermissionDenied": "Разрешение на уведомление отклонено. Включите его в «Настройки» → «Приложения» → «Дорогие» → «Уведомления».",
   "recurring_remindMeAt": "Напомните мне",
@@ -108,17 +66,7 @@
   "recurring_name": "Имя",
   "recurring_amountPerPayment": "Сумма платежа",
   "recurring_firstDate": "First: {date}",
-  "@recurring_firstDate": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "recurring_lastDate": "Последний: {date}",
-  "@recurring_lastDate": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "recurring_noLastPaymentOngoing": "Без последнего платежа (текущий)",
   "accounts_refreshExchangeRates": "Обновить курсы валют",
   "accounts_noAccounts": "Нет аккаунтов",
@@ -127,11 +75,6 @@
   "accounts_exchangeRatesUnavailable": "Курсы валют недоступны (оффлайн). Балансы показаны в национальной валюте.",
   "accounts_unknown": "Неизвестно",
   "accounts_ratesUpdated": "Цены обновлены {timeStr} · Нажмите ↺, чтобы обновить",
-  "@accounts_ratesUpdated": {
-    "placeholders": {
-      "timeStr": {}
-    }
-  },
   "accounts_goldCaps": "ЗОЛОТО",
   "accounts_balance": "Баланс",
   "accounts_income": "Доход",
@@ -140,11 +83,6 @@
   "accounts_value": "Значение",
   "accounts_karat": "Карат",
   "accounts_pure": "{percentage}% pure",
-  "@accounts_pure": {
-    "placeholders": {
-      "percentage": {}
-    }
-  },
   "accounts_weightLabel": "Вес",
   "accounts_perGram": "За грамм",
   "accounts_bank": "Банк",
@@ -164,17 +102,7 @@
   "accounts_fetchingGoldPrice": "Получение цены на золото…",
   "accounts_goldPriceUnavailable": "Цена на золото недоступна — проверьте подключение",
   "lended_person_owesYou": "{name} должен вам",
-  "@lended_person_owesYou": {
-    "placeholders": {
-      "name": {}
-    }
-  },
   "lended_person_youOwe": "You owe {name}",
-  "@lended_person_youOwe": {
-    "placeholders": {
-      "name": {}
-    }
-  },
   "lended_person_allSettledUp": "Все улажено",
   "lended_person_noRecordsYet": "Пока нет записей",
   "lended_person_tapPlusToLog": "Нажмите +, чтобы зарегистрировать деньги, одолженные или взятые в долг",
@@ -184,40 +112,19 @@
   "lended_person_borrowed": "Заимствованный",
   "lended_person_overdue": "Просрочено!",
   "lended_person_due": "Due {date}",
-  "@lended_person_due": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "lended_person_reminderAt": "Reminder at {time}",
-  "@lended_person_reminderAt": {
-    "placeholders": {
-      "time": {}
-    }
-  },
   "lended_person_notificationPermissionDenied": "Разрешение на уведомление отклонено. Включите его в «Настройки» → «Приложения» → «Дорогие» → «Уведомления».",
   "lended_person_remindMeAtPrompt": "Напомните мне",
   "lended_person_editRecord": "Редактировать запись",
   "lended_person_addRecord": "Добавить запись",
   "lended_person_amount": "Количество",
   "lended_person_dueColon": "Due: {date}",
-  "@lended_person_dueColon": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "lended_person_noDueDate": "Нет срока сдачи",
   "lended_person_setDueFirst": "Сначала установите дату сдачи",
   "lended_person_notifiedOnDue": "Вы будете уведомлены о дате сдачи",
   "lended_person_getNotifiedWhenDue": "Получите уведомление, когда это наступит",
   "lended_person_thatTimePassed": "Сегодняшнее время уже прошло — вскоре вы получите уведомление.",
   "lended_person_notificationFiresOn": "Уведомление сработает {date} в {time}.",
-  "@lended_person_notificationFiresOn": {
-    "placeholders": {
-      "date": {},
-      "time": {}
-    }
-  },
   "lended_person_saveChangesBtn": "Сохранить изменения",
   "lended_person_addRecordBtn": "Добавить запись",
   "transactions_searchTransactions": "Поиск транзакций...",
@@ -231,24 +138,9 @@
   "transactions_today": "Сегодня",
   "transactions_yesterday": "Вчера",
   "transactions_lentTo": "Lent to {name}",
-  "@transactions_lentTo": {
-    "placeholders": {
-      "name": {}
-    }
-  },
   "transactions_borrowedFrom": "Borrowed from {name}",
-  "@transactions_borrowedFrom": {
-    "placeholders": {
-      "name": {}
-    }
-  },
   "transactions_unknown": "Неизвестно",
   "transactions_due": "Due {date}",
-  "@transactions_due": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "transactions_unsettled": "Неустроенный",
   "onboarding_restoreFailed": "Восстановление не удалось: возможно, файл поврежден или не является дорогой резервной копией.",
   "onboarding_continue": "Продолжить",
@@ -310,6 +202,59 @@
   "budget_ofAmount": "of {amount}",
   "budget_saveChanges": "Сохранить изменения",
   "budget_budget": "Бюджет",
+  "budget_rollover": "Перенос остатка (Конверты)",
+  "budget_rolloverDesc": "Переносить неизрасходованный остаток или перерасход на следующий период",
+  "budget_rolloverBadge": "Перенос",
+  "budget_base": "Базовый: {amount}",
+  "budget_rolloverFrom": "Перенос ({period}): {amount}",
+  "budget_totalAvailable": "Всего доступно: {amount}",
+  "budget_lastWeek": "Прошлая неделя",
+  "pacing_dailyBudget": "Безопасный расход",
+  "pacing_safeToSpend": "Безопасный расход: {amount}/день (осталось {days} дн.)",
+  "pacing_caution": "Быстрый темп — ограничьте до {amount}/день",
+  "pacing_overPaced": "Предупреждение о темпе — снизьте траты, чтобы уложиться в бюджет",
+  "pacing_budgetExhausted": "Бюджет исчерпан — дневной лимит отсутствует",
+  "pacing_onTrack": "По графику",
+  "pacing_fast": "Быстрый темп",
+  "pacing_alert": "Контроль темпа",
+  "pacing_daysLeft": "Осталось {days} дн.",
+  "pacing_setBudgetPrompt": "Нажмите, чтобы установить лимит бюджета →",
+  "pacing_dailyAvgPace": "Дневной темп",
+  "pacing_perDay": "{amount} / день",
+  "calendar_title": "Финансовый календарь",
+  "calendar_subtitle": "Тепловая карта расходов и сроки платежей",
+  "calendar_zeroSpendDays": "{count} дней без трат",
+  "calendar_zeroSpendDayTitle": "День без расходов! 🎉",
+  "calendar_zeroSpendDayDesc": "Отличная финансовая дисциплина: сегодня расходов нет.",
+  "calendar_billsDue": "Предстоящие счета и подписки",
+  "calendar_loansDue": "Сроки платежей по кредитам",
+  "calendar_lendedDue": "Ожидаемые возвраты долгов",
+  "calendar_dayTransactions": "Транзакции ({count})",
+  "calendar_noActivity": "В этот день операций и платежей не было",
+  "calendar_today": "Сегодня",
+  "calendar_averageDaily": "Среднесуточно: {amount}",
+  "wrapped_title": "Expensy Wrapped",
+  "wrapped_bannerTitle": "Ваш итог за {month} готов!",
+  "wrapped_bannerSub": "Нажмите, чтобы увидеть вашу финансовую историю",
+  "wrapped_theBigPicture": "Общая картина",
+  "wrapped_howMoneyMoved": "Вот как двигались ваши деньги в {month}",
+  "wrapped_totalInflow": "Всего доходов",
+  "wrapped_totalOutflow": "Всего расходов",
+  "wrapped_netSavings": "Чистые сбережения",
+  "wrapped_savingsRate": "Норма сбережений: {rate}%",
+  "wrapped_topCategoryTitle": "Куда ушли деньги?",
+  "wrapped_topCategorySub": "Главной категорией расходов была {category}",
+  "wrapped_topCategoryShare": "{percent}% от общих расходов",
+  "wrapped_biggestSplurgeTitle": "Крупнейшая трата",
+  "wrapped_biggestSplurgeSub": "Ваш самый крупный расход за месяц",
+  "wrapped_noSplurge": "Без лишних трат! В этом месяце не было расходов.",
+  "wrapped_heroHabitTitle": "Геройская привычка",
+  "wrapped_zeroSpendAchieved": "{count} дней без трат",
+  "wrapped_heroHabitDesc": "Вы провели {count} дней с нулевыми тратами. Отличная финансовая дисциплина!",
+  "wrapped_receiptTitle": "Месячная выписка",
+  "wrapped_obscureToggle": "Скрыть суммы для отправки",
+  "wrapped_showToggle": "Показать суммы",
+  "wrapped_replay": "Повторить историю",
   "insights_other": "Другое",
   "insights_noDataYet": "Данных пока нет",
   "insights_addSomeTransactions": "Добавьте несколько транзакций, чтобы увидеть статистику",
@@ -387,6 +332,17 @@
   "wishlist_notesOptional": "Примечания (необязательно)",
   "wishlist_saveChanges": "Сохранить изменения",
   "wishlist_addItem": "Добавить элемент",
+  "wishlist_fundThisItem": "Копить на товар",
+  "wishlist_funded": "{percent}% накоплено ({saved} / {target})",
+  "wishlist_goalAchieved": "Цель достигнута — готово к покупке!",
+  "wishlist_buyNow": "Купить сейчас",
+  "wishlist_purchaseTitle": "Купить товар из вишлиста",
+  "wishlist_purchasePrompt": "Хотите записать расход и списать сумму со счета?",
+  "wishlist_recordAndDeduct": "Записать и списать",
+  "wishlist_markPurchasedOnly": "Только отметить как купленное",
+  "wishlist_itemPurchased": "«{name}» отмечено как купленное!",
+  "wishlist_viewGoal": "Открыть цель накопления",
+  "savings_linkedWishlist": "Связано с вишлистом: {item}",
   "lended_theyOweMe": "Они мне должны",
   "lended_iOweThem": "Я им должен",
   "lended_net": "Чистая",
@@ -442,6 +398,8 @@
   "accounts_goldPurityKarat": "Проба золота (Карат)",
   "accounts_weight": "Вес",
   "accounts_excludeFromTotalBala": "Исключить из общего баланса",
+  "accounts_dontLinkToCard": "Не связывать с картой",
+  "accounts_dontLinkToCardDesc": "Управлять балансом вручную и запретить привязку карт",
   "accounts_color": "Цвет",
   "accounts_liveGoldValue": "Текущая стоимость золота",
   "accounts_enterWeightAboveToSe": "Введите вес выше, чтобы увидеть стоимость",
@@ -484,11 +442,38 @@
   "export_exportTransactions": "Экспорт транзакций",
   "export_dateRange": "Диапазон дат",
   "export_formatExcelXlsx": "Формат: Excel (.xlsx)",
+  "export_exportAsPdf": "Экспорт в отчет PDF",
+  "export_formatPdf": "Формат: Финансовый отчет PDF (.pdf)",
+  "export_pdfGenerating": "Создание PDF...",
+  "export_pdfTitle": "Финансовый отчет",
+  "export_pdfSummary": "Общая сводка",
+  "export_pdfInflow": "Всего доходов",
+  "export_pdfOutflow": "Всего расходов",
+  "export_pdfNet": "Чистые сбережения",
+  "export_pdfSavingsRate": "Норма сбережений",
+  "export_pdfCategoryBreakdown": "Распределение по категориям",
+  "export_pdfTransactions": "Детализированные операции",
+  "export_pdfNetWorthBreakdown": "Активы и обязательства",
+  "export_pdfShare": "Поделиться отчетом",
+  "export_pdfPrint": "Печать / Предпросмотр",
+  "export_pdfGeneratedBy": "Создано в Expensy • Конфиденциально и офлайн",
   "home_totalBalance": "Общий баланс",
   "home_accounts": "Счета",
   "home_recentTransactions": "Последние транзакции",
   "home_noTransactionsYet": "Транзакций пока нет",
   "home_add": "Добавить",
+  "home_goodMorning": "Доброе утро",
+  "home_goodAfternoon": "Добрый день",
+  "home_goodEvening": "Добрый вечер",
+  "home_transferAction": "Перевод",
+  "home_insightsAction": "Аналитика",
+  "home_calendarAction": "Календарь",
+  "home_forecastAction": "Прогноз",
+  "home_manage": "Управление",
+  "home_seeAll": "Все",
+  "home_addAccount": "Добавить счет",
+  "home_monthlyOverview": "Ежемесячный обзор",
+  "home_savingsRate": "Норма сбережений",
   "insights_insights": "Аналитика",
   "lended_person_deletePerson": "Удалить человека",
   "lended_person_editPerson": "Редактировать человека",
@@ -568,17 +553,7 @@
   "onboarding_chooseLanguage": "Выберите язык",
   "error_required": "Это поле обязательно для заполнения",
   "recurring_subscriptions": "Подписки ({count})",
-  "@recurring_subscriptions": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "recurring_installments": "Рассрочка ({count})",
-  "@recurring_installments": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "recurring_recurringType": "Повторяющийся тип",
   "recurring_subscription": "Подписка",
   "recurring_installment": "Рассрочка",
@@ -660,5 +635,154 @@
   "yearly_noData": "Нет запланированных операций",
   "yearly_noDataSub": "Добавьте регулярные платежи или кредиты для просмотра прогноза",
   "budget_addBudget": "Добавить бюджет",
-  "budget_addGoal": "Добавить финансовую цель"
+  "budget_addGoal": "Добавить финансовую цель",
+  "split_transactions_title": "Разделить категории",
+  "split_transactions_badge": "Разделено",
+  "split_transactions_addSplit": "Добавить часть",
+  "split_transactions_removeSplit": "Удалить часть",
+  "split_transactions_allocated": "Распределено",
+  "split_transactions_remaining": "Остаток",
+  "split_transactions_fillRemaining": "Заполнить остаток",
+  "split_transactions_breakdown": "Детали разделения",
+  "split_transactions_mismatchError": "Сумма частей должна быть равна общей сумме.",
+  "netWorth_title": "Чистый капитал",
+  "netWorth_subtitle": "Отслеживайте активы, обязательства и капитал со временем",
+  "netWorth_current": "Текущий чистый капитал",
+  "netWorth_trend": "Динамика чистого капитала",
+  "netWorth_totalAssets": "Всего активов",
+  "netWorth_totalLiabilities": "Всего обязательств",
+  "netWorth_liquidCash": "Наличные и банковские счета",
+  "netWorth_goldValuation": "Физическое золото",
+  "netWorth_fixedAssets": "Имущество и инвестиции",
+  "netWorth_moneyLent": "Одолженные деньги (Дебиторка)",
+  "netWorth_creditDebt": "Кредитные карты и овердрафт",
+  "netWorth_loanDebt": "Кредиты к выплате",
+  "netWorth_moneyBorrowed": "Взятые в долг деньги (Кредиторка)",
+  "netWorth_assetBreakdown": "Структура активов",
+  "netWorth_liabilityBreakdown": "Структура обязательств",
+  "netWorth_noHistory": "История капитала будет накапливаться автоматически по мере сохранения ежедневных снимков.",
+  "netWorth_debtRatio": "Коэффициент долга",
+  "netWorth_quickActions": "Быстрые действия",
+  "netWorth_history": "История снимков",
+  "creditCard_utilization": "Использование кредита",
+  "creditCard_availableCredit": "Доступно",
+  "creditCard_limit": "Лимит",
+  "creditCard_statementBalance": "Сумма к оплате по выписке",
+  "creditCard_unbilledBalance": "Не выставлено",
+  "creditCard_payBill": "Оплатить долг по карте",
+  "creditCard_allCaughtUp": "Все оплачено! Задолженность отсутствует",
+  "creditCard_payBillTitle": "Оплата задолженности по карте",
+  "creditCard_payFromAccount": "Счет списания",
+  "creditCard_paymentAmount": "Сумма платежа",
+  "creditCard_fullStatement": "Сумма по выписке",
+  "creditCard_fullBalance": "Общий долг",
+  "creditCard_minPayment": "Минимальный платеж",
+  "creditCard_customAmount": "Другая сумма",
+  "creditCard_paymentSuccess": "Оплачено {amount} по карте {cardName}",
+  "creditCard_insufficientFunds": "Сумма превышает доступный остаток",
+  "creditCard_invalidAmount": "Пожалуйста, введите корректную сумму",
+  "onboarding_skipForNow": "Пропустить сейчас",
+  "add_transaction_possibleDuplicate": "Возможный дубликат",
+  "add_transaction_goBack": "Назад",
+  "add_transaction_saveAnyway": "Все равно сохранить",
+  "loans_confirmDeleteLoan": "Вы уверены, что хотите удалить этот кредит и все платежи по нему?",
+  "loans_deletePayment": "Удалить платеж",
+  "loans_confirmDeletePayment": "Вы уверены, что хотите удалить эту запись о платеже?",
+  "budget_leftToSpend": "Остаток на расходы",
+  "more_sectionTools": "Финансовые инструменты",
+  "more_sectionAnalytics": "Аналитика и отчеты",
+  "more_sectionPreferences": "Настройки и данные",
+  "onboarding_addCard": "Добавить карту",
+  "onboarding_skipCardDesc": "Вы можете пропустить этот шаг, если не хотите добавлять карту прямо сейчас.",
+  "onboarding_cardNameLabel": "Название карты (напр., Visa Platinum)",
+  "onboarding_debitCard": "Дебетовая карта",
+  "onboarding_creditLimit": "Кредитный лимит",
+  "onboarding_amountUsed": "Использовано",
+  "accounts_cardHolderOptional": "Имя держателя карты (необязательно)",
+  "accounts_last4Digits": "Последние 4 цифры",
+  "accounts_expiryDate": "Срок действия (ММ/ГГ)",
+  "accounts_creditLimitOptional": "Кредитный лимит (необязательно)",
+  "accounts_minPaymentOptional": "Минимальный платеж (необязательно)",
+  "accounts_statementDayOptional": "День выписки (необязательно)",
+  "accounts_statementDayExample": "напр. 20",
+  "accounts_dueDayOptional": "День платежа (необязательно)",
+  "accounts_dueDayExample": "напр. 10",
+  "accounts_linkedAccountOptional": "Связанный банковский счет (необязательно)",
+  "accounts_excludeCardBalance": "Исключить баланс карты из баланса счета",
+  "accounts_excludeCardBalanceDesc": "Баланс этой карты не будет прибавляться к связанному банковскому счету.",
+  "accounts_cardHolderHeader": "ДЕРЖАТЕЛЬ КАРТЫ",
+  "accounts_expHeader": "ДЕЙСТВИТЕЛЬНА ДО",
+  "accounts_notifyOnDueDate": "Вы получите напоминание в день платежа",
+  "accounts_notifyWhenDue": "Получать напоминания о сроках оплаты",
+  "accounts_remind2DaysBeforeDesc": "Получить предварительное напоминание за 2 дня до срока оплаты",
+  "accounts_targetSaved": "Цель / Накоплено",
+  "transactions_selectedCount": "{count, plural, =1{Выбран 1} other{Выбрано: {count}}}",
+  "transactions_changeCategory": "Изменить категорию",
+  "transactions_deleteSelected": "Удалить выбранные",
+  "transactions_advancedFilters": "Расширенные фильтры",
+  "transactions_clearAll": "Сбросить все",
+  "transactions_amountRange": "Диапазон суммы",
+  "transactions_minAmount": "Мин. сумма",
+  "transactions_maxAmount": "Макс. сумма",
+  "transactions_applyFilters": "Применить фильтры",
+  "presets_new": "Новый",
+  "presets_presetName": "Название шаблона (напр., Утренний кофе)",
+  "presets_defaultAmount": "Сумма по умолчанию",
+  "savings_goalName": "Название цели",
+  "savings_goalNameHint": "напр., Новая машина, Отпуск",
+  "savings_targetAmount": "Целевая сумма",
+  "savings_targetDateOptional": "Целевая дата (необязательно)",
+  "savings_selectDate": "Выбрать дату",
+  "savings_amountRequired": "Необходимо указать сумму",
+  "savings_noteOptional": "Заметка (необязательно)",
+  "loans_skipInstallment": "Пропустить следующий платеж по кредиту?",
+  "recurring_confirmDelete": "Вы уверены, что хотите удалить этот регулярный платеж?",
+  "export_formatExcelOption": "Excel (.xlsx)",
+  "export_formatPdfOption": "Отчет PDF",
+  "export_pdfNoTransactions": "За указанный период операций не обнаружено.",
+  "savings_saved": "Сэкономлено",
+  "export_pdfDate": "Дата",
+  "export_pdfDescription": "Описание",
+  "accounts_noCardsYet": "Нет карт",
+  "accounts_tapToAddCard": "Нажмите +, чтобы добавить первую карту",
+  "savings_noGoalsYet": "Нет целей накопления",
+  "savings_tapToAddGoal": "Нажмите +, чтобы установить новую цель",
+  "netWorth_recordSnapshot": "Записать снимок",
+  "netWorth_snapshotRecorded": "Снимок записан",
+  "savings_noContributionsYet": "Взносов пока нет",
+  "creditCard_closesStatementBillingCycle": "Закрывает текущий расчетный период выписки",
+  "creditCard_clearsTotalDebt": "Полностью погашает общую задолженность по карте",
+  "creditCard_requiredMinPayment": "Обязательный минимальный платеж",
+  "creditCard_specifyCustomAmount": "Укажите произвольную сумму платежа",
+  "common_itemDeleted": "\"{name}\" удалено",
+  "common_accountDeleted": "Счет удален",
+  "common_cardDeleted": "Карта удалена",
+  "common_transactionDeleted": "Транзакция удалена",
+  "common_recordDeleted": "Запись удалена",
+  "common_paymentDeleted": "Платеж удален",
+  "loans_skippedInstallment": "Взнос по кредиту пропущен",
+  "loans_loggedPayment": "Зафиксирован платеж на сумму {amount}",
+  "loans_notificationsPermissionRequired": "Требуется разрешение на уведомления",
+  "creditCard_selectFundingAccount": "Пожалуйста, выберите счет списания",
+  "presets_presetUpdated": "Шаблон обновлен",
+  "presets_presetAdded": "Шаблон добавлен",
+  "presets_presetDeleted": "Шаблон удален",
+  "transactions_deletedCount": "{count, plural, =1{Удален 1 элемент} few{Удалено {count} элемента} many{Удалено {count} элементов} other{Удалено {count} элементов}}",
+  "split_atLeastTwoCategories": "Для разделения требуется не менее 2 категорий.",
+  "split_categoryAndAmountRequired": "Каждая позиция разделения должна иметь категорию и сумму > 0.",
+  "presets_addQuickPresets": "Добавить быстрые шаблоны в 1 касание",
+  "presets_quickPresetsDesc": "Записывайте частые траты (кофе, транспорт, обед) одним касанием",
+  "presets_loggedPreset": "Записано: {title} ({amount})",
+  "presets_createPreset": "Создать шаблон",
+  "presets_editQuickPreset": "Редактировать быстрый шаблон",
+  "presets_newQuickPreset": "Новый быстрый шаблон",
+  "savings_addContribution": "Добавить взнос",
+  "savings_withdrawFromGoal": "Вывести из цели",
+  "savings_contribution": "Взнос",
+  "savings_withdrawal": "Снятие",
+  "savings_unknownAccount": "Неизвестный счет",
+  "savings_fromAccount": "Со счета",
+  "savings_toAccount": "На счет",
+  "presets_quickLog": "Быстрая запись",
+  "accounts_dueOnDay": "Срок: {day}-го числа"
 }

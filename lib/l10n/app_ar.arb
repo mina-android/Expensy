@@ -1,5 +1,4 @@
 {
-  "@@locale": "ar",
   "appTitle": "نفقة",
   "settings_title": "الإعدادات",
   "settings_appearance": "المظهر",
@@ -39,17 +38,7 @@
   "settings_cancel": "إلغاء",
   "settings_save": "حفظ",
   "recurring_expenses": "المصروفات ({count})",
-  "@recurring_expenses": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "recurring_incomeList": "الدخل ({count})",
-  "@recurring_incomeList": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "recurring_monthly": "شهرياً",
   "recurring_weekly": "أسبوعياً",
   "recurring_noRecurringExpenses": "لا توجد مصروفات متكررة",
@@ -58,48 +47,17 @@
   "recurring_addIncome": "إضافة دخل",
   "recurring_tapPlusToAddOne": "انقر على + لإضافة واحد",
   "recurring_fromOngoing": "من {date} · مستمر",
-  "@recurring_fromOngoing": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "recurring_paidPayments": "تَمَّ سداد {paid}/{total}",
-  "@recurring_paidPayments": {
-    "placeholders": {
-      "paid": {},
-      "total": {}
-    }
-  },
   "recurring_totalAmount": "الإجمالي: {amount}",
-  "@recurring_totalAmount": {
-    "placeholders": {
-      "amount": {}
-    }
-  },
   "recurring_overdue": "متأخر!",
   "recurring_dueToday": "مستحق اليوم",
   "recurring_dueInDays": "مستحق خلال {days} أيام",
-  "@recurring_dueInDays": {
-    "placeholders": {
-      "days": {}
-    }
-  },
   "recurring_edit": "تعديل",
   "recurring_skipBtn": "تخطي",
   "recurring_nextDate": "التالي: {date}",
-  "@recurring_nextDate": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "recurring_pay": "دفع",
   "recurring_del": "حذف",
   "recurring_historyCount": "السجل ({count})",
-  "@recurring_historyCount": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "recurring_paymentHistory": "سجل الدفعات",
   "recurring_notificationPermissionDenied": "تم رفض إذن الإشعارات. قم بتمكينه في الإعدادات → التطبيقات → Expensy → الإشعارات.",
   "recurring_remindMeAt": "ذكرني في",
@@ -108,17 +66,7 @@
   "recurring_name": "الاسم",
   "recurring_amountPerPayment": "المبلغ لكل دفعة",
   "recurring_firstDate": "الأول: {date}",
-  "@recurring_firstDate": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "recurring_lastDate": "الأخير: {date}",
-  "@recurring_lastDate": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "recurring_noLastPaymentOngoing": "لا توجد دفعة أخيرة (مستمر)",
   "accounts_refreshExchangeRates": "تحديث أسعار الصرف",
   "accounts_noAccounts": "لا توجد حسابات",
@@ -127,11 +75,6 @@
   "accounts_exchangeRatesUnavailable": "أسعار الصرف غير متوفرة (غير متصل). تُعرض الأرصدة بالعملة المحلية.",
   "accounts_unknown": "غير معروف",
   "accounts_ratesUpdated": "تم تحديث الأسعار {timeStr} · انقر ↺ للتحديث",
-  "@accounts_ratesUpdated": {
-    "placeholders": {
-      "timeStr": {}
-    }
-  },
   "accounts_goldCaps": "ذهب",
   "accounts_balance": "الرصيد",
   "accounts_income": "الدخل",
@@ -140,11 +83,6 @@
   "accounts_value": "القيمة",
   "accounts_karat": "عيار",
   "accounts_pure": "نقي بنسبة {percentage}%",
-  "@accounts_pure": {
-    "placeholders": {
-      "percentage": {}
-    }
-  },
   "accounts_weightLabel": "الوزن",
   "accounts_perGram": "لكل جرام",
   "accounts_bank": "بنك",
@@ -164,17 +102,7 @@
   "accounts_fetchingGoldPrice": "جاري جلب سعر الذهب...",
   "accounts_goldPriceUnavailable": "سعر الذهب غير متوفر — تحقق من اتصالك",
   "lended_person_owesYou": "{name} مدين لك",
-  "@lended_person_owesYou": {
-    "placeholders": {
-      "name": {}
-    }
-  },
   "lended_person_youOwe": "أنت مدين لـ {name}",
-  "@lended_person_youOwe": {
-    "placeholders": {
-      "name": {}
-    }
-  },
   "lended_person_allSettledUp": "سُددت بالكامل",
   "lended_person_noRecordsYet": "لا توجد سجلات بعد",
   "lended_person_tapPlusToLog": "انقر على + لتسجيل الأموال التي أقرضتها أو اقترضتها",
@@ -184,40 +112,19 @@
   "lended_person_borrowed": "اقترضت",
   "lended_person_overdue": "متأخر!",
   "lended_person_due": "مستحق في {date}",
-  "@lended_person_due": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "lended_person_reminderAt": "تذكير في {time}",
-  "@lended_person_reminderAt": {
-    "placeholders": {
-      "time": {}
-    }
-  },
   "lended_person_notificationPermissionDenied": "تم رفض إذن الإشعارات. قم بتمكينه في الإعدادات → التطبيقات → Expensy → الإشعارات.",
   "lended_person_remindMeAtPrompt": "ذكرني في",
   "lended_person_editRecord": "تعديل السجل",
   "lended_person_addRecord": "إضافة سجل",
   "lended_person_amount": "المبلغ",
   "lended_person_dueColon": "الاستحقاق: {date}",
-  "@lended_person_dueColon": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "lended_person_noDueDate": "لا يوجد تاريخ استحقاق",
   "lended_person_setDueFirst": "قم بتعيين تاريخ استحقاق أولاً",
   "lended_person_notifiedOnDue": "سيتم إعلامك في تاريخ الاستحقاق",
   "lended_person_getNotifiedWhenDue": "احصل على إشعار عند الاستحقاق",
   "lended_person_thatTimePassed": "لقد مر هذا الوقت اليوم — سيتم إعلامك قريبًا بدلاً من ذلك.",
   "lended_person_notificationFiresOn": "يتم إطلاق الإشعار في {date} الساعة {time}.",
-  "@lended_person_notificationFiresOn": {
-    "placeholders": {
-      "date": {},
-      "time": {}
-    }
-  },
   "lended_person_saveChangesBtn": "حفظ التغييرات",
   "lended_person_addRecordBtn": "إضافة سجل",
   "transactions_searchTransactions": "البحث في المعاملات...",
@@ -231,24 +138,9 @@
   "transactions_today": "اليوم",
   "transactions_yesterday": "أمس",
   "transactions_lentTo": "أقرضت إلى {name}",
-  "@transactions_lentTo": {
-    "placeholders": {
-      "name": {}
-    }
-  },
   "transactions_borrowedFrom": "اقترضت من {name}",
-  "@transactions_borrowedFrom": {
-    "placeholders": {
-      "name": {}
-    }
-  },
   "transactions_unknown": "غير معروف",
   "transactions_due": "مستحق في {date}",
-  "@transactions_due": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "transactions_unsettled": "غير مُسَوّى",
   "onboarding_restoreFailed": "فشلت الاستعادة: قد يكون الملف تالفًا أو ليس نسخة احتياطية من Expensy.",
   "onboarding_continue": "متابعة",
@@ -311,6 +203,59 @@
   "budget_ofAmount": "من {amount}",
   "budget_saveChanges": "حفظ التغييرات",
   "budget_budget": "الميزانية",
+  "budget_rollover": "ترحيل الفائض (المظاريف)",
+  "budget_rolloverDesc": "ترحيل الفائض أو العجز غير المستخدم إلى الفترة التالية",
+  "budget_rolloverBadge": "ترحيل",
+  "budget_base": "الأساس: {amount}",
+  "budget_rolloverFrom": "ترحيل ({period}): {amount}",
+  "budget_totalAvailable": "الإجمالي المتاح: {amount}",
+  "budget_lastWeek": "الأسبوع الماضي",
+  "pacing_dailyBudget": "معدل الصرف الآمن",
+  "pacing_safeToSpend": "الصرف الآمن: {amount}/يوم (متبقي {days} أيام)",
+  "pacing_caution": "صرف متسارع — اضبط الصرف إلى {amount}/يوم",
+  "pacing_overPaced": "تنبيه سرعة الصرف — خفف الصرف للبقاء ضمن الميزانية",
+  "pacing_budgetExhausted": "استُنفدت الميزانية — لا يوجد مخصص يومي متبقٍ",
+  "pacing_onTrack": "ضمن المعدل",
+  "pacing_fast": "صرف متسارع",
+  "pacing_alert": "تنبيه الصرف",
+  "pacing_daysLeft": "متبقي {days} أيام",
+  "pacing_setBudgetPrompt": "انقر لتعيين حدود الميزانية ←",
+  "pacing_dailyAvgPace": "المعدل اليومي",
+  "pacing_perDay": "{amount} / يوم",
+  "calendar_title": "التقويم المالي",
+  "calendar_subtitle": "خريطة المصروفات اليومية ومواعيد الاستحقاق",
+  "calendar_zeroSpendDays": "{count} أيام بدون إنفاق",
+  "calendar_zeroSpendDayTitle": "يوم بلا إنفاق! 🎉",
+  "calendar_zeroSpendDayDesc": "أحسنت! انضباط مالي رائع بدون أي مصروفات اليوم.",
+  "calendar_billsDue": "الفواتير والاشتراكات المستحقة",
+  "calendar_loansDue": "أقساط القروض المستحقة",
+  "calendar_lendedDue": "المستحقات المتوقع استردادها",
+  "calendar_dayTransactions": "المعاملات ({count})",
+  "calendar_noActivity": "لا توجد معاملات أو التزامات في هذا التاريخ",
+  "calendar_today": "اليوم",
+  "calendar_averageDaily": "المتوسط اليومي: {amount}",
+  "wrapped_title": "ملخص إكسبنسي",
+  "wrapped_bannerTitle": "ملخصك لشهر {month} جاهز!",
+  "wrapped_bannerSub": "انقر لاستكشاف قصتك المالية الشهرية",
+  "wrapped_theBigPicture": "الصورة الكبرى",
+  "wrapped_howMoneyMoved": "إليك حركة أموالك في {month}",
+  "wrapped_totalInflow": "إجمالي الدخل",
+  "wrapped_totalOutflow": "إجمالي المصروفات",
+  "wrapped_netSavings": "صافي المدخرات",
+  "wrapped_savingsRate": "معدل الادخار: {rate}%",
+  "wrapped_topCategoryTitle": "أين ذهبت أموالك؟",
+  "wrapped_topCategorySub": "أكبر فئة إنفاق كانت {category}",
+  "wrapped_topCategoryShare": "{percent}% من إجمالي إنفاقك",
+  "wrapped_biggestSplurgeTitle": "أكبر عملية شراء",
+  "wrapped_biggestSplurgeSub": "أكبر مصروف فردي قمت به هذا الشهر",
+  "wrapped_noSplurge": "لا يوجد إنفاق! لم تسجل أي مصروفات هذا الشهر.",
+  "wrapped_heroHabitTitle": "عادتك البطولية",
+  "wrapped_zeroSpendAchieved": "{count} أيام بدون إنفاق",
+  "wrapped_heroHabitDesc": "حققت {count} يوماً بدون أي مصروفات. انضباط مالي استثنائي!",
+  "wrapped_receiptTitle": "البيان الشهري",
+  "wrapped_obscureToggle": "إخفاء المبالغ للمشاركة",
+  "wrapped_showToggle": "إظهار المبالغ",
+  "wrapped_replay": "إعادة عرض القصة",
   "insights_other": "أخرى",
   "insights_noDataYet": "لا توجد بيانات بعد",
   "insights_addSomeTransactions": "أضف بعض المعاملات لرؤية الرؤى",
@@ -371,6 +316,9 @@
   "more_backupRestoreSub": "حفظ أو تحميل بياناتك",
   "more_settings": "الإعدادات",
   "more_settingsSub": "السمة والعملة والتفضيلات",
+  "more_sectionTools": "الأدوات المالية",
+  "more_sectionAnalytics": "التحليلات والرؤى",
+  "more_sectionPreferences": "التفضيلات والبيانات",
   "home_greeting": "مرحباً، {name} 👋",
   "home_there": "بك",
   "home_income": "الدخل",
@@ -388,6 +336,17 @@
   "wishlist_notesOptional": "ملاحظات (اختياري)",
   "wishlist_saveChanges": "حفظ التغييرات",
   "wishlist_addItem": "إضافة عنصر",
+  "wishlist_fundThisItem": "تمويل العنصر",
+  "wishlist_funded": "تم تمويل {percent}% ({saved} / {target})",
+  "wishlist_goalAchieved": "تم تحقيق الهدف — جاهز للشراء!",
+  "wishlist_buyNow": "شراء الآن",
+  "wishlist_purchaseTitle": "شراء عنصر من قائمة الرغبات",
+  "wishlist_purchasePrompt": "هل تريد تسجيل معاملة مصروف وخصم المبلغ من أحد الحسابات؟",
+  "wishlist_recordAndDeduct": "تسجيل وخصم",
+  "wishlist_markPurchasedOnly": "تحديد كمشترى فقط",
+  "wishlist_itemPurchased": "تم تحديد \"{name}\" كمشترى!",
+  "wishlist_viewGoal": "عرض هدف الادخار",
+  "savings_linkedWishlist": "مرتبط بقائمة الرغبات: {item}",
   "lended_theyOweMe": "هم مدينون لي",
   "lended_iOweThem": "أنا مدين لهم",
   "lended_net": "الصافي",
@@ -443,17 +402,7 @@
   "onboarding_chooseLanguage": "اختر اللغة",
   "error_required": "هذا الحقل مطلوب",
   "recurring_subscriptions": "الاشتراكات ({count})",
-  "@recurring_subscriptions": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "recurring_installments": "الأقساط ({count})",
-  "@recurring_installments": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "recurring_recurringType": "نوع التكرار",
   "recurring_subscription": "اشتراك",
   "recurring_installment": "قسط",
@@ -470,6 +419,8 @@
   "accounts_goldPurityKarat": "نقاء الذهب (عيار)",
   "accounts_weight": "الوزن",
   "accounts_excludeFromTotalBala": "استبعاد من إجمالي الرصيد",
+  "accounts_dontLinkToCard": "عدم الربط ببطاقة",
+  "accounts_dontLinkToCardDesc": "إدارة رصيد هذا الحساب يدويًا ومنع البطاقات من الارتباط به",
   "accounts_color": "اللون",
   "accounts_liveGoldValue": "قيمة الذهب المباشرة",
   "accounts_enterWeightAboveToSe": "أدخل الوزن أعلاه لمعرفة القيمة",
@@ -512,11 +463,38 @@
   "export_exportTransactions": "تصدير المعاملات",
   "export_dateRange": "نطاق التاريخ",
   "export_formatExcelXlsx": "التنسيق: Excel (.xlsx)",
+  "export_exportAsPdf": "تصدير كتقرير PDF",
+  "export_formatPdf": "الصيغة: تقرير مالي PDF (.pdf)",
+  "export_pdfGenerating": "جارٍ إنشاء ملف PDF...",
+  "export_pdfTitle": "التقرير المالي",
+  "export_pdfSummary": "الملخص التنفيذي",
+  "export_pdfInflow": "إجمالي الدخل",
+  "export_pdfOutflow": "إجمالي المصروفات",
+  "export_pdfNet": "صافي المدخرات",
+  "export_pdfSavingsRate": "معدل الادخار",
+  "export_pdfCategoryBreakdown": "تفصيل الفئات",
+  "export_pdfTransactions": "المعاملات المفصلة",
+  "export_pdfNetWorthBreakdown": "الأصول والالتزامات",
+  "export_pdfShare": "مشاركة التقرير",
+  "export_pdfPrint": "طباعة / معاينة",
+  "export_pdfGeneratedBy": "تم الإنشاء بواسطة إكسبنسي • خاص وبدون إنترنت",
   "home_totalBalance": "إجمالي الرصيد",
   "home_accounts": "الحسابات",
   "home_recentTransactions": "أحدث المعاملات",
   "home_noTransactionsYet": "لا توجد معاملات بعد",
   "home_add": "إضافة",
+  "home_goodMorning": "صباح الخير",
+  "home_goodAfternoon": "مساء الخير",
+  "home_goodEvening": "مساء الخير",
+  "home_transferAction": "تحويل",
+  "home_insightsAction": "تحليلات",
+  "home_calendarAction": "التقويم",
+  "home_forecastAction": "التوقعات",
+  "home_manage": "إدارة",
+  "home_seeAll": "عرض الكل",
+  "home_addAccount": "إضافة حساب",
+  "home_monthlyOverview": "نظرة شهرية عامة",
+  "home_savingsRate": "معدل الادخار",
   "insights_insights": "الرؤى",
   "lended_person_deletePerson": "حذف الشخص",
   "lended_person_editPerson": "تعديل الشخص",
@@ -661,5 +639,150 @@
   "yearly_noData": "لا يوجد نشاط متوقع حتى الآن",
   "yearly_noDataSub": "أضف مدفوعات متكررة أو قروض أو أموالاً مسبقة بتاريخ استحقاق لرؤية التوقعات",
   "budget_addBudget": "إضافة ميزانية",
-  "budget_addGoal": "إضافة هدف إدّخار"
+  "budget_addGoal": "إضافة هدف إدّخار",
+  "split_transactions_title": "تقسيم الفئات",
+  "split_transactions_badge": "مقسمة",
+  "split_transactions_addSplit": "إضافة تقسيم",
+  "split_transactions_removeSplit": "حذف التقسيم",
+  "split_transactions_allocated": "المخصص",
+  "split_transactions_remaining": "المتبقي",
+  "split_transactions_fillRemaining": "تعبئة المتبقي",
+  "split_transactions_breakdown": "تفاصيل التقسيم",
+  "split_transactions_mismatchError": "يجب أن يتطابق مجموع المبالغ المقسمة مع المبلغ الإجمالي.",
+  "netWorth_title": "صافي الثروة",
+  "netWorth_subtitle": "تتبع إجمالي الأصول والالتزامات والثروة عبر الوقت",
+  "netWorth_current": "صافي الثروة الحالي",
+  "netWorth_trend": "مخطط صافي الثروة",
+  "netWorth_totalAssets": "إجمالي الأصول",
+  "netWorth_totalLiabilities": "إجمالي الالتزامات",
+  "netWorth_liquidCash": "النقد والحسابات البنكية",
+  "netWorth_goldValuation": "الذهب الفعلي",
+  "netWorth_fixedAssets": "الممتلكات والاستثمارات",
+  "netWorth_moneyLent": "أموال مُقرضة (مستحقات)",
+  "netWorth_creditDebt": "بطاقات الائتمان والسحب على المكشوف",
+  "netWorth_loanDebt": "قروض مستحقة الدفع",
+  "netWorth_moneyBorrowed": "أموال مقترضة (ديون)",
+  "netWorth_assetBreakdown": "تفصيل الأصول",
+  "netWorth_liabilityBreakdown": "تفصيل الالتزامات",
+  "netWorth_noHistory": "سيتم بناء سجل صافي الثروة تلقائيًا بمرور الوقت مع تسجيل اللقطات اليومية.",
+  "netWorth_debtRatio": "نسبة الديون",
+  "netWorth_quickActions": "إجراءات سريعة",
+  "netWorth_history": "سجل اللقطات",
+  "creditCard_utilization": "نسبة استخدام الائتمان",
+  "creditCard_availableCredit": "المتاح",
+  "creditCard_limit": "الحد الائتماني",
+  "creditCard_statementBalance": "رصيد كشف الحساب",
+  "creditCard_unbilledBalance": "غير مفوتر",
+  "creditCard_payBill": "سداد فاتورة البطاقة",
+  "creditCard_allCaughtUp": "تم السداد بالكامل! لا توجد مبالغ مستحقة",
+  "creditCard_payBillTitle": "سداد فاتورة بطاقة الائتمان",
+  "creditCard_payFromAccount": "السداد من حساب",
+  "creditCard_paymentAmount": "مبلغ السداد",
+  "creditCard_fullStatement": "رصيد كشف الحساب",
+  "creditCard_fullBalance": "إجمالي الرصيد",
+  "creditCard_minPayment": "الحد الأدنى للدفع",
+  "creditCard_customAmount": "مبلغ مخصص",
+  "creditCard_paymentSuccess": "تم دفع {amount} لـ {cardName}",
+  "creditCard_insufficientFunds": "المبلغ يتجاوز الرصيد المتاح",
+  "creditCard_invalidAmount": "يرجى إدخال مبلغ سداد صحيح",
+  "onboarding_skipForNow": "التخطي الآن",
+  "add_transaction_possibleDuplicate": "معاملة مكررة محتملة",
+  "add_transaction_goBack": "رجوع",
+  "add_transaction_saveAnyway": "حفظ على أي حال",
+  "loans_confirmDeleteLoan": "هل أنت متأكد من حذف هذا القرض وجميع دفعاته؟",
+  "loans_deletePayment": "حذف الدفعة",
+  "loans_confirmDeletePayment": "هل أنت متأكد من حذف سجل هذه الدفعة؟",
+  "onboarding_addCard": "إضافة بطاقة",
+  "onboarding_skipCardDesc": "يمكنك تخطي هذا إذا كنت لا ترغب في إضافة بطاقة الآن.",
+  "onboarding_cardNameLabel": "اسم البطاقة (مثال: فيزا بلاتينيوم)",
+  "onboarding_debitCard": "بطاقة خصم",
+  "onboarding_creditLimit": "الحد الائتماني",
+  "onboarding_amountUsed": "المبلغ المستخدم",
+  "accounts_cardHolderOptional": "اسم حامل البطاقة (اختياري)",
+  "accounts_last4Digits": "آخر 4 أرقام",
+  "accounts_expiryDate": "تاريخ الانتهاء (شهر/سنة)",
+  "accounts_creditLimitOptional": "الحد الائتماني (اختياري)",
+  "accounts_minPaymentOptional": "الحد الأدنى للدفع (اختياري)",
+  "accounts_statementDayOptional": "يوم كشف الحساب (اختياري)",
+  "accounts_statementDayExample": "مثال: 20",
+  "accounts_dueDayOptional": "يوم الاستحقاق (اختياري)",
+  "accounts_dueDayExample": "مثال: 10",
+  "accounts_linkedAccountOptional": "الحساب البنكي المرتبط (اختياري)",
+  "accounts_excludeCardBalance": "استبعاد رصيد البطاقة من رصيد الحساب",
+  "accounts_excludeCardBalanceDesc": "لن تتم إضافة رصيد هذه البطاقة إلى حسابها البنكي المرتبط.",
+  "accounts_cardHolderHeader": "حامل البطاقة",
+  "accounts_expHeader": "الانتهاء",
+  "accounts_notifyOnDueDate": "سيتم إشعارك في تاريخ الاستحقاق",
+  "accounts_notifyWhenDue": "تلقي إشعار عند استحقاق الدفع",
+  "accounts_remind2DaysBeforeDesc": "تلقي تنبيه مسبق قبل يومين من تاريخ الاستحقاق",
+  "accounts_targetSaved": "المستهدف / المدخر",
+  "transactions_selectedCount": "{count, plural, =1{تم تحديد 1} other{تم تحديد {count}}}",
+  "transactions_changeCategory": "تغيير الفئة",
+  "transactions_deleteSelected": "حذف المحدد",
+  "transactions_advancedFilters": "تصفية متقدمة",
+  "transactions_clearAll": "مسح الكل",
+  "transactions_amountRange": "نطاق المبلغ",
+  "transactions_minAmount": "الحد الأدنى",
+  "transactions_maxAmount": "الحد الأقصى",
+  "transactions_applyFilters": "تطبيق التصفية",
+  "presets_new": "جديد",
+  "presets_presetName": "اسم القالب (مثال: قهوة الصباح)",
+  "presets_defaultAmount": "المبلغ الافتراضي",
+  "savings_goalName": "اسم الهدف",
+  "savings_goalNameHint": "مثال: سيارة جديدة، إجازة",
+  "savings_targetAmount": "المبلغ المستهدف",
+  "savings_targetDateOptional": "تاريخ الهدف (اختياري)",
+  "savings_selectDate": "اختر التاريخ",
+  "savings_amountRequired": "المبلغ مطلوب",
+  "savings_noteOptional": "ملاحظة (اختياري)",
+  "loans_skipInstallment": "تخطي قسط القرض القادم؟",
+  "recurring_confirmDelete": "هل أنت متأكد من حذف هذه المعاملة المتكررة؟",
+  "export_formatExcelOption": "Excel (.xlsx)",
+  "export_formatPdfOption": "تقرير PDF",
+  "export_pdfNoTransactions": "لا توجد معاملات مسجلة ضمن هذا النطاق الزمني.",
+  "savings_saved": "المدخر",
+  "export_pdfDate": "التاريخ",
+  "export_pdfDescription": "الوصف",
+  "accounts_noCardsYet": "لا توجد بطاقات",
+  "accounts_tapToAddCard": "اضغط على + لإضافة بطاقتك الأولى",
+  "savings_noGoalsYet": "لا توجد أهداف ادخار",
+  "savings_tapToAddGoal": "اضغط على + لإنشاء هدف جديد",
+  "netWorth_recordSnapshot": "تسجيل لقطة",
+  "netWorth_snapshotRecorded": "تم تسجيل اللقطة",
+  "savings_noContributionsYet": "لا توجد مساهمات حتى الآن",
+  "creditCard_closesStatementBillingCycle": "إغلاق دورة الفوترة الحالية للكشف",
+  "creditCard_clearsTotalDebt": "سداد إجمالي مديونية البطاقة بالكامل",
+  "creditCard_requiredMinPayment": "الحد الأدنى المطلوب للسداد",
+  "creditCard_specifyCustomAmount": "تحديد مبلغ سداد مخصص",
+  "common_itemDeleted": "تم حذف \"{name}\"",
+  "common_accountDeleted": "تم حذف الحساب",
+  "common_cardDeleted": "تم حذف البطاقة",
+  "common_transactionDeleted": "تم حذف المعاملة",
+  "common_recordDeleted": "تم حذف السجل",
+  "common_paymentDeleted": "تم حذف الدفعة",
+  "loans_skippedInstallment": "تم تخطي قسط القرض",
+  "loans_loggedPayment": "تم تسجيل دفعة بقيمة {amount}",
+  "loans_notificationsPermissionRequired": "إذن الإشعارات مطلوب",
+  "creditCard_selectFundingAccount": "يرجى تحديد حساب التمويل",
+  "presets_presetUpdated": "تم تحديث النموذج",
+  "presets_presetAdded": "تمت إضافة النموذج",
+  "presets_presetDeleted": "تم حذف النموذج",
+  "transactions_deletedCount": "{count, plural, =0{لم يتم حذف عناصر} =1{تم حذف عنصر واحد} =2{تم حذف عنصرين} few{تم حذف {count} عناصر} many{تم حذف {count} عنصراً} other{تم حذف {count} عنصر}}",
+  "split_atLeastTwoCategories": "يلزم فئتان على الأقل لتقسيم المعاملة.",
+  "split_categoryAndAmountRequired": "يجب أن يحتوي كل بند مقسم على فئة ومبلغ أكبر من 0.",
+  "presets_addQuickPresets": "إضافة نماذج سريعة بضغطة واحدة",
+  "presets_quickPresetsDesc": "سجّل قهوتك أو مواصلاتك أو وجباتك المتكررة بضغطة واحدة",
+  "presets_loggedPreset": "تم تسجيل {title} ({amount})",
+  "presets_createPreset": "إنشاء نموذج",
+  "presets_editQuickPreset": "تعديل النموذج السريع",
+  "presets_newQuickPreset": "نموذج سريع جديد",
+  "savings_addContribution": "إضافة مساهمة",
+  "savings_withdrawFromGoal": "سحب من الهدف",
+  "savings_contribution": "مساهمة",
+  "savings_withdrawal": "سحب",
+  "savings_unknownAccount": "حساب غير معروف",
+  "savings_fromAccount": "من حساب",
+  "savings_toAccount": "إلى حساب",
+  "presets_quickLog": "تسجيل سريع",
+  "accounts_dueOnDay": "الاستحقاق يوم {day}"
 }

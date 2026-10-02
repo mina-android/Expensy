@@ -33,7 +33,7 @@ class MainActivity : FlutterActivity() {
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, methodChannelName)
             .setMethodCallHandler { call, result ->
                 if (call.method == "getInitialRoute") {
-                    result.success(intent?.getStringExtra(QuickAddWidgetProvider.EXTRA_ROUTE))
+                    result.success(extractRoute(intent))
                 } else {
                     result.notImplemented()
                 }
@@ -56,9 +56,24 @@ class MainActivity : FlutterActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        val route = intent.getStringExtra(QuickAddWidgetProvider.EXTRA_ROUTE)
+        val route = extractRoute(intent)
         if (route != null) {
             eventSink?.success(route)
+        }
+    }
+
+    private fun extractRoute(intent: Intent?): String? {
+        if (intent == null) return null
+        val extraRoute = intent.getStringExtra(QuickAddWidgetProvider.EXTRA_ROUTE)
+        if (extraRoute != null) return extraRoute
+
+        return when (intent.action) {
+            "com.ma.expensy.ACTION_ADD_EXPENSE" -> "expense"
+            "com.ma.expensy.ACTION_ADD_INCOME" -> "income"
+            "com.ma.expensy.ACTION_TRANSFER" -> "transfer"
+            "com.ma.expensy.ACTION_PRESETS" -> "presets"
+            "com.ma.expensy.ACTION_QUICK_ADD" -> "quick_add_transaction"
+            else -> null
         }
     }
 }

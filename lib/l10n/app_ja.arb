@@ -1,5 +1,4 @@
 {
-  "@@locale": "ja",
   "appTitle": "経費",
   "settings_title": "設定",
   "settings_appearance": "外観",
@@ -39,17 +38,7 @@
   "settings_cancel": "キャンセル",
   "settings_save": "保存",
   "recurring_expenses": "経費 ({count})",
-  "@recurring_expenses": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "recurring_incomeList": "収入 ({count})",
-  "@recurring_incomeList": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "recurring_monthly": "毎月",
   "recurring_weekly": "毎週",
   "recurring_noRecurringExpenses": "経常経費なし",
@@ -58,48 +47,17 @@
   "recurring_addIncome": "収入を追加",
   "recurring_tapPlusToAddOne": "+ をタップして 1 つ追加します",
   "recurring_fromOngoing": "From {date} · Ongoing",
-  "@recurring_fromOngoing": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "recurring_paidPayments": "{paid}/{total} paid",
-  "@recurring_paidPayments": {
-    "placeholders": {
-      "paid": {},
-      "total": {}
-    }
-  },
   "recurring_totalAmount": "Total: {amount}",
-  "@recurring_totalAmount": {
-    "placeholders": {
-      "amount": {}
-    }
-  },
   "recurring_overdue": "期限を過ぎました！",
   "recurring_dueToday": "今日が期限",
   "recurring_dueInDays": "Due in {days}d",
-  "@recurring_dueInDays": {
-    "placeholders": {
-      "days": {}
-    }
-  },
   "recurring_edit": "編集",
   "recurring_skipBtn": "スキップ",
   "recurring_nextDate": "Next: {date}",
-  "@recurring_nextDate": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "recurring_pay": "支払う",
   "recurring_del": "デル",
   "recurring_historyCount": "履歴 ({count})",
-  "@recurring_historyCount": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "recurring_paymentHistory": "支払い履歴",
   "recurring_notificationPermissionDenied": "通知の許可が拒否されました。 「設定」→「アプリ」→「経費」→「通知」で有効にします。",
   "recurring_remindMeAt": "",
@@ -108,17 +66,7 @@
   "recurring_name": "名前",
   "recurring_amountPerPayment": "支払いごとの金額",
   "recurring_firstDate": "First: {date}",
-  "@recurring_firstDate": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "recurring_lastDate": "Last: {date}",
-  "@recurring_lastDate": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "recurring_noLastPaymentOngoing": "最終支払いなし (継続中)",
   "accounts_refreshExchangeRates": "為替レートを更新します",
   "accounts_noAccounts": "アカウントがありません",
@@ -127,11 +75,6 @@
   "accounts_exchangeRatesUnavailable": "為替レートは利用できません (オフライン)。残高は自国通貨で表示されます。",
   "accounts_unknown": "不明",
   "accounts_ratesUpdated": "料金が更新されました {timeStr} · ↺ をタップして更新します",
-  "@accounts_ratesUpdated": {
-    "placeholders": {
-      "timeStr": {}
-    }
-  },
   "accounts_goldCaps": "ゴールド",
   "accounts_balance": "バランス",
   "accounts_income": "所得",
@@ -140,11 +83,6 @@
   "accounts_value": "値",
   "accounts_karat": "カラット",
   "accounts_pure": "{percentage}% pure",
-  "@accounts_pure": {
-    "placeholders": {
-      "percentage": {}
-    }
-  },
   "accounts_weightLabel": "体重",
   "accounts_perGram": "グラムあたり",
   "accounts_bank": "銀行",
@@ -164,17 +102,7 @@
   "accounts_fetchingGoldPrice": "金の価格を調べ中…",
   "accounts_goldPriceUnavailable": "ゴールド価格を利用できません — 接続を確認してください",
   "lended_person_owesYou": "{name} はあなたに借りがあります",
-  "@lended_person_owesYou": {
-    "placeholders": {
-      "name": {}
-    }
-  },
   "lended_person_youOwe": "あなたには {name} の借りがあります",
-  "@lended_person_youOwe": {
-    "placeholders": {
-      "name": {}
-    }
-  },
   "lended_person_allSettledUp": "すべて解決しました",
   "lended_person_noRecordsYet": "まだ記録がありません",
   "lended_person_tapPlusToLog": "+ をタップして、お金の貸し借りを記録します",
@@ -184,40 +112,19 @@
   "lended_person_borrowed": "借りました",
   "lended_person_overdue": "期限を過ぎました！",
   "lended_person_due": "Due {date}",
-  "@lended_person_due": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "lended_person_reminderAt": "Reminder at {time}",
-  "@lended_person_reminderAt": {
-    "placeholders": {
-      "time": {}
-    }
-  },
   "lended_person_notificationPermissionDenied": "通知の許可が拒否されました。 「設定」→「アプリ」→「経費」→「通知」で有効にします。",
   "lended_person_remindMeAtPrompt": "",
   "lended_person_editRecord": "でリマインドしてくださいレコードの編集",
   "lended_person_addRecord": "レコードを追加",
   "lended_person_amount": "額",
   "lended_person_dueColon": "Due: {date}",
-  "@lended_person_dueColon": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "lended_person_noDueDate": "期限なし",
   "lended_person_setDueFirst": "最初に期日を設定してください",
   "lended_person_notifiedOnDue": "期日には通知されます",
   "lended_person_getNotifiedWhenDue": "期限が近づいたら通知を受け取ります",
   "lended_person_thatTimePassed": "今日のその時間はすでに過ぎています。代わりに、すぐに通知されます。",
   "lended_person_notificationFiresOn": "通知は {date} の {time} に発生します。",
-  "@lended_person_notificationFiresOn": {
-    "placeholders": {
-      "date": {},
-      "time": {}
-    }
-  },
   "lended_person_saveChangesBtn": "変更を保存",
   "lended_person_addRecordBtn": "レコードを追加",
   "transactions_searchTransactions": "トランザクションを検索...",
@@ -231,24 +138,9 @@
   "transactions_today": "今日",
   "transactions_yesterday": "昨日",
   "transactions_lentTo": "Lent to {name}",
-  "@transactions_lentTo": {
-    "placeholders": {
-      "name": {}
-    }
-  },
   "transactions_borrowedFrom": "{name} から借用",
-  "@transactions_borrowedFrom": {
-    "placeholders": {
-      "name": {}
-    }
-  },
   "transactions_unknown": "不明",
   "transactions_due": "Due {date}",
-  "@transactions_due": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "transactions_unsettled": "不安定",
   "onboarding_restoreFailed": "復元に失敗しました: ファイルが破損しているか、Expensy のバックアップではない可能性があります。",
   "onboarding_continue": "続行",
@@ -310,6 +202,59 @@
   "budget_ofAmount": "of {amount}",
   "budget_saveChanges": "変更を保存",
   "budget_budget": "予算",
+  "budget_rollover": "繰り越し (封筒予算)",
+  "budget_rolloverDesc": "未使用の余剰金または不足分を次の期間に繰り越します",
+  "budget_rolloverBadge": "繰越",
+  "budget_base": "基本: {amount}",
+  "budget_rolloverFrom": "繰越 ({period}): {amount}",
+  "budget_totalAvailable": "利用可能合計: {amount}",
+  "budget_lastWeek": "先週",
+  "pacing_dailyBudget": "安全支出額",
+  "pacing_safeToSpend": "安全支出額: 1日あたり{amount} (残り{days}日)",
+  "pacing_caution": "ペースが早めです — 1日あたり{amount}に抑制",
+  "pacing_overPaced": "ペース警告 — 予算内に収めるため支出を抑えてください",
+  "pacing_budgetExhausted": "予算上限に到達 — 本日の利用可能額はありません",
+  "pacing_onTrack": "順調",
+  "pacing_fast": "ペース早め",
+  "pacing_alert": "ペース警告",
+  "pacing_daysLeft": "残り{days}日",
+  "pacing_setBudgetPrompt": "タップして予算上限を設定 →",
+  "pacing_dailyAvgPace": "1日のペース",
+  "pacing_perDay": "{amount} / 日",
+  "calendar_title": "支出カレンダー",
+  "calendar_subtitle": "日別支出ヒートマップと支払期日",
+  "calendar_zeroSpendDays": "{count}日の無支出日",
+  "calendar_zeroSpendDayTitle": "支出ゼロ達成日！ 🎉",
+  "calendar_zeroSpendDayDesc": "本日も支出ゼロで素晴らしい自己管理です。",
+  "calendar_billsDue": "支払期日の請求・サブスク",
+  "calendar_loansDue": "期日のローン返済",
+  "calendar_lendedDue": "予定されている返済受け取り",
+  "calendar_dayTransactions": "取引履歴 ({count})",
+  "calendar_noActivity": "この日の取引や支払予定はありません",
+  "calendar_today": "今日",
+  "calendar_averageDaily": "1日平均: {amount}",
+  "wrapped_title": "Expensy Wrapped",
+  "wrapped_bannerTitle": "{month}月のまとめができました！",
+  "wrapped_bannerSub": "タップして今月の家計ストーリーを見る",
+  "wrapped_theBigPicture": "全体の概要",
+  "wrapped_howMoneyMoved": "{month}月のお金の動きはこちらです",
+  "wrapped_totalInflow": "総収入",
+  "wrapped_totalOutflow": "総支出",
+  "wrapped_netSavings": "純貯蓄",
+  "wrapped_savingsRate": "貯蓄率: {rate}%",
+  "wrapped_topCategoryTitle": "支出の内訳は？",
+  "wrapped_topCategorySub": "最も多かった支出カテゴリは {category} でした",
+  "wrapped_topCategoryShare": "総支出の {percent}%",
+  "wrapped_biggestSplurgeTitle": "最大の支出",
+  "wrapped_biggestSplurgeSub": "今月最も大きかった支出です",
+  "wrapped_noSplurge": "大きな支出はありません！今月は支出がゼロでした。",
+  "wrapped_heroHabitTitle": "素晴らしい習慣",
+  "wrapped_zeroSpendAchieved": "{count} 日間の支出ゼロ",
+  "wrapped_heroHabitDesc": "支出ゼロの日を {count} 日達成しました。素晴らしい自己管理です！",
+  "wrapped_receiptTitle": "月間レポート",
+  "wrapped_obscureToggle": "共有用に金額を隠す",
+  "wrapped_showToggle": "金額を表示する",
+  "wrapped_replay": "ストーリーをもう一度見る",
   "insights_other": "その他",
   "insights_noDataYet": "まだデータがありません",
   "insights_addSomeTransactions": "いくつかのトランザクションを追加して洞察を確認します",
@@ -387,6 +332,17 @@
   "wishlist_notesOptional": "注記 (オプション)",
   "wishlist_saveChanges": "変更を保存",
   "wishlist_addItem": "アイテムを追加",
+  "wishlist_fundThisItem": "積立を始める",
+  "wishlist_funded": "{percent}% 達成 ({saved} / {target})",
+  "wishlist_goalAchieved": "目標達成 — 購入の準備が整いました！",
+  "wishlist_buyNow": "今すぐ購入",
+  "wishlist_purchaseTitle": "ほしい物リストのアイテムを購入",
+  "wishlist_purchasePrompt": "支出トランザクションを記録し、口座から金額を引き落としますか？",
+  "wishlist_recordAndDeduct": "記録して引き落とす",
+  "wishlist_markPurchasedOnly": "購入済みにのみ設定",
+  "wishlist_itemPurchased": "「{name}」を購入済みにしました！",
+  "wishlist_viewGoal": "貯蓄目標を表示",
+  "savings_linkedWishlist": "ほしい物リストに連携中: {item}",
   "lended_theyOweMe": "彼らは私に借りがある",
   "lended_iOweThem": "私は彼らに借りがあります",
   "lended_net": "ネット",
@@ -442,6 +398,8 @@
   "accounts_goldPurityKarat": "金の純度 (カラット)",
   "accounts_weight": "重量",
   "accounts_excludeFromTotalBala": "合計残高から除外する",
+  "accounts_dontLinkToCard": "カードと紐付けない",
+  "accounts_dontLinkToCardDesc": "この口座の残高を手動で管理し、カードとの紐付けを防止します",
   "accounts_color": "色",
   "accounts_liveGoldValue": "リアルタイムの金価値",
   "accounts_enterWeightAboveToSe": "上の重量を入力して価値を確認してください",
@@ -484,11 +442,38 @@
   "export_exportTransactions": "取引をエクスポート",
   "export_dateRange": "日付範囲",
   "export_formatExcelXlsx": "形式：Excel (.xlsx)",
+  "export_exportAsPdf": "PDFレポートとして出力",
+  "export_formatPdf": "形式: PDF財務レポート (.pdf)",
+  "export_pdfGenerating": "PDFを生成中...",
+  "export_pdfTitle": "財務レポート",
+  "export_pdfSummary": "概要",
+  "export_pdfInflow": "総収入",
+  "export_pdfOutflow": "総支出",
+  "export_pdfNet": "純貯蓄",
+  "export_pdfSavingsRate": "貯蓄率",
+  "export_pdfCategoryBreakdown": "カテゴリ別内訳",
+  "export_pdfTransactions": "個別取引明細",
+  "export_pdfNetWorthBreakdown": "資産と負債",
+  "export_pdfShare": "レポートを共有",
+  "export_pdfPrint": "印刷 / プレビュー",
+  "export_pdfGeneratedBy": "Expensy により生成 • プライベート＆オフライン",
   "home_totalBalance": "合計残高",
   "home_accounts": "口座",
   "home_recentTransactions": "最近の取引",
   "home_noTransactionsYet": "まだ取引はありません",
   "home_add": "追加",
+  "home_goodMorning": "おはようございます",
+  "home_goodAfternoon": "こんにちは",
+  "home_goodEvening": "こんばんは",
+  "home_transferAction": "送金",
+  "home_insightsAction": "インサイト",
+  "home_calendarAction": "カレンダー",
+  "home_forecastAction": "予測",
+  "home_manage": "管理",
+  "home_seeAll": "すべて見る",
+  "home_addAccount": "口座を追加",
+  "home_monthlyOverview": "月間概要",
+  "home_savingsRate": "貯蓄率",
   "insights_insights": "インサイト",
   "lended_person_deletePerson": "人を削除",
   "lended_person_editPerson": "人を編集",
@@ -568,17 +553,7 @@
   "onboarding_chooseLanguage": "言語を選択",
   "error_required": "このフィールドは必須です",
   "recurring_subscriptions": "購読数 ({count})",
-  "@recurring_subscriptions": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "recurring_installments": "分割払い ({count})",
-  "@recurring_installments": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "recurring_recurringType": "繰り返しタイプ",
   "recurring_subscription": "サブスクリプション",
   "recurring_installment": "分割払い",
@@ -660,5 +635,154 @@
   "yearly_noData": "予測アクティビティがありません",
   "yearly_noDataSub": "定期的な支払いやローンを追加して予測を表示",
   "budget_addBudget": "予算を追加",
-  "budget_addGoal": "貯蓄目標を追加"
+  "budget_addGoal": "貯蓄目標を追加",
+  "split_transactions_title": "カテゴリを分割",
+  "split_transactions_badge": "分割",
+  "split_transactions_addSplit": "分割を追加",
+  "split_transactions_removeSplit": "分割を削除",
+  "split_transactions_allocated": "配分済み",
+  "split_transactions_remaining": "残り",
+  "split_transactions_fillRemaining": "残りを入力",
+  "split_transactions_breakdown": "分割内訳",
+  "split_transactions_mismatchError": "分割額の合計は総額と一致する必要があります。",
+  "netWorth_title": "純資産",
+  "netWorth_subtitle": "資産、負債、および富の推移を追跡",
+  "netWorth_current": "現在の純資産",
+  "netWorth_trend": "純資産の推移",
+  "netWorth_totalAssets": "総資産",
+  "netWorth_totalLiabilities": "総負債",
+  "netWorth_liquidCash": "現金および銀行口座",
+  "netWorth_goldValuation": "現物ゴールド",
+  "netWorth_fixedAssets": "不動産・投資資産",
+  "netWorth_moneyLent": "貸付金（未回収）",
+  "netWorth_creditDebt": "クレジットカード・当座貸越",
+  "netWorth_loanDebt": "借入金・ローン",
+  "netWorth_moneyBorrowed": "借受金（返済義務）",
+  "netWorth_assetBreakdown": "資産の内訳",
+  "netWorth_liabilityBreakdown": "負債の内訳",
+  "netWorth_noHistory": "毎日のスナップショットが記録されるにつれて、純資産の推移が蓄積されます。",
+  "netWorth_debtRatio": "負債比率",
+  "netWorth_quickActions": "クイックアクション",
+  "netWorth_history": "スナップショット履歴",
+  "creditCard_utilization": "利用限度額使用率",
+  "creditCard_availableCredit": "利用可能額",
+  "creditCard_limit": "限度額",
+  "creditCard_statementBalance": "請求確定額",
+  "creditCard_unbilledBalance": "未確定額",
+  "creditCard_payBill": "カード代金を支払う",
+  "creditCard_allCaughtUp": "完済済み！未払い残高はありません",
+  "creditCard_payBillTitle": "カード利用代金の支払い",
+  "creditCard_payFromAccount": "支払元口座",
+  "creditCard_paymentAmount": "支払金額",
+  "creditCard_fullStatement": "請求確定額",
+  "creditCard_fullBalance": "利用総額",
+  "creditCard_minPayment": "最低支払額",
+  "creditCard_customAmount": "金額を指定",
+  "creditCard_paymentSuccess": "{cardName} に {amount} を支払いました",
+  "creditCard_insufficientFunds": "金額が口座残高を超えています",
+  "creditCard_invalidAmount": "有効な支払金額を入力してください",
+  "onboarding_skipForNow": "今はスキップ",
+  "add_transaction_possibleDuplicate": "重複の可能性",
+  "add_transaction_goBack": "戻る",
+  "add_transaction_saveAnyway": "このまま保存",
+  "loans_confirmDeleteLoan": "このローンとすべての支払い履歴を削除してもよろしいですか？",
+  "loans_deletePayment": "支払いを削除",
+  "loans_confirmDeletePayment": "この支払い記録を削除してもよろしいですか？",
+  "budget_leftToSpend": "利用可能残高",
+  "more_sectionTools": "金融ツール",
+  "more_sectionAnalytics": "分析＆レポート",
+  "more_sectionPreferences": "設定＆データ",
+  "onboarding_addCard": "カードを追加",
+  "onboarding_skipCardDesc": "今すぐカードを追加しない場合は、この手順をスキップできます。",
+  "onboarding_cardNameLabel": "カード名 (例: Visa Platinum)",
+  "onboarding_debitCard": "デビットカード",
+  "onboarding_creditLimit": "利用限度額",
+  "onboarding_amountUsed": "利用金額",
+  "accounts_cardHolderOptional": "カード名義人 (任意)",
+  "accounts_last4Digits": "下4桁",
+  "accounts_expiryDate": "有効期限 (MM/YY)",
+  "accounts_creditLimitOptional": "利用限度額 (任意)",
+  "accounts_minPaymentOptional": "最低支払額 (任意)",
+  "accounts_statementDayOptional": "締め日 (任意)",
+  "accounts_statementDayExample": "例: 20",
+  "accounts_dueDayOptional": "支払日 (任意)",
+  "accounts_dueDayExample": "例: 10",
+  "accounts_linkedAccountOptional": "紐付け銀行口座 (任意)",
+  "accounts_excludeCardBalance": "口座残高からカード残高を除外",
+  "accounts_excludeCardBalanceDesc": "このカードの残高は紐付けられた銀行口座には加算されません。",
+  "accounts_cardHolderHeader": "カード名義人",
+  "accounts_expHeader": "有効期限",
+  "accounts_notifyOnDueDate": "支払期日にお知らせします",
+  "accounts_notifyWhenDue": "支払期日に通知を受け取る",
+  "accounts_remind2DaysBeforeDesc": "支払期日の2日前に事前通知を受け取ります",
+  "accounts_targetSaved": "目標 / 貯蓄済",
+  "transactions_selectedCount": "{count, plural, other{{count}件選択中}}",
+  "transactions_changeCategory": "カテゴリ変更",
+  "transactions_deleteSelected": "選択項目を削除",
+  "transactions_advancedFilters": "高度なフィルター",
+  "transactions_clearAll": "すべてクリア",
+  "transactions_amountRange": "金額範囲",
+  "transactions_minAmount": "最小金額",
+  "transactions_maxAmount": "最大金額",
+  "transactions_applyFilters": "フィルターを適用",
+  "presets_new": "新規",
+  "presets_presetName": "プリセット名 (例: 朝のコーヒー)",
+  "presets_defaultAmount": "デフォルト金額",
+  "savings_goalName": "目標名",
+  "savings_goalNameHint": "例: 新車、旅行",
+  "savings_targetAmount": "目標金額",
+  "savings_targetDateOptional": "目標日 (任意)",
+  "savings_selectDate": "日付を選択",
+  "savings_amountRequired": "金額を入力してください",
+  "savings_noteOptional": "メモ (任意)",
+  "loans_skipInstallment": "ローンの次回の返済をスキップしますか？",
+  "recurring_confirmDelete": "この定期支払いを削除してもよろしいですか？",
+  "export_formatExcelOption": "Excel (.xlsx)",
+  "export_formatPdfOption": "PDFレポート",
+  "export_pdfNoTransactions": "この期間内に記録された取引はありません。",
+  "savings_saved": "貯蓄額",
+  "export_pdfDate": "日付",
+  "export_pdfDescription": "説明",
+  "accounts_noCardsYet": "カードがありません",
+  "accounts_tapToAddCard": "+ をタップして最初のカードを追加",
+  "savings_noGoalsYet": "貯蓄目標がありません",
+  "savings_tapToAddGoal": "+ をタップして新しい目標を設定",
+  "netWorth_recordSnapshot": "スナップショットを記録",
+  "netWorth_snapshotRecorded": "スナップショットが記録されました",
+  "savings_noContributionsYet": "拠出金はまだありません",
+  "creditCard_closesStatementBillingCycle": "現在の請求サイクルの締め日を清算",
+  "creditCard_clearsTotalDebt": "カードの残高を全額完済",
+  "creditCard_requiredMinPayment": "必要な最低支払額",
+  "creditCard_specifyCustomAmount": "任意の支払額を指定",
+  "common_itemDeleted": "「{name}」を削除しました",
+  "common_accountDeleted": "アカウントを削除しました",
+  "common_cardDeleted": "カードを削除しました",
+  "common_transactionDeleted": "取引を削除しました",
+  "common_recordDeleted": "記録を削除しました",
+  "common_paymentDeleted": "支払いを削除しました",
+  "loans_skippedInstallment": "ローンの分割払いをスキップしました",
+  "loans_loggedPayment": "{amount} の支払いを記録しました",
+  "loans_notificationsPermissionRequired": "通知の許可が必要です",
+  "creditCard_selectFundingAccount": "引き落とし口座を選択してください",
+  "presets_presetUpdated": "プリセットを更新しました",
+  "presets_presetAdded": "プリセットを追加しました",
+  "presets_presetDeleted": "プリセットを削除しました",
+  "transactions_deletedCount": "{count} 件の項目を削除しました",
+  "split_atLeastTwoCategories": "分割には2つ以上のカテゴリが必要です。",
+  "split_categoryAndAmountRequired": "各分割項目にはカテゴリと0より大きい金額が必要です。",
+  "presets_addQuickPresets": "ワンタップのクイックプリセットを追加",
+  "presets_quickPresetsDesc": "コーヒーや交通費、食事などの頻出項目を1タップで記録",
+  "presets_loggedPreset": "{title}（{amount}）を記録しました",
+  "presets_createPreset": "プリセットを作成",
+  "presets_editQuickPreset": "クイックプリセットを編集",
+  "presets_newQuickPreset": "新規クイックプリセット",
+  "savings_addContribution": "拠出金を追加",
+  "savings_withdrawFromGoal": "目標から引き出す",
+  "savings_contribution": "拠出金",
+  "savings_withdrawal": "引き出し",
+  "savings_unknownAccount": "不明な口座",
+  "savings_fromAccount": "出金元口座",
+  "savings_toAccount": "入金先口座",
+  "presets_quickLog": "クイック記録",
+  "accounts_dueOnDay": "{day}日に期日"
 }

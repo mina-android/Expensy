@@ -641,7 +641,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get budget_budgeted => '予算が決まっています';
 
   @override
-  String get budget_leftToSpend => 'Left to Spend';
+  String get budget_leftToSpend => '利用可能残高';
 
   @override
   String get budget_spent => '費やしました';
@@ -702,6 +702,199 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get budget_budget => '予算';
+
+  @override
+  String get budget_rollover => '繰り越し (封筒予算)';
+
+  @override
+  String get budget_rolloverDesc => '未使用の余剰金または不足分を次の期間に繰り越します';
+
+  @override
+  String get budget_rolloverBadge => '繰越';
+
+  @override
+  String budget_base(Object amount) {
+    return '基本: $amount';
+  }
+
+  @override
+  String budget_rolloverFrom(Object period, Object amount) {
+    return '繰越 ($period): $amount';
+  }
+
+  @override
+  String budget_totalAvailable(Object amount) {
+    return '利用可能合計: $amount';
+  }
+
+  @override
+  String get budget_lastWeek => '先週';
+
+  @override
+  String get pacing_dailyBudget => '安全支出額';
+
+  @override
+  String pacing_safeToSpend(Object amount, Object days) {
+    return '安全支出額: 1日あたり$amount (残り$days日)';
+  }
+
+  @override
+  String pacing_caution(Object amount) {
+    return 'ペースが早めです — 1日あたり$amountに抑制';
+  }
+
+  @override
+  String get pacing_overPaced => 'ペース警告 — 予算内に収めるため支出を抑えてください';
+
+  @override
+  String get pacing_budgetExhausted => '予算上限に到達 — 本日の利用可能額はありません';
+
+  @override
+  String get pacing_onTrack => '順調';
+
+  @override
+  String get pacing_fast => 'ペース早め';
+
+  @override
+  String get pacing_alert => 'ペース警告';
+
+  @override
+  String pacing_daysLeft(Object days) {
+    return '残り$days日';
+  }
+
+  @override
+  String get pacing_setBudgetPrompt => 'タップして予算上限を設定 →';
+
+  @override
+  String get pacing_dailyAvgPace => '1日のペース';
+
+  @override
+  String pacing_perDay(Object amount) {
+    return '$amount / 日';
+  }
+
+  @override
+  String get calendar_title => '支出カレンダー';
+
+  @override
+  String get calendar_subtitle => '日別支出ヒートマップと支払期日';
+
+  @override
+  String calendar_zeroSpendDays(Object count) {
+    return '$count日の無支出日';
+  }
+
+  @override
+  String get calendar_zeroSpendDayTitle => '支出ゼロ達成日！ 🎉';
+
+  @override
+  String get calendar_zeroSpendDayDesc => '本日も支出ゼロで素晴らしい自己管理です。';
+
+  @override
+  String get calendar_billsDue => '支払期日の請求・サブスク';
+
+  @override
+  String get calendar_loansDue => '期日のローン返済';
+
+  @override
+  String get calendar_lendedDue => '予定されている返済受け取り';
+
+  @override
+  String calendar_dayTransactions(Object count) {
+    return '取引履歴 ($count)';
+  }
+
+  @override
+  String get calendar_noActivity => 'この日の取引や支払予定はありません';
+
+  @override
+  String get calendar_today => '今日';
+
+  @override
+  String calendar_averageDaily(Object amount) {
+    return '1日平均: $amount';
+  }
+
+  @override
+  String get wrapped_title => 'Expensy Wrapped';
+
+  @override
+  String wrapped_bannerTitle(Object month) {
+    return '$month月のまとめができました！';
+  }
+
+  @override
+  String get wrapped_bannerSub => 'タップして今月の家計ストーリーを見る';
+
+  @override
+  String get wrapped_theBigPicture => '全体の概要';
+
+  @override
+  String wrapped_howMoneyMoved(Object month) {
+    return '$month月のお金の動きはこちらです';
+  }
+
+  @override
+  String get wrapped_totalInflow => '総収入';
+
+  @override
+  String get wrapped_totalOutflow => '総支出';
+
+  @override
+  String get wrapped_netSavings => '純貯蓄';
+
+  @override
+  String wrapped_savingsRate(Object rate) {
+    return '貯蓄率: $rate%';
+  }
+
+  @override
+  String get wrapped_topCategoryTitle => '支出の内訳は？';
+
+  @override
+  String wrapped_topCategorySub(Object category) {
+    return '最も多かった支出カテゴリは $category でした';
+  }
+
+  @override
+  String wrapped_topCategoryShare(Object percent) {
+    return '総支出の $percent%';
+  }
+
+  @override
+  String get wrapped_biggestSplurgeTitle => '最大の支出';
+
+  @override
+  String get wrapped_biggestSplurgeSub => '今月最も大きかった支出です';
+
+  @override
+  String get wrapped_noSplurge => '大きな支出はありません！今月は支出がゼロでした。';
+
+  @override
+  String get wrapped_heroHabitTitle => '素晴らしい習慣';
+
+  @override
+  String wrapped_zeroSpendAchieved(Object count) {
+    return '$count 日間の支出ゼロ';
+  }
+
+  @override
+  String wrapped_heroHabitDesc(Object count) {
+    return '支出ゼロの日を $count 日達成しました。素晴らしい自己管理です！';
+  }
+
+  @override
+  String get wrapped_receiptTitle => '月間レポート';
+
+  @override
+  String get wrapped_obscureToggle => '共有用に金額を隠す';
+
+  @override
+  String get wrapped_showToggle => '金額を表示する';
+
+  @override
+  String get wrapped_replay => 'ストーリーをもう一度見る';
 
   @override
   String get insights_other => 'その他';
@@ -926,6 +1119,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get more_settingsSub => 'テーマ、通貨、設定';
 
   @override
+  String get more_sectionTools => '金融ツール';
+
+  @override
+  String get more_sectionAnalytics => '分析＆レポート';
+
+  @override
+  String get more_sectionPreferences => '設定＆データ';
+
+  @override
   String home_greeting(Object name) {
     return 'Hi, $name 👋';
   }
@@ -977,6 +1179,45 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get wishlist_addItem => 'アイテムを追加';
+
+  @override
+  String get wishlist_fundThisItem => '積立を始める';
+
+  @override
+  String wishlist_funded(int percent, String saved, String target) {
+    return '$percent% 達成 ($saved / $target)';
+  }
+
+  @override
+  String get wishlist_goalAchieved => '目標達成 — 購入の準備が整いました！';
+
+  @override
+  String get wishlist_buyNow => '今すぐ購入';
+
+  @override
+  String get wishlist_purchaseTitle => 'ほしい物リストのアイテムを購入';
+
+  @override
+  String get wishlist_purchasePrompt => '支出トランザクションを記録し、口座から金額を引き落としますか？';
+
+  @override
+  String get wishlist_recordAndDeduct => '記録して引き落とす';
+
+  @override
+  String get wishlist_markPurchasedOnly => '購入済みにのみ設定';
+
+  @override
+  String wishlist_itemPurchased(String name) {
+    return '「$name」を購入済みにしました！';
+  }
+
+  @override
+  String get wishlist_viewGoal => '貯蓄目標を表示';
+
+  @override
+  String savings_linkedWishlist(String item) {
+    return 'ほしい物リストに連携中: $item';
+  }
 
   @override
   String get lended_theyOweMe => '彼らは私に借りがある';
@@ -1179,6 +1420,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get accounts_excludeFromTotalBala => '合計残高から除外する';
 
   @override
+  String get accounts_dontLinkToCard => 'カードと紐付けない';
+
+  @override
+  String get accounts_dontLinkToCardDesc => 'この口座の残高を手動で管理し、カードとの紐付けを防止します';
+
+  @override
   String get accounts_color => '色';
 
   @override
@@ -1305,6 +1552,51 @@ class AppLocalizationsJa extends AppLocalizations {
   String get export_formatExcelXlsx => '形式：Excel (.xlsx)';
 
   @override
+  String get export_exportAsPdf => 'PDFレポートとして出力';
+
+  @override
+  String get export_formatPdf => '形式: PDF財務レポート (.pdf)';
+
+  @override
+  String get export_pdfGenerating => 'PDFを生成中...';
+
+  @override
+  String get export_pdfTitle => '財務レポート';
+
+  @override
+  String get export_pdfSummary => '概要';
+
+  @override
+  String get export_pdfInflow => '総収入';
+
+  @override
+  String get export_pdfOutflow => '総支出';
+
+  @override
+  String get export_pdfNet => '純貯蓄';
+
+  @override
+  String get export_pdfSavingsRate => '貯蓄率';
+
+  @override
+  String get export_pdfCategoryBreakdown => 'カテゴリ別内訳';
+
+  @override
+  String get export_pdfTransactions => '個別取引明細';
+
+  @override
+  String get export_pdfNetWorthBreakdown => '資産と負債';
+
+  @override
+  String get export_pdfShare => 'レポートを共有';
+
+  @override
+  String get export_pdfPrint => '印刷 / プレビュー';
+
+  @override
+  String get export_pdfGeneratedBy => 'Expensy により生成 • プライベート＆オフライン';
+
+  @override
   String get home_totalBalance => '合計残高';
 
   @override
@@ -1318,6 +1610,42 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get home_add => '追加';
+
+  @override
+  String get home_goodMorning => 'おはようございます';
+
+  @override
+  String get home_goodAfternoon => 'こんにちは';
+
+  @override
+  String get home_goodEvening => 'こんばんは';
+
+  @override
+  String get home_transferAction => '送金';
+
+  @override
+  String get home_insightsAction => 'インサイト';
+
+  @override
+  String get home_calendarAction => 'カレンダー';
+
+  @override
+  String get home_forecastAction => '予測';
+
+  @override
+  String get home_manage => '管理';
+
+  @override
+  String get home_seeAll => 'すべて見る';
+
+  @override
+  String get home_addAccount => '口座を追加';
+
+  @override
+  String get home_monthlyOverview => '月間概要';
+
+  @override
+  String get home_savingsRate => '貯蓄率';
 
   @override
   String get insights_insights => 'インサイト';
@@ -1815,22 +2143,456 @@ class AppLocalizationsJa extends AppLocalizations {
   String get budget_addGoal => '貯蓄目標を追加';
 
   @override
-  String get add_transaction_possibleDuplicate => 'Possible duplicate';
+  String get add_transaction_possibleDuplicate => '重複の可能性';
 
   @override
-  String get add_transaction_goBack => 'Go back';
+  String get add_transaction_goBack => '戻る';
 
   @override
-  String get add_transaction_saveAnyway => 'Save anyway';
+  String get add_transaction_saveAnyway => 'このまま保存';
 
   @override
-  String get loans_confirmDeleteLoan =>
-      'Are you sure you want to delete this loan and all its payments?';
+  String get loans_confirmDeleteLoan => 'このローンとすべての支払い履歴を削除してもよろしいですか？';
 
   @override
-  String get loans_deletePayment => 'Delete Payment';
+  String get loans_deletePayment => '支払いを削除';
 
   @override
-  String get loans_confirmDeletePayment =>
-      'Are you sure you want to delete this payment record?';
+  String get loans_confirmDeletePayment => 'この支払い記録を削除してもよろしいですか？';
+
+  @override
+  String get split_transactions_title => 'カテゴリを分割';
+
+  @override
+  String get split_transactions_badge => '分割';
+
+  @override
+  String get split_transactions_addSplit => '分割を追加';
+
+  @override
+  String get split_transactions_removeSplit => '分割を削除';
+
+  @override
+  String get split_transactions_allocated => '配分済み';
+
+  @override
+  String get split_transactions_remaining => '残り';
+
+  @override
+  String get split_transactions_fillRemaining => '残りを入力';
+
+  @override
+  String get split_transactions_breakdown => '分割内訳';
+
+  @override
+  String get split_transactions_mismatchError => '分割額の合計は総額と一致する必要があります。';
+
+  @override
+  String get netWorth_title => '純資産';
+
+  @override
+  String get netWorth_subtitle => '資産、負債、および富の推移を追跡';
+
+  @override
+  String get netWorth_current => '現在の純資産';
+
+  @override
+  String get netWorth_trend => '純資産の推移';
+
+  @override
+  String get netWorth_totalAssets => '総資産';
+
+  @override
+  String get netWorth_totalLiabilities => '総負債';
+
+  @override
+  String get netWorth_liquidCash => '現金および銀行口座';
+
+  @override
+  String get netWorth_goldValuation => '現物ゴールド';
+
+  @override
+  String get netWorth_fixedAssets => '不動産・投資資産';
+
+  @override
+  String get netWorth_moneyLent => '貸付金（未回収）';
+
+  @override
+  String get netWorth_creditDebt => 'クレジットカード・当座貸越';
+
+  @override
+  String get netWorth_loanDebt => '借入金・ローン';
+
+  @override
+  String get netWorth_moneyBorrowed => '借受金（返済義務）';
+
+  @override
+  String get netWorth_assetBreakdown => '資産の内訳';
+
+  @override
+  String get netWorth_liabilityBreakdown => '負債の内訳';
+
+  @override
+  String get netWorth_noHistory => '毎日のスナップショットが記録されるにつれて、純資産の推移が蓄積されます。';
+
+  @override
+  String get netWorth_debtRatio => '負債比率';
+
+  @override
+  String get netWorth_quickActions => 'クイックアクション';
+
+  @override
+  String get netWorth_history => 'スナップショット履歴';
+
+  @override
+  String get creditCard_utilization => '利用限度額使用率';
+
+  @override
+  String get creditCard_availableCredit => '利用可能額';
+
+  @override
+  String get creditCard_limit => '限度額';
+
+  @override
+  String get creditCard_statementBalance => '請求確定額';
+
+  @override
+  String get creditCard_unbilledBalance => '未確定額';
+
+  @override
+  String get creditCard_payBill => 'カード代金を支払う';
+
+  @override
+  String get creditCard_allCaughtUp => '完済済み！未払い残高はありません';
+
+  @override
+  String get creditCard_payBillTitle => 'カード利用代金の支払い';
+
+  @override
+  String get creditCard_payFromAccount => '支払元口座';
+
+  @override
+  String get creditCard_paymentAmount => '支払金額';
+
+  @override
+  String get creditCard_fullStatement => '請求確定額';
+
+  @override
+  String get creditCard_fullBalance => '利用総額';
+
+  @override
+  String get creditCard_minPayment => '最低支払額';
+
+  @override
+  String get creditCard_customAmount => '金額を指定';
+
+  @override
+  String creditCard_paymentSuccess(String amount, String cardName) {
+    return '$cardName に $amount を支払いました';
+  }
+
+  @override
+  String get creditCard_insufficientFunds => '金額が口座残高を超えています';
+
+  @override
+  String get creditCard_invalidAmount => '有効な支払金額を入力してください';
+
+  @override
+  String get onboarding_skipForNow => '今はスキップ';
+
+  @override
+  String get onboarding_addCard => 'カードを追加';
+
+  @override
+  String get onboarding_skipCardDesc => '今すぐカードを追加しない場合は、この手順をスキップできます。';
+
+  @override
+  String get onboarding_cardNameLabel => 'カード名 (例: Visa Platinum)';
+
+  @override
+  String get onboarding_debitCard => 'デビットカード';
+
+  @override
+  String get onboarding_creditLimit => '利用限度額';
+
+  @override
+  String get onboarding_amountUsed => '利用金額';
+
+  @override
+  String get accounts_cardHolderOptional => 'カード名義人 (任意)';
+
+  @override
+  String get accounts_last4Digits => '下4桁';
+
+  @override
+  String get accounts_expiryDate => '有効期限 (MM/YY)';
+
+  @override
+  String get accounts_creditLimitOptional => '利用限度額 (任意)';
+
+  @override
+  String get accounts_minPaymentOptional => '最低支払額 (任意)';
+
+  @override
+  String get accounts_statementDayOptional => '締め日 (任意)';
+
+  @override
+  String get accounts_statementDayExample => '例: 20';
+
+  @override
+  String get accounts_dueDayOptional => '支払日 (任意)';
+
+  @override
+  String get accounts_dueDayExample => '例: 10';
+
+  @override
+  String get accounts_linkedAccountOptional => '紐付け銀行口座 (任意)';
+
+  @override
+  String get accounts_excludeCardBalance => '口座残高からカード残高を除外';
+
+  @override
+  String get accounts_excludeCardBalanceDesc => 'このカードの残高は紐付けられた銀行口座には加算されません。';
+
+  @override
+  String get accounts_cardHolderHeader => 'カード名義人';
+
+  @override
+  String get accounts_expHeader => '有効期限';
+
+  @override
+  String get accounts_notifyOnDueDate => '支払期日にお知らせします';
+
+  @override
+  String get accounts_notifyWhenDue => '支払期日に通知を受け取る';
+
+  @override
+  String get accounts_remind2DaysBeforeDesc => '支払期日の2日前に事前通知を受け取ります';
+
+  @override
+  String get accounts_targetSaved => '目標 / 貯蓄済';
+
+  @override
+  String transactions_selectedCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count件選択中',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get transactions_changeCategory => 'カテゴリ変更';
+
+  @override
+  String get transactions_deleteSelected => '選択項目を削除';
+
+  @override
+  String get transactions_advancedFilters => '高度なフィルター';
+
+  @override
+  String get transactions_clearAll => 'すべてクリア';
+
+  @override
+  String get transactions_amountRange => '金額範囲';
+
+  @override
+  String get transactions_minAmount => '最小金額';
+
+  @override
+  String get transactions_maxAmount => '最大金額';
+
+  @override
+  String get transactions_applyFilters => 'フィルターを適用';
+
+  @override
+  String get presets_new => '新規';
+
+  @override
+  String get presets_presetName => 'プリセット名 (例: 朝のコーヒー)';
+
+  @override
+  String get presets_defaultAmount => 'デフォルト金額';
+
+  @override
+  String get savings_goalName => '目標名';
+
+  @override
+  String get savings_goalNameHint => '例: 新車、旅行';
+
+  @override
+  String get savings_targetAmount => '目標金額';
+
+  @override
+  String get savings_targetDateOptional => '目標日 (任意)';
+
+  @override
+  String get savings_selectDate => '日付を選択';
+
+  @override
+  String get savings_amountRequired => '金額を入力してください';
+
+  @override
+  String get savings_noteOptional => 'メモ (任意)';
+
+  @override
+  String get loans_skipInstallment => 'ローンの次回の返済をスキップしますか？';
+
+  @override
+  String get recurring_confirmDelete => 'この定期支払いを削除してもよろしいですか？';
+
+  @override
+  String get export_formatExcelOption => 'Excel (.xlsx)';
+
+  @override
+  String get export_formatPdfOption => 'PDFレポート';
+
+  @override
+  String get export_pdfNoTransactions => 'この期間内に記録された取引はありません。';
+
+  @override
+  String get savings_saved => '貯蓄額';
+
+  @override
+  String get export_pdfDate => '日付';
+
+  @override
+  String get export_pdfDescription => '説明';
+
+  @override
+  String get accounts_noCardsYet => 'カードがありません';
+
+  @override
+  String get accounts_tapToAddCard => '+ をタップして最初のカードを追加';
+
+  @override
+  String get savings_noGoalsYet => '貯蓄目標がありません';
+
+  @override
+  String get savings_tapToAddGoal => '+ をタップして新しい目標を設定';
+
+  @override
+  String get netWorth_recordSnapshot => 'スナップショットを記録';
+
+  @override
+  String get netWorth_snapshotRecorded => 'スナップショットが記録されました';
+
+  @override
+  String get savings_noContributionsYet => '拠出金はまだありません';
+
+  @override
+  String get creditCard_closesStatementBillingCycle => '現在の請求サイクルの締め日を清算';
+
+  @override
+  String get creditCard_clearsTotalDebt => 'カードの残高を全額完済';
+
+  @override
+  String get creditCard_requiredMinPayment => '必要な最低支払額';
+
+  @override
+  String get creditCard_specifyCustomAmount => '任意の支払額を指定';
+
+  @override
+  String common_itemDeleted(String name) {
+    return '「$name」を削除しました';
+  }
+
+  @override
+  String get common_accountDeleted => 'アカウントを削除しました';
+
+  @override
+  String get common_cardDeleted => 'カードを削除しました';
+
+  @override
+  String get common_transactionDeleted => '取引を削除しました';
+
+  @override
+  String get common_recordDeleted => '記録を削除しました';
+
+  @override
+  String get common_paymentDeleted => '支払いを削除しました';
+
+  @override
+  String get loans_skippedInstallment => 'ローンの分割払いをスキップしました';
+
+  @override
+  String loans_loggedPayment(String amount) {
+    return '$amount の支払いを記録しました';
+  }
+
+  @override
+  String get loans_notificationsPermissionRequired => '通知の許可が必要です';
+
+  @override
+  String get creditCard_selectFundingAccount => '引き落とし口座を選択してください';
+
+  @override
+  String get presets_presetUpdated => 'プリセットを更新しました';
+
+  @override
+  String get presets_presetAdded => 'プリセットを追加しました';
+
+  @override
+  String get presets_presetDeleted => 'プリセットを削除しました';
+
+  @override
+  String transactions_deletedCount(int count) {
+    return '$count 件の項目を削除しました';
+  }
+
+  @override
+  String get split_atLeastTwoCategories => '分割には2つ以上のカテゴリが必要です。';
+
+  @override
+  String get split_categoryAndAmountRequired => '各分割項目にはカテゴリと0より大きい金額が必要です。';
+
+  @override
+  String get presets_addQuickPresets => 'ワンタップのクイックプリセットを追加';
+
+  @override
+  String get presets_quickPresetsDesc => 'コーヒーや交通費、食事などの頻出項目を1タップで記録';
+
+  @override
+  String presets_loggedPreset(String title, String amount) {
+    return '$title（$amount）を記録しました';
+  }
+
+  @override
+  String get presets_createPreset => 'プリセットを作成';
+
+  @override
+  String get presets_editQuickPreset => 'クイックプリセットを編集';
+
+  @override
+  String get presets_newQuickPreset => '新規クイックプリセット';
+
+  @override
+  String get savings_addContribution => '拠出金を追加';
+
+  @override
+  String get savings_withdrawFromGoal => '目標から引き出す';
+
+  @override
+  String get savings_contribution => '拠出金';
+
+  @override
+  String get savings_withdrawal => '引き出し';
+
+  @override
+  String get savings_unknownAccount => '不明な口座';
+
+  @override
+  String get savings_fromAccount => '出金元口座';
+
+  @override
+  String get savings_toAccount => '入金先口座';
+
+  @override
+  String get presets_quickLog => 'クイック記録';
+
+  @override
+  String accounts_dueOnDay(int day) {
+    return '$day日に期日';
+  }
 }

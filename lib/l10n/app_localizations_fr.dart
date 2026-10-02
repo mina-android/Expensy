@@ -657,7 +657,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get budget_budgeted => 'Budgété';
 
   @override
-  String get budget_leftToSpend => 'Left to Spend';
+  String get budget_leftToSpend => 'Reste à dépenser';
 
   @override
   String get budget_spent => 'Dépensé';
@@ -718,6 +718,206 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get budget_budget => 'Budget';
+
+  @override
+  String get budget_rollover => 'Report de budget (Enveloppe)';
+
+  @override
+  String get budget_rolloverDesc =>
+      'Reporter les surplus inutilisés ou les déficits sur la période suivante';
+
+  @override
+  String get budget_rolloverBadge => 'Report';
+
+  @override
+  String budget_base(Object amount) {
+    return 'Base : $amount';
+  }
+
+  @override
+  String budget_rolloverFrom(Object period, Object amount) {
+    return 'Report ($period) : $amount';
+  }
+
+  @override
+  String budget_totalAvailable(Object amount) {
+    return 'Total disponible : $amount';
+  }
+
+  @override
+  String get budget_lastWeek => 'Semaine dernière';
+
+  @override
+  String get pacing_dailyBudget => 'Dépense sereine';
+
+  @override
+  String pacing_safeToSpend(Object amount, Object days) {
+    return 'Dépense sereine : $amount/jour ($days jours restants)';
+  }
+
+  @override
+  String pacing_caution(Object amount) {
+    return 'Rythme élevé — limiter à $amount/jour';
+  }
+
+  @override
+  String get pacing_overPaced =>
+      'Alerte de rythme — ralentissez pour respecter le budget';
+
+  @override
+  String get pacing_budgetExhausted =>
+      'Budget épuisé — plus de marge quotidienne';
+
+  @override
+  String get pacing_onTrack => 'Dans les clous';
+
+  @override
+  String get pacing_fast => 'Rythme élevé';
+
+  @override
+  String get pacing_alert => 'Alerte rythme';
+
+  @override
+  String pacing_daysLeft(Object days) {
+    return '$days jours restants';
+  }
+
+  @override
+  String get pacing_setBudgetPrompt => 'Appuyez pour définir des budgets →';
+
+  @override
+  String get pacing_dailyAvgPace => 'Rythme quotidien';
+
+  @override
+  String pacing_perDay(Object amount) {
+    return '$amount / jour';
+  }
+
+  @override
+  String get calendar_title => 'Calendrier financier';
+
+  @override
+  String get calendar_subtitle => 'Carte thermique des dépenses et échéances';
+
+  @override
+  String calendar_zeroSpendDays(Object count) {
+    return '$count jours sans dépense';
+  }
+
+  @override
+  String get calendar_zeroSpendDayTitle => 'Journée zéro dépense ! 🎉';
+
+  @override
+  String get calendar_zeroSpendDayDesc =>
+      'Belle discipline financière sans aucune dépense aujourd\'hui.';
+
+  @override
+  String get calendar_billsDue => 'Factures et abonnements dus';
+
+  @override
+  String get calendar_loansDue => 'Mensualités de prêt dues';
+
+  @override
+  String get calendar_lendedDue => 'Remboursements attendus';
+
+  @override
+  String calendar_dayTransactions(Object count) {
+    return 'Transactions ($count)';
+  }
+
+  @override
+  String get calendar_noActivity =>
+      'Aucune transaction ni échéance à cette date';
+
+  @override
+  String get calendar_today => 'Aujourd\'hui';
+
+  @override
+  String calendar_averageDaily(Object amount) {
+    return 'Moyenne quotidienne : $amount';
+  }
+
+  @override
+  String get wrapped_title => 'Expensy Wrapped';
+
+  @override
+  String wrapped_bannerTitle(Object month) {
+    return 'Votre bilan de $month est prêt !';
+  }
+
+  @override
+  String get wrapped_bannerSub =>
+      'Appuyez pour voir votre histoire financière mensuelle';
+
+  @override
+  String get wrapped_theBigPicture => 'Vue d\'ensemble';
+
+  @override
+  String wrapped_howMoneyMoved(Object month) {
+    return 'Voici comment votre argent a circulé en $month';
+  }
+
+  @override
+  String get wrapped_totalInflow => 'Revenus totaux';
+
+  @override
+  String get wrapped_totalOutflow => 'Dépenses totales';
+
+  @override
+  String get wrapped_netSavings => 'Épargne nette';
+
+  @override
+  String wrapped_savingsRate(Object rate) {
+    return 'Taux d\'épargne : $rate%';
+  }
+
+  @override
+  String get wrapped_topCategoryTitle => 'Où est passé votre argent ?';
+
+  @override
+  String wrapped_topCategorySub(Object category) {
+    return 'Votre principale catégorie de dépense était $category';
+  }
+
+  @override
+  String wrapped_topCategoryShare(Object percent) {
+    return '$percent% de vos dépenses totales';
+  }
+
+  @override
+  String get wrapped_biggestSplurgeTitle => 'Plus gros achat';
+
+  @override
+  String get wrapped_biggestSplurgeSub => 'Votre plus grosse dépense du mois';
+
+  @override
+  String get wrapped_noSplurge =>
+      'Pas d\'excès ! Vous n\'avez eu aucune dépense ce mois-ci.';
+
+  @override
+  String get wrapped_heroHabitTitle => 'Habitude héroïque';
+
+  @override
+  String wrapped_zeroSpendAchieved(Object count) {
+    return '$count jours sans dépenses';
+  }
+
+  @override
+  String wrapped_heroHabitDesc(Object count) {
+    return 'Vous avez atteint $count jours sans dépenses. Discipline financière exceptionnelle !';
+  }
+
+  @override
+  String get wrapped_receiptTitle => 'Relevé mensuel';
+
+  @override
+  String get wrapped_obscureToggle => 'Masquer les montants pour partager';
+
+  @override
+  String get wrapped_showToggle => 'Afficher les montants';
+
+  @override
+  String get wrapped_replay => 'Rejouer l\'histoire';
 
   @override
   String get insights_other => 'Autre';
@@ -948,6 +1148,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get more_settingsSub => 'Thème, devise et préférences';
 
   @override
+  String get more_sectionTools => 'Outils financiers';
+
+  @override
+  String get more_sectionAnalytics => 'Analyses & Aperçus';
+
+  @override
+  String get more_sectionPreferences => 'Préférences & Données';
+
+  @override
   String home_greeting(Object name) {
     return 'Salut, $name 👋';
   }
@@ -1001,6 +1210,46 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get wishlist_addItem => 'Ajouter l\'élément';
+
+  @override
+  String get wishlist_fundThisItem => 'Financer l\'article';
+
+  @override
+  String wishlist_funded(int percent, String saved, String target) {
+    return '$percent% financé ($saved / $target)';
+  }
+
+  @override
+  String get wishlist_goalAchieved => 'Objectif atteint — prêt à acheter !';
+
+  @override
+  String get wishlist_buyNow => 'Acheter maintenant';
+
+  @override
+  String get wishlist_purchaseTitle => 'Acheter un article d\'envies';
+
+  @override
+  String get wishlist_purchasePrompt =>
+      'Voulez-vous enregistrer une dépense et déduire le montant d\'un compte ?';
+
+  @override
+  String get wishlist_recordAndDeduct => 'Enregistrer et déduire';
+
+  @override
+  String get wishlist_markPurchasedOnly => 'Marquer comme acheté uniquement';
+
+  @override
+  String wishlist_itemPurchased(String name) {
+    return '« $name » marqué comme acheté !';
+  }
+
+  @override
+  String get wishlist_viewGoal => 'Voir l\'objectif d\'épargne';
+
+  @override
+  String savings_linkedWishlist(String item) {
+    return 'Lié à la liste d\'envies : $item';
+  }
 
   @override
   String get lended_theyOweMe => 'Ils me doivent';
@@ -1206,6 +1455,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get accounts_excludeFromTotalBala => 'Exclure du solde total';
 
   @override
+  String get accounts_dontLinkToCard => 'Ne pas lier à une carte';
+
+  @override
+  String get accounts_dontLinkToCardDesc =>
+      'Gérer le solde manuellement et empêcher les cartes de s\'y lier';
+
+  @override
   String get accounts_color => 'Couleur';
 
   @override
@@ -1337,6 +1593,51 @@ class AppLocalizationsFr extends AppLocalizations {
   String get export_formatExcelXlsx => 'Format : Excel (.xlsx)';
 
   @override
+  String get export_exportAsPdf => 'Exporter en rapport PDF';
+
+  @override
+  String get export_formatPdf => 'Format : Rapport financier PDF (.pdf)';
+
+  @override
+  String get export_pdfGenerating => 'Génération du PDF...';
+
+  @override
+  String get export_pdfTitle => 'Rapport Financier';
+
+  @override
+  String get export_pdfSummary => 'Résumé exécutif';
+
+  @override
+  String get export_pdfInflow => 'Revenus totaux';
+
+  @override
+  String get export_pdfOutflow => 'Dépenses totales';
+
+  @override
+  String get export_pdfNet => 'Épargne nette';
+
+  @override
+  String get export_pdfSavingsRate => 'Taux d\'épargne';
+
+  @override
+  String get export_pdfCategoryBreakdown => 'Répartition par catégories';
+
+  @override
+  String get export_pdfTransactions => 'Transactions détaillées';
+
+  @override
+  String get export_pdfNetWorthBreakdown => 'Actifs et Passifs';
+
+  @override
+  String get export_pdfShare => 'Partager le rapport';
+
+  @override
+  String get export_pdfPrint => 'Imprimer / Aperçu';
+
+  @override
+  String get export_pdfGeneratedBy => 'Généré par Expensy • Privé & Hors-ligne';
+
+  @override
   String get home_totalBalance => 'Solde total';
 
   @override
@@ -1350,6 +1651,42 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get home_add => 'Ajouter';
+
+  @override
+  String get home_goodMorning => 'Bonjour';
+
+  @override
+  String get home_goodAfternoon => 'Bon après-midi';
+
+  @override
+  String get home_goodEvening => 'Bonsoir';
+
+  @override
+  String get home_transferAction => 'Transférer';
+
+  @override
+  String get home_insightsAction => 'Aperçus';
+
+  @override
+  String get home_calendarAction => 'Calendrier';
+
+  @override
+  String get home_forecastAction => 'Prévisions';
+
+  @override
+  String get home_manage => 'Gérer';
+
+  @override
+  String get home_seeAll => 'Voir tout';
+
+  @override
+  String get home_addAccount => 'Ajouter un compte';
+
+  @override
+  String get home_monthlyOverview => 'Aperçu mensuel';
+
+  @override
+  String get home_savingsRate => 'Taux d\'épargne';
 
   @override
   String get insights_insights => 'Aperçus';
@@ -1712,110 +2049,110 @@ class AppLocalizationsFr extends AppLocalizations {
   String get savings_saveGoal => 'Enregistrer l\'objectif';
 
   @override
-  String get more_loans => 'Loans';
+  String get more_loans => 'Prêts';
 
   @override
   String more_loansSub(num count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count active loans',
-      one: '1 active loan',
+      other: '$count prêts actifs',
+      one: '1 prêt actif',
     );
     return '$_temp0';
   }
 
   @override
-  String get loans_title => 'Loans';
+  String get loans_title => 'Prêts';
 
   @override
-  String get loans_addLoan => 'Add Loan';
+  String get loans_addLoan => 'Ajouter un prêt';
 
   @override
-  String get loans_editLoan => 'Edit Loan';
+  String get loans_editLoan => 'Modifier le prêt';
 
   @override
-  String get loans_loanName => 'Loan Name';
+  String get loans_loanName => 'Nom du prêt';
 
   @override
-  String get loans_amount => 'Amount';
+  String get loans_amount => 'Montant';
 
   @override
-  String get loans_startDate => 'Start Date';
+  String get loans_startDate => 'Date de début';
 
   @override
-  String get loans_endDate => 'End Date';
+  String get loans_endDate => 'Date de fin';
 
   @override
-  String get loans_interestRateOptional => 'Interest Rate (Optional)';
+  String get loans_interestRateOptional => 'Taux d\'intérêt (Optionnel)';
 
   @override
-  String get loans_account => 'Linked Account';
+  String get loans_account => 'Compte associé';
 
   @override
-  String get loans_monthlyPayment => 'Monthly Payment';
+  String get loans_monthlyPayment => 'Mensualité';
 
   @override
-  String get loans_totalPayable => 'Total Payable';
+  String get loans_totalPayable => 'Total à rembourser';
 
   @override
-  String get loans_remaining => 'Remaining';
+  String get loans_remaining => 'Restant';
 
   @override
-  String get loans_paid => 'Paid';
+  String get loans_paid => 'Payé';
 
   @override
-  String get loans_logPayment => 'Log Payment';
+  String get loans_logPayment => 'Enregistrer un paiement';
 
   @override
-  String get loans_paymentReminder => 'Payment Reminder';
+  String get loans_paymentReminder => 'Rappel de paiement';
 
   @override
-  String get loans_reminderDay => 'Reminder Day';
+  String get loans_reminderDay => 'Jour de rappel';
 
   @override
   String get loans_notes => 'Notes';
 
   @override
-  String get loans_saveLoan => 'Save Loan';
+  String get loans_saveLoan => 'Enregistrer le prêt';
 
   @override
-  String get loans_deleteLoan => 'Delete Loan';
+  String get loans_deleteLoan => 'Supprimer le prêt';
 
   @override
-  String get loans_settled => 'Settled';
+  String get loans_settled => 'Soldé';
 
   @override
   String loans_durationMonths(num count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count months',
-      one: '1 month',
+      other: '$count mois',
+      one: '1 mois',
     );
     return '$_temp0';
   }
 
   @override
-  String get loans_paymentHistory => 'Payment History';
+  String get loans_paymentHistory => 'Historique des paiements';
 
   @override
-  String get loans_noPayments => 'No payments logged yet';
+  String get loans_noPayments => 'Aucun paiement enregistré pour l\'instant';
 
   @override
-  String get loans_outstandingDebt => 'Outstanding Debt';
+  String get loans_outstandingDebt => 'Dette restante';
 
   @override
-  String get loans_monthlyObligation => 'Monthly Obligation';
+  String get loans_monthlyObligation => 'Engagement mensuel';
 
   @override
-  String get insights_loans => 'Loans';
+  String get insights_loans => 'Prêts';
 
   @override
-  String get backup_loans => 'Loans';
+  String get backup_loans => 'Prêts';
 
   @override
-  String get backup_loanPayments => 'Loan Payments';
+  String get backup_loanPayments => 'Paiements de prêt';
 
   @override
   String get more_yearlyAnalysis => 'Analyse annuelle';
@@ -1873,22 +2210,489 @@ class AppLocalizationsFr extends AppLocalizations {
   String get budget_addGoal => 'Ajouter un objectif d\'épargne';
 
   @override
-  String get add_transaction_possibleDuplicate => 'Possible duplicate';
+  String get add_transaction_possibleDuplicate => 'Doublon possible';
 
   @override
-  String get add_transaction_goBack => 'Go back';
+  String get add_transaction_goBack => 'Retour';
 
   @override
-  String get add_transaction_saveAnyway => 'Save anyway';
+  String get add_transaction_saveAnyway => 'Enregistrer quand même';
 
   @override
   String get loans_confirmDeleteLoan =>
-      'Are you sure you want to delete this loan and all its payments?';
+      'Voulez-vous vraiment supprimer ce prêt et tous ses paiements ?';
 
   @override
-  String get loans_deletePayment => 'Delete Payment';
+  String get loans_deletePayment => 'Supprimer le paiement';
 
   @override
   String get loans_confirmDeletePayment =>
-      'Are you sure you want to delete this payment record?';
+      'Voulez-vous vraiment supprimer cet enregistrement de paiement ?';
+
+  @override
+  String get split_transactions_title => 'Diviser les catégories';
+
+  @override
+  String get split_transactions_badge => 'Divisé';
+
+  @override
+  String get split_transactions_addSplit => 'Ajouter une division';
+
+  @override
+  String get split_transactions_removeSplit => 'Supprimer la division';
+
+  @override
+  String get split_transactions_allocated => 'Alloué';
+
+  @override
+  String get split_transactions_remaining => 'Restant';
+
+  @override
+  String get split_transactions_fillRemaining => 'Remplir le reste';
+
+  @override
+  String get split_transactions_breakdown => 'Détail de la division';
+
+  @override
+  String get split_transactions_mismatchError =>
+      'Le total des montants divisés doit correspondre au montant total.';
+
+  @override
+  String get netWorth_title => 'Valeur nette';
+
+  @override
+  String get netWorth_subtitle =>
+      'Suivez le total des actifs, des passifs et de la richesse';
+
+  @override
+  String get netWorth_current => 'Valeur nette actuelle';
+
+  @override
+  String get netWorth_trend => 'Tendance de la valeur nette';
+
+  @override
+  String get netWorth_totalAssets => 'Total des actifs';
+
+  @override
+  String get netWorth_totalLiabilities => 'Total des passifs';
+
+  @override
+  String get netWorth_liquidCash => 'Espèces et comptes bancaires';
+
+  @override
+  String get netWorth_goldValuation => 'Or physique';
+
+  @override
+  String get netWorth_fixedAssets => 'Biens et investissements';
+
+  @override
+  String get netWorth_moneyLent => 'Argent prêté (Créances)';
+
+  @override
+  String get netWorth_creditDebt => 'Cartes de crédit et découverts';
+
+  @override
+  String get netWorth_loanDebt => 'Prêts à rembourser';
+
+  @override
+  String get netWorth_moneyBorrowed => 'Argent emprunté (Dettes)';
+
+  @override
+  String get netWorth_assetBreakdown => 'Ventilation des actifs';
+
+  @override
+  String get netWorth_liabilityBreakdown => 'Ventilation des passifs';
+
+  @override
+  String get netWorth_noHistory =>
+      'L\'historique de la valeur nette s\'établira automatiquement avec les instantanés quotidiens.';
+
+  @override
+  String get netWorth_debtRatio => 'Ratio d\'endettement';
+
+  @override
+  String get netWorth_quickActions => 'Actions rapides';
+
+  @override
+  String get netWorth_history => 'Historique des instantanés';
+
+  @override
+  String get creditCard_utilization => 'Utilisation du crédit';
+
+  @override
+  String get creditCard_availableCredit => 'Disponible';
+
+  @override
+  String get creditCard_limit => 'Plafond';
+
+  @override
+  String get creditCard_statementBalance => 'Solde du relevé';
+
+  @override
+  String get creditCard_unbilledBalance => 'Non facturé';
+
+  @override
+  String get creditCard_payBill => 'Payer le relevé';
+
+  @override
+  String get creditCard_allCaughtUp => 'Tout est à jour ! Aucun solde dû';
+
+  @override
+  String get creditCard_payBillTitle => 'Régler la facture de carte';
+
+  @override
+  String get creditCard_payFromAccount => 'Payer depuis le compte';
+
+  @override
+  String get creditCard_paymentAmount => 'Montant du paiement';
+
+  @override
+  String get creditCard_fullStatement => 'Solde du relevé';
+
+  @override
+  String get creditCard_fullBalance => 'Solde total';
+
+  @override
+  String get creditCard_minPayment => 'Paiement minimum';
+
+  @override
+  String get creditCard_customAmount => 'Montant personnalisé';
+
+  @override
+  String creditCard_paymentSuccess(String amount, String cardName) {
+    return '$amount payé(s) pour $cardName';
+  }
+
+  @override
+  String get creditCard_insufficientFunds =>
+      'Le montant dépasse le solde disponible';
+
+  @override
+  String get creditCard_invalidAmount => 'Veuillez saisir un montant valide';
+
+  @override
+  String get onboarding_skipForNow => 'Ignorer pour le moment';
+
+  @override
+  String get onboarding_addCard => 'Ajouter une carte';
+
+  @override
+  String get onboarding_skipCardDesc =>
+      'Vous pouvez ignorer cette étape si vous ne souhaitez pas ajouter de carte maintenant.';
+
+  @override
+  String get onboarding_cardNameLabel => 'Nom de la carte (ex. Visa Platinum)';
+
+  @override
+  String get onboarding_debitCard => 'Carte de débit';
+
+  @override
+  String get onboarding_creditLimit => 'Plafond de crédit';
+
+  @override
+  String get onboarding_amountUsed => 'Montant utilisé';
+
+  @override
+  String get accounts_cardHolderOptional => 'Titulaire de la carte (Optionnel)';
+
+  @override
+  String get accounts_last4Digits => '4 derniers chiffres';
+
+  @override
+  String get accounts_expiryDate => 'Date d\'expiration (MM/AA)';
+
+  @override
+  String get accounts_creditLimitOptional => 'Plafond de crédit (Optionnel)';
+
+  @override
+  String get accounts_minPaymentOptional => 'Paiement minimum (Optionnel)';
+
+  @override
+  String get accounts_statementDayOptional => 'Jour d\'arrêté (Optionnel)';
+
+  @override
+  String get accounts_statementDayExample => 'ex. 20';
+
+  @override
+  String get accounts_dueDayOptional => 'Jour d\'échéance (Optionnel)';
+
+  @override
+  String get accounts_dueDayExample => 'ex. 10';
+
+  @override
+  String get accounts_linkedAccountOptional =>
+      'Compte bancaire lié (Optionnel)';
+
+  @override
+  String get accounts_excludeCardBalance =>
+      'Exclure le solde de la carte du solde du compte';
+
+  @override
+  String get accounts_excludeCardBalanceDesc =>
+      'Le solde de cette carte ne sera pas ajouté à son compte bancaire lié.';
+
+  @override
+  String get accounts_cardHolderHeader => 'TITULAIRE';
+
+  @override
+  String get accounts_expHeader => 'EXP';
+
+  @override
+  String get accounts_notifyOnDueDate =>
+      'Vous serez notifié à la date d\'échéance';
+
+  @override
+  String get accounts_notifyWhenDue =>
+      'Recevoir une notification avant l\'échéance';
+
+  @override
+  String get accounts_remind2DaysBeforeDesc =>
+      'Recevoir un avertissement 2 jours avant l\'échéance';
+
+  @override
+  String get accounts_targetSaved => 'Objectif / Épargné';
+
+  @override
+  String transactions_selectedCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sélectionnés',
+      one: '1 sélectionné',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get transactions_changeCategory => 'Changer de catégorie';
+
+  @override
+  String get transactions_deleteSelected => 'Supprimer la sélection';
+
+  @override
+  String get transactions_advancedFilters => 'Filtres avancés';
+
+  @override
+  String get transactions_clearAll => 'Tout effacer';
+
+  @override
+  String get transactions_amountRange => 'Fourchette de montant';
+
+  @override
+  String get transactions_minAmount => 'Montant min';
+
+  @override
+  String get transactions_maxAmount => 'Montant max';
+
+  @override
+  String get transactions_applyFilters => 'Appliquer les filtres';
+
+  @override
+  String get presets_new => 'Nouveau';
+
+  @override
+  String get presets_presetName => 'Nom du modèle (ex. Café du matin)';
+
+  @override
+  String get presets_defaultAmount => 'Montant par défaut';
+
+  @override
+  String get savings_goalName => 'Nom de l\'objectif';
+
+  @override
+  String get savings_goalNameHint => 'ex. Nouvelle voiture, Vacances';
+
+  @override
+  String get savings_targetAmount => 'Montant cible';
+
+  @override
+  String get savings_targetDateOptional => 'Date cible (Optionnel)';
+
+  @override
+  String get savings_selectDate => 'Sélectionner la date';
+
+  @override
+  String get savings_amountRequired => 'Le montant est requis';
+
+  @override
+  String get savings_noteOptional => 'Note (Optionnel)';
+
+  @override
+  String get loans_skipInstallment => 'Ignorer la prochaine échéance du prêt ?';
+
+  @override
+  String get recurring_confirmDelete =>
+      'Voulez-vous vraiment supprimer ce paiement récurrent ?';
+
+  @override
+  String get export_formatExcelOption => 'Excel (.xlsx)';
+
+  @override
+  String get export_formatPdfOption => 'Rapport PDF';
+
+  @override
+  String get export_pdfNoTransactions =>
+      'Aucune transaction enregistrée dans cette période.';
+
+  @override
+  String get savings_saved => 'Économisé';
+
+  @override
+  String get export_pdfDate => 'Date';
+
+  @override
+  String get export_pdfDescription => 'Description';
+
+  @override
+  String get accounts_noCardsYet => 'Aucune carte';
+
+  @override
+  String get accounts_tapToAddCard =>
+      'Appuyez sur + pour ajouter votre première carte';
+
+  @override
+  String get savings_noGoalsYet => 'Aucun objectif d\'épargne';
+
+  @override
+  String get savings_tapToAddGoal =>
+      'Appuyez sur + pour définir un nouvel objectif';
+
+  @override
+  String get netWorth_recordSnapshot => 'Enregistrer un instantané';
+
+  @override
+  String get netWorth_snapshotRecorded => 'Instantané enregistré';
+
+  @override
+  String get savings_noContributionsYet => 'Aucune contribution pour le moment';
+
+  @override
+  String get creditCard_closesStatementBillingCycle =>
+      'Clôture le cycle de facturation actuel du relevé';
+
+  @override
+  String get creditCard_clearsTotalDebt =>
+      'Règle intégralement la dette totale de la carte';
+
+  @override
+  String get creditCard_requiredMinPayment => 'Paiement minimum requis';
+
+  @override
+  String get creditCard_specifyCustomAmount =>
+      'Spécifier un montant de paiement personnalisé';
+
+  @override
+  String common_itemDeleted(String name) {
+    return '\"$name\" supprimé';
+  }
+
+  @override
+  String get common_accountDeleted => 'Compte supprimé';
+
+  @override
+  String get common_cardDeleted => 'Carte supprimée';
+
+  @override
+  String get common_transactionDeleted => 'Transaction supprimée';
+
+  @override
+  String get common_recordDeleted => 'Enregistrement supprimé';
+
+  @override
+  String get common_paymentDeleted => 'Paiement supprimé';
+
+  @override
+  String get loans_skippedInstallment => 'Échéance de prêt ignorée';
+
+  @override
+  String loans_loggedPayment(String amount) {
+    return 'Paiement de $amount enregistré';
+  }
+
+  @override
+  String get loans_notificationsPermissionRequired =>
+      'Autorisation des notifications requise';
+
+  @override
+  String get creditCard_selectFundingAccount =>
+      'Veuillez sélectionner un compte source';
+
+  @override
+  String get presets_presetUpdated => 'Modèle mis à jour';
+
+  @override
+  String get presets_presetAdded => 'Modèle ajouté';
+
+  @override
+  String get presets_presetDeleted => 'Modèle supprimé';
+
+  @override
+  String transactions_deletedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count éléments supprimés',
+      one: '1 élément supprimé',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get split_atLeastTwoCategories =>
+      'Au moins 2 catégories requises pour la division.';
+
+  @override
+  String get split_categoryAndAmountRequired =>
+      'Chaque élément divisé doit avoir une catégorie et un montant > 0.';
+
+  @override
+  String get presets_addQuickPresets =>
+      'Ajouter des modèles rapides en 1 geste';
+
+  @override
+  String get presets_quickPresetsDesc =>
+      'Enregistrez vos dépenses fréquentes (café, transport, repas) en un geste';
+
+  @override
+  String presets_loggedPreset(String title, String amount) {
+    return '$title ($amount) enregistré';
+  }
+
+  @override
+  String get presets_createPreset => 'Créer un modèle';
+
+  @override
+  String get presets_editQuickPreset => 'Modifier le modèle rapide';
+
+  @override
+  String get presets_newQuickPreset => 'Nouveau modèle rapide';
+
+  @override
+  String get savings_addContribution => 'Ajouter une contribution';
+
+  @override
+  String get savings_withdrawFromGoal => 'Retirer de l\'objectif';
+
+  @override
+  String get savings_contribution => 'Contribution';
+
+  @override
+  String get savings_withdrawal => 'Retrait';
+
+  @override
+  String get savings_unknownAccount => 'Compte inconnu';
+
+  @override
+  String get savings_fromAccount => 'Depuis le compte';
+
+  @override
+  String get savings_toAccount => 'Vers le compte';
+
+  @override
+  String get presets_quickLog => 'Saisie rapide';
+
+  @override
+  String accounts_dueOnDay(int day) {
+    return 'Échéance le $day';
+  }
 }

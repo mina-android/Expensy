@@ -8,8 +8,12 @@ enum HapticStrength { selection, light, medium, heavy }
 class AppHaptics {
   static void tap(BuildContext context,
       [HapticStrength strength = HapticStrength.light]) {
-    final enabled = context.read<AppProvider>().settings.hapticsEnabled;
-    if (!enabled) return;
+    try {
+      final enabled = context.read<AppProvider>().settings.hapticsEnabled;
+      if (!enabled) return;
+    } catch (_) {
+      // Provider not present in context (e.g. in isolated widget tests)
+    }
 
     switch (strength) {
       case HapticStrength.selection:

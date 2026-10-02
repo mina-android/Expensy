@@ -7,4 +7,7 @@
     <color name="budget_primary">@android:color/system_accent1_200</color>
     <color name="budget_orange">@android:color/system_accent2_200</color>
     <color name="budget_red">@android:color/system_accent3_200</color>
+    <color name="shortcut_background">@android:color/system_neutral1_900</color>
+    <color name="shortcut_icon_color">#FFFFFF</color>
+    <color name="quick_tile_icon_color">#FFFFFF</color>
 </resources>

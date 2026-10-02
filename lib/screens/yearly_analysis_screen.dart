@@ -141,7 +141,13 @@ class YearlyAnalysisScreen extends StatefulWidget {
 
 class _YearlyAnalysisScreenState extends State<YearlyAnalysisScreen> {
   late int _selectedYear;
-
+  Map<int, Map<int, YearlyMonthData>>? _cachedAllData;
+  List<RecurringPayment>? _cachedRecurring;
+  List<Loan>? _cachedLoans;
+  List<LendedMoney>? _cachedLended;
+  Map<String, double>? _cachedRates;
+  String? _cachedCurrency;
+  List<Account>? _cachedAccounts;
   @override
   void initState() {
     super.initState();
@@ -154,7 +160,25 @@ class _YearlyAnalysisScreenState extends State<YearlyAnalysisScreen> {
     final cs = Theme.of(context).colorScheme;
     final app = context.watch<AppProvider>();
 
-    final allData = buildYearlyAnalysis(app);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    if (_cachedAllData == null ||
+        !identical(_cachedRecurring, app.recurring) ||
+        !identical(_cachedLoans, app.loans) ||
+        !identical(_cachedLended, app.lended) ||
+        !identical(_cachedRates, app.exchangeRates) ||
+        _cachedCurrency != app.settings.currency ||
+        !identical(_cachedAccounts, app.accounts)) {
+      _cachedRecurring = app.recurring;
+      _cachedLoans = app.loans;
+      _cachedLended = app.lended;
+      _cachedRates = app.exchangeRates;
+      _cachedCurrency = app.settings.currency;
+      _cachedAccounts = app.accounts;
+      _cachedAllData = buildYearlyAnalysis(app);
+    }
+
+    final allData = _cachedAllData!;
     final yearData = allData[_selectedYear] ?? {};
 
     double totalInflow = 0;
@@ -181,8 +205,6 @@ class _YearlyAnalysisScreenState extends State<YearlyAnalysisScreen> {
       appBar: AppBar(
         title: Text(l10n.yearly_title,
             style: const TextStyle(fontWeight: FontWeight.w800)),
-        backgroundColor: cs.primary,
-        foregroundColor: cs.onPrimary,
       ),
       body: !hasAnyDataInApp
           ? EmptyState(
@@ -194,8 +216,17 @@ class _YearlyAnalysisScreenState extends State<YearlyAnalysisScreen> {
               children: [
                 // Year Navigator Row
                 Container(
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: cs.surfaceContainer.withValues(alpha: isDark ? 0.35 : 0.55),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04),
+                    ),
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -261,7 +292,7 @@ class _YearlyAnalysisScreenState extends State<YearlyAnalysisScreen> {
                 // Month List
                 Expanded(
                   child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    padding: const EdgeInsets.fromLTRB(14, 0, 14, 60),
                     itemCount: 12,
                     itemBuilder: (context, index) {
                       final monthNum = index + 1;
@@ -297,11 +328,15 @@ class _SummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
       decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(14),
+        color: cs.surfaceContainer.withValues(alpha: isDark ? 0.35 : 0.55),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -358,24 +393,35 @@ class _MonthCardState extends State<_MonthCard> {
     final cs = Theme.of(context).colorScheme;
     final isEmpty = widget.data.isEmpty;
     final monthName = DateFormat('MMMM').format(widget.month);
-    final netColor = widget.data.netFlow >= 0 ? cs.primary : cs.error;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final netColor = widget.data.netFlow >= 0
+        ? const Color(0xFF2E7D32)
+        : const Color(0xFFC62828);
 
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      clipBehavior: Clip.antiAlias,
-      elevation: _expanded ? 3 : 1,
+      decoration: BoxDecoration(
+        color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+        ),
+      ),
       child: AnimatedOpacity(
         duration: const Duration(milliseconds: 200),
         opacity: isEmpty ? 0.5 : 1.0,
-        child: InkWell(
-          onTap: isEmpty
-              ? null
-              : () {
-                  AppHaptics.tap(context, HapticStrength.selection);
-                  setState(() => _expanded = !_expanded);
-                },
-          child: Padding(
-            padding: const EdgeInsets.all(16),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(20),
+            onTap: isEmpty
+                ? null
+                : () {
+                    AppHaptics.tap(context, HapticStrength.selection);
+                    setState(() => _expanded = !_expanded);
+                  },
+            child: Padding(
+              padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -607,6 +653,7 @@ class _MonthCardState extends State<_MonthCard> {
             ),
           ),
         ),
+      ),
       ),
     );
   }

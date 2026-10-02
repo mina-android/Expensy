@@ -9,6 +9,7 @@ class Account {
   int colorValue;
   bool excludeFromTotal;
   bool excludeFromBankTotal;
+  bool dontLinkToCard;
   DateTime createdAt;
   // Gold-specific fields (null for non-gold accounts)
   final int? goldKarat; // 24, 22, 21, 18, 14, 10, 9
@@ -37,6 +38,7 @@ class Account {
     required this.colorValue,
     this.excludeFromTotal = false,
     this.excludeFromBankTotal = false,
+    this.dontLinkToCard = false,
     DateTime? createdAt,
     this.goldKarat,
     this.goldGrams,
@@ -67,6 +69,7 @@ class Account {
         'color_value': colorValue,
         'exclude_from_total': excludeFromTotal ? 1 : 0,
         'exclude_from_bank_total': excludeFromBankTotal ? 1 : 0,
+        'dont_link_to_card': dontLinkToCard ? 1 : 0,
         'created_at': createdAt.toIso8601String(),
         'gold_karat': goldKarat,
         'gold_grams': goldGrams,
@@ -94,6 +97,7 @@ class Account {
         colorValue: (m['color_value'] as int?) ?? 0xFF6750A4,
         excludeFromTotal: (m['exclude_from_total'] as int? ?? 0) == 1,
         excludeFromBankTotal: (m['exclude_from_bank_total'] as int? ?? 0) == 1,
+        dontLinkToCard: (m['dont_link_to_card'] as int? ?? 0) == 1,
         createdAt: m['created_at'] != null
             ? DateTime.parse(m['created_at'] as String)
             : DateTime.now(),
@@ -123,6 +127,7 @@ class Account {
     int? colorValue,
     bool? excludeFromTotal,
     bool? excludeFromBankTotal,
+    bool? dontLinkToCard,
     int? goldKarat,
     double? goldGrams,
     String? cardHolderName,
@@ -151,6 +156,7 @@ class Account {
         colorValue: colorValue ?? this.colorValue,
         excludeFromTotal: excludeFromTotal ?? this.excludeFromTotal,
         excludeFromBankTotal: excludeFromBankTotal ?? this.excludeFromBankTotal,
+        dontLinkToCard: dontLinkToCard ?? this.dontLinkToCard,
         createdAt: createdAt,
         goldKarat: clearGold ? null : (goldKarat ?? this.goldKarat),
         goldGrams: clearGold ? null : (goldGrams ?? this.goldGrams),
@@ -327,6 +333,8 @@ class RecurringPayment {
   bool earlyReminderEnabled;
   String notes;
   String recurringType; // 'subscription' | 'installment'
+  bool autoPayEnabled;
+  String autoPayTime; // 'HH:mm'
 
   RecurringPayment({
     required this.id,
@@ -346,6 +354,8 @@ class RecurringPayment {
     this.earlyReminderEnabled = false,
     this.notes = '',
     this.recurringType = 'subscription',
+    this.autoPayEnabled = false,
+    this.autoPayTime = '09:00',
   });
 
   // Inclusive count: first → last
@@ -434,6 +444,8 @@ class RecurringPayment {
         'early_reminder_enabled': earlyReminderEnabled ? 1 : 0,
         'notes': notes,
         'recurring_type': recurringType,
+        'auto_pay_enabled': autoPayEnabled ? 1 : 0,
+        'auto_pay_time': autoPayTime,
       };
 
   static RecurringPayment fromMap(Map<String, dynamic> m) => RecurringPayment(
@@ -460,6 +472,8 @@ class RecurringPayment {
         earlyReminderEnabled: (m['early_reminder_enabled'] as int? ?? 0) == 1,
         notes: (m['notes'] as String?) ?? '',
         recurringType: (m['recurring_type'] as String?) ?? 'subscription',
+        autoPayEnabled: (m['auto_pay_enabled'] as int? ?? 0) == 1,
+        autoPayTime: (m['auto_pay_time'] as String?) ?? '09:00',
       );
 }
 
@@ -471,6 +485,7 @@ class WishlistItem {
   bool isPurchased;
   String notes;
   DateTime createdAt;
+  String? goalId;
 
   WishlistItem({
     required this.id,
@@ -480,6 +495,7 @@ class WishlistItem {
     this.isPurchased = false,
     this.notes = '',
     DateTime? createdAt,
+    this.goalId,
   }) : createdAt = createdAt ?? DateTime.now();
 
   Map<String, dynamic> toMap() => {
@@ -490,6 +506,7 @@ class WishlistItem {
         'is_purchased': isPurchased ? 1 : 0,
         'notes': notes,
         'created_at': createdAt.toIso8601String(),
+        'goal_id': goalId,
       };
 
   static WishlistItem fromMap(Map<String, dynamic> m) => WishlistItem(
@@ -502,6 +519,7 @@ class WishlistItem {
         createdAt: m['created_at'] != null
             ? DateTime.parse(m['created_at'] as String)
             : DateTime.now(),
+        goalId: m['goal_id'] as String?,
       );
 
   WishlistItem copyWith({
@@ -510,6 +528,8 @@ class WishlistItem {
     String? priority,
     bool? isPurchased,
     String? notes,
+    String? goalId,
+    bool clearGoalId = false,
   }) =>
       WishlistItem(
         id: id,
@@ -519,6 +539,7 @@ class WishlistItem {
         isPurchased: isPurchased ?? this.isPurchased,
         notes: notes ?? this.notes,
         createdAt: createdAt,
+        goalId: clearGoalId ? null : (goalId ?? this.goalId),
       );
 }
 
@@ -721,6 +742,7 @@ class Budget {
   final double amount;
   final String period; // 'monthly' | 'weekly'
   final DateTime createdAt;
+  final bool allowRollover;
 
   const Budget({
     required this.id,
@@ -728,15 +750,22 @@ class Budget {
     required this.amount,
     required this.period,
     required this.createdAt,
+    this.allowRollover = false,
   });
 
-  Budget copyWith({String? categoryId, double? amount, String? period}) =>
+  Budget copyWith({
+    String? categoryId,
+    double? amount,
+    String? period,
+    bool? allowRollover,
+  }) =>
       Budget(
         id: id,
         categoryId: categoryId ?? this.categoryId,
         amount: amount ?? this.amount,
         period: period ?? this.period,
         createdAt: createdAt,
+        allowRollover: allowRollover ?? this.allowRollover,
       );
 
   Map<String, dynamic> toMap() => {
@@ -745,6 +774,7 @@ class Budget {
         'amount': amount,
         'period': period,
         'created_at': createdAt.toIso8601String(),
+        'allow_rollover': allowRollover ? 1 : 0,
       };
 
   static Budget fromMap(Map<String, dynamic> m) => Budget(
@@ -755,7 +785,53 @@ class Budget {
         createdAt: m['created_at'] != null
             ? DateTime.parse(m['created_at'] as String)
             : DateTime.now(),
+        allowRollover: (m['allow_rollover'] as int? ?? 0) == 1,
       );
+}
+
+/// Pacing status of a budget relative to elapsed time in the period.
+enum BudgetPacingStatus {
+  /// Spending rate is equal to or slower than time elapsed (pacing ratio <= 1.0).
+  onTrack,
+
+  /// Spending rate is slightly faster than time elapsed (pacing ratio 1.01 - 1.25).
+  caution,
+
+  /// Spending rate is significantly faster than time elapsed (pacing ratio > 1.25).
+  overPaced,
+
+  /// Current spending has exceeded the total effective budget allowance.
+  exceeded,
+}
+
+/// Computed daily pacing analysis for a budget or aggregated budgets.
+class BudgetPacingInfo {
+  final double safeDailyAllowance;
+  final double pacingRatio;
+  final int daysRemaining;
+  final int totalDaysInPeriod;
+  final int elapsedDays;
+  final double spent;
+  final double allowance;
+  final double remainingAmount;
+  final BudgetPacingStatus status;
+
+  const BudgetPacingInfo({
+    required this.safeDailyAllowance,
+    required this.pacingRatio,
+    required this.daysRemaining,
+    required this.totalDaysInPeriod,
+    required this.elapsedDays,
+    required this.spent,
+    required this.allowance,
+    required this.remainingAmount,
+    required this.status,
+  });
+
+  bool get isOnTrack => status == BudgetPacingStatus.onTrack;
+  bool get isCaution => status == BudgetPacingStatus.caution;
+  bool get isOverPaced => status == BudgetPacingStatus.overPaced;
+  bool get isExceeded => status == BudgetPacingStatus.exceeded;
 }
 
 class NetWorthSnapshot {
@@ -846,6 +922,7 @@ class SavingsGoal {
   bool isCompleted;
   DateTime createdAt;
   DateTime? completedAt;
+  String? wishlistItemId;
 
   SavingsGoal({
     required this.id,
@@ -858,6 +935,7 @@ class SavingsGoal {
     this.isCompleted = false,
     DateTime? createdAt,
     this.completedAt,
+    this.wishlistItemId,
   }) : createdAt = createdAt ?? DateTime.now();
 
   Map<String, dynamic> toMap() => {
@@ -871,6 +949,7 @@ class SavingsGoal {
         'is_completed': isCompleted ? 1 : 0,
         'created_at': createdAt.toIso8601String(),
         'completed_at': completedAt?.toIso8601String(),
+        'wishlist_item_id': wishlistItemId,
       };
 
   static SavingsGoal fromMap(Map<String, dynamic> m) => SavingsGoal(
@@ -890,6 +969,7 @@ class SavingsGoal {
         completedAt: m['completed_at'] != null
             ? DateTime.parse(m['completed_at'] as String)
             : null,
+        wishlistItemId: m['wishlist_item_id'] as String?,
       );
 
   SavingsGoal copyWith({
@@ -901,8 +981,10 @@ class SavingsGoal {
     int? colorValue,
     bool? isCompleted,
     DateTime? completedAt,
+    String? wishlistItemId,
     bool clearTargetDate = false,
     bool clearCompletedAt = false,
+    bool clearWishlistItemId = false,
   }) =>
       SavingsGoal(
         id: id,
@@ -916,6 +998,9 @@ class SavingsGoal {
         createdAt: createdAt,
         completedAt:
             clearCompletedAt ? null : (completedAt ?? this.completedAt),
+        wishlistItemId: clearWishlistItemId
+            ? null
+            : (wishlistItemId ?? this.wishlistItemId),
       );
 }
 
@@ -1156,3 +1241,214 @@ class LoanPayment {
         notes: (m['notes'] as String?) ?? '',
       );
 }
+
+class TransactionPreset {
+  final String id;
+  String title;
+  String type; // expense | income
+  double amount;
+  String accountId;
+  String categoryId;
+  String currency;
+  String note;
+  int colorValue;
+  int iconCodePoint;
+  int orderIndex;
+  DateTime createdAt;
+
+  TransactionPreset({
+    required this.id,
+    required this.title,
+    required this.type,
+    required this.amount,
+    required this.accountId,
+    required this.categoryId,
+    this.currency = '',
+    this.note = '',
+    required this.colorValue,
+    this.iconCodePoint = 0,
+    this.orderIndex = 0,
+    DateTime? createdAt,
+  }) : createdAt = createdAt ?? DateTime.now();
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'title': title,
+        'type': type,
+        'amount': amount,
+        'account_id': accountId,
+        'category_id': categoryId,
+        'currency': currency,
+        'note': note,
+        'color_value': colorValue,
+        'icon_code_point': iconCodePoint,
+        'order_index': orderIndex,
+        'created_at': createdAt.toIso8601String(),
+      };
+
+  static TransactionPreset fromMap(Map<String, dynamic> m) => TransactionPreset(
+        id: (m['id'] as String?) ?? '',
+        title: (m['title'] as String?) ?? '',
+        type: (m['type'] as String?) ?? 'expense',
+        amount: (m['amount'] as num?)?.toDouble() ?? 0.0,
+        accountId: (m['account_id'] as String?) ?? '',
+        categoryId: (m['category_id'] as String?) ?? '',
+        currency: (m['currency'] as String?) ?? '',
+        note: (m['note'] as String?) ?? '',
+        colorValue: (m['color_value'] as int?) ?? 0xFF2196F3,
+        iconCodePoint: (m['icon_code_point'] as int?) ?? 0,
+        orderIndex: (m['order_index'] as int?) ?? 0,
+        createdAt: m['created_at'] != null
+            ? DateTime.tryParse(m['created_at'] as String) ?? DateTime.now()
+            : DateTime.now(),
+      );
+
+  TransactionPreset copyWith({
+    String? title,
+    String? type,
+    double? amount,
+    String? accountId,
+    String? categoryId,
+    String? currency,
+    String? note,
+    int? colorValue,
+    int? iconCodePoint,
+    int? orderIndex,
+  }) =>
+      TransactionPreset(
+        id: id,
+        title: title ?? this.title,
+        type: type ?? this.type,
+        amount: amount ?? this.amount,
+        accountId: accountId ?? this.accountId,
+        categoryId: categoryId ?? this.categoryId,
+        currency: currency ?? this.currency,
+        note: note ?? this.note,
+        colorValue: colorValue ?? this.colorValue,
+        iconCodePoint: iconCodePoint ?? this.iconCodePoint,
+        orderIndex: orderIndex ?? this.orderIndex,
+        createdAt: createdAt,
+      );
+}
+
+class TransactionSplit {
+  final String id;
+  final String transactionId;
+  final String categoryId;
+  final double amount;
+  final String note;
+
+  const TransactionSplit({
+    required this.id,
+    required this.transactionId,
+    required this.categoryId,
+    required this.amount,
+    this.note = '',
+  });
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'transaction_id': transactionId,
+        'category_id': categoryId,
+        'amount': amount,
+        'note': note,
+      };
+
+  static TransactionSplit fromMap(Map<String, dynamic> m) => TransactionSplit(
+        id: (m['id'] as String?) ?? '',
+        transactionId: (m['transaction_id'] as String?) ?? '',
+        categoryId: (m['category_id'] as String?) ?? '',
+        amount: (m['amount'] as num?)?.toDouble() ?? 0.0,
+        note: (m['note'] as String?) ?? '',
+      );
+
+  TransactionSplit copyWith({
+    String? categoryId,
+    double? amount,
+    String? note,
+  }) =>
+      TransactionSplit(
+        id: id,
+        transactionId: transactionId,
+        categoryId: categoryId ?? this.categoryId,
+        amount: amount ?? this.amount,
+        note: note ?? this.note,
+      );
+}
+
+/// Represents the calculated billing cycle, utilization, and settlement status for a credit card.
+class CreditCardStatement {
+  final Account account;
+  final DateTime? statementDate;
+  final DateTime? previousStatementDate;
+  final DateTime? dueDate;
+  final double statementBalance;
+  final double unbilledBalance;
+  final double totalOutstandingDebt;
+  final double creditLimit;
+  final double availableCredit;
+  final double utilizationPercent;
+  final double minPaymentAmount;
+  final int? daysUntilDue;
+  final bool isDueSoon;
+  final bool isOverdue;
+  final bool isFullyPaid;
+
+  const CreditCardStatement({
+    required this.account,
+    this.statementDate,
+    this.previousStatementDate,
+    this.dueDate,
+    required this.statementBalance,
+    required this.unbilledBalance,
+    required this.totalOutstandingDebt,
+    required this.creditLimit,
+    required this.availableCredit,
+    required this.utilizationPercent,
+    required this.minPaymentAmount,
+    this.daysUntilDue,
+    required this.isDueSoon,
+    required this.isOverdue,
+    required this.isFullyPaid,
+  });
+
+  /// Utilization tier: 'low' (< 30%), 'moderate' (30% - 70%), 'high' (> 70%)
+  String get utilizationTier {
+    if (utilizationPercent < 30.0) return 'low';
+    if (utilizationPercent <= 70.0) return 'moderate';
+    return 'high';
+  }
+}
+
+/// Monthly story review / digest snapshot model for Expensy Wrapped.
+class ExpensyWrappedData {
+  final DateTime month;
+  final double totalInflow;
+  final double totalOutflow;
+  final double netSaved;
+  final double savingsRate;
+  final String? topCategoryId;
+  final double topCategoryAmount;
+  final double topCategoryPercent;
+  final AppTransaction? biggestSplurge;
+  final double biggestSplurgeAmount;
+  final int zeroSpendDays;
+  final int totalDaysInMonth;
+
+  const ExpensyWrappedData({
+    required this.month,
+    required this.totalInflow,
+    required this.totalOutflow,
+    required this.netSaved,
+    required this.savingsRate,
+    this.topCategoryId,
+    this.topCategoryAmount = 0.0,
+    this.topCategoryPercent = 0.0,
+    this.biggestSplurge,
+    this.biggestSplurgeAmount = 0.0,
+    required this.zeroSpendDays,
+    required this.totalDaysInMonth,
+  });
+}
+
+

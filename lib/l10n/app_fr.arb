@@ -1,5 +1,4 @@
 {
-  "@@locale": "fr",
   "appTitle": "Dépense",
   "settings_title": "Paramètres",
   "settings_appearance": "Apparence",
@@ -39,17 +38,7 @@
   "settings_cancel": "Annuler",
   "settings_save": "Enregistrer",
   "recurring_expenses": "Dépenses ({count})",
-  "@recurring_expenses": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "recurring_incomeList": "Revenus ({count})",
-  "@recurring_incomeList": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "recurring_monthly": "Mensuel",
   "recurring_weekly": "Hebdomadaire",
   "recurring_noRecurringExpenses": "Aucune dépense récurrente",
@@ -58,48 +47,17 @@
   "recurring_addIncome": "Ajouter un revenu",
   "recurring_tapPlusToAddOne": "Appuyez sur + pour en ajouter",
   "recurring_fromOngoing": "Depuis le {date} · En cours",
-  "@recurring_fromOngoing": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "recurring_paidPayments": "{paid}/{total} payés",
-  "@recurring_paidPayments": {
-    "placeholders": {
-      "paid": {},
-      "total": {}
-    }
-  },
   "recurring_totalAmount": "Total : {amount}",
-  "@recurring_totalAmount": {
-    "placeholders": {
-      "amount": {}
-    }
-  },
   "recurring_overdue": "En retard !",
   "recurring_dueToday": "Dû aujourd'hui",
   "recurring_dueInDays": "Dû dans {days} j",
-  "@recurring_dueInDays": {
-    "placeholders": {
-      "days": {}
-    }
-  },
   "recurring_edit": "Modifier",
   "recurring_skipBtn": "Passer",
   "recurring_nextDate": "Prochain : {date}",
-  "@recurring_nextDate": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "recurring_pay": "Payer",
   "recurring_del": "Suppr",
   "recurring_historyCount": "Historique ({count})",
-  "@recurring_historyCount": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "recurring_paymentHistory": "Historique des paiements",
   "recurring_notificationPermissionDenied": "Permission de notification refusée. Activez-la dans Paramètres → Applications → Expensy → Notifications.",
   "recurring_remindMeAt": "Me le rappeler à",
@@ -108,17 +66,7 @@
   "recurring_name": "Nom",
   "recurring_amountPerPayment": "Montant par paiement",
   "recurring_firstDate": "Premier : {date}",
-  "@recurring_firstDate": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "recurring_lastDate": "Dernier : {date}",
-  "@recurring_lastDate": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "recurring_noLastPaymentOngoing": "Pas de dernier paiement (en cours)",
   "accounts_refreshExchangeRates": "Actualiser les taux de change",
   "accounts_noAccounts": "Aucun compte",
@@ -127,11 +75,6 @@
   "accounts_exchangeRatesUnavailable": "Taux de change indisponibles (hors ligne). Soldes affichés dans la devise native.",
   "accounts_unknown": "Inconnu",
   "accounts_ratesUpdated": "Taux mis à jour à {timeStr} · Appuyez sur ↺ pour rafraîchir",
-  "@accounts_ratesUpdated": {
-    "placeholders": {
-      "timeStr": {}
-    }
-  },
   "accounts_goldCaps": "OR",
   "accounts_balance": "Solde",
   "accounts_income": "Revenus",
@@ -140,11 +83,6 @@
   "accounts_value": "Valeur",
   "accounts_karat": "Carat",
   "accounts_pure": "{percentage}% pur",
-  "@accounts_pure": {
-    "placeholders": {
-      "percentage": {}
-    }
-  },
   "accounts_weightLabel": "Poids",
   "accounts_perGram": "Par gramme",
   "accounts_bank": "Banque",
@@ -164,17 +102,7 @@
   "accounts_fetchingGoldPrice": "Récupération du prix de l'or…",
   "accounts_goldPriceUnavailable": "Prix de l'or indisponible — vérifiez votre connexion",
   "lended_person_owesYou": "{name} vous doit",
-  "@lended_person_owesYou": {
-    "placeholders": {
-      "name": {}
-    }
-  },
   "lended_person_youOwe": "Vous devez à {name}",
-  "@lended_person_youOwe": {
-    "placeholders": {
-      "name": {}
-    }
-  },
   "lended_person_allSettledUp": "Tout est réglé",
   "lended_person_noRecordsYet": "Aucun enregistrement",
   "lended_person_tapPlusToLog": "Appuyez sur + pour consigner l'argent prêté ou emprunté",
@@ -184,40 +112,19 @@
   "lended_person_borrowed": "Emprunté",
   "lended_person_overdue": "En retard !",
   "lended_person_due": "Dû le {date}",
-  "@lended_person_due": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "lended_person_reminderAt": "Rappel à {time}",
-  "@lended_person_reminderAt": {
-    "placeholders": {
-      "time": {}
-    }
-  },
   "lended_person_notificationPermissionDenied": "Permission de notification refusée. Activez-la dans Paramètres → Applications → Expensy → Notifications.",
   "lended_person_remindMeAtPrompt": "Me le rappeler à",
   "lended_person_editRecord": "Modifier l'enregistrement",
   "lended_person_addRecord": "Ajouter un enregistrement",
   "lended_person_amount": "Montant",
   "lended_person_dueColon": "Dû : {date}",
-  "@lended_person_dueColon": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "lended_person_noDueDate": "Pas de date d'échéance",
   "lended_person_setDueFirst": "Définir d'abord une date d'échéance",
   "lended_person_notifiedOnDue": "Vous serez averti à la date d'échéance",
   "lended_person_getNotifiedWhenDue": "Être averti à l'échéance",
   "lended_person_thatTimePassed": "Cette heure est déjà passée aujourd'hui — vous serez bientôt averti à la place.",
   "lended_person_notificationFiresOn": "La notification se déclenche le {date} à {time}.",
-  "@lended_person_notificationFiresOn": {
-    "placeholders": {
-      "date": {},
-      "time": {}
-    }
-  },
   "lended_person_saveChangesBtn": "Enregistrer les modifications",
   "lended_person_addRecordBtn": "Ajouter un enregistrement",
   "transactions_searchTransactions": "Rechercher des transactions...",
@@ -231,24 +138,9 @@
   "transactions_today": "Aujourd'hui",
   "transactions_yesterday": "Hier",
   "transactions_lentTo": "Prêté à {name}",
-  "@transactions_lentTo": {
-    "placeholders": {
-      "name": {}
-    }
-  },
   "transactions_borrowedFrom": "Emprunté à {name}",
-  "@transactions_borrowedFrom": {
-    "placeholders": {
-      "name": {}
-    }
-  },
   "transactions_unknown": "Inconnu",
   "transactions_due": "Dû le {date}",
-  "@transactions_due": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "transactions_unsettled": "Non réglé",
   "onboarding_restoreFailed": "Échec de la restauration : le fichier est peut-être corrompu ou ne correspond pas à une sauvegarde Expensy.",
   "onboarding_continue": "Continuer",
@@ -310,6 +202,59 @@
   "budget_ofAmount": "sur {amount}",
   "budget_saveChanges": "Enregistrer les modifications",
   "budget_budget": "Budget",
+  "budget_rollover": "Report de budget (Enveloppe)",
+  "budget_rolloverDesc": "Reporter les surplus inutilisés ou les déficits sur la période suivante",
+  "budget_rolloverBadge": "Report",
+  "budget_base": "Base : {amount}",
+  "budget_rolloverFrom": "Report ({period}) : {amount}",
+  "budget_totalAvailable": "Total disponible : {amount}",
+  "budget_lastWeek": "Semaine dernière",
+  "pacing_dailyBudget": "Dépense sereine",
+  "pacing_safeToSpend": "Dépense sereine : {amount}/jour ({days} jours restants)",
+  "pacing_caution": "Rythme élevé — limiter à {amount}/jour",
+  "pacing_overPaced": "Alerte de rythme — ralentissez pour respecter le budget",
+  "pacing_budgetExhausted": "Budget épuisé — plus de marge quotidienne",
+  "pacing_onTrack": "Dans les clous",
+  "pacing_fast": "Rythme élevé",
+  "pacing_alert": "Alerte rythme",
+  "pacing_daysLeft": "{days} jours restants",
+  "pacing_setBudgetPrompt": "Appuyez pour définir des budgets →",
+  "pacing_dailyAvgPace": "Rythme quotidien",
+  "pacing_perDay": "{amount} / jour",
+  "calendar_title": "Calendrier financier",
+  "calendar_subtitle": "Carte thermique des dépenses et échéances",
+  "calendar_zeroSpendDays": "{count} jours sans dépense",
+  "calendar_zeroSpendDayTitle": "Journée zéro dépense ! 🎉",
+  "calendar_zeroSpendDayDesc": "Belle discipline financière sans aucune dépense aujourd'hui.",
+  "calendar_billsDue": "Factures et abonnements dus",
+  "calendar_loansDue": "Mensualités de prêt dues",
+  "calendar_lendedDue": "Remboursements attendus",
+  "calendar_dayTransactions": "Transactions ({count})",
+  "calendar_noActivity": "Aucune transaction ni échéance à cette date",
+  "calendar_today": "Aujourd'hui",
+  "calendar_averageDaily": "Moyenne quotidienne : {amount}",
+  "wrapped_title": "Expensy Wrapped",
+  "wrapped_bannerTitle": "Votre bilan de {month} est prêt !",
+  "wrapped_bannerSub": "Appuyez pour voir votre histoire financière mensuelle",
+  "wrapped_theBigPicture": "Vue d'ensemble",
+  "wrapped_howMoneyMoved": "Voici comment votre argent a circulé en {month}",
+  "wrapped_totalInflow": "Revenus totaux",
+  "wrapped_totalOutflow": "Dépenses totales",
+  "wrapped_netSavings": "Épargne nette",
+  "wrapped_savingsRate": "Taux d'épargne : {rate}%",
+  "wrapped_topCategoryTitle": "Où est passé votre argent ?",
+  "wrapped_topCategorySub": "Votre principale catégorie de dépense était {category}",
+  "wrapped_topCategoryShare": "{percent}% de vos dépenses totales",
+  "wrapped_biggestSplurgeTitle": "Plus gros achat",
+  "wrapped_biggestSplurgeSub": "Votre plus grosse dépense du mois",
+  "wrapped_noSplurge": "Pas d'excès ! Vous n'avez eu aucune dépense ce mois-ci.",
+  "wrapped_heroHabitTitle": "Habitude héroïque",
+  "wrapped_zeroSpendAchieved": "{count} jours sans dépenses",
+  "wrapped_heroHabitDesc": "Vous avez atteint {count} jours sans dépenses. Discipline financière exceptionnelle !",
+  "wrapped_receiptTitle": "Relevé mensuel",
+  "wrapped_obscureToggle": "Masquer les montants pour partager",
+  "wrapped_showToggle": "Afficher les montants",
+  "wrapped_replay": "Rejouer l'histoire",
   "insights_other": "Autre",
   "insights_noDataYet": "Aucune donnée pour l'instant",
   "insights_addSomeTransactions": "Ajoutez des transactions pour voir les statistiques",
@@ -387,6 +332,17 @@
   "wishlist_notesOptional": "Notes (facultatif)",
   "wishlist_saveChanges": "Enregistrer les modifications",
   "wishlist_addItem": "Ajouter l'élément",
+  "wishlist_fundThisItem": "Financer l'article",
+  "wishlist_funded": "{percent}% financé ({saved} / {target})",
+  "wishlist_goalAchieved": "Objectif atteint — prêt à acheter !",
+  "wishlist_buyNow": "Acheter maintenant",
+  "wishlist_purchaseTitle": "Acheter un article d'envies",
+  "wishlist_purchasePrompt": "Voulez-vous enregistrer une dépense et déduire le montant d'un compte ?",
+  "wishlist_recordAndDeduct": "Enregistrer et déduire",
+  "wishlist_markPurchasedOnly": "Marquer comme acheté uniquement",
+  "wishlist_itemPurchased": "« {name} » marqué comme acheté !",
+  "wishlist_viewGoal": "Voir l'objectif d'épargne",
+  "savings_linkedWishlist": "Lié à la liste d'envies : {item}",
   "lended_theyOweMe": "Ils me doivent",
   "lended_iOweThem": "Je leur dois",
   "lended_net": "Filet",
@@ -442,17 +398,7 @@
   "onboarding_chooseLanguage": "Choisir la langue",
   "error_required": "Ce champ est obligatoire",
   "recurring_subscriptions": "Abonnements ({count})",
-  "@recurring_subscriptions": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "recurring_installments": "Mensualités ({count})",
-  "@recurring_installments": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "recurring_recurringType": "Type de récurrence",
   "recurring_subscription": "Abonnement",
   "recurring_installment": "Mensualité",
@@ -469,6 +415,8 @@
   "accounts_goldPurityKarat": "Pureté de l'or (Carat)",
   "accounts_weight": "Poids",
   "accounts_excludeFromTotalBala": "Exclure du solde total",
+  "accounts_dontLinkToCard": "Ne pas lier à une carte",
+  "accounts_dontLinkToCardDesc": "Gérer le solde manuellement et empêcher les cartes de s'y lier",
   "accounts_color": "Couleur",
   "accounts_liveGoldValue": "Valeur de l'or en direct",
   "accounts_enterWeightAboveToSe": "Entrez le poids ci-dessus pour voir la valeur",
@@ -511,11 +459,38 @@
   "export_exportTransactions": "Exporter les transactions",
   "export_dateRange": "Plage de dates",
   "export_formatExcelXlsx": "Format : Excel (.xlsx)",
+  "export_exportAsPdf": "Exporter en rapport PDF",
+  "export_formatPdf": "Format : Rapport financier PDF (.pdf)",
+  "export_pdfGenerating": "Génération du PDF...",
+  "export_pdfTitle": "Rapport Financier",
+  "export_pdfSummary": "Résumé exécutif",
+  "export_pdfInflow": "Revenus totaux",
+  "export_pdfOutflow": "Dépenses totales",
+  "export_pdfNet": "Épargne nette",
+  "export_pdfSavingsRate": "Taux d'épargne",
+  "export_pdfCategoryBreakdown": "Répartition par catégories",
+  "export_pdfTransactions": "Transactions détaillées",
+  "export_pdfNetWorthBreakdown": "Actifs et Passifs",
+  "export_pdfShare": "Partager le rapport",
+  "export_pdfPrint": "Imprimer / Aperçu",
+  "export_pdfGeneratedBy": "Généré par Expensy • Privé & Hors-ligne",
   "home_totalBalance": "Solde total",
   "home_accounts": "Comptes",
   "home_recentTransactions": "Transactions récentes",
   "home_noTransactionsYet": "Aucune transaction pour l'instant",
   "home_add": "Ajouter",
+  "home_goodMorning": "Bonjour",
+  "home_goodAfternoon": "Bon après-midi",
+  "home_goodEvening": "Bonsoir",
+  "home_transferAction": "Transférer",
+  "home_insightsAction": "Aperçus",
+  "home_calendarAction": "Calendrier",
+  "home_forecastAction": "Prévisions",
+  "home_manage": "Gérer",
+  "home_seeAll": "Voir tout",
+  "home_addAccount": "Ajouter un compte",
+  "home_monthlyOverview": "Aperçu mensuel",
+  "home_savingsRate": "Taux d'épargne",
   "insights_insights": "Aperçus",
   "lended_person_deletePerson": "Supprimer la personne",
   "lended_person_editPerson": "Modifier la personne",
@@ -630,5 +605,184 @@
   "yearly_noData": "Aucune activité projetée",
   "yearly_noDataSub": "Ajoutez des paiements récurrents, prêts ou dettes avec une date d'échéance pour voir les prévisions",
   "budget_addBudget": "Ajouter un budget",
-  "budget_addGoal": "Ajouter un objectif d'épargne"
+  "budget_addGoal": "Ajouter un objectif d'épargne",
+  "split_transactions_title": "Diviser les catégories",
+  "split_transactions_badge": "Divisé",
+  "split_transactions_addSplit": "Ajouter une division",
+  "split_transactions_removeSplit": "Supprimer la division",
+  "split_transactions_allocated": "Alloué",
+  "split_transactions_remaining": "Restant",
+  "split_transactions_fillRemaining": "Remplir le reste",
+  "split_transactions_breakdown": "Détail de la division",
+  "split_transactions_mismatchError": "Le total des montants divisés doit correspondre au montant total.",
+  "netWorth_title": "Valeur nette",
+  "netWorth_subtitle": "Suivez le total des actifs, des passifs et de la richesse",
+  "netWorth_current": "Valeur nette actuelle",
+  "netWorth_trend": "Tendance de la valeur nette",
+  "netWorth_totalAssets": "Total des actifs",
+  "netWorth_totalLiabilities": "Total des passifs",
+  "netWorth_liquidCash": "Espèces et comptes bancaires",
+  "netWorth_goldValuation": "Or physique",
+  "netWorth_fixedAssets": "Biens et investissements",
+  "netWorth_moneyLent": "Argent prêté (Créances)",
+  "netWorth_creditDebt": "Cartes de crédit et découverts",
+  "netWorth_loanDebt": "Prêts à rembourser",
+  "netWorth_moneyBorrowed": "Argent emprunté (Dettes)",
+  "netWorth_assetBreakdown": "Ventilation des actifs",
+  "netWorth_liabilityBreakdown": "Ventilation des passifs",
+  "netWorth_noHistory": "L'historique de la valeur nette s'établira automatiquement avec les instantanés quotidiens.",
+  "netWorth_debtRatio": "Ratio d'endettement",
+  "netWorth_quickActions": "Actions rapides",
+  "netWorth_history": "Historique des instantanés",
+  "creditCard_utilization": "Utilisation du crédit",
+  "creditCard_availableCredit": "Disponible",
+  "creditCard_limit": "Plafond",
+  "creditCard_statementBalance": "Solde du relevé",
+  "creditCard_unbilledBalance": "Non facturé",
+  "creditCard_payBill": "Payer le relevé",
+  "creditCard_allCaughtUp": "Tout est à jour ! Aucun solde dû",
+  "creditCard_payBillTitle": "Régler la facture de carte",
+  "creditCard_payFromAccount": "Payer depuis le compte",
+  "creditCard_paymentAmount": "Montant du paiement",
+  "creditCard_fullStatement": "Solde du relevé",
+  "creditCard_fullBalance": "Solde total",
+  "creditCard_minPayment": "Paiement minimum",
+  "creditCard_customAmount": "Montant personnalisé",
+  "creditCard_paymentSuccess": "{amount} payé(s) pour {cardName}",
+  "creditCard_insufficientFunds": "Le montant dépasse le solde disponible",
+  "creditCard_invalidAmount": "Veuillez saisir un montant valide",
+  "onboarding_skipForNow": "Ignorer pour le moment",
+  "add_transaction_possibleDuplicate": "Doublon possible",
+  "add_transaction_goBack": "Retour",
+  "add_transaction_saveAnyway": "Enregistrer quand même",
+  "loans_confirmDeleteLoan": "Voulez-vous vraiment supprimer ce prêt et tous ses paiements ?",
+  "loans_deletePayment": "Supprimer le paiement",
+  "loans_confirmDeletePayment": "Voulez-vous vraiment supprimer cet enregistrement de paiement ?",
+  "budget_leftToSpend": "Reste à dépenser",
+  "more_sectionTools": "Outils financiers",
+  "more_sectionAnalytics": "Analyses & Aperçus",
+  "more_sectionPreferences": "Préférences & Données",
+  "more_loans": "Prêts",
+  "more_loansSub": "{count, plural, =1{1 prêt actif} other{{count} prêts actifs}}",
+  "loans_title": "Prêts",
+  "loans_addLoan": "Ajouter un prêt",
+  "loans_editLoan": "Modifier le prêt",
+  "loans_loanName": "Nom du prêt",
+  "loans_amount": "Montant",
+  "loans_startDate": "Date de début",
+  "loans_endDate": "Date de fin",
+  "loans_interestRateOptional": "Taux d'intérêt (Optionnel)",
+  "loans_account": "Compte associé",
+  "loans_monthlyPayment": "Mensualité",
+  "loans_totalPayable": "Total à rembourser",
+  "loans_remaining": "Restant",
+  "loans_paid": "Payé",
+  "loans_logPayment": "Enregistrer un paiement",
+  "loans_paymentReminder": "Rappel de paiement",
+  "loans_reminderDay": "Jour de rappel",
+  "loans_notes": "Notes",
+  "loans_saveLoan": "Enregistrer le prêt",
+  "loans_deleteLoan": "Supprimer le prêt",
+  "loans_settled": "Soldé",
+  "loans_durationMonths": "{count, plural, =1{1 mois} other{{count} mois}}",
+  "loans_paymentHistory": "Historique des paiements",
+  "loans_noPayments": "Aucun paiement enregistré pour l'instant",
+  "loans_outstandingDebt": "Dette restante",
+  "loans_monthlyObligation": "Engagement mensuel",
+  "insights_loans": "Prêts",
+  "backup_loans": "Prêts",
+  "backup_loanPayments": "Paiements de prêt",
+  "onboarding_addCard": "Ajouter une carte",
+  "onboarding_skipCardDesc": "Vous pouvez ignorer cette étape si vous ne souhaitez pas ajouter de carte maintenant.",
+  "onboarding_cardNameLabel": "Nom de la carte (ex. Visa Platinum)",
+  "onboarding_debitCard": "Carte de débit",
+  "onboarding_creditLimit": "Plafond de crédit",
+  "onboarding_amountUsed": "Montant utilisé",
+  "accounts_cardHolderOptional": "Titulaire de la carte (Optionnel)",
+  "accounts_last4Digits": "4 derniers chiffres",
+  "accounts_expiryDate": "Date d'expiration (MM/AA)",
+  "accounts_creditLimitOptional": "Plafond de crédit (Optionnel)",
+  "accounts_minPaymentOptional": "Paiement minimum (Optionnel)",
+  "accounts_statementDayOptional": "Jour d'arrêté (Optionnel)",
+  "accounts_statementDayExample": "ex. 20",
+  "accounts_dueDayOptional": "Jour d'échéance (Optionnel)",
+  "accounts_dueDayExample": "ex. 10",
+  "accounts_linkedAccountOptional": "Compte bancaire lié (Optionnel)",
+  "accounts_excludeCardBalance": "Exclure le solde de la carte du solde du compte",
+  "accounts_excludeCardBalanceDesc": "Le solde de cette carte ne sera pas ajouté à son compte bancaire lié.",
+  "accounts_cardHolderHeader": "TITULAIRE",
+  "accounts_expHeader": "EXP",
+  "accounts_notifyOnDueDate": "Vous serez notifié à la date d'échéance",
+  "accounts_notifyWhenDue": "Recevoir une notification avant l'échéance",
+  "accounts_remind2DaysBeforeDesc": "Recevoir un avertissement 2 jours avant l'échéance",
+  "accounts_targetSaved": "Objectif / Épargné",
+  "transactions_selectedCount": "{count, plural, =1{1 sélectionné} other{{count} sélectionnés}}",
+  "transactions_changeCategory": "Changer de catégorie",
+  "transactions_deleteSelected": "Supprimer la sélection",
+  "transactions_advancedFilters": "Filtres avancés",
+  "transactions_clearAll": "Tout effacer",
+  "transactions_amountRange": "Fourchette de montant",
+  "transactions_minAmount": "Montant min",
+  "transactions_maxAmount": "Montant max",
+  "transactions_applyFilters": "Appliquer les filtres",
+  "presets_new": "Nouveau",
+  "presets_presetName": "Nom du modèle (ex. Café du matin)",
+  "presets_defaultAmount": "Montant par défaut",
+  "savings_goalName": "Nom de l'objectif",
+  "savings_goalNameHint": "ex. Nouvelle voiture, Vacances",
+  "savings_targetAmount": "Montant cible",
+  "savings_targetDateOptional": "Date cible (Optionnel)",
+  "savings_selectDate": "Sélectionner la date",
+  "savings_amountRequired": "Le montant est requis",
+  "savings_noteOptional": "Note (Optionnel)",
+  "loans_skipInstallment": "Ignorer la prochaine échéance du prêt ?",
+  "recurring_confirmDelete": "Voulez-vous vraiment supprimer ce paiement récurrent ?",
+  "export_formatExcelOption": "Excel (.xlsx)",
+  "export_formatPdfOption": "Rapport PDF",
+  "export_pdfNoTransactions": "Aucune transaction enregistrée dans cette période.",
+  "savings_saved": "Économisé",
+  "export_pdfDate": "Date",
+  "export_pdfDescription": "Description",
+  "accounts_noCardsYet": "Aucune carte",
+  "accounts_tapToAddCard": "Appuyez sur + pour ajouter votre première carte",
+  "savings_noGoalsYet": "Aucun objectif d'épargne",
+  "savings_tapToAddGoal": "Appuyez sur + pour définir un nouvel objectif",
+  "netWorth_recordSnapshot": "Enregistrer un instantané",
+  "netWorth_snapshotRecorded": "Instantané enregistré",
+  "savings_noContributionsYet": "Aucune contribution pour le moment",
+  "creditCard_closesStatementBillingCycle": "Clôture le cycle de facturation actuel du relevé",
+  "creditCard_clearsTotalDebt": "Règle intégralement la dette totale de la carte",
+  "creditCard_requiredMinPayment": "Paiement minimum requis",
+  "creditCard_specifyCustomAmount": "Spécifier un montant de paiement personnalisé",
+  "common_itemDeleted": "\"{name}\" supprimé",
+  "common_accountDeleted": "Compte supprimé",
+  "common_cardDeleted": "Carte supprimée",
+  "common_transactionDeleted": "Transaction supprimée",
+  "common_recordDeleted": "Enregistrement supprimé",
+  "common_paymentDeleted": "Paiement supprimé",
+  "loans_skippedInstallment": "Échéance de prêt ignorée",
+  "loans_loggedPayment": "Paiement de {amount} enregistré",
+  "loans_notificationsPermissionRequired": "Autorisation des notifications requise",
+  "creditCard_selectFundingAccount": "Veuillez sélectionner un compte source",
+  "presets_presetUpdated": "Modèle mis à jour",
+  "presets_presetAdded": "Modèle ajouté",
+  "presets_presetDeleted": "Modèle supprimé",
+  "transactions_deletedCount": "{count, plural, =1{1 élément supprimé} other{{count} éléments supprimés}}",
+  "split_atLeastTwoCategories": "Au moins 2 catégories requises pour la division.",
+  "split_categoryAndAmountRequired": "Chaque élément divisé doit avoir une catégorie et un montant > 0.",
+  "presets_addQuickPresets": "Ajouter des modèles rapides en 1 geste",
+  "presets_quickPresetsDesc": "Enregistrez vos dépenses fréquentes (café, transport, repas) en un geste",
+  "presets_loggedPreset": "{title} ({amount}) enregistré",
+  "presets_createPreset": "Créer un modèle",
+  "presets_editQuickPreset": "Modifier le modèle rapide",
+  "presets_newQuickPreset": "Nouveau modèle rapide",
+  "savings_addContribution": "Ajouter une contribution",
+  "savings_withdrawFromGoal": "Retirer de l'objectif",
+  "savings_contribution": "Contribution",
+  "savings_withdrawal": "Retrait",
+  "savings_unknownAccount": "Compte inconnu",
+  "savings_fromAccount": "Depuis le compte",
+  "savings_toAccount": "Vers le compte",
+  "presets_quickLog": "Saisie rapide",
+  "accounts_dueOnDay": "Échéance le {day}"
 }

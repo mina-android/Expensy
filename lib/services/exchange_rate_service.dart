@@ -98,7 +98,7 @@ class ExchangeRateService {
     try {
       final resp = await http
           .get(Uri.parse(_apiUrl))
-          .timeout(const Duration(seconds: 12));
+          .timeout(const Duration(seconds: 6));
       if (resp.statusCode != 200) return null;
 
       final json = jsonDecode(resp.body) as Map<String, dynamic>;
@@ -133,7 +133,7 @@ class ExchangeRateService {
     for (final url in [_goldApiPrimary, _goldApiFallback]) {
       try {
         final resp =
-            await http.get(Uri.parse(url)).timeout(const Duration(seconds: 10));
+            await http.get(Uri.parse(url)).timeout(const Duration(seconds: 5));
         if (resp.statusCode != 200) continue;
 
         final data = jsonDecode(resp.body);

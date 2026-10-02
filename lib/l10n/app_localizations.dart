@@ -1358,6 +1358,324 @@ abstract class AppLocalizations {
   /// **'Budget'**
   String get budget_budget;
 
+  /// No description provided for @budget_rollover.
+  ///
+  /// In en, this message translates to:
+  /// **'Rollover (Envelope)'**
+  String get budget_rollover;
+
+  /// No description provided for @budget_rolloverDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Carry forward unused surplus or deficits to the next period'**
+  String get budget_rolloverDesc;
+
+  /// No description provided for @budget_rolloverBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Rollover'**
+  String get budget_rolloverBadge;
+
+  /// No description provided for @budget_base.
+  ///
+  /// In en, this message translates to:
+  /// **'Base: {amount}'**
+  String budget_base(Object amount);
+
+  /// No description provided for @budget_rolloverFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Rollover ({period}): {amount}'**
+  String budget_rolloverFrom(Object period, Object amount);
+
+  /// No description provided for @budget_totalAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Available: {amount}'**
+  String budget_totalAvailable(Object amount);
+
+  /// No description provided for @budget_lastWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Last Week'**
+  String get budget_lastWeek;
+
+  /// No description provided for @pacing_dailyBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Safe-to-Spend'**
+  String get pacing_dailyBudget;
+
+  /// No description provided for @pacing_safeToSpend.
+  ///
+  /// In en, this message translates to:
+  /// **'Safe to spend: {amount}/day ({days} left)'**
+  String pacing_safeToSpend(Object amount, Object days);
+
+  /// No description provided for @pacing_caution.
+  ///
+  /// In en, this message translates to:
+  /// **'Pacing fast — limit to {amount}/day'**
+  String pacing_caution(Object amount);
+
+  /// No description provided for @pacing_overPaced.
+  ///
+  /// In en, this message translates to:
+  /// **'Pace Alert — slow down to stay in budget'**
+  String get pacing_overPaced;
+
+  /// No description provided for @pacing_budgetExhausted.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget reached — no daily allowance left'**
+  String get pacing_budgetExhausted;
+
+  /// No description provided for @pacing_onTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'On track'**
+  String get pacing_onTrack;
+
+  /// No description provided for @pacing_fast.
+  ///
+  /// In en, this message translates to:
+  /// **'Pacing fast'**
+  String get pacing_fast;
+
+  /// No description provided for @pacing_alert.
+  ///
+  /// In en, this message translates to:
+  /// **'Pace alert'**
+  String get pacing_alert;
+
+  /// No description provided for @pacing_daysLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days left'**
+  String pacing_daysLeft(Object days);
+
+  /// No description provided for @pacing_setBudgetPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to set budget limits →'**
+  String get pacing_setBudgetPrompt;
+
+  /// No description provided for @pacing_dailyAvgPace.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Pace'**
+  String get pacing_dailyAvgPace;
+
+  /// No description provided for @pacing_perDay.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} / day'**
+  String pacing_perDay(Object amount);
+
+  /// No description provided for @calendar_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Financial Calendar'**
+  String get calendar_title;
+
+  /// No description provided for @calendar_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily spending heatmap & due dates'**
+  String get calendar_subtitle;
+
+  /// No description provided for @calendar_zeroSpendDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} Zero-Spend Days'**
+  String calendar_zeroSpendDays(Object count);
+
+  /// No description provided for @calendar_zeroSpendDayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Zero-Spend Day! 🎉'**
+  String get calendar_zeroSpendDayTitle;
+
+  /// No description provided for @calendar_zeroSpendDayDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Great job maintaining financial discipline with no expenses today.'**
+  String get calendar_zeroSpendDayDesc;
+
+  /// No description provided for @calendar_billsDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Bills & Subscriptions Due'**
+  String get calendar_billsDue;
+
+  /// No description provided for @calendar_loansDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Loan Payments Due'**
+  String get calendar_loansDue;
+
+  /// No description provided for @calendar_lendedDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected Repayments'**
+  String get calendar_lendedDue;
+
+  /// No description provided for @calendar_dayTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions ({count})'**
+  String calendar_dayTransactions(Object count);
+
+  /// No description provided for @calendar_noActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions or obligations on this date'**
+  String get calendar_noActivity;
+
+  /// No description provided for @calendar_today.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get calendar_today;
+
+  /// No description provided for @calendar_averageDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily avg: {amount}'**
+  String calendar_averageDaily(Object amount);
+
+  /// No description provided for @wrapped_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Expensy Wrapped'**
+  String get wrapped_title;
+
+  /// No description provided for @wrapped_bannerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your {month} Wrapped is ready!'**
+  String wrapped_bannerTitle(Object month);
+
+  /// No description provided for @wrapped_bannerSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to explore your monthly financial story'**
+  String get wrapped_bannerSub;
+
+  /// No description provided for @wrapped_theBigPicture.
+  ///
+  /// In en, this message translates to:
+  /// **'The Big Picture'**
+  String get wrapped_theBigPicture;
+
+  /// No description provided for @wrapped_howMoneyMoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Here is how your money moved in {month}'**
+  String wrapped_howMoneyMoved(Object month);
+
+  /// No description provided for @wrapped_totalInflow.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Inflow'**
+  String get wrapped_totalInflow;
+
+  /// No description provided for @wrapped_totalOutflow.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Outflow'**
+  String get wrapped_totalOutflow;
+
+  /// No description provided for @wrapped_netSavings.
+  ///
+  /// In en, this message translates to:
+  /// **'Net Saved'**
+  String get wrapped_netSavings;
+
+  /// No description provided for @wrapped_savingsRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Savings Rate: {rate}%'**
+  String wrapped_savingsRate(Object rate);
+
+  /// No description provided for @wrapped_topCategoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Where Did It Go?'**
+  String get wrapped_topCategoryTitle;
+
+  /// No description provided for @wrapped_topCategorySub.
+  ///
+  /// In en, this message translates to:
+  /// **'Your top spending category was {category}'**
+  String wrapped_topCategorySub(Object category);
+
+  /// No description provided for @wrapped_topCategoryShare.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% of your total spending'**
+  String wrapped_topCategoryShare(Object percent);
+
+  /// No description provided for @wrapped_biggestSplurgeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Biggest Splurge'**
+  String get wrapped_biggestSplurgeTitle;
+
+  /// No description provided for @wrapped_biggestSplurgeSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Your single largest expense of the month'**
+  String get wrapped_biggestSplurgeSub;
+
+  /// No description provided for @wrapped_noSplurge.
+  ///
+  /// In en, this message translates to:
+  /// **'No splurges! You had zero expenses this month.'**
+  String get wrapped_noSplurge;
+
+  /// No description provided for @wrapped_heroHabitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hero Habit'**
+  String get wrapped_heroHabitTitle;
+
+  /// No description provided for @wrapped_zeroSpendAchieved.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} Zero-Spend Days'**
+  String wrapped_zeroSpendAchieved(Object count);
+
+  /// No description provided for @wrapped_heroHabitDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'You achieved {count} days with zero expenses. Outstanding financial discipline!'**
+  String wrapped_heroHabitDesc(Object count);
+
+  /// No description provided for @wrapped_receiptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly Statement'**
+  String get wrapped_receiptTitle;
+
+  /// No description provided for @wrapped_obscureToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide amounts for sharing'**
+  String get wrapped_obscureToggle;
+
+  /// No description provided for @wrapped_showToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show amounts'**
+  String get wrapped_showToggle;
+
+  /// No description provided for @wrapped_replay.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay Story'**
+  String get wrapped_replay;
+
   /// No description provided for @insights_other.
   ///
   /// In en, this message translates to:
@@ -1718,6 +2036,24 @@ abstract class AppLocalizations {
   /// **'Theme, currency & preferences'**
   String get more_settingsSub;
 
+  /// No description provided for @more_sectionTools.
+  ///
+  /// In en, this message translates to:
+  /// **'Financial Tools'**
+  String get more_sectionTools;
+
+  /// No description provided for @more_sectionAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Analytics & Insights'**
+  String get more_sectionAnalytics;
+
+  /// No description provided for @more_sectionPreferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferences & Data'**
+  String get more_sectionPreferences;
+
   /// No description provided for @home_greeting.
   ///
   /// In en, this message translates to:
@@ -1819,6 +2155,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add Item'**
   String get wishlist_addItem;
+
+  /// No description provided for @wishlist_fundThisItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Fund Item'**
+  String get wishlist_fundThisItem;
+
+  /// No description provided for @wishlist_funded.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% funded ({saved} / {target})'**
+  String wishlist_funded(int percent, String saved, String target);
+
+  /// No description provided for @wishlist_goalAchieved.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal Achieved — Ready to Buy!'**
+  String get wishlist_goalAchieved;
+
+  /// No description provided for @wishlist_buyNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy Now'**
+  String get wishlist_buyNow;
+
+  /// No description provided for @wishlist_purchaseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase Wishlist Item'**
+  String get wishlist_purchaseTitle;
+
+  /// No description provided for @wishlist_purchasePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you want to record an expense transaction to deduct this purchase from an account?'**
+  String get wishlist_purchasePrompt;
+
+  /// No description provided for @wishlist_recordAndDeduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Record & Deduct'**
+  String get wishlist_recordAndDeduct;
+
+  /// No description provided for @wishlist_markPurchasedOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark Purchased Only'**
+  String get wishlist_markPurchasedOnly;
+
+  /// No description provided for @wishlist_itemPurchased.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{name}\" marked as purchased!'**
+  String wishlist_itemPurchased(String name);
+
+  /// No description provided for @wishlist_viewGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'View Savings Goal'**
+  String get wishlist_viewGoal;
+
+  /// No description provided for @savings_linkedWishlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked to Wishlist: {item}'**
+  String savings_linkedWishlist(String item);
 
   /// No description provided for @lended_theyOweMe.
   ///
@@ -2150,6 +2552,18 @@ abstract class AppLocalizations {
   /// **'Exclude from Total Balance'**
   String get accounts_excludeFromTotalBala;
 
+  /// Toggle to prevent bank account from linking with a card and restore manual balance and exclude toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t link to Card'**
+  String get accounts_dontLinkToCard;
+
+  /// Subtitle describing the Don't link to Card toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Manage this account\'s balance manually and prevent cards from linking to it'**
+  String get accounts_dontLinkToCardDesc;
+
   /// No description provided for @accounts_color.
   ///
   /// In en, this message translates to:
@@ -2402,6 +2816,96 @@ abstract class AppLocalizations {
   /// **'Format: Excel (.xlsx)'**
   String get export_formatExcelXlsx;
 
+  /// No description provided for @export_exportAsPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Export as PDF Report'**
+  String get export_exportAsPdf;
+
+  /// No description provided for @export_formatPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Format: PDF Financial Report (.pdf)'**
+  String get export_formatPdf;
+
+  /// No description provided for @export_pdfGenerating.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating PDF...'**
+  String get export_pdfGenerating;
+
+  /// No description provided for @export_pdfTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Financial Report'**
+  String get export_pdfTitle;
+
+  /// No description provided for @export_pdfSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Executive Summary'**
+  String get export_pdfSummary;
+
+  /// No description provided for @export_pdfInflow.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Inflow'**
+  String get export_pdfInflow;
+
+  /// No description provided for @export_pdfOutflow.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Outflow'**
+  String get export_pdfOutflow;
+
+  /// No description provided for @export_pdfNet.
+  ///
+  /// In en, this message translates to:
+  /// **'Net Savings'**
+  String get export_pdfNet;
+
+  /// No description provided for @export_pdfSavingsRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Savings Rate'**
+  String get export_pdfSavingsRate;
+
+  /// No description provided for @export_pdfCategoryBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Category Breakdown'**
+  String get export_pdfCategoryBreakdown;
+
+  /// No description provided for @export_pdfTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Itemized Transactions'**
+  String get export_pdfTransactions;
+
+  /// No description provided for @export_pdfNetWorthBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Assets & Liabilities'**
+  String get export_pdfNetWorthBreakdown;
+
+  /// No description provided for @export_pdfShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Report'**
+  String get export_pdfShare;
+
+  /// No description provided for @export_pdfPrint.
+  ///
+  /// In en, this message translates to:
+  /// **'Print / Preview'**
+  String get export_pdfPrint;
+
+  /// No description provided for @export_pdfGeneratedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Generated by Expensy • Private & Offline'**
+  String get export_pdfGeneratedBy;
+
   /// No description provided for @home_totalBalance.
   ///
   /// In en, this message translates to:
@@ -2431,6 +2935,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add'**
   String get home_add;
+
+  /// No description provided for @home_goodMorning.
+  ///
+  /// In en, this message translates to:
+  /// **'Good morning'**
+  String get home_goodMorning;
+
+  /// No description provided for @home_goodAfternoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Good afternoon'**
+  String get home_goodAfternoon;
+
+  /// No description provided for @home_goodEvening.
+  ///
+  /// In en, this message translates to:
+  /// **'Good evening'**
+  String get home_goodEvening;
+
+  /// No description provided for @home_transferAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer'**
+  String get home_transferAction;
+
+  /// No description provided for @home_insightsAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Insights'**
+  String get home_insightsAction;
+
+  /// No description provided for @home_calendarAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar'**
+  String get home_calendarAction;
+
+  /// No description provided for @home_forecastAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Forecast'**
+  String get home_forecastAction;
+
+  /// No description provided for @home_manage.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage'**
+  String get home_manage;
+
+  /// No description provided for @home_seeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'See All'**
+  String get home_seeAll;
+
+  /// No description provided for @home_addAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Account'**
+  String get home_addAccount;
+
+  /// No description provided for @home_monthlyOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly Overview'**
+  String get home_monthlyOverview;
+
+  /// No description provided for @home_savingsRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Savings Rate'**
+  String get home_savingsRate;
 
   /// No description provided for @insights_insights.
   ///
@@ -3421,6 +3997,840 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Are you sure you want to delete this payment record?'**
   String get loans_confirmDeletePayment;
+
+  /// No description provided for @split_transactions_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Split Categories'**
+  String get split_transactions_title;
+
+  /// No description provided for @split_transactions_badge.
+  ///
+  /// In en, this message translates to:
+  /// **'Split'**
+  String get split_transactions_badge;
+
+  /// No description provided for @split_transactions_addSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Split'**
+  String get split_transactions_addSplit;
+
+  /// No description provided for @split_transactions_removeSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Split'**
+  String get split_transactions_removeSplit;
+
+  /// No description provided for @split_transactions_allocated.
+  ///
+  /// In en, this message translates to:
+  /// **'Allocated'**
+  String get split_transactions_allocated;
+
+  /// No description provided for @split_transactions_remaining.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining'**
+  String get split_transactions_remaining;
+
+  /// No description provided for @split_transactions_fillRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill Remaining'**
+  String get split_transactions_fillRemaining;
+
+  /// No description provided for @split_transactions_breakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Split Breakdown'**
+  String get split_transactions_breakdown;
+
+  /// No description provided for @split_transactions_mismatchError.
+  ///
+  /// In en, this message translates to:
+  /// **'Split amounts must equal the total amount.'**
+  String get split_transactions_mismatchError;
+
+  /// No description provided for @netWorth_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Net Worth'**
+  String get netWorth_title;
+
+  /// No description provided for @netWorth_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Track total assets, liabilities & wealth over time'**
+  String get netWorth_subtitle;
+
+  /// No description provided for @netWorth_current.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Net Worth'**
+  String get netWorth_current;
+
+  /// No description provided for @netWorth_trend.
+  ///
+  /// In en, this message translates to:
+  /// **'Net Worth Trend'**
+  String get netWorth_trend;
+
+  /// No description provided for @netWorth_totalAssets.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Assets'**
+  String get netWorth_totalAssets;
+
+  /// No description provided for @netWorth_totalLiabilities.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Liabilities'**
+  String get netWorth_totalLiabilities;
+
+  /// No description provided for @netWorth_liquidCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash & Bank Accounts'**
+  String get netWorth_liquidCash;
+
+  /// No description provided for @netWorth_goldValuation.
+  ///
+  /// In en, this message translates to:
+  /// **'Physical Gold'**
+  String get netWorth_goldValuation;
+
+  /// No description provided for @netWorth_fixedAssets.
+  ///
+  /// In en, this message translates to:
+  /// **'Property & Investments'**
+  String get netWorth_fixedAssets;
+
+  /// No description provided for @netWorth_moneyLent.
+  ///
+  /// In en, this message translates to:
+  /// **'Money Lent (Receivables)'**
+  String get netWorth_moneyLent;
+
+  /// No description provided for @netWorth_creditDebt.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit Cards & Overdraft'**
+  String get netWorth_creditDebt;
+
+  /// No description provided for @netWorth_loanDebt.
+  ///
+  /// In en, this message translates to:
+  /// **'Loans Payable'**
+  String get netWorth_loanDebt;
+
+  /// No description provided for @netWorth_moneyBorrowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Money Borrowed (Payables)'**
+  String get netWorth_moneyBorrowed;
+
+  /// No description provided for @netWorth_assetBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Assets Breakdown'**
+  String get netWorth_assetBreakdown;
+
+  /// No description provided for @netWorth_liabilityBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Liabilities Breakdown'**
+  String get netWorth_liabilityBreakdown;
+
+  /// No description provided for @netWorth_noHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Net worth history will build up automatically over time as daily snapshots are recorded.'**
+  String get netWorth_noHistory;
+
+  /// No description provided for @netWorth_debtRatio.
+  ///
+  /// In en, this message translates to:
+  /// **'Debt Ratio'**
+  String get netWorth_debtRatio;
+
+  /// No description provided for @netWorth_quickActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Actions'**
+  String get netWorth_quickActions;
+
+  /// No description provided for @netWorth_history.
+  ///
+  /// In en, this message translates to:
+  /// **'Snapshot History'**
+  String get netWorth_history;
+
+  /// No description provided for @creditCard_utilization.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit Utilization'**
+  String get creditCard_utilization;
+
+  /// No description provided for @creditCard_availableCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Available'**
+  String get creditCard_availableCredit;
+
+  /// No description provided for @creditCard_limit.
+  ///
+  /// In en, this message translates to:
+  /// **'Limit'**
+  String get creditCard_limit;
+
+  /// No description provided for @creditCard_statementBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Statement Balance'**
+  String get creditCard_statementBalance;
+
+  /// No description provided for @creditCard_unbilledBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Unbilled'**
+  String get creditCard_unbilledBalance;
+
+  /// No description provided for @creditCard_payBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay Card Bill'**
+  String get creditCard_payBill;
+
+  /// No description provided for @creditCard_allCaughtUp.
+  ///
+  /// In en, this message translates to:
+  /// **'All caught up! No balance due'**
+  String get creditCard_allCaughtUp;
+
+  /// No description provided for @creditCard_payBillTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay Credit Card Bill'**
+  String get creditCard_payBillTitle;
+
+  /// No description provided for @creditCard_payFromAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay From Account'**
+  String get creditCard_payFromAccount;
+
+  /// No description provided for @creditCard_paymentAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Amount'**
+  String get creditCard_paymentAmount;
+
+  /// No description provided for @creditCard_fullStatement.
+  ///
+  /// In en, this message translates to:
+  /// **'Statement Balance'**
+  String get creditCard_fullStatement;
+
+  /// No description provided for @creditCard_fullBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Balance'**
+  String get creditCard_fullBalance;
+
+  /// No description provided for @creditCard_minPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum Payment'**
+  String get creditCard_minPayment;
+
+  /// No description provided for @creditCard_customAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Amount'**
+  String get creditCard_customAmount;
+
+  /// No description provided for @creditCard_paymentSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid {amount} towards {cardName}'**
+  String creditCard_paymentSuccess(String amount, String cardName);
+
+  /// No description provided for @creditCard_insufficientFunds.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount exceeds available balance'**
+  String get creditCard_insufficientFunds;
+
+  /// No description provided for @creditCard_invalidAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid payment amount'**
+  String get creditCard_invalidAmount;
+
+  /// No description provided for @onboarding_skipForNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip for now'**
+  String get onboarding_skipForNow;
+
+  /// No description provided for @onboarding_addCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a Card'**
+  String get onboarding_addCard;
+
+  /// No description provided for @onboarding_skipCardDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'You can skip this if you don\'t want to add a card right now.'**
+  String get onboarding_skipCardDesc;
+
+  /// No description provided for @onboarding_cardNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Card Name (e.g. Visa Platinum)'**
+  String get onboarding_cardNameLabel;
+
+  /// No description provided for @onboarding_debitCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Debit Card'**
+  String get onboarding_debitCard;
+
+  /// No description provided for @onboarding_creditLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit Limit'**
+  String get onboarding_creditLimit;
+
+  /// No description provided for @onboarding_amountUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount Used'**
+  String get onboarding_amountUsed;
+
+  /// No description provided for @accounts_cardHolderOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Card Holder Name (Optional)'**
+  String get accounts_cardHolderOptional;
+
+  /// No description provided for @accounts_last4Digits.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 4 Digits'**
+  String get accounts_last4Digits;
+
+  /// No description provided for @accounts_expiryDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Expiry Date (MM/YY)'**
+  String get accounts_expiryDate;
+
+  /// No description provided for @accounts_creditLimitOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit Limit (Optional)'**
+  String get accounts_creditLimitOptional;
+
+  /// No description provided for @accounts_minPaymentOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Min. Payment (Optional)'**
+  String get accounts_minPaymentOptional;
+
+  /// No description provided for @accounts_statementDayOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Statement Day (Optional)'**
+  String get accounts_statementDayOptional;
+
+  /// No description provided for @accounts_statementDayExample.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 20'**
+  String get accounts_statementDayExample;
+
+  /// No description provided for @accounts_dueDayOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Due Day (Optional)'**
+  String get accounts_dueDayOptional;
+
+  /// No description provided for @accounts_dueDayExample.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 10'**
+  String get accounts_dueDayExample;
+
+  /// No description provided for @accounts_linkedAccountOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked Bank Account (Optional)'**
+  String get accounts_linkedAccountOptional;
+
+  /// No description provided for @accounts_excludeCardBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Exclude card balance from account balance'**
+  String get accounts_excludeCardBalance;
+
+  /// No description provided for @accounts_excludeCardBalanceDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'This card\'s balance will not be added to its linked bank account.'**
+  String get accounts_excludeCardBalanceDesc;
+
+  /// No description provided for @accounts_cardHolderHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'CARD HOLDER'**
+  String get accounts_cardHolderHeader;
+
+  /// No description provided for @accounts_expHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'EXP'**
+  String get accounts_expHeader;
+
+  /// No description provided for @accounts_notifyOnDueDate.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll be notified on the due date'**
+  String get accounts_notifyOnDueDate;
+
+  /// No description provided for @accounts_notifyWhenDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Get notified when payment is due'**
+  String get accounts_notifyWhenDue;
+
+  /// No description provided for @accounts_remind2DaysBeforeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Get an advance heads-up 2 days before due date'**
+  String get accounts_remind2DaysBeforeDesc;
+
+  /// No description provided for @accounts_targetSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Target / Saved'**
+  String get accounts_targetSaved;
+
+  /// No description provided for @transactions_selectedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 selected} other{{count} selected}}'**
+  String transactions_selectedCount(num count);
+
+  /// No description provided for @transactions_changeCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Category'**
+  String get transactions_changeCategory;
+
+  /// No description provided for @transactions_deleteSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Selected'**
+  String get transactions_deleteSelected;
+
+  /// No description provided for @transactions_advancedFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced Filters'**
+  String get transactions_advancedFilters;
+
+  /// No description provided for @transactions_clearAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear All'**
+  String get transactions_clearAll;
+
+  /// No description provided for @transactions_amountRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount Range'**
+  String get transactions_amountRange;
+
+  /// No description provided for @transactions_minAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Min Amount'**
+  String get transactions_minAmount;
+
+  /// No description provided for @transactions_maxAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Max Amount'**
+  String get transactions_maxAmount;
+
+  /// No description provided for @transactions_applyFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply Filters'**
+  String get transactions_applyFilters;
+
+  /// No description provided for @presets_new.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get presets_new;
+
+  /// No description provided for @presets_presetName.
+  ///
+  /// In en, this message translates to:
+  /// **'Preset Name (e.g. Morning Coffee)'**
+  String get presets_presetName;
+
+  /// No description provided for @presets_defaultAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Default Amount'**
+  String get presets_defaultAmount;
+
+  /// No description provided for @savings_goalName.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal Name'**
+  String get savings_goalName;
+
+  /// No description provided for @savings_goalNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. New Car, Vacation'**
+  String get savings_goalNameHint;
+
+  /// No description provided for @savings_targetAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Target Amount'**
+  String get savings_targetAmount;
+
+  /// No description provided for @savings_targetDateOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Target Date (Optional)'**
+  String get savings_targetDateOptional;
+
+  /// No description provided for @savings_selectDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Select date'**
+  String get savings_selectDate;
+
+  /// No description provided for @savings_amountRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount is required'**
+  String get savings_amountRequired;
+
+  /// No description provided for @savings_noteOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Note (Optional)'**
+  String get savings_noteOptional;
+
+  /// No description provided for @loans_skipInstallment.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip the next loan installment?'**
+  String get loans_skipInstallment;
+
+  /// No description provided for @recurring_confirmDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this recurring payment?'**
+  String get recurring_confirmDelete;
+
+  /// No description provided for @export_formatExcelOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Excel (.xlsx)'**
+  String get export_formatExcelOption;
+
+  /// No description provided for @export_formatPdfOption.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF Report'**
+  String get export_formatPdfOption;
+
+  /// No description provided for @export_pdfNoTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions recorded within this date range.'**
+  String get export_pdfNoTransactions;
+
+  /// No description provided for @savings_saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get savings_saved;
+
+  /// No description provided for @export_pdfDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get export_pdfDate;
+
+  /// No description provided for @export_pdfDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get export_pdfDescription;
+
+  /// No description provided for @accounts_noCardsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No Cards'**
+  String get accounts_noCardsYet;
+
+  /// No description provided for @accounts_tapToAddCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap + to add your first card'**
+  String get accounts_tapToAddCard;
+
+  /// No description provided for @savings_noGoalsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No Savings Goals'**
+  String get savings_noGoalsYet;
+
+  /// No description provided for @savings_tapToAddGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap + to set a new goal'**
+  String get savings_tapToAddGoal;
+
+  /// No description provided for @netWorth_recordSnapshot.
+  ///
+  /// In en, this message translates to:
+  /// **'Record Snapshot'**
+  String get netWorth_recordSnapshot;
+
+  /// No description provided for @netWorth_snapshotRecorded.
+  ///
+  /// In en, this message translates to:
+  /// **'Snapshot recorded'**
+  String get netWorth_snapshotRecorded;
+
+  /// No description provided for @savings_noContributionsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No contributions yet'**
+  String get savings_noContributionsYet;
+
+  /// No description provided for @creditCard_closesStatementBillingCycle.
+  ///
+  /// In en, this message translates to:
+  /// **'Closes current statement billing cycle'**
+  String get creditCard_closesStatementBillingCycle;
+
+  /// No description provided for @creditCard_clearsTotalDebt.
+  ///
+  /// In en, this message translates to:
+  /// **'Clears total card debt in full'**
+  String get creditCard_clearsTotalDebt;
+
+  /// No description provided for @creditCard_requiredMinPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Required minimum payment'**
+  String get creditCard_requiredMinPayment;
+
+  /// No description provided for @creditCard_specifyCustomAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Specify custom payment amount'**
+  String get creditCard_specifyCustomAmount;
+
+  /// No description provided for @common_itemDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{name}\" deleted'**
+  String common_itemDeleted(String name);
+
+  /// No description provided for @common_accountDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deleted'**
+  String get common_accountDeleted;
+
+  /// No description provided for @common_cardDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Card deleted'**
+  String get common_cardDeleted;
+
+  /// No description provided for @common_transactionDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction deleted'**
+  String get common_transactionDeleted;
+
+  /// No description provided for @common_recordDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Record deleted'**
+  String get common_recordDeleted;
+
+  /// No description provided for @common_paymentDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment deleted'**
+  String get common_paymentDeleted;
+
+  /// No description provided for @loans_skippedInstallment.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped loan installment'**
+  String get loans_skippedInstallment;
+
+  /// No description provided for @loans_loggedPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Logged payment of {amount}'**
+  String loans_loggedPayment(String amount);
+
+  /// No description provided for @loans_notificationsPermissionRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications permission required'**
+  String get loans_notificationsPermissionRequired;
+
+  /// No description provided for @creditCard_selectFundingAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a funding account'**
+  String get creditCard_selectFundingAccount;
+
+  /// No description provided for @presets_presetUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Preset updated'**
+  String get presets_presetUpdated;
+
+  /// No description provided for @presets_presetAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Preset added'**
+  String get presets_presetAdded;
+
+  /// No description provided for @presets_presetDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Preset deleted'**
+  String get presets_presetDeleted;
+
+  /// No description provided for @transactions_deletedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Deleted 1 item} other{Deleted {count} items}}'**
+  String transactions_deletedCount(int count);
+
+  /// No description provided for @split_atLeastTwoCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'At least 2 categories required for split.'**
+  String get split_atLeastTwoCategories;
+
+  /// No description provided for @split_categoryAndAmountRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Each split item must have a category and amount > 0.'**
+  String get split_categoryAndAmountRequired;
+
+  /// No description provided for @presets_addQuickPresets.
+  ///
+  /// In en, this message translates to:
+  /// **'Add 1-Tap Quick Presets'**
+  String get presets_addQuickPresets;
+
+  /// No description provided for @presets_quickPresetsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Log frequent coffees, commute, or meals with one tap'**
+  String get presets_quickPresetsDesc;
+
+  /// No description provided for @presets_loggedPreset.
+  ///
+  /// In en, this message translates to:
+  /// **'Logged {title} ({amount})'**
+  String presets_loggedPreset(String title, String amount);
+
+  /// No description provided for @presets_createPreset.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Preset'**
+  String get presets_createPreset;
+
+  /// No description provided for @presets_editQuickPreset.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Quick Preset'**
+  String get presets_editQuickPreset;
+
+  /// No description provided for @presets_newQuickPreset.
+  ///
+  /// In en, this message translates to:
+  /// **'New Quick Preset'**
+  String get presets_newQuickPreset;
+
+  /// No description provided for @savings_addContribution.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Contribution'**
+  String get savings_addContribution;
+
+  /// No description provided for @savings_withdrawFromGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdraw from Goal'**
+  String get savings_withdrawFromGoal;
+
+  /// No description provided for @savings_contribution.
+  ///
+  /// In en, this message translates to:
+  /// **'Contribution'**
+  String get savings_contribution;
+
+  /// No description provided for @savings_withdrawal.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdrawal'**
+  String get savings_withdrawal;
+
+  /// No description provided for @savings_unknownAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown Account'**
+  String get savings_unknownAccount;
+
+  /// No description provided for @savings_fromAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'From Account'**
+  String get savings_fromAccount;
+
+  /// No description provided for @savings_toAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'To Account'**
+  String get savings_toAccount;
+
+  /// No description provided for @presets_quickLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Log'**
+  String get presets_quickLog;
+
+  /// No description provided for @accounts_dueOnDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Due on {day}'**
+  String accounts_dueOnDay(int day);
 }
 
 class _AppLocalizationsDelegate

@@ -1,5 +1,4 @@
 {
-  "@@locale": "zh",
   "appTitle": "昂贵",
   "settings_title": "设置",
   "settings_appearance": "外观",
@@ -39,17 +38,7 @@
   "settings_cancel": "取消",
   "settings_save": "保存",
   "recurring_expenses": "费用 ({count})",
-  "@recurring_expenses": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "recurring_incomeList": "收入 ({count})",
-  "@recurring_incomeList": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "recurring_monthly": "每月",
   "recurring_weekly": "每周",
   "recurring_noRecurringExpenses": "无经常性费用",
@@ -58,48 +47,17 @@
   "recurring_addIncome": "增加收入",
   "recurring_tapPlusToAddOne": "点击 + 添加一个",
   "recurring_fromOngoing": "From {date} · Ongoing",
-  "@recurring_fromOngoing": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "recurring_paidPayments": "{paid}/{total} paid",
-  "@recurring_paidPayments": {
-    "placeholders": {
-      "paid": {},
-      "total": {}
-    }
-  },
   "recurring_totalAmount": "Total: {amount}",
-  "@recurring_totalAmount": {
-    "placeholders": {
-      "amount": {}
-    }
-  },
   "recurring_overdue": "逾期了！",
   "recurring_dueToday": "今天到期",
   "recurring_dueInDays": "{days}d 后到期",
-  "@recurring_dueInDays": {
-    "placeholders": {
-      "days": {}
-    }
-  },
   "recurring_edit": "编辑",
   "recurring_skipBtn": "跳过",
   "recurring_nextDate": "Next: {date}",
-  "@recurring_nextDate": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "recurring_pay": "支付",
   "recurring_del": "德尔",
   "recurring_historyCount": "历史 ({count})",
-  "@recurring_historyCount": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "recurring_paymentHistory": "付款历史",
   "recurring_notificationPermissionDenied": "通知权限被拒绝。在“设置”→“应用程序”→“费用”→“通知”中启用它。",
   "recurring_remindMeAt": "提醒我",
@@ -108,17 +66,7 @@
   "recurring_name": "姓名",
   "recurring_amountPerPayment": "每次付款金额",
   "recurring_firstDate": "First: {date}",
-  "@recurring_firstDate": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "recurring_lastDate": "Last: {date}",
-  "@recurring_lastDate": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "recurring_noLastPaymentOngoing": "没有最后付款（正在进行中）",
   "accounts_refreshExchangeRates": "刷新汇率",
   "accounts_noAccounts": "没有账户",
@@ -127,11 +75,6 @@
   "accounts_exchangeRatesUnavailable": "汇率不可用（离线）。余额以本国货币显示。",
   "accounts_unknown": "未知",
   "accounts_ratesUpdated": "费率已更新 {timeStr} · 点击 ↺ 刷新",
-  "@accounts_ratesUpdated": {
-    "placeholders": {
-      "timeStr": {}
-    }
-  },
   "accounts_goldCaps": "黄金",
   "accounts_balance": "平衡",
   "accounts_income": "收入",
@@ -140,11 +83,6 @@
   "accounts_value": "价值",
   "accounts_karat": "克拉",
   "accounts_pure": "{percentage}% pure",
-  "@accounts_pure": {
-    "placeholders": {
-      "percentage": {}
-    }
-  },
   "accounts_weightLabel": "重量",
   "accounts_perGram": "每克",
   "accounts_bank": "银行",
@@ -164,17 +102,7 @@
   "accounts_fetchingGoldPrice": "获取黄金价格...",
   "accounts_goldPriceUnavailable": "黄金价格不可用 — 检查您的连接",
   "lended_person_owesYou": "{name}欠你",
-  "@lended_person_owesYou": {
-    "placeholders": {
-      "name": {}
-    }
-  },
   "lended_person_youOwe": "你欠{name}",
-  "@lended_person_youOwe": {
-    "placeholders": {
-      "name": {}
-    }
-  },
   "lended_person_allSettledUp": "一切都安排好了",
   "lended_person_noRecordsYet": "还没有记录",
   "lended_person_tapPlusToLog": "点击 + 记录借出或借入的资金",
@@ -184,40 +112,19 @@
   "lended_person_borrowed": "借用",
   "lended_person_overdue": "逾期了！",
   "lended_person_due": "Due {date}",
-  "@lended_person_due": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "lended_person_reminderAt": "Reminder at {time}",
-  "@lended_person_reminderAt": {
-    "placeholders": {
-      "time": {}
-    }
-  },
   "lended_person_notificationPermissionDenied": "通知权限被拒绝。在“设置”→“应用程序”→“费用”→“通知”中启用它。",
   "lended_person_remindMeAtPrompt": "提醒我",
   "lended_person_editRecord": "编辑记录",
   "lended_person_addRecord": "添加记录",
   "lended_person_amount": "数量",
   "lended_person_dueColon": "Due: {date}",
-  "@lended_person_dueColon": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "lended_person_noDueDate": "没有截止日期",
   "lended_person_setDueFirst": "首先设定截止日期",
   "lended_person_notifiedOnDue": "您将在截止日期收到通知",
   "lended_person_getNotifiedWhenDue": "到期时收到通知",
   "lended_person_thatTimePassed": "今天的时间已经过去了——您很快就会收到通知。",
   "lended_person_notificationFiresOn": "通知于 {date} {time} 触发。",
-  "@lended_person_notificationFiresOn": {
-    "placeholders": {
-      "date": {},
-      "time": {}
-    }
-  },
   "lended_person_saveChangesBtn": "保存更改",
   "lended_person_addRecordBtn": "添加记录",
   "transactions_searchTransactions": "搜索交易...",
@@ -231,24 +138,9 @@
   "transactions_today": "今天",
   "transactions_yesterday": "昨天",
   "transactions_lentTo": "借给{name}",
-  "@transactions_lentTo": {
-    "placeholders": {
-      "name": {}
-    }
-  },
   "transactions_borrowedFrom": "借自{name}",
-  "@transactions_borrowedFrom": {
-    "placeholders": {
-      "name": {}
-    }
-  },
   "transactions_unknown": "未知",
   "transactions_due": "Due {date}",
-  "@transactions_due": {
-    "placeholders": {
-      "date": {}
-    }
-  },
   "transactions_unsettled": "未定",
   "onboarding_restoreFailed": "恢复失败：文件可能已损坏或不是昂贵的备份。",
   "onboarding_continue": "继续",
@@ -310,6 +202,59 @@
   "budget_ofAmount": "of {amount}",
   "budget_saveChanges": "保存更改",
   "budget_budget": "预算",
+  "budget_rollover": "滚存 (信封预算)",
+  "budget_rolloverDesc": "将未使用的结余或超支顺延至下一周期",
+  "budget_rolloverBadge": "滚存",
+  "budget_base": "基础: {amount}",
+  "budget_rolloverFrom": "滚存 ({period}): {amount}",
+  "budget_totalAvailable": "总可用: {amount}",
+  "budget_lastWeek": "上周",
+  "pacing_dailyBudget": "每日安全消费",
+  "pacing_safeToSpend": "安全消费额度：每天 {amount}（剩余 {days} 天）",
+  "pacing_caution": "消费节奏偏快 — 建议控制在每天 {amount}",
+  "pacing_overPaced": "节奏预警 — 请放缓开支以保持在预算内",
+  "pacing_budgetExhausted": "预算已达上限 — 无剩余每日额度",
+  "pacing_onTrack": "节奏良好",
+  "pacing_fast": "节奏偏快",
+  "pacing_alert": "节奏预警",
+  "pacing_daysLeft": "剩余 {days} 天",
+  "pacing_setBudgetPrompt": "点击设置预算限额 →",
+  "pacing_dailyAvgPace": "每日节奏",
+  "pacing_perDay": "{amount} / 天",
+  "calendar_title": "财务日历",
+  "calendar_subtitle": "每日支出热力图与到期提醒",
+  "calendar_zeroSpendDays": "{count} 个零支出日",
+  "calendar_zeroSpendDayTitle": "零支出日达成！ 🎉",
+  "calendar_zeroSpendDayDesc": "非常棒的自律表现，今天没有任何支出。",
+  "calendar_billsDue": "到期账单与订阅",
+  "calendar_loansDue": "到期贷款还款",
+  "calendar_lendedDue": "预计收到的还款",
+  "calendar_dayTransactions": "交易明细 ({count})",
+  "calendar_noActivity": "该日期无交易或待办事项",
+  "calendar_today": "今天",
+  "calendar_averageDaily": "日均消费：{amount}",
+  "wrapped_title": "Expensy Wrapped",
+  "wrapped_bannerTitle": "您的 {month} 月度账单已生成！",
+  "wrapped_bannerSub": "点击查看您的月度财务回顾",
+  "wrapped_theBigPicture": "总体概况",
+  "wrapped_howMoneyMoved": "以下是您在 {month} 的资金流动",
+  "wrapped_totalInflow": "总收入",
+  "wrapped_totalOutflow": "总支出",
+  "wrapped_netSavings": "净结余",
+  "wrapped_savingsRate": "储蓄率: {rate}%",
+  "wrapped_topCategoryTitle": "钱花在哪了？",
+  "wrapped_topCategorySub": "您的最高支出类别是 {category}",
+  "wrapped_topCategoryShare": "占总支出的 {percent}%",
+  "wrapped_biggestSplurgeTitle": "最大单笔支出",
+  "wrapped_biggestSplurgeSub": "本月单笔最高支出",
+  "wrapped_noSplurge": "无大额支出！本月没有支出记录。",
+  "wrapped_heroHabitTitle": "优秀习惯",
+  "wrapped_zeroSpendAchieved": "{count} 天零支出",
+  "wrapped_heroHabitDesc": "您达成了 {count} 天零支出记录。财务自律非常出色！",
+  "wrapped_receiptTitle": "月度账单",
+  "wrapped_obscureToggle": "隐藏金额以便分享",
+  "wrapped_showToggle": "显示金额",
+  "wrapped_replay": "重播回顾",
   "insights_other": "其他",
   "insights_noDataYet": "还没有数据",
   "insights_addSomeTransactions": "添加一些交易以查看见解",
@@ -387,6 +332,17 @@
   "wishlist_notesOptional": "注释（可选）",
   "wishlist_saveChanges": "保存更改",
   "wishlist_addItem": "添加项目",
+  "wishlist_fundThisItem": "为心愿存钱",
+  "wishlist_funded": "已完成 {percent}% ({saved} / {target})",
+  "wishlist_goalAchieved": "目标已达成 — 可以购买啦！",
+  "wishlist_buyNow": "立即购买",
+  "wishlist_purchaseTitle": "购买心愿单物品",
+  "wishlist_purchasePrompt": "是否要记录一笔支出交易并从账户扣除该金额？",
+  "wishlist_recordAndDeduct": "记账并扣款",
+  "wishlist_markPurchasedOnly": "仅标记为已购买",
+  "wishlist_itemPurchased": "已将「{name}」标记为已购买！",
+  "wishlist_viewGoal": "查看储蓄目标",
+  "savings_linkedWishlist": "已关联心愿单物品: {item}",
   "lended_theyOweMe": "他们欠我",
   "lended_iOweThem": "我欠他们",
   "lended_net": "净",
@@ -442,6 +398,8 @@
   "accounts_goldPurityKarat": "黄金纯度 (Karat)",
   "accounts_weight": "重量",
   "accounts_excludeFromTotalBala": "从总余额中排除",
+  "accounts_dontLinkToCard": "不与卡关联",
+  "accounts_dontLinkToCardDesc": "手动管理此账户余额并阻止卡与此账户关联",
   "accounts_color": "颜色",
   "accounts_liveGoldValue": "实时黄金价值",
   "accounts_enterWeightAboveToSe": "在上方输入重量以查看价值",
@@ -484,11 +442,38 @@
   "export_exportTransactions": "导出交易",
   "export_dateRange": "日期范围",
   "export_formatExcelXlsx": "格式：Excel (.xlsx)",
+  "export_exportAsPdf": "导出为 PDF 报告",
+  "export_formatPdf": "格式: PDF 财务报告 (.pdf)",
+  "export_pdfGenerating": "正在生成 PDF...",
+  "export_pdfTitle": "财务报告",
+  "export_pdfSummary": "财务摘要",
+  "export_pdfInflow": "总收入",
+  "export_pdfOutflow": "总支出",
+  "export_pdfNet": "净结余",
+  "export_pdfSavingsRate": "储蓄率",
+  "export_pdfCategoryBreakdown": "分类支出明细",
+  "export_pdfTransactions": "交易流水明细",
+  "export_pdfNetWorthBreakdown": "资产与负债概览",
+  "export_pdfShare": "分享报告",
+  "export_pdfPrint": "打印 / 预览",
+  "export_pdfGeneratedBy": "由 Expensy 生成 • 私密且离线",
   "home_totalBalance": "总余额",
   "home_accounts": "账户",
   "home_recentTransactions": "近期交易",
   "home_noTransactionsYet": "暂无交易",
   "home_add": "添加",
+  "home_goodMorning": "早上好",
+  "home_goodAfternoon": "下午好",
+  "home_goodEvening": "晚上好",
+  "home_transferAction": "转账",
+  "home_insightsAction": "洞察",
+  "home_calendarAction": "日历",
+  "home_forecastAction": "预测",
+  "home_manage": "管理",
+  "home_seeAll": "查看全部",
+  "home_addAccount": "添加账户",
+  "home_monthlyOverview": "月度概览",
+  "home_savingsRate": "储蓄率",
   "insights_insights": "洞察",
   "lended_person_deletePerson": "删除人员",
   "lended_person_editPerson": "编辑人员",
@@ -568,17 +553,7 @@
   "onboarding_chooseLanguage": "选择语言",
   "error_required": "此字段为必填项",
   "recurring_subscriptions": "订阅 ({count})",
-  "@recurring_subscriptions": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "recurring_installments": "分期付款 ({count})",
-  "@recurring_installments": {
-    "placeholders": {
-      "count": {}
-    }
-  },
   "recurring_recurringType": "重复类型",
   "recurring_subscription": "订阅",
   "recurring_installment": "分期付款",
@@ -660,5 +635,154 @@
   "yearly_noData": "暂无预测活动",
   "yearly_noDataSub": "添加定期付款或贷款以查看预测",
   "budget_addBudget": "添加预算",
-  "budget_addGoal": "添加储蓄目标"
+  "budget_addGoal": "添加储蓄目标",
+  "split_transactions_title": "拆分分类",
+  "split_transactions_badge": "拆分",
+  "split_transactions_addSplit": "添加拆分",
+  "split_transactions_removeSplit": "删除拆分",
+  "split_transactions_allocated": "已分配",
+  "split_transactions_remaining": "剩余",
+  "split_transactions_fillRemaining": "填满剩余",
+  "split_transactions_breakdown": "拆分明细",
+  "split_transactions_mismatchError": "拆分金额必须等于总金额。",
+  "netWorth_title": "净资产",
+  "netWorth_subtitle": "跟踪总资产、负债和财富随时间的变化",
+  "netWorth_current": "当前净资产",
+  "netWorth_trend": "净资产走势",
+  "netWorth_totalAssets": "总资产",
+  "netWorth_totalLiabilities": "总负债",
+  "netWorth_liquidCash": "现金与银行账户",
+  "netWorth_goldValuation": "实物黄金",
+  "netWorth_fixedAssets": "房产与投资",
+  "netWorth_moneyLent": "借出款项（应收款）",
+  "netWorth_creditDebt": "信用卡与透支",
+  "netWorth_loanDebt": "应付贷款",
+  "netWorth_moneyBorrowed": "借入款项（应付款）",
+  "netWorth_assetBreakdown": "资产分布",
+  "netWorth_liabilityBreakdown": "负债分布",
+  "netWorth_noHistory": "随着记录每日快照，净资产历史将随时间自动建立。",
+  "netWorth_debtRatio": "负债率",
+  "netWorth_quickActions": "快捷操作",
+  "netWorth_history": "快照历史",
+  "creditCard_utilization": "额度使用率",
+  "creditCard_availableCredit": "可用额度",
+  "creditCard_limit": "信用额度",
+  "creditCard_statementBalance": "账单金额",
+  "creditCard_unbilledBalance": "未出账单",
+  "creditCard_payBill": "偿还信用卡",
+  "creditCard_allCaughtUp": "已全额还清！暂无待还账单",
+  "creditCard_payBillTitle": "还款信用卡账单",
+  "creditCard_payFromAccount": "扣款账户",
+  "creditCard_paymentAmount": "还款金额",
+  "creditCard_fullStatement": "账单金额",
+  "creditCard_fullBalance": "总欠款",
+  "creditCard_minPayment": "最低还款额",
+  "creditCard_customAmount": "自定义金额",
+  "creditCard_paymentSuccess": "已向 {cardName} 还款 {amount}",
+  "creditCard_insufficientFunds": "还款金额超过可用余额",
+  "creditCard_invalidAmount": "请输入有效的还款金额",
+  "onboarding_skipForNow": "暂时跳过",
+  "add_transaction_possibleDuplicate": "可能是重复交易",
+  "add_transaction_goBack": "返回",
+  "add_transaction_saveAnyway": "仍然保存",
+  "loans_confirmDeleteLoan": "确定要删除此贷款及其所有还款记录吗？",
+  "loans_deletePayment": "删除还款",
+  "loans_confirmDeletePayment": "确定要删除此还款记录吗？",
+  "budget_leftToSpend": "剩余可用额度",
+  "more_sectionTools": "金融工具",
+  "more_sectionAnalytics": "分析与洞察",
+  "more_sectionPreferences": "偏好与数据",
+  "onboarding_addCard": "添加卡片",
+  "onboarding_skipCardDesc": "如果您现在不想添加卡片，可以跳过此步骤。",
+  "onboarding_cardNameLabel": "卡片名称（例如：Visa 白金卡）",
+  "onboarding_debitCard": "借记卡",
+  "onboarding_creditLimit": "信用额度",
+  "onboarding_amountUsed": "已用金额",
+  "accounts_cardHolderOptional": "持卡人姓名（可选）",
+  "accounts_last4Digits": "卡号后4位",
+  "accounts_expiryDate": "到期日 (MM/YY)",
+  "accounts_creditLimitOptional": "信用额度（可选）",
+  "accounts_minPaymentOptional": "最低还款额（可选）",
+  "accounts_statementDayOptional": "账单日（可选）",
+  "accounts_statementDayExample": "例如：20",
+  "accounts_dueDayOptional": "还款日（可选）",
+  "accounts_dueDayExample": "例如：10",
+  "accounts_linkedAccountOptional": "关联银行账户（可选）",
+  "accounts_excludeCardBalance": "从账户总余额中排除卡片余额",
+  "accounts_excludeCardBalanceDesc": "此卡片的余额不会计入关联的银行账户总额。",
+  "accounts_cardHolderHeader": "持卡人",
+  "accounts_expHeader": "到期",
+  "accounts_notifyOnDueDate": "将在还款日向您发送提醒",
+  "accounts_notifyWhenDue": "在还款到期时接收提醒",
+  "accounts_remind2DaysBeforeDesc": "在还款到期前 2 天接收提前提醒",
+  "accounts_targetSaved": "目标 / 已存",
+  "transactions_selectedCount": "{count, plural, other{已选择 {count} 项}}",
+  "transactions_changeCategory": "更改分类",
+  "transactions_deleteSelected": "删除选中项",
+  "transactions_advancedFilters": "高级筛选",
+  "transactions_clearAll": "清空全部",
+  "transactions_amountRange": "金额范围",
+  "transactions_minAmount": "最小金额",
+  "transactions_maxAmount": "最大金额",
+  "transactions_applyFilters": "应用筛选",
+  "presets_new": "新建",
+  "presets_presetName": "预设名称（例如：早晨咖啡）",
+  "presets_defaultAmount": "默认金额",
+  "savings_goalName": "目标名称",
+  "savings_goalNameHint": "例如：新车、度假",
+  "savings_targetAmount": "目标金额",
+  "savings_targetDateOptional": "目标日期（可选）",
+  "savings_selectDate": "选择日期",
+  "savings_amountRequired": "金额不能为空",
+  "savings_noteOptional": "备注（可选）",
+  "loans_skipInstallment": "跳过下一次贷款还款？",
+  "recurring_confirmDelete": "确定要删除此周期性付款吗？",
+  "export_formatExcelOption": "Excel (.xlsx)",
+  "export_formatPdfOption": "PDF 财务报告",
+  "export_pdfNoTransactions": "在所选日期范围内未记录任何交易。",
+  "savings_saved": "已存",
+  "export_pdfDate": "日期",
+  "export_pdfDescription": "描述",
+  "accounts_noCardsYet": "无卡片",
+  "accounts_tapToAddCard": "点击 + 添加第一张卡片",
+  "savings_noGoalsYet": "暂无储蓄目标",
+  "savings_tapToAddGoal": "点击 + 设定新目标",
+  "netWorth_recordSnapshot": "记录快照",
+  "netWorth_snapshotRecorded": "快照已记录",
+  "savings_noContributionsYet": "暂无存入记录",
+  "creditCard_closesStatementBillingCycle": "结清当期对账单计费周期",
+  "creditCard_clearsTotalDebt": "全额还清卡片所有欠款",
+  "creditCard_requiredMinPayment": "最低还款额",
+  "creditCard_specifyCustomAmount": "指定自定义还款金额",
+  "common_itemDeleted": "已删除 \"{name}\"",
+  "common_accountDeleted": "账户已删除",
+  "common_cardDeleted": "卡片已删除",
+  "common_transactionDeleted": "交易已删除",
+  "common_recordDeleted": "记录已删除",
+  "common_paymentDeleted": "付款已删除",
+  "loans_skippedInstallment": "已跳过本期贷款分期",
+  "loans_loggedPayment": "已记录 {amount} 的还款",
+  "loans_notificationsPermissionRequired": "需要通知权限",
+  "creditCard_selectFundingAccount": "请选择扣款账户",
+  "presets_presetUpdated": "预设已更新",
+  "presets_presetAdded": "预设已添加",
+  "presets_presetDeleted": "预设已删除",
+  "transactions_deletedCount": "已删除 {count} 个项目",
+  "split_atLeastTwoCategories": "拆分至少需要 2 个类别。",
+  "split_categoryAndAmountRequired": "每个拆分项必须有类别且金额大于 0。",
+  "presets_addQuickPresets": "添加一键快捷预设",
+  "presets_quickPresetsDesc": "一键记录日常咖啡、通勤或用餐",
+  "presets_loggedPreset": "已记录 {title} ({amount})",
+  "presets_createPreset": "创建预设",
+  "presets_editQuickPreset": "编辑快捷预设",
+  "presets_newQuickPreset": "新建快捷预设",
+  "savings_addContribution": "存入资金",
+  "savings_withdrawFromGoal": "从目标取出",
+  "savings_contribution": "存入",
+  "savings_withdrawal": "取款",
+  "savings_unknownAccount": "未知账户",
+  "savings_fromAccount": "转出账户",
+  "savings_toAccount": "转入账户",
+  "presets_quickLog": "快捷记录",
+  "accounts_dueOnDay": "到期日：{day}号"
 }

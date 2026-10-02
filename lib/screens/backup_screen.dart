@@ -45,7 +45,9 @@ class _BackupScreenState extends State<BackupScreen> {
       _msg = null;
     });
     try {
-      final savedPath = await context.read<AppProvider>().createBackup();
+      final savedPath = await context
+          .read<AppProvider>()
+          .createBackup(dialogTitle: l10n.backup_createBackup);
       if (savedPath != null) {
         _setMsg(l10n.backup_backupSavedSuccessfully(savedPath));
       }
@@ -172,132 +174,76 @@ class _BackupScreenState extends State<BackupScreen> {
           Icons.settings_outlined, l10n.backup_settings, -1), // -1 = 'included'
     ];
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.backup_backupRestore,
             style: const TextStyle(fontWeight: FontWeight.w800)),
-        backgroundColor: cs.primary,
-        foregroundColor: cs.onPrimary,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          // ── What's included ────────────────────────────────────────────
-          Row(children: [
-            Expanded(
-                child: Text(l10n.backup_whatsIncluded,
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        letterSpacing: 1,
-                        color: cs.onSurface.withValues(alpha: 0.6)))),
-            Text(l10n.backup_everythingAlways,
-                style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: cs.primary)),
-          ]),
-          const SizedBox(height: 8),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              child: Column(
-                children: counts
-                    .map((r) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 6),
-                          child: Row(children: [
-                            Icon(r.icon,
-                                size: 18,
-                                color: cs.primary.withValues(alpha: 0.8)),
-                            const SizedBox(width: 12),
-                            Expanded(
-                                child: Text(r.label,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 13))),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: cs.primaryContainer,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                r.count == -1
-                                    ? l10n.backup_included
-                                    : '${r.count}',
-                                style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    color: cs.onPrimaryContainer),
-                              ),
-                            ),
-                          ]),
-                        ))
-                    .toList(),
-              ),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Text(
-              l10n.backup_backupDescription,
-              style: TextStyle(
-                  fontSize: 11.5, color: cs.onSurface.withValues(alpha: 0.55)),
-            ),
-          ),
-          const SizedBox(height: 20),
-
           // ── Create backup ──────────────────────────────────────────────
           Text(l10n.backup_createBackup,
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
                   letterSpacing: 1,
                   color: cs.onSurface.withValues(alpha: 0.6))),
           const SizedBox(height: 8),
-          Card(
-              child: Padding(
-            padding: const EdgeInsets.all(18),
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Row(children: [
-                Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                        color: cs.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12)),
-                    child: Icon(Icons.backup_outlined, color: cs.primary)),
-                const SizedBox(width: 14),
-                Expanded(
-                    child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(l10n.backup_saveAsJson,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w800, fontSize: 15)),
-                    Text(l10n.backup_exportsAllAppDataToA,
-                        style: const TextStyle(fontSize: 12)),
-                  ],
-                )),
-              ]),
-              const SizedBox(height: 14),
-              FilledButton.icon(
-                onPressed: _backingUp ? null : _backup,
-                icon: _backingUp
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white))
-                    : const Icon(Icons.save_outlined),
-                label: Text(
-                    _backingUp ? l10n.backup_saving : l10n.backup_saveBackup),
-                style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(44),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(22))),
+          Container(
+            decoration: BoxDecoration(
+              color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
               ),
-            ]),
-          )),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child:
+                  Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(children: [
+                  Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                          color: cs.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12)),
+                      child: Icon(Icons.backup_outlined, color: cs.primary)),
+                  const SizedBox(width: 14),
+                  Expanded(
+                      child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(l10n.backup_saveAsJson,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w800, fontSize: 15)),
+                      Text(l10n.backup_exportsAllAppDataToA,
+                          style: const TextStyle(fontSize: 12)),
+                    ],
+                  )),
+                ]),
+                const SizedBox(height: 14),
+                FilledButton.icon(
+                  onPressed: _backingUp ? null : _backup,
+                  icon: _backingUp
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white))
+                      : const Icon(Icons.save_outlined),
+                  label: Text(
+                      _backingUp ? l10n.backup_saving : l10n.backup_saveBackup),
+                  style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(44),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(22))),
+                ),
+              ]),
+            ),
+          ),
+          const SizedBox(height: 20),
 
           // ── Restore backup ─────────────────────────────────────────────
           Text(l10n.backup_restoreBackup_,
@@ -305,11 +251,18 @@ class _BackupScreenState extends State<BackupScreen> {
                   letterSpacing: 1,
                   color: cs.onSurface.withValues(alpha: 0.6))),
           const SizedBox(height: 8),
-          Card(
-              child: Padding(
-            padding: const EdgeInsets.all(18),
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Container(
+            decoration: BoxDecoration(
+              color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child:
+                  Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(children: [
                 Container(
                     width: 44,
@@ -386,8 +339,9 @@ class _BackupScreenState extends State<BackupScreen> {
                         borderRadius: BorderRadius.circular(22))),
               ),
             ]),
-          )),
-          const SizedBox(height: 12),
+          ),
+          ),
+          const SizedBox(height: 20),
 
           // ── Import from Other Apps ─────────────────────────────────────────────
           Text(l10n.backup_importFromOtherApps,
@@ -395,47 +349,128 @@ class _BackupScreenState extends State<BackupScreen> {
                   letterSpacing: 1,
                   color: cs.onSurface.withValues(alpha: 0.6))),
           const SizedBox(height: 8),
-          Card(
-              child: Padding(
-            padding: const EdgeInsets.all(18),
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Row(children: [
-                Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                        color: cs.secondary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12)),
-                    child: Icon(Icons.download_outlined, color: cs.secondary)),
-                const SizedBox(width: 14),
-                Expanded(
-                    child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(l10n.backup_importFromOtherApps,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w800, fontSize: 15)),
-                    Text(l10n.backup_importDescription,
-                        style: TextStyle(
-                            fontSize: 12,
-                            color: cs.onSurface.withValues(alpha: 0.6))),
-                  ],
-                )),
-              ]),
-              const SizedBox(height: 14),
-              OutlinedButton.icon(
-                onPressed:
-                    _restoring ? null : () => _restoreExternal('greenstash'),
-                icon: const Icon(Icons.savings),
-                label: Text(l10n.backup_importFromGreenStash),
-                style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(44),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(22))),
+          Container(
+            decoration: BoxDecoration(
+              color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
               ),
-            ]),
-          )),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child:
+                  Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(children: [
+                  Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                          color: cs.secondary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12)),
+                      child: Icon(Icons.download_outlined, color: cs.secondary)),
+                  const SizedBox(width: 14),
+                  Expanded(
+                      child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(l10n.backup_importFromOtherApps,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w800, fontSize: 15)),
+                      Text(l10n.backup_importDescription,
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: cs.onSurface.withValues(alpha: 0.6))),
+                    ],
+                  )),
+                ]),
+                const SizedBox(height: 14),
+                OutlinedButton.icon(
+                  onPressed:
+                      _restoring ? null : () => _restoreExternal('greenstash'),
+                  icon: const Icon(Icons.savings),
+                  label: Text(l10n.backup_importFromGreenStash),
+                  style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(44),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(22))),
+                ),
+              ]),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // ── What's included ────────────────────────────────────────────
+          Row(children: [
+            Expanded(
+                child: Text(l10n.backup_whatsIncluded,
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        letterSpacing: 1,
+                        color: cs.onSurface.withValues(alpha: 0.6)))),
+            Text(l10n.backup_everythingAlways,
+                style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: cs.primary)),
+          ]),
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Column(
+                children: counts
+                    .map((r) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Row(children: [
+                            Icon(r.icon,
+                                size: 18,
+                                color: cs.primary.withValues(alpha: 0.8)),
+                            const SizedBox(width: 12),
+                            Expanded(
+                                child: Text(r.label,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 13))),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: cs.primary.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                r.count == -1
+                                    ? l10n.backup_included
+                                    : '${r.count}',
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: cs.primary),
+                              ),
+                            ),
+                          ]),
+                        ))
+                    .toList(),
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Text(
+              l10n.backup_backupDescription,
+              style: TextStyle(
+                  fontSize: 11.5, color: cs.onSurface.withValues(alpha: 0.55)),
+            ),
+          ),
+          const SizedBox(height: 20),
         ]),
       ),
       bottomNavigationBar: _msg != null

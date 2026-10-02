@@ -709,6 +709,8 @@ class ExpandableFab extends StatefulWidget {
   final VoidCallback? onIncome;
   final VoidCallback? onExpense;
   final List<ExpandableFabItem>? items;
+  final Color? color;
+  final CrossAxisAlignment alignment;
 
   const ExpandableFab({
     super.key,
@@ -716,6 +718,8 @@ class ExpandableFab extends StatefulWidget {
     this.onIncome,
     this.onExpense,
     this.items,
+    this.color,
+    this.alignment = CrossAxisAlignment.end,
   });
 
   @override
@@ -734,7 +738,7 @@ class _ExpandableFabState extends State<ExpandableFab>
     super.initState();
     _controller = AnimationController(
       value: _open ? 1.0 : 0.0,
-      duration: const Duration(milliseconds: 150),
+      duration: const Duration(milliseconds: 180),
       vsync: this,
     );
     _expandAnimation0 = CurvedAnimation(
@@ -785,11 +789,15 @@ class _ExpandableFabState extends State<ExpandableFab>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
+    final primaryColor = widget.color ?? cs.primary;
+
     final List<ExpandableFabItem> actions = widget.items ?? [
       ExpandableFabItem(
         label: l10n.add_transaction_expense,
         icon: Icons.arrow_upward_rounded,
-        color: const Color(0xFFC62828),
+        color: const Color(0xFFE53935),
         onTap: widget.onExpense ?? () {},
       ),
       ExpandableFabItem(
@@ -802,7 +810,7 @@ class _ExpandableFabState extends State<ExpandableFab>
 
     return Column(
       mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: widget.alignment,
       children: [
         ...actions.asMap().entries.map((entry) {
           final idx = entry.key;
@@ -817,22 +825,62 @@ class _ExpandableFabState extends State<ExpandableFab>
               item.onTap();
             },
             animation: anim,
+            isDark: isDark,
           );
         }),
-        FloatingActionButton.extended(
-          heroTag: null,
-          onPressed: _toggle,
-          label: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(widget.label),
-              const SizedBox(width: 8),
-              AnimatedRotation(
-                turns: _open ? 0.125 : 0,
-                duration: const Duration(milliseconds: 150),
-                child: const Icon(Icons.add),
+        Material(
+          color: Colors.transparent,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: _toggle,
+            child: Container(
+              height: 48,
+              padding: const EdgeInsets.symmetric(horizontal: 18),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(22),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    primaryColor,
+                    Color.lerp(primaryColor, Colors.black, isDark ? 0.25 : 0.15)!,
+                  ],
+                ),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: isDark ? 0.25 : 0.4),
+                  width: 1.2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: primaryColor.withValues(alpha: isDark ? 0.45 : 0.35),
+                    blurRadius: 18,
+                    spreadRadius: 0,
+                    offset: const Offset(0, 7),
+                  ),
+                ],
               ),
-            ],
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    widget.label,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14.5,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  AnimatedRotation(
+                    turns: _open ? 0.125 : 0,
+                    duration: const Duration(milliseconds: 180),
+                    child: const Icon(Icons.add_rounded, color: Colors.white, size: 22),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ],
@@ -845,47 +893,81 @@ class _ExpandableFabState extends State<ExpandableFab>
     required String label,
     required VoidCallback onTap,
     required Animation<double> animation,
+    required bool isDark,
   }) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizeTransition(
-          sizeFactor: animation,
-          axis: Axis.vertical,
-          alignment: const Alignment(0.0, -1.0),
-          child: FadeTransition(
-            opacity: animation,
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: color,
-                  foregroundColor: Colors.white,
-                  elevation: 4,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                onPressed: onTap,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      label,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w600, fontSize: 14),
+    final Alignment animAlignment = widget.alignment == CrossAxisAlignment.end
+        ? Alignment.bottomRight
+        : (widget.alignment == CrossAxisAlignment.start
+            ? Alignment.bottomLeft
+            : Alignment.bottomCenter);
+
+    return Align(
+      alignment: widget.alignment == CrossAxisAlignment.end
+          ? Alignment.centerRight
+          : (widget.alignment == CrossAxisAlignment.start
+              ? Alignment.centerLeft
+              : Alignment.center),
+      child: SizeTransition(
+        sizeFactor: animation,
+        axis: Axis.vertical,
+        alignment: animAlignment,
+        child: FadeTransition(
+          opacity: animation,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Material(
+              color: Colors.transparent,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: onTap,
+                child: Container(
+                  height: 44,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        color,
+                        Color.lerp(color, Colors.black, isDark ? 0.2 : 0.1)!,
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    Icon(icon, size: 22),
-                  ],
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: isDark ? 0.25 : 0.35),
+                      width: 1.1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: color.withValues(alpha: isDark ? 0.4 : 0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        label,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13.5,
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(icon, color: Colors.white, size: 19),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
         ),
-      ],
+      ),
     );
   }
 }

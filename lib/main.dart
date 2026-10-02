@@ -11,6 +11,8 @@ import 'theme/app_theme.dart';
 import 'screens/main_shell.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/add_transaction_screen.dart';
+import 'screens/transfer_screen.dart';
+import 'widgets/preset_sheet.dart';
 import 'services/notification_service.dart';
 import 'services/lended_notification_service.dart';
 import 'services/quick_add_service.dart';
@@ -65,34 +67,59 @@ class _ExpensyAppState extends State<ExpensyApp> {
   void initState() {
     super.initState();
 
-    // Cold start: were we launched directly from the widget tap? Checked
-    // once here (rather than in main(), before runApp) so it can safely
-    // push onto rootNavigatorKey after the very first frame is up.
+    // Cold start: were we launched directly from a widget, shortcut, or quick tile?
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final initialRoute = await QuickAddService.instance.getInitialRoute();
-      if (initialRoute == QuickAddService.routeQuickAdd) {
-        _pushQuickAdd();
+      if (initialRoute != null) {
+        _handleRoute(initialRoute);
       }
     });
 
-    // Warm start: app already alive in the background, widget tapped again.
+    // Warm start: app already alive in the background, shortcut/widget tapped again.
     _quickAddSub = QuickAddService.instance.routeStream.listen((route) {
-      if (route == QuickAddService.routeQuickAdd) {
-        _pushQuickAdd();
+      if (route != null) {
+        _handleRoute(route);
       }
     });
   }
 
-  void _pushQuickAdd() {
-    // onboarding screen has no bottom-nav shell to return to underneath it —
-    // skip the quick-add fast-path in that case and let onboarding proceed
-    // normally.
+  void _handleRoute(String route) {
     final app = context.read<AppProvider>();
     if (!app.settings.onboarded) return;
 
-    rootNavigatorKey.currentState?.push(
-      ExpensySlideUpRoute(builder: (_) => const AddTransactionScreen()),
-    );
+    final nav = rootNavigatorKey.currentState;
+    if (nav == null) return;
+
+    switch (route) {
+      case QuickAddService.routeQuickAdd:
+      case QuickAddService.routeExpense:
+        nav.push(
+          ExpensySlideUpRoute(
+            builder: (_) => const AddTransactionScreen(initialType: 'expense'),
+          ),
+        );
+        break;
+      case QuickAddService.routeIncome:
+        nav.push(
+          ExpensySlideUpRoute(
+            builder: (_) => const AddTransactionScreen(initialType: 'income'),
+          ),
+        );
+        break;
+      case QuickAddService.routeTransfer:
+        nav.push(
+          ExpensySlideUpRoute(
+            builder: (_) => const TransferScreen(),
+          ),
+        );
+        break;
+      case QuickAddService.routePresets:
+        final navContext = rootNavigatorKey.currentContext;
+        if (navContext != null) {
+          PresetSheet.show(navContext);
+        }
+        break;
+    }
   }
 
   @override
@@ -129,35 +156,39 @@ class _ExpensyAppState extends State<ExpensyApp> {
 
     return DynamicColorBuilder(
       builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
-        final view = View.of(context);
-        final mediaQueryData =
-            MediaQueryData.fromView(view).copyWith(accessibleNavigation: false);
+        return Builder(
+          builder: (context) {
+            final view = View.of(context);
+            final mediaQueryData = MediaQueryData.fromView(view)
+                .copyWith(accessibleNavigation: false);
 
-        return MediaQuery(
-          data: mediaQueryData,
-          child: MaterialApp(
-            title: 'Expensy',
-            navigatorKey: rootNavigatorKey,
-            debugShowCheckedModeBanner: false,
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            locale: languageCode == 'system' ? null : Locale(languageCode),
-            themeMode: resolveThemeMode(themeMode),
-            theme: buildTheme(
-              seed: themeSeed,
-              dark: false,
-              appFont: appFont,
-              dynamicScheme: usesDynamic ? lightDynamic : null,
-            ),
-            darkTheme: buildTheme(
-              seed: themeSeed,
-              dark: true,
-              amoled: amoledSurfaces, // applies regardless of color source
-              appFont: appFont,
-              dynamicScheme: usesDynamic ? darkDynamic : null,
-            ),
-            home: onboarded ? const MainShell() : const OnboardingScreen(),
-          ),
+            return MediaQuery(
+              data: mediaQueryData,
+              child: MaterialApp(
+                title: 'Expensy',
+                navigatorKey: rootNavigatorKey,
+                debugShowCheckedModeBanner: false,
+                localizationsDelegates: AppLocalizations.localizationsDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
+                locale: languageCode == 'system' ? null : Locale(languageCode),
+                themeMode: resolveThemeMode(themeMode),
+                theme: buildTheme(
+                  seed: themeSeed,
+                  dark: false,
+                  appFont: appFont,
+                  dynamicScheme: usesDynamic ? lightDynamic : null,
+                ),
+                darkTheme: buildTheme(
+                  seed: themeSeed,
+                  dark: true,
+                  amoled: amoledSurfaces,
+                  appFont: appFont,
+                  dynamicScheme: usesDynamic ? darkDynamic : null,
+                ),
+                home: onboarded ? const MainShell() : const OnboardingScreen(),
+              ),
+            );
+          },
         );
       },
     );

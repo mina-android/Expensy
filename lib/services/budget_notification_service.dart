@@ -17,7 +17,7 @@ class BudgetNotificationService {
     const androidInit =
         AndroidInitializationSettings('ic_notification');
     const initSettings = InitializationSettings(android: androidInit);
-    await _plugin.initialize(initSettings);
+    await _plugin.initialize(settings: initSettings);
     _initialized = true;
   }
 
@@ -34,9 +34,11 @@ class BudgetNotificationService {
   }
 
   Future<void> showBudgetExceeded(
-      Budget budget, AppCategory category, double spentAmount) async {
+      Budget budget, AppCategory category, double spentAmount,
+      [double? allowanceAmount]) async {
     if (!(await hasPermission())) return;
-    final overAmount = spentAmount - budget.amount;
+    final limit = allowanceAmount ?? budget.amount;
+    final overAmount = spentAmount - limit;
     if (overAmount <= 0) return;
 
     final nf = NumberFormat.currency(symbol: '');
@@ -61,10 +63,10 @@ class BudgetNotificationService {
     const details = NotificationDetails(android: androidDetails);
 
     await _plugin.show(
-      id,
-      '🚨 Over Budget',
-      '${category.name} — $amountStr over your ${budget.period} limit',
-      details,
+      id: id,
+      title: '🚨 Over Budget',
+      body: '${category.name} — $amountStr over your ${budget.period} limit',
+      notificationDetails: details,
     );
   }
 
@@ -93,10 +95,10 @@ class BudgetNotificationService {
     const details = NotificationDetails(android: androidDetails);
 
     await _plugin.show(
-      id,
-      '🎉 Goal Reached',
-      'You reached your goal of $amountStr for ${goal.name}!',
-      details,
+      id: id,
+      title: '🎉 Goal Reached',
+      body: 'You reached your goal of $amountStr for ${goal.name}!',
+      notificationDetails: details,
     );
   }
 }

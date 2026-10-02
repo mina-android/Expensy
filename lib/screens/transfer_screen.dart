@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
+import '../widgets/app_numeric_keypad.dart';
 import '../utils/haptics.dart';
 
 class TransferScreen extends StatefulWidget {
@@ -44,7 +45,8 @@ class _TransferScreenState extends State<TransferScreen> {
   Future<void> _submit() async {
     setState(() => _submitted = true);
     if (_fromId == null || _toId == null || _fromId == _toId) return;
-    final amount = double.tryParse(_amtCtrl.text);
+    final evalAmount = ExpressionEvaluator.evaluate(_amtCtrl.text);
+    final amount = evalAmount ?? double.tryParse(_amtCtrl.text);
     if (amount == null || amount <= 0) return;
     await context.read<AppProvider>().addTransfer(
           fromId: _fromId!,
@@ -73,27 +75,29 @@ class _TransferScreenState extends State<TransferScreen> {
     final sym = currencyInfo(fromCurrency).symbol;
 
     // Live conversion preview
-    final inputAmount = double.tryParse(_amtCtrl.text);
+    final evalAmount = ExpressionEvaluator.evaluate(_amtCtrl.text);
+    final inputAmount = evalAmount ?? double.tryParse(_amtCtrl.text);
     final convertedAmount =
         (isCrossCurrency && inputAmount != null && app.exchangeRates.isNotEmpty)
             ? app.convertBetween(inputAmount, fromCurrency, toCurrency)
             : null;
 
+    final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.transfer_transfer,
             style: const TextStyle(fontWeight: FontWeight.w800)),
-        backgroundColor: cs.primary,
-        foregroundColor: cs.onPrimary,
       ),
-      body: SafeArea(
-          bottom: true,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              // ── FROM row ──────────────────────────────────────────────────
-              Text(l10n.transfer_from,
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child:
+                  Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                // ── FROM row ──────────────────────────────────────────────────
+                Text(l10n.transfer_from,
                   style: Theme.of(context)
                       .textTheme
                       .labelMedium
@@ -272,20 +276,26 @@ class _TransferScreenState extends State<TransferScreen> {
               // ── Amount field ──────────────────────────────────────────────
               TextField(
                 controller: _amtCtrl,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                readOnly: true,
+                showCursor: true,
                 decoration: InputDecoration(
                   labelText: l10n.transfer_amount,
                   prefixText: '$sym ',
                   suffixText: fromCurrency,
                   errorText:
-                      _submitted && (double.tryParse(_amtCtrl.text) ?? 0) <= 0
+                      _submitted && ((evalAmount ?? double.tryParse(_amtCtrl.text) ?? 0) <= 0)
                           ? l10n.error_required
                           : null,
+                  helperText: (_amtCtrl.text.contains('+') ||
+                              _amtCtrl.text.contains('-') ||
+                              _amtCtrl.text.contains('×') ||
+                              _amtCtrl.text.contains('÷')) &&
+                          evalAmount != null
+                      ? '= ${formatAmount(evalAmount, fromCurrency)}'
+                      : ' ',
                 ),
                 style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-                onChanged: (_) => setState(() {}),
+                    const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 12),
 
@@ -310,6 +320,17 @@ class _TransferScreenState extends State<TransferScreen> {
               ),
             ]),
           )),
+          if (!isKeyboardOpen)
+            SafeArea(
+              top: false,
+              child: AppNumericKeypad(
+                controller: _amtCtrl,
+                onChanged: (_) => setState(() => _submitted = false),
+                onDone: _submit,
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

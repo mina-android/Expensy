@@ -8,6 +8,7 @@ import '../providers/app_provider.dart';
 import '../models/models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
+import '../widgets/fintech_components.dart';
 import '../services/notification_service.dart';
 import '../utils/haptics.dart';
 import 'recurring_detail_screen.dart';
@@ -18,10 +19,9 @@ class RecurringScreen extends StatefulWidget {
   State<RecurringScreen> createState() => _RecurringScreenState();
 }
 
-class _RecurringScreenState extends State<RecurringScreen>
-    with SingleTickerProviderStateMixin {
+class _RecurringScreenState extends State<RecurringScreen> {
   AppLocalizations get l10n => AppLocalizations.of(context)!;
-  late TabController _tab;
+  int _tabIndex = 0; // 0 = Expenses, 1 = Income
   String _expenseSubFilter = 'subscription'; // 'subscription' or 'installment'
 
   List<RecurringPayment>? _cachedRecurring;
@@ -58,163 +58,243 @@ class _RecurringScreenState extends State<RecurringScreen>
   void _computeData(AppProvider app) {
     if (identical(_cachedRecurring, app.recurring) &&
         _cachedExpenseSubFilter == _expenseSubFilter &&
-        _cachedTabIndex == _tab.index) {
+        _cachedTabIndex == _tabIndex) {
       return;
     }
     _cachedRecurring = app.recurring;
     _cachedExpenseSubFilter = _expenseSubFilter;
-    _cachedTabIndex = _tab.index;
+    _cachedTabIndex = _tabIndex;
 
     _expenses = app.recurring.where((r) => r.paymentType == 'expense').toList();
     _incomes = app.recurring.where((r) => r.paymentType == 'income').toList();
     _filteredExpenses =
         _expenses.where((r) => r.recurringType == _expenseSubFilter).toList();
-    _shown = _tab.index == 0 ? _filteredExpenses : _incomes;
+    _shown = _tabIndex == 0 ? _filteredExpenses : _incomes;
     _m = _monthly(_shown);
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _tab = TabController(length: 2, vsync: this);
-    _tab.addListener(() => setState(() {}));
-  }
-
-  @override
-  void dispose() {
-    _tab.dispose();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final app = context.watch<AppProvider>();
     final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tabPurple = isDark ? const Color(0xFFBA68C8) : const Color(0xFF8E24AA);
     String fmt(double v) => formatAmount(v, app.settings.currency);
 
     _computeData(app);
 
+    final monthlyExpenses = _monthly(_expenses);
+    final monthlyIncomes = _monthly(_incomes);
+
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Row(
-          children: [
-            Text(l10n.recurring_recurring,
-                style: const TextStyle(fontWeight: FontWeight.w800)),
-            const Spacer(),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
+      body: Column(
+        children: [
+          // ── Transparent Edge-to-Edge Header ────────────────────────
+          FintechHeader(
+            title: l10n.recurring_recurring,
+            subtitle: '${_expenses.length + _incomes.length} subscriptions & recurring',
+          ),
+
+          // ── Elevated Committed Cash Flow Hero Card ──────────────────
+          FintechHeroCard(
+            accentColor: tabPurple,
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${l10n.home_income} / ${l10n.home_expenses}',
-                    style: TextStyle(
-                        fontSize: 10,
-                        color: cs.onPrimary.withValues(alpha: 0.7))),
-                Text(
-                  '${fmt(_monthly(_incomes))} / ${fmt(_monthly(_expenses))}',
-                  style: const TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.w600),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: tabPurple.withValues(alpha: isDark ? 0.25 : 0.12),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: tabPurple.withValues(alpha: isDark ? 0.4 : 0.25),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.repeat_rounded, size: 12, color: tabPurple),
+                          const SizedBox(width: 5),
+                          Text(
+                            (_tabIndex == 0 ? l10n.home_expenses : l10n.home_income).toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.5,
+                              color: tabPurple,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      '${fmt(_m / 4.33)} / week',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: cs.onSurface.withValues(alpha: 0.55),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      fmt(_m),
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.5,
+                          ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '/ month',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: cs.onSurface.withValues(alpha: 0.6),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: cs.surfaceContainerHighest.withValues(alpha: isDark ? 0.3 : 0.45),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.arrow_downward_rounded, size: 14, color: Color(0xFFC62828)),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${l10n.home_expenses}: ${fmt(monthlyExpenses)}',
+                            style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          const Icon(Icons.arrow_upward_rounded, size: 14, color: Color(0xFF2E7D32)),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${l10n.home_income}: ${fmt(monthlyIncomes)}',
+                            style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-          ],
-        ),
-        backgroundColor: cs.primary,
-        foregroundColor: cs.onPrimary,
-        bottom: TabBar(
-          controller: _tab,
-          labelColor: cs.onPrimary,
-          unselectedLabelColor: cs.onPrimary.withValues(alpha: 0.55),
-          indicatorColor: cs.onPrimary,
-          tabs: [
-            Tab(text: l10n.recurring_expenses(_expenses.length.toString())),
-            Tab(text: l10n.recurring_incomeList(_incomes.length.toString())),
-          ],
-        ),
+          ),
+
+          // ── Pill Segmented Control (Expenses / Income) ──────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 6),
+            child: FintechSegmentedControl<int>(
+              activeColor: tabPurple,
+              selectedValue: _tabIndex,
+              onValueChanged: (val) => setState(() => _tabIndex = val),
+              items: [
+                FintechSegmentItem<int>(
+                  value: 0,
+                  label: l10n.recurring_expenses(_expenses.length.toString()),
+                  icon: Icons.arrow_downward_rounded,
+                ),
+                FintechSegmentItem<int>(
+                  value: 1,
+                  label: l10n.recurring_incomeList(_incomes.length.toString()),
+                  icon: Icons.arrow_upward_rounded,
+                ),
+              ],
+            ),
+          ),
+
+          // ── Expenses Sub-Filter (Subscription / Installment) ────────
+          AnimatedSize(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
+            child: _tabIndex == 0
+                ? Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 2, 16, 6),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _FilterCard(
+                            label: l10n.recurring_subscriptions(_expenses
+                                .where((e) => e.recurringType == 'subscription')
+                                .length
+                                .toString()),
+                            icon: Icons.sync_rounded,
+                            selected: _expenseSubFilter == 'subscription',
+                            onTap: () =>
+                                setState(() => _expenseSubFilter = 'subscription'),
+                            color: tabPurple,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _FilterCard(
+                            label: l10n.recurring_installments(_expenses
+                                .where((e) => e.recurringType == 'installment')
+                                .length
+                                .toString()),
+                            icon: Icons.payments_outlined,
+                            selected: _expenseSubFilter == 'installment',
+                            onTap: () =>
+                                setState(() => _expenseSubFilter = 'installment'),
+                            color: tabPurple,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
+
+          // ── Content List ────────────────────────────────────────────
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: _tabIndex == 0
+                  ? _RecurringList(
+                      key: ValueKey('expenses_$_expenseSubFilter'),
+                      items: _filteredExpenses,
+                      app: app,
+                      fmt: fmt,
+                      empty: l10n.recurring_noRecurringExpenses,
+                    )
+                  : _RecurringList(
+                      key: const ValueKey('incomes_list'),
+                      items: _incomes,
+                      app: app,
+                      fmt: fmt,
+                      empty: l10n.recurring_noRecurringIncome,
+                    ),
+            ),
+          ),
+        ],
       ),
-      body: Column(children: [
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 150),
-          child: Padding(
-            key: ValueKey('summary_${_tab.index}_$_expenseSubFilter'),
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
-            child: Row(children: [
-              Expanded(
-                  child: _SummaryCard(
-                      label: l10n.recurring_monthly,
-                      value: fmt(_m),
-                      color: cs.primary,
-                      bg: cs.primaryContainer,
-                      fg: cs.onPrimaryContainer)),
-              const SizedBox(width: 10),
-              Expanded(
-                  child: _SummaryCard(
-                      label: l10n.recurring_weekly,
-                      value: fmt(_m / 4.33),
-                      color: cs.secondary,
-                      bg: cs.secondaryContainer,
-                      fg: cs.onSecondaryContainer)),
-            ]),
-          ),
-        ),
-        const SizedBox(height: 8),
-        AnimatedCrossFade(
-          duration: const Duration(milliseconds: 150),
-          crossFadeState: _tab.index == 0
-              ? CrossFadeState.showFirst
-              : CrossFadeState.showSecond,
-          firstChild: Padding(
-            padding: const EdgeInsets.only(left: 14, right: 14, bottom: 8),
-            child: Row(children: [
-              Expanded(
-                child: _FilterCard(
-                  label: l10n.recurring_subscriptions(_expenses
-                      .where((e) => e.recurringType == 'subscription')
-                      .length
-                      .toString()),
-                  icon: Icons.sync_rounded,
-                  selected: _expenseSubFilter == 'subscription',
-                  onTap: () =>
-                      setState(() => _expenseSubFilter = 'subscription'),
-                  color: cs.primary,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _FilterCard(
-                  label: l10n.recurring_installments(_expenses
-                      .where((e) => e.recurringType == 'installment')
-                      .length
-                      .toString()),
-                  icon: Icons.payments_outlined,
-                  selected: _expenseSubFilter == 'installment',
-                  onTap: () =>
-                      setState(() => _expenseSubFilter = 'installment'),
-                  color: cs.secondary,
-                ),
-              ),
-            ]),
-          ),
-          secondChild: const SizedBox.shrink(),
-        ),
-        Expanded(
-            child: TabBarView(controller: _tab, children: [
-          _RecurringList(
-              items: _filteredExpenses,
-              app: app,
-              fmt: fmt,
-              empty: l10n.recurring_noRecurringExpenses),
-          _RecurringList(
-              items: _incomes,
-              app: app,
-              fmt: fmt,
-              empty: l10n.recurring_noRecurringIncome),
-        ])),
-      ]),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 76),
+        padding: const EdgeInsets.only(bottom: 84, right: 4),
         child: ExpandableFab(
           label: l10n.home_add,
+          color: tabPurple,
           onIncome: () => openRecurringSheet(context, defaultType: 'income'),
           onExpense: () => openRecurringSheet(context, defaultType: 'expense'),
         ),
@@ -233,35 +313,6 @@ void openRecurringSheet(BuildContext ctx,
     builder: (_) =>
         _RecurringSheet(existing: existing, defaultType: defaultType),
   );
-}
-
-// ── Summary Card ──────────────────────────────────────────────────────────────
-class _SummaryCard extends StatelessWidget {
-  final String label, value;
-  final Color color, bg, fg;
-  const _SummaryCard(
-      {required this.label,
-      required this.value,
-      required this.color,
-      required this.bg,
-      required this.fg});
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
-        decoration:
-            BoxDecoration(color: bg, borderRadius: BorderRadius.circular(14)),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(label,
-              style: TextStyle(
-                  fontSize: 11,
-                  color: fg.withValues(alpha: 0.65),
-                  fontWeight: FontWeight.w600)),
-          const SizedBox(height: 2),
-          Text(value,
-              style: TextStyle(
-                  fontSize: 16, fontWeight: FontWeight.w800, color: color)),
-        ]),
-      );
 }
 
 class _FilterCard extends StatelessWidget {
@@ -330,7 +381,8 @@ class _RecurringList extends StatelessWidget {
   final String Function(double) fmt;
   final String empty;
   const _RecurringList(
-      {required this.items,
+      {super.key,
+      required this.items,
       required this.app,
       required this.fmt,
       required this.empty});
@@ -385,21 +437,35 @@ class _RecurringCardState extends State<_RecurringCard> {
     final days = r.nextDate.difference(DateTime.now()).inDays;
     final overdue = days < 0;
 
-    return Card(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.08)
+              : Colors.black.withValues(alpha: 0.05),
+          width: 1,
+        ),
+      ),
       clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            ExpensyRoute(
-              builder: (_) => RecurringDetailScreen(recurring: r, fmt: fmt),
-            ),
-          );
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              ExpensyRoute(
+                builder: (_) => RecurringDetailScreen(recurring: r, fmt: fmt),
+              ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             // ── Header row ──────────────────────────────────────────────
             Row(children: [
             CategoryDot(category: cat, size: 46),
@@ -561,8 +627,9 @@ class _RecurringCardState extends State<_RecurringCard> {
                 onTap: () async {
                   await context.read<AppProvider>().markRecurringPaid(r);
                 }),
+            ]),
           ]),
-        ]),
+        ),
       ),
     ),
   );
@@ -626,12 +693,18 @@ class _RecurringSheetState extends State<_RecurringSheet> {
   bool _reminderEnabled = false;
   bool _earlyReminderEnabled = false;
   TimeOfDay _reminderTime = const TimeOfDay(hour: 9, minute: 0);
+  bool _autoPayEnabled = false;
+  TimeOfDay _autoPayTime = const TimeOfDay(hour: 9, minute: 0);
 
   bool get isEdit => widget.existing != null;
 
   String get _reminderTimeStr =>
       '${_reminderTime.hour.toString().padLeft(2, '0')}:'
       '${_reminderTime.minute.toString().padLeft(2, '0')}';
+
+  String get _autoPayTimeStr =>
+      '${_autoPayTime.hour.toString().padLeft(2, '0')}:'
+      '${_autoPayTime.minute.toString().padLeft(2, '0')}';
 
   static TimeOfDay _parseTime(String s) {
     final parts = s.split(':');
@@ -666,6 +739,8 @@ class _RecurringSheetState extends State<_RecurringSheet> {
       _reminderEnabled = e.reminderEnabled;
       _earlyReminderEnabled = e.earlyReminderEnabled;
       _reminderTime = _parseTime(e.reminderTime);
+      _autoPayEnabled = e.autoPayEnabled;
+      _autoPayTime = _parseTime(e.autoPayTime);
     }
   }
 
@@ -733,6 +808,15 @@ class _RecurringSheetState extends State<_RecurringSheet> {
     if (picked != null) setState(() => _reminderTime = picked);
   }
 
+  Future<void> _pickAutoPayTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _autoPayTime,
+      helpText: 'Auto Pay at',
+    );
+    if (picked != null) setState(() => _autoPayTime = picked);
+  }
+
   Future<void> _submit() async {
     setState(() => _submitted = true);
     if (_nameCtrl.text.trim().isEmpty) return;
@@ -759,13 +843,17 @@ class _RecurringSheetState extends State<_RecurringSheet> {
       freqVal: freq,
       freqUnit: _freqUnit,
       startDate: _first,
-      nextDate: isEdit ? widget.existing!.nextDate : _first,
+      nextDate: isEdit
+          ? (widget.existing!.startDate != _first ? _first : widget.existing!.nextDate)
+          : _first,
       endDate: _last,
       paidPayments: isEdit ? widget.existing!.paidPayments : 0,
       reminderEnabled: _reminderEnabled,
       reminderTime: _reminderTimeStr,
       earlyReminderEnabled: _earlyReminderEnabled,
       notes: isEdit ? widget.existing!.notes : '',
+      autoPayEnabled: _autoPayEnabled,
+      autoPayTime: _autoPayTimeStr,
     );
 
     if (isEdit) {
@@ -785,17 +873,22 @@ class _RecurringSheetState extends State<_RecurringSheet> {
     final est = _estimate;
     final amt = double.tryParse(_amtCtrl.text) ?? 0;
 
+
     return Padding(
-      padding: const EdgeInsets.only(
-          bottom: 16,
+      padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
           left: 20,
           right: 20,
           top: 20),
-      child: SingleChildScrollView(
-          child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
+        child: SingleChildScrollView(
+            child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           Text(
               isEdit
                   ? l10n.recurring_editRecurring
@@ -902,7 +995,6 @@ class _RecurringSheetState extends State<_RecurringSheet> {
           TextField(
             controller: _nameCtrl,
             textInputAction: TextInputAction.next,
-           
             decoration: InputDecoration(
               labelText: l10n.recurring_name,
               prefixIcon: const Icon(Icons.repeat_rounded),
@@ -915,7 +1007,6 @@ class _RecurringSheetState extends State<_RecurringSheet> {
           TextField(
               controller: _amtCtrl,
               textInputAction: TextInputAction.next,
-             
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
               decoration: InputDecoration(
@@ -1196,6 +1287,66 @@ class _RecurringSheetState extends State<_RecurringSheet> {
               onChanged: (v) => setState(() => _earlyReminderEnabled = v),
             ),
           ],
+          const Divider(height: 24),
+          SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            secondary: Icon(
+              _autoPayEnabled
+                  ? Icons.autorenew_rounded
+                  : Icons.sync_disabled_rounded,
+              color: _autoPayEnabled ? const Color(0xFF2E7D32) : null,
+            ),
+            title: Text('Auto pay on Due date',
+                style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: _autoPayEnabled ? const Color(0xFF2E7D32) : null)),
+            subtitle: Text(
+              _autoPayEnabled
+                  ? 'Automatically recorded on due date'
+                  : 'Automatically record this payment when due',
+              style: TextStyle(
+                  fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5)),
+            ),
+            value: _autoPayEnabled,
+            onChanged: (v) => setState(() => _autoPayEnabled = v),
+          ),
+
+          if (_autoPayEnabled) ...[
+            const SizedBox(height: 4),
+            InkWell(
+              onTap: _pickAutoPayTime,
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2E7D32).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFF2E7D32).withValues(alpha: 0.35)),
+                ),
+                child: Row(children: [
+                  const Icon(Icons.access_time_rounded, size: 20, color: Color(0xFF2E7D32)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                        Text('Auto pay time',
+                            style: TextStyle(
+                                fontSize: 11,
+                                color: cs.onSurface.withValues(alpha: 0.55))),
+                        Text(_autoPayTime.format(context),
+                            style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF2E7D32))),
+                      ])),
+                  const Icon(Icons.chevron_right_rounded, color: Color(0xFF2E7D32)),
+                ]),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
 
           const SizedBox(height: 16),
           FilledButton.icon(
@@ -1213,6 +1364,7 @@ class _RecurringSheetState extends State<_RecurringSheet> {
           const SizedBox(height: 4),
         ],
       )),
+      ),
     );
   }
 }

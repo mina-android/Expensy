@@ -2,164 +2,161 @@
 
 <img src="assets/splash_icon.png" alt="Expensy Logo" width="120" height="120" style="border-radius: 24px"/>
 
-# Expensy
+<h1>Expensy</h1>
 
-### A finance tracker that stays on your phone, not in the cloud
+<h3>A finance tracker that stays on your phone, not in the cloud</h3>
 
-[![Flutter](https://img.shields.io/badge/Flutter-3.3%2B-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
-[![Android](https://img.shields.io/badge/Android-5.0%2B-3DDC84?logo=android&logoColor=white)](https://android.com)
-[![Version](https://img.shields.io/badge/Version-1.1.0-brightgreen)](https://github.com/mina-android/Expensy/releases)
-[![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platform-Android-3DDC84?logo=android&logoColor=white)](https://android.com) [![Version](https://img.shields.io/badge/Version-1.2.0-brightgreen)](https://github.com/mina-android/Expensy/releases) [![License](https://img.shields.io/badge/License-GPL--3.0-blue)](LICENSE)
 
-No sign-up. No cloud sync. No ads. Your data lives on your device and nowhere else.
+Expensy is a simple app that helps anyone manage their money, track debts, and plan ahead with complete peace of mind.  
+It works completely offline, with no sign-ups or ads, and your financial data never leaves your phone.
 
-[**Download**](#-installation) · [**Features**](#-features) · [**Screenshots**](#-screenshots) · [**Build from Source**](#-build-from-source)
+[**Download**](#-download) · [**Features**](#-what-you-can-do) · [**Screenshots**](#-take-a-look) · [**FAQ**](#-questions-you-might-have) · [**For Developers**](#-for-developers)
 
 </div>
 
 ---
 
-## Why I built this
+## ✨ What you can do
 
-I got tired of finance apps that ask for an account before they'll even let you add a transaction, then quietly sync everything to a server somewhere. Expensy doesn't do any of that. There's no login screen, no backend, no analytics SDK phoning home. It's just a local SQLite database on your phone. The only time it touches the network is to fetch exchange rates and the day's gold price — everything else, from your account balances to your spending history, never leaves the device. Uninstall the app and there's nothing left behind to "delete your data" from, because it was never anywhere else to begin with.
-
----
-
-## ✨ What's in it
-
-I've tried to make this a genuinely complete money app rather than just a transaction logger:
-
-- **Accounts** for however you actually keep money — bank, cash, savings, credit card, e-wallet, or gold — each with its own currency, and you can drag them into whatever order makes sense to you
-- **Linked cards**, so a credit or debit card can sit under a parent bank account and roll up into one total instead of being tracked separately
-- **Gold accounts** that value themselves automatically from live gold prices, tracked by karat and grams
-- A unified **transaction list** — income, expenses, and lent/borrowed money all in one chronological view, with search, filters, swipe-to-delete, bulk selection, and tap-to-edit
-- **Transfers** between accounts with automatic currency conversion baked in
-- **Recurring payments** for subscriptions, installments, rent, salary — with reminders and a full payment history
-- **Budgets**, monthly or weekly, per category, with progress bars and a push notification the moment you go over
-- **Statistics & Insights** — charts, trends, month-over-month comparisons, the stuff that actually tells you where your money went
-- A built-in **currency converter** using live rates
-- **Savings goals** you can contribute to or withdraw from, with a nudge when you hit the target
-- **Assets & a wishlist**, for tracking what you own and what you're saving up for
-- **Lent & borrowed money**, so you can actually remember who owes who, with due-date reminders
-- **Yearly Analysis** — a 24-month planned cash flow forecast for recurring income, expenses, loans, and lent/borrowed due dates
-- An optional **nightly reminder** if you haven't logged anything that day
-- **Backup & restore** to a single JSON file that's entirely yours — and if you're coming from GreenStash, it can import your data directly
-- A UI that's meant to feel fast — smooth at 120Hz even with a few thousand transactions sitting in the list
-
-And because a finance app is something you'll look at every day, I spent real time on how it looks: a sleek **floating Material 3 navigation bar**, Material You theming, 29 accent colors, 10 fonts, a proper AMOLED dark mode, and a few home-screen widgets (quick-add, accounts, budget progress) so you don't always have to open the app just to log something.
+- **💳 Accounts & credit card settlement**: Track bank accounts, cash, digital wallets, credit cards, and gold holdings. Pay your monthly credit card balance in a single tap from a linked bank account.
+- **⚡ 1-Tap quick presets & built-in calculator**: Pin your frequent daily expenses right on your home screen for one-tap logging, and calculate taxes or split totals instantly with the tactile in-app keypad.
+- **🎯 Rollover budgets & safe-to-spend pacer**: Set category spending targets where unused funds roll over into next month, and see at a glance how much you can comfortably spend each day.
+- **🔄 Subscriptions, bills & auto-pay**: Keep tabs on recurring bills, installment plans, and salaries, complete with custom auto-pay times and scheduled reminder notifications.
+- **📈 Wealth management & net worth**: Get a clear picture of what you own versus what you owe, with automatic daily net worth snapshots, asset tracking, and interactive growth charts.
+- **🔔 Gentle reminders**: Get a nudge when a recurring bill is due, when an installment is approaching, or when someone's repayment date arrives so nothing slips through the cracks.
+- **📤 Share your data**: Turn what you've logged into a clean, multi-page vector PDF statement or a spreadsheet in a couple of taps, rendered 100% offline.
+- **💾 Backups that just work**: Switching phones? Save an unencrypted or encrypted JSON backup file directly to your device storage and restore everything in seconds.
+- **🎨 Easy on the eyes**: Built with modern Material You dynamic theming, 29 vibrant accent colors, a true AMOLED pure-black mode, and edge-to-edge status bar styling.
 
 ---
 
-## 📸 Screenshots
+## 🧭 Getting started
 
-<div align="center">
+1. **Set up your profile & currency**: Choose your primary currency, pick your favorite accent color and font, or let Material You match your phone's wallpaper.
+2. **Add your primary accounts**: Add your cash wallet, bank accounts, or credit cards to see your starting total balance.
+3. **Log your first transaction or pin a preset**: Tap the center action button to log an expense, or pin daily expenses like morning coffee to your home screen for 1-tap entry.
+4. **Plan ahead & export reports**: Set category budgets, schedule your recurring monthly bills, or generate a tidy PDF report whenever you like.
+
+---
+
+## 📸 Take a look
+
+<p align="center">
   <img src="screenshots/home.png" width="32%" alt="Home" />
   <img src="screenshots/transactions.png" width="32%" alt="Transactions" />
   <img src="screenshots/recurring.png" width="32%" alt="Recurring" />
-  <br>
+</p>
+
+<p align="center">
   <img src="screenshots/accounts.png" width="32%" alt="Accounts" />
   <img src="screenshots/budgets.png" width="32%" alt="Budgets" />
-  <img src="screenshots/statistics.png" width="32%" alt="Statistics" />
-</div>
+  <img src="screenshots/more.png" width="32%" alt="More" />
+</p>
+
+<p align="center">
+  <img src="screenshots/currency_converter.png" width="32%" alt="Currency Converter" />
+  <img src="screenshots/financial_calendar.png" width="32%" alt="Financial Calendar" />
+  <img src="screenshots/insights.png" width="32%" alt="Insights" />
+</p>
 
 ---
 
-## 🌍 Localization
+## 📲 Download
 
-I wanted this to feel native for more than just English speakers, so it's currently translated into 11 languages (see `lib/l10n/`):
+1. Head over to the [**Releases page**](https://github.com/mina-android/Expensy/releases)
+2. Grab the latest APK. If you're not sure which one, pick the file ending in `arm64-v8a`, since most newer phones use that
+3. Open it, and if Android asks, allow installs from unknown sources
 
-🇺🇸 English · 🇪🇸 Spanish · 🇸🇦 Arabic (with RTL support) · 🇫🇷 French · 🇩🇪 German · 🇮🇳 Hindi · 🇮🇹 Italian · 🇯🇵 Japanese · 🇵🇹 Portuguese · 🇷🇺 Russian · 🇨🇳 Chinese
-
-Some of these are more complete than others — check the `.arb` files under `lib/l10n/` if you're curious how far along a given language is. If you speak one of these natively and something reads awkwardly, a PR fixing it would genuinely make the app better for someone. See [Contributing](#-contributing).
-
----
-
-## 📲 Installation
-
-1. Grab the latest APK from [**Releases**](https://github.com/mina-android/Expensy/releases)
-2. Enable **Install Unknown Apps** for your file manager (Settings → Security)
-3. Open the APK and install it
-
-That's it — no account to create. Requires Android 5.0 or newer.
+It runs on Android 5.0 (Lollipop) or newer and takes up about 27 MB.
 
 ---
 
-## 🛠 Build from Source
+## 🔒 Your privacy
 
-**Prerequisites:** [Flutter SDK 3.3+](https://flutter.dev/docs/get-started/install), Java JDK 11+
+I take this seriously, so here's the plain version:
+
+- **Everything stays on your phone**: All your records are stored locally using a high-performance SQLite database via Drift over Dart FFI in a background isolate.
+- **No accounts, no ads, and no tracking**: No sign-up screens, no telemetry, no analytics SDKs, and zero cloud databases pinging external servers.
+- **If you uninstall the app, your data goes with it**: Because nothing is stored remotely, make sure to save a backup to your storage or drive before changing phones or uninstalling.
+
+---
+
+## ❓ Questions you might have
+
+**Do I need an internet connection to use it?**  
+No. Expensy works entirely offline. The only optional network requests are to fetch live currency conversion rates and spot gold prices when you choose to refresh them.
+
+**What happens to my data if I get a new phone?**  
+Go to More → Backup & Restore, tap "Create Backup", and save the JSON backup file to your Google Drive or send it to your new phone. Once you install Expensy on your new device, tap "Restore Backup".
+
+**Can I import data from other finance apps?**  
+Yes! Expensy includes built-in support for importing backups from GreenStash and restoring previous Expensy JSON backups.
+
+**Is there an iPhone version?**  
+Not right now. Expensy is tailored specifically for Android with native Material You theming, Quick Settings tiles, home-screen widgets, and app shortcuts.
+
+---
+
+## 💬 Say hello
+
+- Ran into a bug or want a new feature? [Open an issue](https://github.com/mina-android/Expensy/issues)
+- Just want to chat or give feedback? Reach me via GitHub Issues or discussions
+- If the app has made your life a little easier, a ⭐ on the repo would make my day
+
+---
+
+## 🛠 For developers
+
+<details>
+<summary><strong>What it's built with</strong></summary>
+
+- **Flutter & Dart**: Cross-platform UI toolkit targeting Android (minSdk 21 / Android 5.0+).
+- **Drift & SQLite**: Compile-time type-safe persistence executing in a dedicated background isolate via Dart FFI.
+- **Provider**: Streamlined and responsive app-wide state management.
+- **Key Packages**: `fl_chart` (financial visualizations), `pdf` & `printing` (offline vector reports), `excel` (spreadsheets), `home_widget` (interactive Android widgets), and `flutter_local_notifications` (offline bill & budget alerts).
+
+</details>
+
+<details>
+<summary><strong>Run it yourself</strong></summary>
+
+You'll need Flutter 3.3+ and Android Studio with Java JDK 11+. Then:
 
 ```bash
 git clone https://github.com/mina-android/Expensy.git
 cd Expensy
 flutter pub get
 flutter run
-
-# Signed release APK (universal)
-flutter build apk --release
-
-# Signed split-per-ABI APKs (smaller download per architecture)
-flutter build apk --split-per-abi --release
-
-# Signed Play Store bundle
-flutter build appbundle --release
 ```
 
-If `android/key.properties` is present, release builds automatically pick it up and sign with `expensy.jks`. You'll find the output in `build/app/outputs/flutter-apk/` (`app-release.apk`, `app-arm64-v8a-release.apk`, ...) and `build/app/outputs/bundle/release/` (`app-release.aab`).
+To build release APKs: `flutter build apk --split-per-abi --release`
+
+</details>
 
 <details>
-<summary><strong>Running into build trouble?</strong></summary>
+<summary><strong>Want to help out?</strong></summary>
 
-- **`flutter pub get` fails:** `flutter clean && flutter pub get`
-- **Gradle errors:** make sure `gradle-wrapper.properties` points at Gradle **8.11.1**, not 9.x
-- **Weird path/drive-letter errors on Windows:** add `kotlin.incremental=false` and `org.gradle.configuration-cache=false` to `android/gradle.properties`
-- **Missing SDK licenses:** `flutter doctor --android-licenses`
-- **Notifications not firing:** check Settings → Apps → Expensy → Notifications, and don't forget "Alarms & Reminders" on Android 12+
+Contributions are welcome! Here's how:
+
+1. Fork the repo
+2. Create a branch: `git checkout -b feature/my-new-feature`
+3. Make your changes and push them
+4. Open a Pull Request and tell me what you changed
+
+Please run `flutter analyze` before opening a pull request to keep code quality and linting clean.
 
 </details>
 
 ---
 
-## 🔒 Privacy, actually
+## 📄 License
 
-- Everything is stored locally in SQLite — nothing ever leaves your device
-- Exchange rates come from free public APIs that don't need a key or an account
-- No analytics, no crash reporting, no ads, no trackers of any kind
-- Backups are plain JSON files that live wherever you put them, not on some server
-- Uninstall the app and it's genuinely gone — there's nothing left in a cloud somewhere to worry about
-
----
-
-## 🗺 Roadmap
-
-- [ ] iOS support
-- [x] Home screen widgets (quick-add, add transaction, accounts, budget progress)
-- [x] Multiple languages (11 and counting)
-- [ ] Recurring payment auto-pay
-- [x] Budgets per category
-- [x] Savings goals
-- [x] Loans with reminders
-- [x] Push notifications for recurring payments and lent/borrowed money
-
----
-
-## 🤝 Contributing
-
-1. Fork the repo
-2. Create a branch: `git checkout -b feature/my-feature`
-3. Commit and push your changes
-4. Open a Pull Request
-
-Please run `flutter analyze` before submitting — keeps the diff clean for review.
-
----
-
-## License
-
-MIT License — see [LICENSE](LICENSE) for details.
+GNU General Public License v3.0. Have a look at [LICENSE](LICENSE) for the details.  
 Copyright © 2026 [Mina Android](https://github.com/mina-android)
 
 <div align="center">
 
-Made with ❤️ and Flutter · [**More projects**](https://github.com/mina-android)
+Made with ❤️ for anyone who wants to take control of their finances · [**See my other projects**](https://github.com/mina-android)
 
 </div>

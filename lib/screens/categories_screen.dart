@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../models/models.dart';
 import '../widgets/shared_widgets.dart';
+import '../widgets/fintech_components.dart';
 import '../utils/haptics.dart';
 
 class CategoriesScreen extends StatelessWidget {
@@ -15,7 +16,6 @@ class CategoriesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
-    final cs = Theme.of(context).colorScheme;
     final expenses = app.categories.where((c) => c.type == 'expense').toList();
     final incomes = app.categories.where((c) => c.type == 'income').toList();
 
@@ -23,8 +23,6 @@ class CategoriesScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(l10n.categories_categories,
             style: const TextStyle(fontWeight: FontWeight.w800)),
-        backgroundColor: cs.primary,
-        foregroundColor: cs.onPrimary,
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(14, 14, 14, 140),
@@ -64,13 +62,9 @@ class CategoriesScreen extends StatelessWidget {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        heroTag: null,
-        onPressed: () {
-          AppHaptics.tap(context, HapticStrength.light);
-          _openSheet(context);
-        },
-        child: const Icon(Icons.add),
+      floatingActionButton: FintechFab(
+        tooltip: l10n.categories_addCategory,
+        onPressed: () => _openSheet(context),
       ),
     );
   }
@@ -94,8 +88,16 @@ class _CatTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
-    return Card(
-      margin: const EdgeInsets.only(bottom: 6),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainer.withValues(alpha: isDark ? 0.35 : 0.55),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04),
+        ),
+      ),
       child: ListTile(
         leading: CategoryDot(category: cat, size: 36),
         title:
@@ -119,7 +121,9 @@ class _CatTile extends StatelessWidget {
                     .read<AppProvider>()
                     .deleteCategoryWithUndo(cat.id);
                 if (context.mounted) {
-                  showAppSnackbar(context, '${cat.name} deleted', onUndo: undo);
+                  showAppSnackbar(
+                      context, l10n.common_itemDeleted(cat.name),
+                      onUndo: undo);
                 }
               }),
         ]),

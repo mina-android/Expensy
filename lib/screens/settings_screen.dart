@@ -16,6 +16,7 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final app = context.watch<AppProvider>();
     final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final s = app.settings;
     final l10n = AppLocalizations.of(context)!;
 
@@ -23,19 +24,24 @@ class SettingsScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(l10n.settings_title,
             style: const TextStyle(fontWeight: FontWeight.w800)),
-        backgroundColor: cs.primary,
-        foregroundColor: cs.onPrimary,
       ),
       body: SafeArea(
           bottom: true,
           child: ListView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 60),
             children: [
               // ── Appearance ────────────────────────────────────────────────
               SectionHeader(title: l10n.settings_appearance),
-              Card(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: Column(children: [
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                  ),
+                ),
+                child: Column(children: [
                     // Theme mode
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
@@ -202,128 +208,166 @@ class SettingsScreen extends StatelessWidget {
 
               // ── App Font ──────────────────────────────────────────────────
               SectionHeader(title: l10n.settings_appFont),
-              Card(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(children: [
-                            Icon(Icons.text_fields_rounded,
-                                color: cs.primary, size: 20),
-                            const SizedBox(width: 10),
-                            Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(l10n.settings_appFont,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 14)),
-                                  Text(
-                                      kFonts[s.appFont] ??
-                                          l10n.settings_systemDefault,
-                                      style: TextStyle(
-                                          fontSize: 12,
-                                          color: cs.onSurface
-                                              .withValues(alpha: 0.55))),
-                                ]),
-                          ]),
-                          const SizedBox(height: 12),
-                          Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: kFonts.entries.map((e) {
-                                final sel = s.appFont == e.key;
-                                return GestureDetector(
-                                  onTap: () =>
-                                      app.updateSetting('appFont', e.key),
-                                  child: AnimatedContainer(
-                                    duration: const Duration(milliseconds: 100),
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 14, vertical: 8),
-                                    decoration: BoxDecoration(
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(children: [
+                          Icon(Icons.text_fields_rounded,
+                              color: cs.primary, size: 20),
+                          const SizedBox(width: 10),
+                          Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(l10n.settings_appFont,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 14)),
+                                Text(
+                                    kFonts[s.appFont] ??
+                                        l10n.settings_systemDefault,
+                                    style: TextStyle(
+                                        fontSize: 12,
+                                        color: cs.onSurface
+                                            .withValues(alpha: 0.55))),
+                              ]),
+                        ]),
+                        const SizedBox(height: 12),
+                        Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: kFonts.entries.map((e) {
+                              final sel = s.appFont == e.key;
+                              return GestureDetector(
+                                onTap: () =>
+                                    app.updateSetting('appFont', e.key),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 100),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 14, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: sel
+                                        ? cs.primary
+                                        : cs.surfaceContainerHighest.withValues(alpha: 0.4),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
                                       color: sel
                                           ? cs.primary
-                                          : cs.surfaceContainerHigh,
-                                      borderRadius: BorderRadius.circular(20),
+                                          : (isDark
+                                              ? Colors.white.withValues(alpha: 0.08)
+                                              : Colors.black.withValues(alpha: 0.06)),
                                     ),
-                                    child: Text(e.value,
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: sel
-                                              ? FontWeight.w700
-                                              : FontWeight.w400,
-                                          color:
-                                              sel ? cs.onPrimary : cs.onSurface,
-                                        )),
                                   ),
-                                );
-                              }).toList()),
-                        ]),
-                  )),
+                                  child: Text(e.value,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: sel
+                                            ? FontWeight.w700
+                                            : FontWeight.w400,
+                                        color:
+                                            sel ? cs.onPrimary : cs.onSurface,
+                                      )),
+                                ),
+                              );
+                            }).toList()),
+                      ]),
+                ),
+              ),
 
               // ── Currency ──────────────────────────────────────────────────
               SectionHeader(title: l10n.settings_currency),
-              Card(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: ListTile(
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                    leading:
-                        Icon(Icons.monetization_on_outlined, color: cs.primary),
-                    title: Text(l10n.settings_defaultCurrency,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w700, fontSize: 14)),
-                    subtitle: Text(
-                        '${currencyInfo(s.currency).name} (${currencyInfo(s.currency).symbol})',
-                        style: TextStyle(
-                            fontSize: 12,
-                            color: cs.onSurface.withValues(alpha: 0.55))),
-                    trailing: const Icon(Icons.chevron_right_rounded),
-                    onTap: () async {
-                      final picked = await showCurrencyPicker(context,
-                          current: s.currency);
-                      if (picked != null && context.mounted) {
-                        context
-                            .read<AppProvider>()
-                            .updateSetting('currency', picked);
-                      }
-                    },
-                  )),
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                  ),
+                ),
+                child: ListTile(
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),
+                  leading:
+                      Icon(Icons.monetization_on_outlined, color: cs.primary),
+                  title: Text(l10n.settings_defaultCurrency,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w700, fontSize: 14)),
+                  subtitle: Text(
+                      '${currencyInfo(s.currency).name} (${currencyInfo(s.currency).symbol})',
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: cs.onSurface.withValues(alpha: 0.55))),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () async {
+                    final picked = await showCurrencyPicker(context,
+                        current: s.currency);
+                    if (picked != null && context.mounted) {
+                      context
+                          .read<AppProvider>()
+                          .updateSetting('currency', picked);
+                    }
+                  },
+                ),
+              ),
 
               // ── Language ──────────────────────────────────────────────────
               SectionHeader(title: l10n.settings_language),
-              Card(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: ListTile(
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                    leading: Icon(Icons.language_outlined, color: cs.primary),
-                    title: Text(l10n.settings_language,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w700, fontSize: 14)),
-                    subtitle: Text(_langName(context, s.languageCode),
-                        style: TextStyle(
-                            fontSize: 12,
-                            color: cs.onSurface.withValues(alpha: 0.55))),
-                    trailing: const Icon(Icons.chevron_right_rounded),
-                    onTap: () async {
-                      final picked = await _showLanguagePicker(context,
-                          current: s.languageCode);
-                      if (picked != null && context.mounted) {
-                        context
-                            .read<AppProvider>()
-                            .updateSetting('languageCode', picked);
-                      }
-                    },
-                  )),
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                  ),
+                ),
+                child: ListTile(
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),
+                  leading: Icon(Icons.language_outlined, color: cs.primary),
+                  title: Text(l10n.settings_language,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w700, fontSize: 14)),
+                  subtitle: Text(_langName(context, s.languageCode),
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: cs.onSurface.withValues(alpha: 0.55))),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () async {
+                    final picked = await _showLanguagePicker(context,
+                        current: s.languageCode);
+                    if (picked != null && context.mounted) {
+                      context
+                          .read<AppProvider>()
+                          .updateSetting('languageCode', picked);
+                    }
+                  },
+                ),
+              ),
 
               // ── Preferences ───────────────────────────────────────────────
               SectionHeader(title: l10n.settings_preferences),
-              Card(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: Column(children: [
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                  ),
+                ),
+                child: Column(children: [
                     ListTile(
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16)),
@@ -371,7 +415,7 @@ class SettingsScreen extends StatelessWidget {
                           style: const TextStyle(
                               fontWeight: FontWeight.w700, fontSize: 14)),
                       subtitle:
-                          const Text('Notify when a budget or goal is reached'),
+                          Text(l10n.settings_budgetAlertsSub),
                       value: s.budgetAlertsEnabled,
                       onChanged: (v) {
                         AppHaptics.tap(context, HapticStrength.selection);
@@ -385,7 +429,7 @@ class SettingsScreen extends StatelessWidget {
                       title: Text(l10n.settings_dailyReminder,
                           style: const TextStyle(
                               fontWeight: FontWeight.w700, fontSize: 14)),
-                      subtitle: const Text('Remind to log transactions daily'),
+                      subtitle: Text(l10n.settings_dailyReminderSub),
                       value: s.dailyReminderEnabled,
                       onChanged: (v) {
                         AppHaptics.tap(context, HapticStrength.selection);
@@ -428,7 +472,7 @@ class SettingsScreen extends StatelessWidget {
                       title: Text(l10n.settings_hapticFeedback,
                           style: const TextStyle(
                               fontWeight: FontWeight.w700, fontSize: 14)),
-                      subtitle: const Text('Vibrate on interactions'),
+                      subtitle: Text(l10n.settings_hapticFeedbackSub),
                       value: s.hapticsEnabled,
                       onChanged: (v) {
                         AppHaptics.tap(context, HapticStrength.selection);
@@ -439,32 +483,47 @@ class SettingsScreen extends StatelessWidget {
 
               // ── Profile ───────────────────────────────────────────────────
               SectionHeader(title: l10n.settings_profile),
-              Card(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: ListTile(
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                    leading:
-                        Icon(Icons.person_outline_rounded, color: cs.primary),
-                    title: Text(l10n.settings_displayName,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w700, fontSize: 14)),
-                    subtitle: Text(
-                        s.userName.isNotEmpty
-                            ? s.userName
-                            : l10n.settings_notSet,
-                        style: TextStyle(
-                            fontSize: 12,
-                            color: cs.onSurface.withValues(alpha: 0.55))),
-                    trailing: const Icon(Icons.chevron_right_rounded),
-                    onTap: () => _editName(context, app),
-                  )),
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                  ),
+                ),
+                child: ListTile(
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),
+                  leading:
+                      Icon(Icons.person_outline_rounded, color: cs.primary),
+                  title: Text(l10n.settings_displayName,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w700, fontSize: 14)),
+                  subtitle: Text(
+                      s.userName.isNotEmpty
+                          ? s.userName
+                          : l10n.settings_notSet,
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: cs.onSurface.withValues(alpha: 0.55))),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => _editName(context, app),
+                ),
+              ),
 
               // ── About ──────────────────────────────────────────────────────
               SectionHeader(title: l10n.settings_about),
-              Card(
-                  margin: const EdgeInsets.only(bottom: 40),
-                  child: Column(children: [
+              Container(
+                margin: const EdgeInsets.only(bottom: 24),
+                decoration: BoxDecoration(
+                  color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                  ),
+                ),
+                child: Column(children: [
                     ListTile(
                       leading:
                           Icon(Icons.info_outline_rounded, color: cs.primary),
@@ -700,16 +759,21 @@ class _ThemeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final sel = selected == value;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         height: 68,
         decoration: BoxDecoration(
-          color: sel ? cs.primary : cs.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(14),
+          color: sel ? cs.primary : cs.surfaceContainerHighest.withValues(alpha: 0.4),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: sel ? cs.primary : cs.outlineVariant,
+            color: sel
+                ? cs.primary
+                : (isDark
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : Colors.black.withValues(alpha: 0.06)),
             width: sel ? 0 : 1,
           ),
         ),

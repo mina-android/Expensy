@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
+import '../widgets/app_numeric_keypad.dart';
 
 class CurrencyConverterScreen extends StatefulWidget {
   const CurrencyConverterScreen({super.key});
@@ -65,80 +66,83 @@ class _CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
     // 1 FROM → X TO
     final unitRate = rateAvail ? app.convertBetween(1.0, _from, _to) : null;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.currency_converter_currencyConverter,
             style: const TextStyle(fontWeight: FontWeight.w800)),
-        backgroundColor: cs.primary,
-        foregroundColor: cs.onPrimary,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 24,
-          bottom: 24,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Offline banner ───────────────────────────────────────
-            if (!rateAvail) ...[
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                decoration: BoxDecoration(
-                  color: cs.errorContainer,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(children: [
-                  Icon(Icons.wifi_off_rounded,
-                      size: 18, color: cs.onErrorContainer),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      app.ratesFetching
-                          ? l10n.currency_converter_loadingRates
-                          : l10n.currency_converter_ratesUnavailable,
-                      style:
-                          TextStyle(fontSize: 12, color: cs.onErrorContainer),
-                    ),
-                  ),
-                  if (app.ratesFetching)
-                    SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: cs.onErrorContainer),
-                    ),
-                ]),
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: 24,
               ),
-              const SizedBox(height: 20),
-            ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── Offline banner ───────────────────────────────────────
+                  if (!rateAvail) ...[
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: cs.errorContainer,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(children: [
+                        Icon(Icons.wifi_off_rounded,
+                            size: 18, color: cs.onErrorContainer),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            app.ratesFetching
+                                ? l10n.currency_converter_loadingRates
+                                : l10n.currency_converter_ratesUnavailable,
+                            style:
+                                TextStyle(fontSize: 12, color: cs.onErrorContainer),
+                          ),
+                        ),
+                        if (app.ratesFetching)
+                          SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: cs.onErrorContainer),
+                          ),
+                      ]),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
 
-            // ── FROM field ───────────────────────────────────────────
-            Text(l10n.currency_converter_amount,
-                style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.8,
-                    color: cs.onSurface.withValues(alpha: 0.5))),
-            const SizedBox(height: 6),
-            Row(children: [
-              Expanded(
-                child: TextField(
-                  controller: _ctrl,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  style: const TextStyle(
-                      fontSize: 22, fontWeight: FontWeight.w700),
-                  decoration: InputDecoration(
-                    hintText: '0.00',
-                    prefixText: '${fromInfo.symbol} ',
-                  ),
-                  onChanged: (_) => _convert(app),
-                ),
-              ),
+                  // ── FROM field ───────────────────────────────────────────
+                  Text(l10n.currency_converter_amount,
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.8,
+                          color: cs.onSurface.withValues(alpha: 0.5))),
+                  const SizedBox(height: 6),
+                  Row(children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _ctrl,
+                        readOnly: true,
+                        showCursor: true,
+                        style: const TextStyle(
+                            fontSize: 22, fontWeight: FontWeight.w700),
+                        decoration: InputDecoration(
+                          hintText: '0.00',
+                          prefixText: '${fromInfo.symbol} ',
+                        ),
+                        onChanged: (_) => _convert(app),
+                      ),
+                    ),
               const SizedBox(width: 10),
               // FROM currency pill
               GestureDetector(
@@ -162,12 +166,12 @@ class _CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
                 onTap: () => _swap(app),
                 borderRadius: BorderRadius.circular(50),
                 child: Container(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: cs.primaryContainer,
+                    color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
                     shape: BoxShape.circle,
                     border:
-                        Border.all(color: cs.primary.withValues(alpha: 0.3)),
+                        Border.all(color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05)),
                   ),
                   child: Icon(Icons.swap_vert_rounded,
                       size: 22, color: cs.primary),
@@ -176,7 +180,7 @@ class _CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
             ),
             const SizedBox(height: 20),
 
-            // ── TO result ────────────────────────────────────────────
+            // ── TO result ────────────────────────────────────
             Text(l10n.currency_converter_convertedTo,
                 style: TextStyle(
                     fontSize: 11,
@@ -188,12 +192,12 @@ class _CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
               Expanded(
                 child: Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                   decoration: BoxDecoration(
-                    color: cs.primaryContainer.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(12),
+                    color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+                    borderRadius: BorderRadius.circular(16),
                     border:
-                        Border.all(color: cs.primary.withValues(alpha: 0.3)),
+                        Border.all(color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05)),
                   ),
                   child: Text(
                     _result != null
@@ -232,8 +236,9 @@ class _CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
-                  color: cs.surfaceContainerHighest.withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(10),
+                  color: cs.surfaceContainer.withValues(alpha: isDark ? 0.35 : 0.55),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04)),
                 ),
                 child: Row(children: [
                   Icon(Icons.info_outline_rounded,
@@ -278,8 +283,19 @@ class _CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+        SafeArea(
+          top: false,
+          child: AppNumericKeypad(
+            controller: _ctrl,
+            onChanged: (_) => _convert(app),
+            showDoneButton: false,
+          ),
+        ),
+      ],
+    ),
+  );
+}
 
   String _rateAge(DateTime fetched, AppLocalizations l10n) {
     final diff = DateTime.now().difference(fetched);
@@ -300,23 +316,28 @@ class _CurrencyPill extends StatelessWidget {
   final ColorScheme cs;
   const _CurrencyPill({required this.code, required this.cs});
   @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-        decoration: BoxDecoration(
-          color: cs.primaryContainer,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: cs.primary.withValues(alpha: 0.3)),
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
         ),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Text(code,
-              style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  color: cs.primary)),
-          const SizedBox(width: 4),
-          Icon(Icons.arrow_drop_down_rounded, size: 18, color: cs.primary),
-        ]),
-      );
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Text(code,
+            style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: cs.primary)),
+        const SizedBox(width: 4),
+        Icon(Icons.arrow_drop_down_rounded, size: 20, color: cs.primary),
+      ]),
+    );
+  }
 }
 
 // ── Quick conversions strip ───────────────────────────────────────────────────

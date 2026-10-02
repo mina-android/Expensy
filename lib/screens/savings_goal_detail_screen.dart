@@ -6,6 +6,7 @@ import '../models/models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
 import '../widgets/savings_goal_sheet.dart';
+import '../widgets/app_numeric_keypad.dart';
 import '../utils/haptics.dart';
 import 'package:intl/intl.dart';
 
@@ -29,16 +30,15 @@ class SavingsGoalDetailScreen extends StatelessWidget {
     final progress = app.goalProgress(currentGoal);
     final color = Color(currentGoal.colorValue);
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(currentGoal.name,
             style: const TextStyle(fontWeight: FontWeight.w800)),
-        backgroundColor: color,
-        foregroundColor:
-            color.computeLuminance() > 0.5 ? Colors.black : Colors.white,
         actions: [
           IconButton(
-            icon: const Icon(Icons.edit),
+            icon: const Icon(Icons.edit_outlined),
             onPressed: () {
               AppHaptics.tap(context);
               showModalBottomSheet(
@@ -55,81 +55,138 @@ class SavingsGoalDetailScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              border: Border(
-                  bottom: BorderSide(color: color.withValues(alpha: 0.2))),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(l10n.savings_savedSoFar,
-                            style: const TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.w600)),
-                        Text(
-                            formatAmount(currentGoal.currentAmount,
-                                currentGoal.currency),
-                            style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.w800,
-                                color: color)),
-                      ],
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(l10n.savings_target,
-                            style: const TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.w600)),
-                        Text(
-                            formatAmount(
-                                currentGoal.targetAmount, currentGoal.currency),
-                            style: const TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.w700)),
-                      ],
-                    ),
-                  ],
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
                 ),
-                const SizedBox(height: 20),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: LinearProgressIndicator(
-                    value: progress,
-                    minHeight: 12,
-                    color: currentGoal.isCompleted
-                        ? const Color(0xFF2E7D32)
-                        : color,
-                    backgroundColor: color.withValues(alpha: 0.2),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(l10n.savings_savedSoFar,
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: cs.onSurface.withValues(alpha: 0.6))),
+                          const SizedBox(height: 4),
+                          Text(
+                              formatAmount(currentGoal.currentAmount,
+                                  currentGoal.currency),
+                              style: TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w900,
+                                  color: color)),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(l10n.savings_target,
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: cs.onSurface.withValues(alpha: 0.6))),
+                          const SizedBox(height: 4),
+                          Text(
+                              formatAmount(
+                                  currentGoal.targetAmount, currentGoal.currency),
+                              style: const TextStyle(
+                                  fontSize: 20, fontWeight: FontWeight.w800)),
+                        ],
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('${(progress * 100).toStringAsFixed(1)}%',
-                        style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: color)),
-                    if (currentGoal.targetDate != null)
-                      Text(
-                          l10n.savings_targetDate(
-                              DateFormat('MMM d, yyyy').format(currentGoal.targetDate!)),
+                  const SizedBox(height: 20),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 10,
+                      color: currentGoal.isCompleted
+                          ? const Color(0xFF2E7D32)
+                          : color,
+                      backgroundColor: color.withValues(alpha: 0.15),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('${(progress * 100).toStringAsFixed(1)}%',
                           style: TextStyle(
                               fontSize: 13,
-                              color: cs.onSurface.withValues(alpha: 0.6))),
-                  ],
-                ),
-              ],
+                              fontWeight: FontWeight.w800,
+                              color: color)),
+                      if (currentGoal.targetDate != null)
+                        Text(
+                            l10n.savings_targetDate(
+                                DateFormat('MMM d, yyyy').format(currentGoal.targetDate!)),
+                            style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: cs.onSurface.withValues(alpha: 0.55))),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
+          if (app.wishlistForGoal(currentGoal) != null) ...[
+            Builder(builder: (context) {
+              final linkedWishlist = app.wishlistForGoal(currentGoal)!;
+              return Container(
+                margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2E7D32).withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                      color: const Color(0xFF2E7D32).withValues(alpha: 0.25)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.star_rounded,
+                        color: Color(0xFF2E7D32), size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.savings_linkedWishlist(linkedWishlist.name),
+                            style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF2E7D32)),
+                          ),
+                          if (linkedWishlist.isPurchased)
+                            Text(
+                              l10n.transactions_settled,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: cs.onSurface.withValues(alpha: 0.6),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
           Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
@@ -166,9 +223,9 @@ class SavingsGoalDetailScreen extends StatelessWidget {
               builder: (context) {
                 final contributions = app.contributionsFor(currentGoal.id);
                 if (contributions.isEmpty) {
-                  return const EmptyState(
+                  return EmptyState(
                     icon: Icons.history,
-                    message: 'No contributions yet',
+                    message: l10n.savings_noContributionsYet,
                   );
                 }
                 return ListView.builder(
@@ -178,32 +235,43 @@ class SavingsGoalDetailScreen extends StatelessWidget {
                     final c = contributions[index];
                     final isContrib = c.type == 'contribution';
                     final acc = app.accountById(c.accountId);
-                    return ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: CircleAvatar(
-                        backgroundColor: isContrib
-                            ? const Color(0xFF2E7D32).withValues(alpha: 0.1)
-                            : cs.error.withValues(alpha: 0.1),
-                        child: Icon(
-                          isContrib ? Icons.arrow_downward : Icons.arrow_upward,
-                          color: isContrib ? const Color(0xFF2E7D32) : cs.error,
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      decoration: BoxDecoration(
+                        color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
                         ),
                       ),
-                      title: Text(isContrib ? 'Contribution' : 'Withdrawal',
-                          style: const TextStyle(fontWeight: FontWeight.w600)),
-                      subtitle: Text(
-                          '${DateFormat('MMM d, yyyy').format(c.date)} • ${acc?.name ?? 'Unknown Account'}',
+                      child: ListTile(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        leading: CircleAvatar(
+                          backgroundColor: isContrib
+                              ? const Color(0xFF2E7D32).withValues(alpha: 0.12)
+                              : cs.error.withValues(alpha: 0.12),
+                          child: Icon(
+                            isContrib ? Icons.arrow_downward : Icons.arrow_upward,
+                            color: isContrib ? const Color(0xFF2E7D32) : cs.error,
+                          ),
+                        ),
+                        title: Text(isContrib ? l10n.savings_contribution : l10n.savings_withdrawal,
+                            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                        subtitle: Text(
+                            '${DateFormat('MMM d, yyyy').format(c.date)} • ${acc?.name ?? l10n.savings_unknownAccount}',
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: cs.onSurface.withValues(alpha: 0.55))),
+                        trailing: Text(
+                          '${isContrib ? '+' : '-'}${formatAmount(c.amount, currentGoal.currency)}',
                           style: TextStyle(
-                              fontSize: 12,
-                              color: cs.onSurface.withValues(alpha: 0.6))),
-                      trailing: Text(
-                        '${isContrib ? '+' : '-'}${formatAmount(c.amount, currentGoal.currency)}',
-                        style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: isContrib
-                                ? const Color(0xFF2E7D32)
-                                : cs.onSurface),
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: isContrib
+                                  ? const Color(0xFF2E7D32)
+                                  : cs.onSurface),
+                        ),
                       ),
                     );
                   },
@@ -247,6 +315,7 @@ class _ContributionSheetState extends State<_ContributionSheet> {
   final _noteCtrl = TextEditingController();
   String? _selectedAccountId;
   bool _submitted = false;
+  bool _showKeypad = true;
 
   @override
   void initState() {
@@ -301,7 +370,7 @@ class _ContributionSheetState extends State<_ContributionSheet> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-              widget.isContribution ? 'Add Contribution' : 'Withdraw from Goal',
+              widget.isContribution ? l10n.savings_addContribution : l10n.savings_withdrawFromGoal,
               style:
                   const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
           const SizedBox(height: 20),
@@ -312,7 +381,7 @@ class _ContributionSheetState extends State<_ContributionSheet> {
               initialValue: _selectedAccountId,
               decoration: InputDecoration(
                 labelText:
-                    widget.isContribution ? 'From Account' : 'To Account',
+                    widget.isContribution ? l10n.savings_fromAccount : l10n.savings_toAccount,
                 border:
                     OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
@@ -327,28 +396,51 @@ class _ContributionSheetState extends State<_ContributionSheet> {
             const SizedBox(height: 16),
             TextField(
               controller: _amountCtrl,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
+              readOnly: true,
+              showCursor: true,
+              onTap: () {
+                FocusScope.of(context).unfocus();
+                setState(() => _showKeypad = true);
+              },
               decoration: InputDecoration(
-                labelText: 'Amount',
+                labelText: l10n.add_transaction_amount,
                 border:
                     OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 prefixIcon: const Icon(Icons.monetization_on_outlined),
+                suffixIcon: _showKeypad
+                    ? IconButton(
+                        icon: const Icon(Icons.keyboard_hide_outlined),
+                        onPressed: () => setState(() => _showKeypad = false),
+                      )
+                    : null,
                 errorText: _submitted &&
                         (double.tryParse(
                                     _amountCtrl.text.replaceAll(',', '')) ??
                                 0.0) <=
                             0
-                    ? 'Amount is required'
+                    ? l10n.savings_amountRequired
                     : null,
               ),
             ),
+            if (_showKeypad &&
+                MediaQuery.of(context).viewInsets.bottom < 100) ...[
+              const SizedBox(height: 8),
+              AppNumericKeypad(
+                compact: true,
+                controller: _amountCtrl,
+                onChanged: (_) => setState(() {}),
+                onDone: () => setState(() => _showKeypad = false),
+              ),
+            ],
             const SizedBox(height: 16),
             TextField(
               controller: _noteCtrl,
               textCapitalization: TextCapitalization.sentences,
+              onTap: () {
+                if (_showKeypad) setState(() => _showKeypad = false);
+              },
               decoration: InputDecoration(
-                labelText: 'Note (Optional)',
+                labelText: l10n.savings_noteOptional,
                 border:
                     OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 prefixIcon: const Icon(Icons.notes),
@@ -368,7 +460,7 @@ class _ContributionSheetState extends State<_ContributionSheet> {
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16))),
               child: Text(
-                  widget.isContribution ? 'Add Contribution' : 'Withdraw',
+                  widget.isContribution ? l10n.savings_addContribution : l10n.savings_withdraw,
                   style: const TextStyle(
                       fontSize: 16, fontWeight: FontWeight.w700)),
             ),

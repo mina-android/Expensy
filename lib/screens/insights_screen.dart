@@ -12,6 +12,7 @@ import 'package:flutter/foundation.dart';
 import '../database/db_helper.dart';
 import '../services/exchange_rate_service.dart';
 import 'net_worth_screen.dart';
+import 'wrapped_screen.dart';
 import '../utils/haptics.dart';
 
 class _ComputePayload {
@@ -181,12 +182,13 @@ class _InsightsScreenState extends State<InsightsScreen> {
       }
     }
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (app.transactions.isEmpty && !_isLoading) {
       return Scaffold(
         appBar: AppBar(
           title: Text(l10n.insights_insights,
               style: const TextStyle(fontWeight: FontWeight.w800)),
-          backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
         ),
         body: EmptyState(
           icon: Icons.insights_outlined,
@@ -201,7 +203,6 @@ class _InsightsScreenState extends State<InsightsScreen> {
         appBar: AppBar(
           title: Text(l10n.insights_insights,
               style: const TextStyle(fontWeight: FontWeight.w800)),
-          backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
@@ -236,183 +237,309 @@ class _InsightsScreenState extends State<InsightsScreen> {
                 : cs.primary))
         : cs.primary;
 
-    final liveTotalAccounts = app.totalBalanceAll;
-    final liveTotalAssets = app.totalAssetsValue;
-    final liveNetWorth = liveTotalAccounts + liveTotalAssets;
+    final liveTotalAssets = app.totalWealthAssets;
+    final liveTotalLiabilities = app.totalWealthLiabilities;
+    final liveNetWorth = app.liveNetWorth;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.insights_insights,
             style: const TextStyle(fontWeight: FontWeight.w800)),
-        backgroundColor: cs.primary, foregroundColor: cs.onPrimary,
       ),
       body: RefreshIndicator(
         onRefresh: app.refreshRates,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 40),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 60),
         children: [
+          // ── Expensy Wrapped Banner ──────────────────────────────────
+          Container(
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: cs.primary.withValues(alpha: isDark ? 0.35 : 0.2)),
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  AppHaptics.tap(context);
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const WrappedScreen()),
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        cs.primaryContainer.withValues(alpha: isDark ? 0.6 : 0.8),
+                        cs.surfaceContainerHighest.withValues(alpha: isDark ? 0.4 : 0.6),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: cs.primary,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.auto_awesome_rounded,
+                            color: cs.onPrimary, size: 26),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.wrapped_bannerTitle(
+                                  DateFormat('MMMM').format(now.day <= 5
+                                      ? DateTime(now.year, now.month - 1, 1)
+                                      : now)),
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                color: cs.onSurface,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              l10n.wrapped_bannerSub,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: cs.onSurface.withValues(alpha: 0.7),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(Icons.arrow_forward_ios_rounded,
+                          size: 16, color: cs.primary),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
 
           // ── This vs Last month ──────────────────────────────────────
           _SectionLabel(label: l10n.insights_thisMonthVsLastMonth),
-          Card(child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(children: [
-              Expanded(child: _MonthCol(
-                title: DateFormat('MMMM').format(now),
-                value: fmt(thisExp),
-                color: cs.primary,
-              )),
-              Container(width: 1, height: 48, color: cs.outlineVariant),
-              Expanded(child: _MonthCol(
-                title: DateFormat('MMMM').format(DateTime(now.year, now.month - 1)),
-                value: fmt(lastExp),
-                color: cs.onSurface.withValues(alpha: 0.45),
-              )),
-              const SizedBox(width: 12),
-              _TrendBadge(pct: pctChange),
-            ]),
-          )),
+          Container(
+            decoration: BoxDecoration(
+              color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(children: [
+                Expanded(child: _MonthCol(
+                  title: DateFormat('MMMM').format(now),
+                  value: fmt(thisExp),
+                  color: cs.primary,
+                )),
+                Container(width: 1, height: 48, color: cs.outlineVariant.withValues(alpha: 0.3)),
+                Expanded(child: _MonthCol(
+                  title: DateFormat('MMMM').format(DateTime(now.year, now.month - 1)),
+                  value: fmt(lastExp),
+                  color: cs.onSurface.withValues(alpha: 0.45),
+                )),
+                const SizedBox(width: 12),
+                _TrendBadge(pct: pctChange),
+              ]),
+            ),
+          ),
           const SizedBox(height: 12),
 
           // ── Daily average ───────────────────────────────────────────
           _SectionLabel(label: l10n.insights_dailyAverage),
-          Card(child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(children: [
-              Container(
-                width: 44, height: 44,
-                decoration: BoxDecoration(
-                  color: cs.primaryContainer,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(Icons.today_outlined, color: cs.primary, size: 22),
+          Container(
+            decoration: BoxDecoration(
+              color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
               ),
-              const SizedBox(width: 14),
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(fmt(dailyAverage),
-                    style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        color: cs.primary)),
-                Text(l10n.insights_perDayBasedOn(daysElapsed.toString()),
-                    style: TextStyle(
-                        fontSize: 11,
-                        color: cs.onSurface.withValues(alpha: 0.5))),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(children: [
+                Container(
+                  width: 44, height: 44,
+                  decoration: BoxDecoration(
+                    color: cs.primaryContainer,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(Icons.today_outlined, color: cs.primary, size: 22),
+                ),
+                const SizedBox(width: 14),
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(fmt(dailyAverage),
+                      style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          color: cs.primary)),
+                  Text(l10n.insights_perDayBasedOn(daysElapsed.toString()),
+                      style: TextStyle(
+                          fontSize: 11,
+                          color: cs.onSurface.withValues(alpha: 0.5))),
+                ]),
               ]),
-            ]),
-          )),
+            ),
+          ),
           const SizedBox(height: 12),
 
           // ── Spending Forecast ───────────────────────────────────────
           if (daysElapsed >= 3) ...[
             const _SectionLabel(label: 'Spending Forecast'),
-            Card(
-                child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: cs.tertiaryContainer,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(Icons.insights_rounded,
-                      color: cs.tertiary, size: 22),
+            Container(
+              decoration: BoxDecoration(
+                color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
                 ),
-                const SizedBox(width: 14),
-                Expanded(
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                      RichText(
-                        text: TextSpan(
-                          style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: cs.onSurface),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: cs.tertiaryContainer,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(Icons.insights_rounded,
+                        color: cs.tertiary, size: 22),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const TextSpan(
-                                text: 'At this rate, you\'ll spend '),
-                            TextSpan(
-                                text: fmt(projectedTotal),
-                                style: TextStyle(
-                                    fontWeight: FontWeight.w800,
-                                    color: forecastColor)),
-                            TextSpan(
-                                text:
-                                    ' by the end of ${DateFormat('MMMM').format(now)} — $remainingDays days left.'),
-                          ],
+                        RichText(
+                          text: TextSpan(
+                            style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: cs.onSurface),
+                            children: [
+                              const TextSpan(
+                                  text: 'At this rate, you\'ll spend '),
+                              TextSpan(
+                                  text: fmt(projectedTotal),
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                      color: forecastColor)),
+                              TextSpan(
+                                  text:
+                                      ' by the end of ${DateFormat('MMMM').format(now)} — $remainingDays days left.'),
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Projection based on spending so far, doesn\'t include upcoming recurring bills.',
-                        style: TextStyle(
-                            fontSize: 11,
-                            color: cs.onSurface.withValues(alpha: 0.5)),
-                      ),
-                    ])),
-              ]),
-            )),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Projection based on spending so far, doesn\'t include upcoming recurring bills.',
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: cs.onSurface.withValues(alpha: 0.5)),
+                        ),
+                      ])),
+                ]),
+              ),
+            ),
             const SizedBox(height: 12),
           ] else ...[
             const _SectionLabel(label: 'Spending Forecast'),
-            Card(
-                child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(children: [
-                Icon(Icons.info_outline,
-                    size: 20, color: cs.onSurface.withValues(alpha: 0.5)),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Based on the first $daysElapsed days — accuracy improves as the month goes on.',
-                    style: TextStyle(
-                        fontSize: 12,
-                        color: cs.onSurface.withValues(alpha: 0.6)),
-                  ),
+            Container(
+              decoration: BoxDecoration(
+                color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
                 ),
-              ]),
-            )),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(children: [
+                  Icon(Icons.info_outline,
+                      size: 20, color: cs.onSurface.withValues(alpha: 0.5)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Based on the first $daysElapsed days — accuracy improves as the month goes on.',
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: cs.onSurface.withValues(alpha: 0.6)),
+                    ),
+                  ),
+                ]),
+              ),
+            ),
             const SizedBox(height: 12),
           ],
 
           // ── Income vs Expense ratio ─────────────────────────────────
           if (thisInc > 0 || thisExp > 0) ...[
             _SectionLabel(label: l10n.insights_incomeVsExpenses),
-            Card(child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                _RatioBar(income: thisInc, expense: thisExp, cs: cs),
-                const SizedBox(height: 10),
-                Row(children: [
-                  _DotLabel(color: const Color(0xFF2E7D32), label: l10n.insights_incomeAmount(fmt(thisInc))),
-                  const SizedBox(width: 14),
-                  _DotLabel(color: const Color(0xFFC62828), label: l10n.insights_expensesAmount(fmt(thisExp))),
+            Container(
+              decoration: BoxDecoration(
+                color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                  _RatioBar(income: thisInc, expense: thisExp, cs: cs),
+                  const SizedBox(height: 10),
+                  Row(children: [
+                    _DotLabel(color: const Color(0xFF2E7D32), label: l10n.insights_incomeAmount(fmt(thisInc))),
+                    const SizedBox(width: 14),
+                    _DotLabel(color: const Color(0xFFC62828), label: l10n.insights_expensesAmount(fmt(thisExp))),
+                  ]),
+                  if (thisInc > 0 && thisInc > thisExp) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      l10n.insights_percentSaved(((thisInc - thisExp) / thisInc * 100).toStringAsFixed(0)),
+                      style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF2E7D32)),
+                    ),
+                  ],
                 ]),
-                if (thisInc > 0 && thisInc > thisExp) ...[
-                  const SizedBox(height: 6),
-                  Text(
-                    l10n.insights_percentSaved(((thisInc - thisExp) / thisInc * 100).toStringAsFixed(0)),
-                    style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF2E7D32)),
-                  ),
-                ],
-              ]),
-            )),
+              ),
+            ),
             const SizedBox(height: 12),
           ],
 
           // ── Top 3 categories ────────────────────────────────────────
           if (topCats.isNotEmpty) ...[
             _SectionLabel(label: l10n.insights_topSpendingCategories),
-            Card(child: Padding(
-              padding: const EdgeInsets.all(16),
+            Container(
+              decoration: BoxDecoration(
+                color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
                   SizedBox(
@@ -535,59 +662,86 @@ class _InsightsScreenState extends State<InsightsScreen> {
                   ),
                 ],
               ),
-            )),
-            const SizedBox(height: 12),
-          ],
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
 
           // ── Biggest single expense ──────────────────────────────────
           if (biggestTx != null) ...[
             _SectionLabel(label: l10n.insights_biggestExpenseThisMonth),
-            Card(child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(children: [
-                CategoryDot(
-                    category: app.categoryById(biggestTx.categoryId),
-                    size: 44),
-                const SizedBox(width: 12),
-                Expanded(child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                  Text(biggestTx.description,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w700, fontSize: 14)),
-                  Text(
-                    DateFormat('d MMMM').format(biggestTx.date),
-                    style: TextStyle(
-                        fontSize: 11,
-                        color: cs.onSurface.withValues(alpha: 0.5)),
-                  ),
-                ])),
-                Text(fmt(biggestAmt),
-                    style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: cs.error)),
-              ]),
-            )),
+            Container(
+              decoration: BoxDecoration(
+                color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(children: [
+                  CategoryDot(
+                      category: app.categoryById(biggestTx.categoryId),
+                      size: 44),
+                  const SizedBox(width: 12),
+                  Expanded(child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                    Text(biggestTx.description,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w700, fontSize: 14)),
+                    Text(
+                      DateFormat('d MMMM').format(biggestTx.date),
+                      style: TextStyle(
+                          fontSize: 11,
+                          color: cs.onSurface.withValues(alpha: 0.5)),
+                    ),
+                  ])),
+                  Text(fmt(biggestAmt),
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: cs.error)),
+                ]),
+              ),
+            ),
             const SizedBox(height: 12),
           ],
 
           // ── Category trends ─────────────────────────────────────────
           if (thisCatMap.isNotEmpty || lastCatMap.isNotEmpty) ...[
             _SectionLabel(label: l10n.insights_categoryTrends),
-            Card(child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: _buildTrendRows(app, thisCatMap, lastCatMap, cs, fmt),
+            Container(
+              decoration: BoxDecoration(
+                color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                ),
               ),
-            )),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: _buildTrendRows(app, thisCatMap, lastCatMap, cs, fmt),
+                ),
+              ),
+            ),
             const SizedBox(height: 12),
           ],
 
           // ── 12-month trend chart ─────────────────────────────────────
           _SectionLabel(label: l10n.insights_12MonthTrend),
-          Card(child: Padding(
-            padding: const EdgeInsets.all(16),
+          Container(
+            decoration: BoxDecoration(
+              color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
             child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -660,125 +814,135 @@ class _InsightsScreenState extends State<InsightsScreen> {
 
           // ── Net Worth ───────────────────────────────────────────────
           if (app.netWorthSnapshots.isNotEmpty || liveNetWorth != 0) ...[
-            const _SectionLabel(label: 'Net Worth'),
-            Card(
-              clipBehavior: Clip.antiAlias,
-              child: InkWell(
-                onTap: () {
-                  AppHaptics.tap(context, HapticStrength.light);
-                  Navigator.push(context, ExpensyRoute(builder: (_) => const NetWorthScreen()));
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Current Net Worth',
-                          style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: cs.onSurface.withValues(alpha: 0.5))),
-                      const SizedBox(height: 4),
-                      Text(fmt(liveNetWorth),
-                          style: TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w800,
-                              color: cs.primary)),
-                      const SizedBox(height: 12),
-                      if (app.netWorthSnapshots.isNotEmpty) ...[
-                        Builder(builder: (context) {
-                          final spots = <FlSpot>[];
-                          for (int i = 0; i < app.netWorthSnapshots.length; i++) {
-                            spots.add(FlSpot(i.toDouble(), app.netWorthSnapshots[i].netWorth));
-                          }
-                          // Append live point to show immediate changes
-                          spots.add(FlSpot(app.netWorthSnapshots.length.toDouble(), liveNetWorth));
-
-                          return SizedBox(
-                            height: 80,
-                            child: LineChart(LineChartData(
-                              lineBarsData: [
-                                LineChartBarData(
-                                  spots: spots,
-                                  isCurved: true,
-                                  color: cs.primary,
-                                  barWidth: 2,
-                                  dotData: const FlDotData(show: false),
-                                  belowBarData: BarAreaData(
-                                    show: true,
-                                    color: cs.primary.withValues(alpha: 0.1),
-                                  ),
-                                ),
-                              ],
-                              gridData: const FlGridData(show: false),
-                              borderData: FlBorderData(show: false),
-                              titlesData: const FlTitlesData(show: false),
-                              lineTouchData: const LineTouchData(enabled: false),
-                            )),
-                          );
-                        }),
+            _SectionLabel(label: l10n.netWorth_title),
+            Container(
+              decoration: BoxDecoration(
+                color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                ),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(20),
+                  onTap: () {
+                    AppHaptics.tap(context, HapticStrength.light);
+                    Navigator.push(context, ExpensyRoute(builder: (_) => const NetWorthScreen()));
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(l10n.netWorth_current,
+                            style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: cs.onSurface.withValues(alpha: 0.5))),
+                        const SizedBox(height: 4),
+                        Text(fmt(liveNetWorth),
+                            style: TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.w800,
+                                color: liveNetWorth >= 0 ? cs.primary : cs.error)),
                         const SizedBox(height: 12),
-                      ],
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: cs.primaryContainer.withValues(alpha: 0.5),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('Accounts & Gold',
-                                        style: TextStyle(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w600,
-                                            color: cs.onSurface
-                                                .withValues(alpha: 0.55))),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                        fmt(liveTotalAccounts),
-                                        style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w800,
-                                            color: cs.primary)),
-                                  ]),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: cs.tertiaryContainer.withValues(alpha: 0.5),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('Assets',
-                                        style: TextStyle(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w600,
-                                            color: cs.onSurface
-                                                .withValues(alpha: 0.55))),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                        fmt(liveTotalAssets),
-                                        style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w800,
-                                            color: cs.tertiary)),
-                                  ]),
-                            ),
-                          ),
+                        if (app.netWorthSnapshots.isNotEmpty) ...[
+                          Builder(builder: (context) {
+                            final spots = <FlSpot>[];
+                            for (int i = 0; i < app.netWorthSnapshots.length; i++) {
+                              spots.add(FlSpot(i.toDouble(), app.netWorthSnapshots[i].netWorth));
+                            }
+                            // Append live point to show immediate changes
+                            spots.add(FlSpot(app.netWorthSnapshots.length.toDouble(), liveNetWorth));
+
+                            return SizedBox(
+                              height: 80,
+                              child: LineChart(LineChartData(
+                                lineBarsData: [
+                                  LineChartBarData(
+                                    spots: spots,
+                                    isCurved: true,
+                                    color: cs.primary,
+                                    barWidth: 2,
+                                    dotData: const FlDotData(show: false),
+                                    belowBarData: BarAreaData(
+                                      show: true,
+                                      color: cs.primary.withValues(alpha: 0.1),
+                                    ),
+                                  ),
+                                ],
+                                gridData: const FlGridData(show: false),
+                                borderData: FlBorderData(show: false),
+                                titlesData: const FlTitlesData(show: false),
+                                lineTouchData: const LineTouchData(enabled: false),
+                              )),
+                            );
+                          }),
+                          const SizedBox(height: 12),
                         ],
-                      ),
-                    ],
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: cs.primaryContainer.withValues(alpha: 0.5),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(l10n.netWorth_totalAssets,
+                                          style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w600,
+                                              color: cs.onSurface
+                                                  .withValues(alpha: 0.55))),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                          fmt(liveTotalAssets),
+                                          style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w800,
+                                              color: cs.primary)),
+                                    ]),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: cs.errorContainer.withValues(alpha: 0.4),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(l10n.netWorth_totalLiabilities,
+                                          style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w600,
+                                              color: cs.onSurface
+                                                  .withValues(alpha: 0.55))),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                          fmt(liveTotalLiabilities),
+                                          style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w800,
+                                              color: cs.error)),
+                                    ]),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -789,7 +953,14 @@ class _InsightsScreenState extends State<InsightsScreen> {
           // ── Loans ────────────────────────────────────────────────────
           if (app.loans.isNotEmpty) ...[
             const _SectionLabel(label: 'Loans'),
-            Card(
+            Container(
+              decoration: BoxDecoration(
+                color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                ),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -854,8 +1025,11 @@ class _InsightsScreenState extends State<InsightsScreen> {
                       final Color barColor;
                       if (progress >= 0.8) {
                         barColor = const Color(0xFF2E7D32); // Green
-                      } else if (progress >= 0.4) barColor = const Color(0xFFE65100); // Orange
-                      else barColor = const Color(0xFFC62828); // Red
+                      } else if (progress >= 0.4) {
+                        barColor = const Color(0xFFE65100); // Orange
+                      } else {
+                        barColor = const Color(0xFFC62828); // Red
+                      }
 
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),

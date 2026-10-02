@@ -1,30 +1,253 @@
 # Changelog
 
-## [1.1.0] - 2026-08-10
+## [1.2.0] - 2026-09-25
 ### Added
-- Floating Material 3 Navigation Bar: Modern floating pill navigation bar (`extendBody: true`) with circular active tab selection indicator (`CircleBorder()`), 24px icon-only destinations (`alwaysHide` labels), and 48px horizontal margins.
-- Expanded `ExpandableFab` (`ExpandableFabItem` list model) to the Transactions screen (Income/Expense actions) and the Budgets & Goals screen (Add Budget / Add Savings Goal actions, with matching green `0xFF2E7D32` buttons).
-- Redesigned Yearly Analysis monthly cards: month-by-month planned cash flow forecast for a 24-month horizon, featuring visually readable summary grid cards for inflows and outflows, net cash flow balance pills, custom section icons, larger typography, and smooth expand animations.
-- Multi-language support (English, Arabic, French, German, Hindi) for the new Yearly Analysis and Budgets & Goals ExpandableFab features.
-- Loan Transfer Account feature: Setting up a loan automatically deposits the principal into a selected account, and deleting the loan (or undoing it) reverses the deposit.
-- Redesigned Recurring Payment UI: payment history and recurring payment details are now shown in a dedicated `RecurringDetailScreen` with stats grids and card-based payment history lists.
-- Restored progress bars inside the installment recurring cards on the main screen list and on the detail screen.
-- Swipe/press back behavior on the Transactions screen multi-selection mode: pressing/swiping back now gracefully exits the selection mode instead of popping back to the home page.
-- Added Undo button snackbar support when deleting budgets and savings goals, aligning them with the rest of the application's delete-undo pattern.
+- **Auto Pay on Due Date for Recurring Payments & Incomes**:
+  - Added `autoPayEnabled` and configurable `autoPayTime` (defaults to 09:00) to `RecurringPayment` model, SQLite schema v25, and Drift tables.
+  - Added interactive "Auto pay on Due date" toggle with custom time picker in `_RecurringSheet` and status indicators in `RecurringDetailScreen`.
+  - Added real-time auto-pay execution in `AppProvider` triggered upon adding or updating recurring payments, startup `load()`, and via a continuous 1-minute periodic timer so recurring payments due today at the chosen time are processed immediately without delay.
+- **Enhanced Fintech Floating Navigation Bar**:
+  - Upgraded floating nav bar shell with elevated glassmorphic container border (`1.2px`), outer shadow blur, and clean geometry matching rounded-square indicators.
+- **Right-Aligned Purpose-Built Floating Action Buttons (FABs)**:
+  - Re-aligned FABs across Home, Recurring, Accounts, and Budgets to `endFloat` (`padding: EdgeInsets.only(bottom: 84, right: 4)`).
+  - Fixed expandable action buttons popup alignment to animate directly above the FAB button anchored to the right rather than popping up from the center.
+
+### Changed & Fixed
+- **Home Page**:
+  - Removed emoji next to user greeting.
+  - Made the "Good morning, user" header (with hide eye icon) and Total Balance card a static top bar rather than scrolling with the rest of the page.
+  - Fixed excessive whitespace below the status bar in Home and More tabs by removing redundant sliver app bars and nested status bar insets.
+  - Updated Total Balance card gradient in Home to dynamically follow the Home navbar tab color (`Color(0xFF64B5F6)` in dark mode, `Color(0xFF1972E8)` in light mode).
+  - Added `clipBehavior: Clip.antiAlias` to Recent Transactions container so swipe-to-delete slides stay cleanly clipped within the rounded card boundaries.
+- **More Tab**:
+  - Made "More" header and settings button a static top bar anchored to the top of the screen with smooth non-overlapping scrolling for cards below.
+- **Yearly Analysis Screen**:
+  - Removed full-screen loading spinner blocker so the screen renders immediately without flash.
+- **Transactions Screen**:
+  - Fixed long-press item selection layout jump by rendering selection controls directly inside `FintechHeader` instead of toggling an Android `AppBar`.
+  - Styled selection mode with Fintech circular tactile action buttons matching the app theme.
+  - Rounded item selection highlights (`BorderRadius.circular(14)`) across `_TxTile`, `_LendedTile`, and `_LoanPaymentTile`.
+- **More Tab**:
+  - Removed duplicate Settings card from "Preferences & Data", keeping Settings exclusively in the top right Fintech header.
+  - Fixed content scrolling behind transparent status bar using pinned background barrier.
+- **Yearly Analysis Screen**:
+  - Deferred heavy multi-year projection loops until after route transition finishes, eliminating screen opening animation stutter.
+- **Recurring Screen**:
+  - Wrapped sub-filters in `AnimatedSize` with smooth curves to eliminate layout stutter when switching between Expenses and Income tabs.
+- **Wishlist**:
+  - Added delete with undo snackbar inside `_WishSheet` modal in addition to item card actions.
+- **Unified App-Wide Add Button Redesign & Purpose-Built Positioning Rules**:
+  - **Home Screen (`HomeScreen`)**:
+    - Relocated Add FAB to **Center Bottom** (`floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat`) with dedicated vertical clearance (`padding: EdgeInsets.only(bottom: 84)`) and expanded scroll viewport bottom spacing (`150px`) so no cards are obscured.
+    - Updated `ExpandableFab` to support centered alignment, frosted glass capsules, hairline borders, and glowing multi-stop shadows.
+  - **Transactions Screen (`TransactionsScreen`)**:
+    - Repositioned Add action into the **Top App Header** as a circular frosted tactile button (`FintechCircleButton`), located on the right adjacent to the advanced filters button on its left.
+    - Removed bottom FAB from Transactions to provide completely unobstructed ledger scrolling.
+    - Added bottom action sheet with rounded category avatars for swift selection between Expense and Income entries.
+  - **Recurring, Accounts & Budgets Tabs (`RecurringScreen`, `AccountsScreen`, `BudgetScreen`)**:
+    - Retained bottom positioning while upgrading FAB to the Modern Premium Fintech capsule aesthetic with tab-specific glowing accent colors (Royal Purple for Recurring, Amber/Orange for Accounts, Rose/Pink for Budgets).
+    - Adjusted vertical clearance to `bottom: 84` to float cleanly above the floating navbar.
+  - **Sub-Pages & Satellite Views (`AssetsScreen`, `CategoriesScreen`, `WishlistScreen`, `LoansScreen`, `LendedScreen`, `LendedPersonScreen`, `LoanDetailScreen`)**:
+    - Replaced raw Material 3 FABs with `FintechFab` (squircle container with multi-stop gradient, glassmorphic hairline border, and soft glowing shadow) and `FintechExtendedFab`.
+    - Increased list bottom clearance across all sub-screens to `110px-140px` for consistent viewport accessibility.
+- **Complete App-Wide Modern Premium Fintech Visual Redesign (All 6 Tabs & Status Bar)**:
+  - **Guaranteed High-Contrast Edge-to-Edge Status Bar (`AppTheme`, `MainShell`):**
+    - Wrapped root application shell in `AnnotatedRegion<SystemUiOverlayStyle>` and configured `ThemeData.appBarTheme.systemOverlayStyle` with `statusBarColor: Colors.transparent`, ensuring system status bar indicators (clock, battery, Wi-Fi, notifications) maintain 100% visible, high-contrast brightness (`Brightness.dark` icons in light mode, `Brightness.light` icons in dark mode) edge-to-edge across all screens without solid AppBars cutting off the viewport.
+  - **Modern Reusable Fintech UI Primitives (`lib/widgets/fintech_components.dart`):**
+    - `FintechHeader`: Edge-to-edge transparent top header with status-bar safe padding, bold typography, contextual metadata subtitles, and frosted circular tactile action buttons (`FintechCircleButton`).
+    - `FintechHeroCard`: Elevated multi-stop gradient cards with glassmorphic hairline borders, dynamic theme-adaptive backgrounds, and tap interactions.
+    - `FintechSegmentedControl<T>`: Pill-shaped segmented control replacing legacy underlined TabBars with tactile haptic feedback.
+    - `FintechContainedLedger`: Rounded group containers eliminating individual card visual clutter and grouping activity with sleek inset dividers.
+  - **Transactions Tab Redesign (`TransactionsScreen`):**
+    - Edge-to-edge transparent header with dynamic entry count and filter button.
+    - Pill-shaped soft-fill search bar (`BorderRadius.circular(22)`).
+    - Modern filter pills with Emerald Green glowing active state.
+    - Date-grouped contained ledgers displaying humanized day headings (Today, Yesterday, Date) paired with daily net cash flow (`+/- amount`), enclosing transaction tiles with subtle inset dividers.
+    - Elevated category icons (`BorderRadius.circular(14)`) across transactions, lent money, loan repayments, and goal contributions.
+  - **Accounts & Cards Tab Redesign (`AccountsScreen`):**
+    - Converted to stateful view with `FintechSegmentedControl<int>` (Accounts vs Cards).
+    - Amber/Orange Net Liquidity Hero Card showing aggregated balance and live multi-currency metadata.
+    - Transparent fintech header with account count and live exchange rate synchronization trigger.
+    - Contained account cards and credit card settlement tiles with glassmorphic borders.
+  - **Recurring Cash Flow Tab Redesign (`RecurringScreen`):**
+    - Converted to `FintechSegmentedControl<int>` (Expenses vs Income) with Royal Purple accent.
+    - Elevated Committed Cash Flow Hero Card showing monthly burn rate, weekly rate, and real-time monthly income vs expenses breakdown.
+    - Modernized subscription vs installment filter cards and rounded recurring payment containers (`BorderRadius.circular(20)`).
+  - **Budgets & Savings Goals Tab Redesign (`BudgetScreen`):**
+    - Rose/Pink fintech header with active budget and goal counts.
+    - Elevated Safe-to-Spend Allowance Hero Card displaying daily pacing, monthly remaining allowance, dynamic pacing indicator badges, and monthly progress bar.
+    - Replaced legacy TabBar with `FintechSegmentedControl<int>` for Budgets vs Savings Goals.
+    - Modernized budget and savings goal cards with rounded containers (`BorderRadius.circular(20)`), subtle glass borders, and pacing indicator rows.
+  - **More Hub Redesign (`MoreScreen`):**
+    - Modernized header to transparent `FintechHeader` with Ocean Teal accent and live tool count metadata.
+    - Elevated Total Wealth & Net Worth Hero Card (`FintechHeroCard`) with live aggregated net worth, asset vs liability breakdown, and direct 1-tap shortcut to Net Worth screen.
+    - Redesigned 2-column grid cards with rounded containers (`BorderRadius.circular(20)`), subtle surface fill, hairline borders, and 38px rounded category badge icons.
+  - **More Tab Sub-Screens Redesign (All 14 Screens & Satellite Flows):**
+    - **Analytics & Insights Suite:**
+      - `NetWorthScreen`: Replaced legacy material cards with `FintechHeroCard`, rounded trend chart container, quick nav shortcuts container, snapshot history container, and `_SectionBreakdownCard` rounded fintech container.
+      - `StatisticsScreen`: Transparent AppBar, rounded month nav pill container, modern `_StatCard` rounded containers, 6-month bar chart container, and expense pie breakdown container.
+      - `InsightsScreen`: Transparent AppBars, Expensy Wrapped banner container, This vs Last Month comparison container, Daily Average container, Spending Forecast container, Expense-to-Income Ratio container, Top Categories container, Biggest Expense container, Category Trends container, 12-Month Trend Chart container, and Net Worth + Loans containers modernized to Fintech containers.
+      - `FinancialCalendarScreen`: Transparent AppBar, modernized month navigation header, calendar grid heatmap container, and selected day ledger & breakdown container with smooth ink splash support.
+      - `YearlyAnalysisScreen`: Transparent AppBar, modernized year selector container, metric summary cards, and `_MonthCard` modernized to rounded Fintech container with dynamic net flow indicator colors.
+    - **Financial Tools Suite:**
+      - `LoansScreen`: Transparent AppBar, modernized summary chips, and `_LoanCard` rounded Fintech container with transparent Material InkWell.
+      - `LoanDetailScreen`: Transparent AppBar, replaced solid primary header with Fintech rounded hero container, modernized metadata stats grid, and payment history items in rounded containers.
+      - `LendedScreen`: Transparent AppBar, modernized summary row container, updated `_SumCol`, and `_PersonCard` rounded Fintech container.
+      - `LendedPersonScreen`: Transparent AppBar, replaced solid primary header with Fintech rounded hero container, and modernized `_EntryCard` with rounded container.
+      - `WishlistScreen`: Transparent AppBar, modernized `_WishCard` with rounded container and subtle celebration border.
+      - `AssetsScreen`: Transparent AppBar, modernized summary row container, updated `_SumCol`, and `_AssetCard` rounded container.
+      - `CurrencyConverterScreen`: Transparent AppBar, modernized swap button, converted result container, rate info container, and `_CurrencyPill`.
+    - **Preferences & System Suite:**
+      - `CategoriesScreen`: Transparent AppBar, modernized `_CatTile` into rounded container.
+      - `ExportScreen`: Transparent AppBar, modernized summary box container, `_DateCard`, and `_Banner`.
+      - `BackupScreen`: Transparent AppBar, modernized Create backup container, Restore backup container, Import from other apps container, and What's included container.
+      - `SettingsScreen`: Transparent AppBar, modernized Appearance Card, App Font Card, Currency Card, Language Card, Preferences Card, Profile Card, About Card, and `_ThemeCard` into rounded containers (`BorderRadius.circular(20)`).
+    - **Satellite Detail Screens & Modals:**
+      - `RecurringDetailScreen`: Transparent AppBar, replaced solid primary header with Fintech rounded hero container, modernized metadata stats grid, and payment history items in rounded containers.
+      - `SavingsGoalDetailScreen`: Transparent AppBar, replaced solid top banner with Fintech rounded hero card, modernized contribution tiles in rounded containers.
+      - `TransferScreen` & `AddTransactionScreen`: Transparent AppBars guaranteeing edge-to-edge status bar visibility.
+- **Vibrant Multi-Color Floating Navigation Bar (`MainShell`)**:
+  - Replaced monochrome solid white icons in the bottom navigation bar with dedicated, theme-adaptive semantic colors for each tab destination:
+    - **Home (Tab 0):** Vibrant Blue (`#1972E8` in light mode, `#64B5F6` in dark mode).
+    - **Transactions (Tab 1):** Emerald Green (`#2E7D32` in light mode, `#81C784` in dark mode).
+    - **Recurring (Tab 2):** Royal Violet/Purple (`#8E24AA` in light mode, `#BA68C8` in dark mode).
+    - **Accounts (Tab 3):** Amber/Gold/Orange (`#F57C00` in light mode, `#FFB74D` in dark mode).
+    - **Budgets (Tab 4):** Rose/Pink (`#D81B60` in light mode, `#F06292` in dark mode).
+    - **More (Tab 5):** Teal/Cyan (`#00897B` in light mode, `#4DB6AC` in dark mode).
+  - **Dynamic Tab Highlight & Soft Unselected State:** Unselected icons render with a soft 60% opacity tint of their respective tab color for immediate distinction without visual clutter, while the selected icon renders with 100% opacity inside a matching softly tinted rounded-corner square indicator (`indicatorColor` adapts dynamically to `tabColor.withValues(alpha: 0.16–0.22)`).
+- **Modern Premium Fintech Home Screen Redesign (`HomeScreen`)**:
+  - **Dynamic Time-of-Day Greeting & Native Localized Date:** Replaced the static header with a contextual time-of-day greeting ("Good morning / afternoon / evening, [Name]") accompanied by dynamic time emojis (☀️, 🌤️, 🌆, 🌙) and locale-native formatted dates (`DateFormat.MMMMEEEEd`).
+  - **Elevated Hero Balance Card:** Transformed the top section into an elevated fintech hero card with dark/light adaptive gradients, subtle glassmorphic borders, currency pill badge, and high-impact balance typography (`hideBalance` masking supported).
+  - **Accessible Labeled Quick Actions Row:** Replaced the overcrowded top-right icon cluster with a clean 4-button quick action row featuring circular tactile buttons with text labels for Transfer, Insights, Calendar, and Forecast (Yearly Analysis).
+  - **Unified Monthly Cash Flow Card:** Replaced the 3 squished chips with a modern overview card featuring distinct Inflow and Outflow columns, real-time Net indicator badges, and a dynamic savings rate progress bar.
+  - **Realistic Account Cards:** Redesigned the horizontal account carousel with realistic debit/credit card styling, card network and contactless antenna badges, cardholder last 4 digits (`•••• 1234`), gold weight stats, and converted currency amounts, alongside a dedicated "+ Add Account" card.
+  - **Contained Activity Ledger:** Grouped recent transactions within an elegant rounded card container featuring category avatars, split transaction pill badges, clean item dividers, and a direct "See All →" shortcut.
+  - **100% Comprehensive 11-Locale Localization:** Added all 12 new home keys (`home_goodMorning`, `home_goodAfternoon`, `home_goodEvening`, `home_transferAction`, `home_insightsAction`, `home_calendarAction`, `home_forecastAction`, `home_manage`, `home_seeAll`, `home_addAccount`, `home_monthlyOverview`, `home_savingsRate`) across all 11 languages (`en`, `ar`, `de`, `es`, `fr`, `hi`, `it`, `ja`, `pt`, `ru`, `zh`) with 0 untranslated strings.
+- **Standalone Bank Accounts ("Don't link to Card", Schema v24)**:
+  - Added a dedicated "Don't link to Card" toggle (`dontLinkToCard`) in Bank account creation/editing and Onboarding:
+    - **Initial Balance & Exclude from Total:** When enabled, restores the starting/current balance field and the "Exclude from Total Balance" toggle for bank accounts (which are otherwise hidden under the assumption that card-linked bank balances are synthesized).
+    - **Card Link Prevention:** Automatically excludes bank accounts with `dontLinkToCard == true` from card-linking selectors (`_AccountSheet` and `_CardSheet`), ensuring cards can only link to card-enabled bank accounts.
+    - **Automatic Card Unlinking:** Editing an existing bank account and toggling "Don't link to Card" ON automatically unlinks any previously attached credit/debit cards in `AppProvider.updateAccount`.
+    - **Onboarding Flow Integration:** Synchronized `_PageThree` (First Account) and `_finish()` in `OnboardingScreen` so users can create unlinked bank accounts with a custom starting balance and exclude preference, preventing subsequent cards in `_PageFour` from auto-linking to it.
+    - **Database Migration:** Bumped schema version to `24` in `AppDatabase` (Drift) and `DBHelper` (SQLite) with an automated `dont_link_to_card` column migration and complete backup/restore serialization.
+    - **Complete 11-Locale Localization:** Added `accounts_dontLinkToCard` and `accounts_dontLinkToCardDesc` across all 11 supported languages (`en`, `ar`, `de`, `es`, `fr`, `hi`, `it`, `ja`, `pt`, `ru`, `zh`).
+- **100% Comprehensive App-Wide Localization Across All 11 Supported Languages**:
+  - Full synchronization and coverage of 772 translation keys across all 11 supported languages: `en` (English), `ar` (Arabic), `de` (German), `es` (Spanish), `fr` (French), `hi` (Hindi), `it` (Italian), `ja` (Japanese), `pt` (Portuguese), `ru` (Russian), `zh` (Chinese).
+  - Validated with `flutter gen-l10n` producing 0 missing/untranslated keys (`untranslated.json` evaluated to `{}`).
+  - Extracted and localized remaining hardcoded strings across `AccountsScreen`, `TransactionsScreen`, `BudgetScreen`, `ExportScreen`, `LoansScreen`, `AddTransactionScreen`, `AssetsScreen`, `CategoriesScreen`, `HomeScreen`, `LendedPersonScreen`, `WishlistScreen`, `OnboardingScreen`, `PresetsCarousel`, `PresetSheet`, `SavingsGoalSheet`, `SavingsGoalDetailScreen`, `CreditCardSettlementSheet`, `NetWorthScreen`, `BackupScreen`, and `PdfReportService`.
+  - Added new localized strings for confirmation dialogues, snackbar notifications with undo actions, card preview headers, settlement actions, statement cycle labels, and split-transaction validation errors.
+- **Global Dedicated In-App Numeric Keypad & Calculator (`AppNumericKeypad`)**: Applied across every single numeric and monetary amount input in the entire application, eliminating Android system keyboard popups, lag, layout jumping, and viewport obstruction:
+  - **In-App Calculator Engine with Percentage Calculation (`ExpressionEvaluator`):** Added a dedicated `%` key on the bottom-right of the keypad to calculate percentages seamlessly: direct percentages (`50%` $\rightarrow$ `0.5`), portion multiplication (`200 × 15%` $\rightarrow$ `30`), percentage markups and taxes (`100 + 15%` $\rightarrow$ `115`), and discount calculations (`100 − 20%` $\rightarrow$ `80`). Built-in real-time arithmetic operations (`+`, `−`, `×`, `÷`, `=`, `%`) with operator precedence parsing, evaluation preview, and haptic feedback.
+  - **Compact Responsive Design:** Equipped `AppNumericKeypad` with a `compact: bool` mode (~200px height with 36px tactile button rows) specifically engineered for Material 3 modal bottom sheets and compact viewports.
+- **Streamlined Quick Presets Carousel (`PresetsCarousel`)**: When presets exist, removed the duplicate "+ New" chip from the left of the horizontal scroll view, preserving a clean preset row alongside the header's "+ Add" button on the right.
+  - **Complete 100% App-Wide Coverage:**
+    - `AddTransactionScreen`: Main amount and multi-category split amounts.
+    - `CurrencyConverterScreen`: Converted amount input with permanently docked keypad.
+    - `PresetSheet`: Preset creation amount.
+    - `SavingsGoalSheet`: Target savings goal amount.
+    - `SavingsGoalDetailScreen` (`_ContributionSheet`): Contribution and withdrawal amounts.
+    - `CreditCardSettlementSheet`: Custom settlement payment amount.
+    - `BudgetScreen` (`_BudgetSheet`): Monthly budget allowance.
+    - `LendedPersonScreen` (`_EntrySheet`): Lent and borrowed amounts.
+    - `WishlistScreen`: Target price in `_WishSheet` and deduction amount in purchase dialog.
+    - `AssetsScreen` (`_AssetSheet`): Asset valuation amount.
+    - `TransactionsScreen` (`_AdvancedFilterSheet`): Minimum and maximum filter amounts.
+    - `OnboardingScreen` (`_PageThree` & `_PageFour`): Initial account balance, card credit limit, and card amount used.
+  - **Seamless Text/Keypad Focus Coordination:** Setting `readOnly: true` and `showCursor: true` eliminates system soft-keyboard popups on numeric fields, while tapping text fields (Title, Notes, Name) cleanly dismisses the numeric pad and restores the soft-keyboard smoothly.
+- **Professional PDF Financial Report Generator (`PdfReportService`)**: Multi-page vector PDF financial statement generation built 100% offline with zero cloud tracking:
+  - **Comprehensive Report Layout:** Features Expensy branding header, date range filter, base currency indicator, Executive Summary table (Total Inflow, Total Outflow, Net Savings, Savings Rate, Transaction count), Assets & Liabilities snapshot, Category Breakdown table with expense percentage allocations, and an Itemized Transaction Ledger with color-coded badges.
+  - **ExportScreen Format Switcher:** Added a modern SegmentedButton to `ExportScreen` allowing users to toggle between Excel (.xlsx) and PDF Report (.pdf).
+  - **Print, Preview & Share:** Integrated direct 1-tap print/preview sheets (`Printing.layoutPdf`), system share sheets (`Printing.sharePdf`), and local storage saving via platform file picker (`FilePicker.platform.saveFile`).
+  - **Complete 11-Locale Localization:** Added `export_pdf*` keys across all 11 supported languages (`en, ar, de, es, fr, hi, it, ja, pt, ru, zh`).
+- **Android App Shortcuts & Quick Settings Tile (`QuickAddTileService`, `shortcuts.xml`)**: Instant entry points directly from the Android operating system without navigating the full app first:
+  - **Static App Shortcuts (`shortcuts.xml`):** Long-pressing the Expensy app launcher icon provides 1-tap shortcuts for Add Expense (`com.ma.expensy.ACTION_ADD_EXPENSE`), Add Income (`com.ma.expensy.ACTION_ADD_INCOME`), Transfer (`com.ma.expensy.ACTION_TRANSFER`), and Quick Presets (`com.ma.expensy.ACTION_PRESETS`).
+  - **Theme-Adaptive Shortcut Icons:** Converted shortcut icons to Android Adaptive Icons (`ic_shortcut_expense`, `ic_shortcut_income`, `ic_shortcut_transfer`, `ic_shortcut_presets` in `res/drawable-anydpi-v26/` and fallback vectors in `res/drawable/`). The circular container background dynamically adapts to the device theme (`@color/shortcut_background` — light surface in light mode, dark surface in dark mode), while the refined line drawings adapt to pure black in light mode and pure white in dark mode (`@color/shortcut_icon_color`).
+  - **"Quick Add" Quick Settings Tile (`QuickAddTileService`, `ic_qs_quick_add.xml`):** Dedicated quick tile in Android's notification shade for 1-tap quick expense logging titled "Quick Add" with Android 14+ (API 34) `PendingIntent` compatibility, featuring a theme-adaptive vector plus icon that dynamically adapts to pure black in light mode and pure white in dark mode (`@color/quick_tile_icon_color`).
+  - **Dynamic Routing in `main.dart` & `MainActivity.kt`:** Automatically extracts intents on both cold starts and warm background resumes, seamlessly pushing slide-up routes to `AddTransactionScreen` (pre-configured for expense or income), `TransferScreen`, or opening `PresetSheet`.
+- **"Expensy Wrapped" Monthly Story Digest (`WrappedScreen`)**: Spotify-Wrapped-style interactive monthly financial recap computed 100% locally from the on-device database:
+  - **5 Interactive Story Slides:** The Big Picture (Inflows, Outflows, Net Saved, Savings Rate), Where Did It Go (dominant spending category and percentage share), Biggest Splurge (single largest expense highlight card), Hero Habit (Zero-Spend days count and discipline streak), and Shareable Monthly Receipt Card.
+  - **Story Controls & Gestures:** 5-segment animated top progress indicators, left/right tap navigation, long-press to pause, and a 1-tap Replay button.
+  - **Privacy-First Obscure Amounts Toggle:** A prominent "Hide amounts for sharing" action on the final receipt card replaces monetary figures with `***` while preserving percentages and streak stats for safe sharing on social media.
+  - **Navigation Integration:** Prominently featured via an Expensy Wrapped banner card in `InsightsScreen` and as a permanent tool in `MoreScreen`.
+  - **Full 11-Locale Localization:** Added all 22 `wrapped_*` keys across all 11 supported languages (`en, ar, de, es, fr, hi, it, ja, pt, ru, zh`).
+- **Smart "Safe-to-Spend" Daily Budget Pacer (`BudgetPacingInfo`, `BudgetPacingStatus`)**: Replaces passive budget progress bars with actionable daily spending guidance:
+  - **Mathematical Pacing Engine:** Computes real-time Safe Daily Allowance ($\frac{\max(0, \text{Allowance} - \text{Spent})}{\text{Days Remaining}}$) and Pacing Ratio ($\frac{\text{Spent} / \text{Allowance}}{\text{Elapsed} / \text{Total Days}}$) across monthly and 7-day weekly budget cycles.
+  - **Dynamic Pacing Classification (`BudgetPacingStatus`):** Classifies spending into `onTrack` ($\le 1.0$, emerald), `caution` ($1.01 - 1.25$, amber), `overPaced` ($> 1.25$, coral/red), and `exceeded` (budget exhausted).
+  - **BudgetCard Pacing Indicator (`_BudgetPacingRow`):** In `BudgetScreen`, category cards feature a dedicated pacing badge with status icon, safe daily spending rate, and remaining days.
+  - **Budget Screen Summary Strip:** Top horizontal strip includes a live Safe-to-Spend aggregate chip alongside total budgeted, spent, and left-to-spend.
+  - **HomeScreen Smart Pacer Integration:** Revamped the home Daily Pace card into an interactive Safe-to-Spend Daily Pacer card with visual status tinting, status badges, daily allowance, countdown, and 1-tap haptic navigation to the Budgets tab.
+  - **Full 11-Locale Localization:** Added all necessary strings across all 11 supported languages.
+- **Wishlist-to-Savings Goal Bridge ("Dream & Fund", Schema v23)**: Connects desires in the Wishlist directly to structured Savings Goals:
+  - **Database Expansion:** Added `goal_id` to `wishlist` and `wishlist_item_id` to `savings_goals` tables with automatic migrations and backup interoperability.
+  - **"Fund Item" 1-Tap Bridge:** Wishlist cards for unpurchased items feature a 1-tap "Fund Item" action that opens the goal creation sheet prefilled with the item's name and target price.
+  - **Live Savings Progress & Quick Navigation:** Linked wishlist cards display real-time savings progress bars with itemized amounts and percentages, linking directly to `SavingsGoalDetailScreen`.
+  - **Celebration State & "Buy Now":** When linked savings reach 100% or the goal completes, wishlist cards highlight with an emerald celebration border, celebration badge, and a prominent "Buy Now" button.
+  - **Lifecycle Purchase & Account Deduction Flow:** Marking an item as purchased offers an interactive dialog to record an expense transaction, choose the funding account and category, deduct the balance, and complete the linked savings goal.
+  - **Bidirectional Cascade Handling:** Deleting a savings goal safely unlinks its wishlist item, and deleting a wishlist item safely unlinks its savings goal.
+  - **SavingsGoalDetailScreen Indicator:** Shows an emerald banner when a savings goal is linked to a wishlist item with current status.
+  - **Full 11-Locale Localization:** Localized across all 11 languages.
+- **Rollover (Envelope) Budgeting (Schema v22)**: Carries over unspent surplus or overspending deficits into subsequent budget periods:
+  - **Calculation Engine:** Computes previous period's unspent surplus or deficit and adjusts current period allowance: $\text{EffectiveAllowance} = \max(0.0, \text{BaseBudget} + \text{Rollover})$.
+  - **Visual Breakdown:** Budget cards display "Rollover" badges and itemized strips: *"Base: \$300.00 • Rollover (Aug): +\$45.00 • Total Available: \$345.00"*.
+  - **Envelope Toggle:** Material 3 SwitchListTile in budget sheet allows enabling rollover per category.
+  - **Notifications & Home Widget:** Budget alert thresholds and widget sync track dynamic effective allowances.
+- **Credit Card Statement & Settlement Workflow (`CreditCardSettlementSheet`)**: Fully integrated statement billing cycle tracker and 1-tap bill payment workflow:
+  - **Statement Billing Cycle Engine (`getCreditCardStatement`):** Calculates statement date, statement period expenses vs. unbilled charges, available credit, and credit utilization percentage ($\text{Current Outstanding Debt} / \text{Credit Limit}$).
+  - **AccountsScreen Credit Card UI Overhaul:** Rendered cards in the "Cards" tab feature a multi-tier color-coded utilization progress bar (Green: $< 30\%$, Amber: $30\% - 70\%$, Red: $> 70\%$), statement cycle vs. unbilled breakdown, due date countdown with overdue/due-soon alerts, and an "All caught up" banner when debt-free.
+  - **1-Tap Settlement Modal (`CreditCardSettlementSheet`):** Seamless bill payment sheet auto-selecting the user's linked/primary funding account, offering 1-tap choices (Full Statement Balance, Total Balance, Minimum Payment, or Custom Amount), performing an instant bank-to-card transfer, and rescheduling reminders.
+  - **Credit Card Setup Parity:** Added Statement Day and Minimum Payment Amount fields to `_CardSheet` and `_AccountSheet`.
+  - **Notification Synchronization:** Updated `CreditReminderService` to automatically cancel due reminders when a credit card's outstanding balance is paid in full.
+  - **Full 11-Locale Localization:** Added `creditCard_*` keys across all 11 supported languages.
+- **Wealth Management Engine & Net Worth Reactivation (`NetWorthScreen`, `NetWorthSnapshot`)**: Fully implemented accurate Assets vs. Liabilities financial mathematics in `AppProvider`:
+  - **Assets Breakdown:** Liquid bank/cash/wallet balances (`totalLiquidAccountsValue`), physical gold spot valuation (`totalGoldValue`), fixed and financial assets (`totalAssetsValue`), and unsettled money lent to others (`totalLentMoneyValue`).
+  - **Liabilities Breakdown:** Negative account balances / credit card debts (`totalDebtAccounts`), outstanding loan balances payable (`totalOutstandingLoanDebt`), and unsettled money borrowed from others (`totalBorrowedMoneyValue`).
+  - **Live Net Worth:** Dynamically computed as $\text{Total Assets} - \text{Total Liabilities}$.
+  - **Automated Daily Snapshots (`recordNetWorthSnapshot`):** Automatically captures and updates daily net worth snapshots in `net_worth_snapshots` on startup and on any balance-affecting transaction, transfer, account, loan, loan payment, asset, or debt change.
+  - **Modernized Net Worth Screen (`NetWorthScreen`):** Revamped standalone view featuring a hero card with debt-to-asset ratio badges, interactive trend chart with multi-timeframe filter chips (`7D, 30D, 90D, 1Y, ALL`), touch tooltips, proportional visual distribution bars, itemized asset/liability cards with direct drill-down navigation, quick action shortcuts, and historical snapshot ledger with day-over-day deltas.
+  - **Navigation Integration:** Prominently exposed `NetWorthScreen` in `MoreScreen` and updated the `InsightsScreen` Net Worth card with live assets/liabilities breakdown and 1-tap routing.
+  - **Complete 11-Locale Localization:** Added `netWorth_*` keys across all 11 supported languages.
+- **Split Transactions (Multi-Category Splitting, `SplitTransactionSheet`)**:
+  - Distributed expense logging across multiple categories in `AddTransactionScreen` with live validation header (`Total | Allocated | Remaining`), 1-tap "Fill Remaining" balance auto-fill, individual split category selectors and note fields, and full integration with the docked `AppNumericKeypad`.
+  - **Split Breakdown Bottom Sheet (`SplitTransactionSheet`):** Interactive inspection modal showing itemized breakdown with category dots, percentage allocation pills, item notes, and 1-tap edit navigation.
+  - **Split-Aware Financial Aggregations:** `AppProvider.budgetSpent`, budget alert notifications, and `StatisticsScreen` category breakdown charts now itemize split transactions into their respective category amounts rather than lumping into a single category.
+  - **Complete 11-Locale Localization:** Added localized translations for split transactions across all 11 languages.
+- **Quick Presets & 1-Tap Transaction Logging (Schema v21, `PresetsCarousel`, `PresetSheet`)**: Added `transaction_presets` and `transaction_splits` tables with automated Drift schema migration from v20 to v21. Users can create reusable presets for frequent expenses (e.g., daily coffee, commute fare, lunch), log them with 1-tap directly from `HomeScreen` via `PresetsCarousel` (with instant Undo snackbar), and quick-fill `AddTransactionScreen` via preset chips. Includes full management modal `PresetSheet`.
+- **Database Engine Upgrade to Drift (`AppDatabase`)**: Migrated database layer from legacy Sqflite to Drift (`drift: ^2.35.0` + `sqlite3_flutter_libs`) running asynchronously via Dart FFI in a background isolate, delivering type-safe queries, isolate multi-threading, and robust compile-time schema validation.
+  - **Zero-Downtime Database Bridge:** `DBHelper` now seamlessly routes all CRUD queries, aggregations, transactions, and JSON backup/restore methods through `AppDatabase.instance`, preserving 100% backward compatibility with all providers and UI screens.
+  - **Comprehensive Drift In-Memory Unit Test Suite:** Added tests covering table schema generation, category seeding, account and transaction CRUD, and JSON backup/restore integrity.
+- **More Tab 2-Column Sectioned Grid (`MoreScreen`)**: Reorganized the entire More screen into an intuitive, responsive 2-column grid categorized into three distinct functional sections with standard 140px bottom spacing:
+  - **Financial Tools:** Currency Converter, Wishlist, Lent Money, Assets, and Loans.
+  - **Analytics & Insights:** Net Worth, Statistics, Insights, Yearly Analysis, Financial Calendar, and Expensy Wrapped.
+  - **Preferences & Data:** Categories, Export Transactions, Backup & Restore, and Settings.
+  - Features compact card tiles with semantic icon badges, chevron indicators, and haptic feedback.
+- **Floating Rounded-Corners Navigation Bar**: Redesigned floating navigation bar (`extendBody: true`) to a floating rounded corners rectangle (`BorderRadius.circular(22)`), enlarged height (64px) and comfortable width (20px horizontal margins), with the active tab selection highlight redesigned to a rounded corner square (`RoundedSquareBorder(borderRadius: 14, size: 40)`), 24px icon-only destinations (`alwaysHide` labels), and elevation shadow.
+- **Expanded `ExpandableFab` (`ExpandableFabItem` list model)**: Added to the Transactions screen (Income/Expense actions) and the Budgets & Goals screen (Add Budget / Add Savings Goal actions, with matching green `0xFF2E7D32` buttons).
+- **Redesigned Yearly Analysis Monthly Cards (`YearlyAnalysisScreen`)**: Month-by-month planned cash flow forecast for a 24-month horizon, featuring visually readable summary grid cards for inflows and outflows, net cash flow balance pills, custom section icons, larger typography, and smooth expand animations.
+- **Loan Transfer Account Feature**: Setting up a loan automatically deposits the principal into a selected account, and deleting the loan (or undoing it) reverses the deposit.
+- **Redesigned Recurring Payment UI (`RecurringDetailScreen`)**: Payment history and recurring payment details are now shown in a dedicated `RecurringDetailScreen` with stats grids and card-based payment history lists. Restored progress bars inside installment recurring cards.
 
 ### Changed
-- Shifted all Floating Action Buttons (FABs) down to a 76px bottom padding offset to float cleanly right above the new floating navigation bar.
-- Updated main screen scroll view bottom paddings to 140px to ensure full scrolling space above the floating bar.
-- Moved the delete button in the loan sheet form from the sheet header to a dedicated AppBar action in `LoanDetailScreen`.
-- Restored the "Left to Spend" calculation on the budgets tab to show the subtraction between total monthly recurring income and total monthly budgeted amount.
-- Restyled the budgets and goals cards to match the exact card style used in recurring payments.
-- Changed the summary strip backgrounds in the budgets and goals tab to transparent to cleanly blend with the black AMOLED theme.
-- Updated the Savings Goal sheet target date text field to open a native calendar date picker dialog instead of manual text input.
+- **Transaction Form Save Button Repositioned Under Keypad (`AddTransactionScreen`)**: Moved the primary submit / Save action ("Save Changes" / "Add Transaction") out of the scrollable form body and docked it directly underneath the permanently docked `AppNumericKeypad` (and floating above the soft-keyboard when editing text fields), providing effortless 1-tap accessibility without requiring users to scroll through the form.
+- **Backup & Restore Action Hierarchy Optimization (`BackupScreen`)**: Moved actionable cards ("Create Backup", "Restore Backup", and "Import from Other Apps") to the very top of the screen, placing the informational "What's Included" breakdown and count indicators underneath them for a significantly faster user workflow.
+- **Floating Navigation Bar Layout Clearances**: Shifted all Floating Action Buttons (FABs) down to a 76px bottom padding offset to float cleanly right above the new floating navigation bar, and updated main screen scroll view bottom paddings to 140px to ensure full scrolling space above the bar.
+- **Loan Management**: Moved the delete button in the loan sheet form from the sheet header to a dedicated AppBar action in `LoanDetailScreen`.
+- **Budget Metrics**: Restored the "Left to Spend" calculation on the budgets tab to show the subtraction between total monthly recurring income and total monthly budgeted amount.
+- **Card Styling Parity**: Restyled the budgets and goals cards to match the exact card style used in recurring payments, and changed summary strip backgrounds to transparent to cleanly blend with the black AMOLED theme.
+- **Savings Goal Date Selection**: Updated the Savings Goal sheet target date text field to open a native calendar date picker dialog instead of manual text input.
 
 ### Fixed
+- **Navigation Bar Tab Press Highlight Artifact (`MainShell`, `AppTheme`)**: Fixed a visual glitch where tapping or pressing any navigation destination rendered an unshaped rectangular Material ink splash/highlight overlay inside the rounded-corner square indicator. Configured `overlayColor: WidgetStateProperty.all(Colors.transparent)` on `NavigationBarThemeData` and wrapped the navigation bar with `splashFactory: NoSplash.splashFactory`, ensuring only the clean rounded-square selection indicator (`RoundedSquareBorder(borderRadius: 14, size: 40)`) displays without rectangular state layer clipping artifacts.
+- **Onboarding Skip for Now Button (`OnboardingScreen`)**: Fixed a page index mismatch in the onboarding wizard where the "Skip for now" button was improperly displayed on the Currency selection screen and missing from the "Add a Card" screen. Corrected step index routing (`_page == 4` for Account, `_page == 5` for Card) so users can skip card creation cleanly, and localized the button across all 11 supported languages (`onboarding_skipForNow`).
+- **Gold Purity Percentage Above 100% (`AccountsScreen`)**: Fixed a calculation typo where gold karat purity was multiplied by 140 instead of 100 (`karat / 24 * 100`), which caused 24k gold to erroneously show as 140% and inflated all karat chips, account cards, and live breakdown percentages. Karat chips and cards now properly show 100% (24k), 92% (22k), 88% (21k), 75% (18k), 58% (14k), 42% (10k), and 38% (9k).
+- **Gold Sheet Character Encoding Artifact (`_GoldPreviewCard`)**: Fixed an encoding issue where the multiplication sign in the live gold breakdown was displaying as a corrupted `Ã—` (`Weight Ã— purity` and `${grams} g Ã— ${purity}%`), replacing it with a clean Unicode multiplication sign (`×`).
+- **Transaction Form Amount Field Highlight Alignment (`AddTransactionScreen`)**: Resolved an issue where tapping the amount input caused an ink highlight to appear underneath the input container in the helper text area rather than surrounding the field. Replaced the outer `InkWell` and `IgnorePointer` wrapper with direct `TextField` focus management and a focused primary border outline cleanly surrounding the field boundaries.
+- **Transactions Screen Multi-Selection Back Gesture**: Pressing/swiping back while in multi-selection mode on the Transactions screen now gracefully exits the selection mode instead of popping back to the home page.
+- **Budget & Savings Goal Deletion Undo**: Added Undo snackbar support when deleting budgets and savings goals, aligning them with the rest of the application's delete-undo pattern.
+- **Home Screen Stale Record on Edit**: Fixed an issue where editing a transaction without changing its amount caused the home screen to display the stale record until app restart or adding a new record.
+- **Recurring Payments Installment Reset**: Fixed an issue where clicking Pay or Skip on an installment recurring payment reset its type to subscription and incorrectly moved it to the Subscriptions tab.
 - **ProGuard / R8 Hardening**: Resolved app crashes and black-screen issues in Release builds by configuring `proguard-rules.pro` to keep GSON type parameters (resolving alarm manager trigger crash) and protecting `home_widget` communications from obfuscation.
 - **Resource Shrinking Protection**: Prevented background service crashes by creating `keep.xml` to protect custom notification icons (`ic_notification`) from resource shrinking, and updating reminder services to use proper resource paths.
-- **Savings Goal Detail Screen**: Fixed a white screen rendering crash caused by an invalid runtime cast of `DateTime` targetDate to `String?`.
+- **Savings Goal Detail Screen Cast Exception**: Fixed a white screen rendering crash caused by an invalid runtime cast of `DateTime` targetDate to `String?`.
 - **UI Spacing Adjustments**: Optimized layout item spacing on the Transactions list screen to clean up empty spaces around date headers.
 - **Codebase Cleanups**: Resolved 30+ compiler warnings and linting issues.
 

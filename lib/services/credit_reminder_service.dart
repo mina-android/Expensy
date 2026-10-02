@@ -21,7 +21,7 @@ class CreditReminderService {
     const androidSettings =
         AndroidInitializationSettings('ic_notification');
     await _plugin
-        .initialize(const InitializationSettings(android: androidSettings));
+        .initialize(settings: const InitializationSettings(android: androidSettings));
     _initialized = true;
 
     final android = _plugin.resolvePlatformSpecificImplementation<
@@ -118,6 +118,10 @@ class CreditReminderService {
       return;
     }
     await _ensureInit();
+    if (acc.balance >= 0) {
+      await cancelReminder(acc.id);
+      return;
+    }
     if (!(await hasPermission())) return;
 
     final parts = acc.creditReminderTime.split(':');
@@ -129,14 +133,12 @@ class CreditReminderService {
     if (tzDate != null) {
       final body = 'Your ${acc.name} bill is due today.';
       await _plugin.zonedSchedule(
-        _notifId(acc.id),
-        '💳 Bill Due Today',
-        body,
-        tzDate,
-        _buildDetails(),
+        id: _notifId(acc.id),
+        title: '💳 Bill Due Today',
+        body: body,
+        scheduledDate: tzDate,
+        notificationDetails: _buildDetails(),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
         payload: acc.id,
       );
     }
@@ -147,14 +149,12 @@ class CreditReminderService {
       if (advTzDate != null) {
         final body = 'Your ${acc.name} bill is due in 2 days.';
         await _plugin.zonedSchedule(
-          _advanceId(acc.id),
-          '💳 Bill Due Soon',
-          body,
-          advTzDate,
-          _buildDetails(),
+          id: _advanceId(acc.id),
+          title: '💳 Bill Due Soon',
+          body: body,
+          scheduledDate: advTzDate,
+          notificationDetails: _buildDetails(),
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          uiLocalNotificationDateInterpretation:
-              UILocalNotificationDateInterpretation.absoluteTime,
           payload: acc.id,
         );
       }
@@ -163,8 +163,8 @@ class CreditReminderService {
 
   Future<void> cancelReminder(String accountId) async {
     await _ensureInit();
-    await _plugin.cancel(_notifId(accountId));
-    await _plugin.cancel(_advanceId(accountId));
+    await _plugin.cancel(id: _notifId(accountId));
+    await _plugin.cancel(id: _advanceId(accountId));
   }
 
   Future<void> rescheduleAll(List<Account> accounts) async {

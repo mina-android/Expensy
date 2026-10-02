@@ -6,6 +6,8 @@ import '../providers/app_provider.dart';
 import '../models/models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
+import '../widgets/app_numeric_keypad.dart';
+import '../utils/haptics.dart';
 import 'main_shell.dart';
 
 const List<int> _kColors = [
@@ -79,6 +81,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   String _accType = 'bank';
   String _accCur = 'EGP';
   int _accColor = 0xFF6750A4;
+  bool _accExcludeFromTotal = false;
+  bool _accDontLinkToCard = false;
 
   // Step 4 — First Card
   final _cardNameCtrl = TextEditingController(text: 'Credit Card');
@@ -111,10 +115,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _skip() {
-    if (_page == 3) {
+    if (_page == 4) {
       _accNameCtrl.clear();
       _accBalCtrl.clear();
-    } else if (_page == 4) {
+    } else if (_page == 5) {
       _cardNameCtrl.clear();
       _cardBalCtrl.clear();
       _cardLimitCtrl.clear();
@@ -223,8 +227,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         name: accName,
         type: _accType,
         currency: _accCur,
-        balance: double.tryParse(_accBalCtrl.text) ?? 0,
+        balance: (_accType != 'bank' || _accDontLinkToCard)
+            ? (double.tryParse(_accBalCtrl.text) ?? 0)
+            : 0,
         colorValue: _accColor,
+        excludeFromTotal: (_accType != 'bank' || _accDontLinkToCard)
+            ? _accExcludeFromTotal
+            : false,
+        dontLinkToCard: _accType == 'bank' ? _accDontLinkToCard : false,
       ));
     }
 
@@ -238,7 +248,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         balance: double.tryParse(_cardBalCtrl.text) ?? 0,
         creditLimit: double.tryParse(_cardLimitCtrl.text) ?? 0,
         colorValue: _cardColor,
-        linkedAccountId: bankAccId,
+        linkedAccountId:
+            (_accType == 'bank' && !_accDontLinkToCard) ? bankAccId : null,
       ));
     }
 
@@ -304,9 +315,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   type: _accType,
                   currency: _accCur,
                   color: _accColor,
+                  dontLinkToCard: _accDontLinkToCard,
+                  excludeFromTotal: _accExcludeFromTotal,
                   onType: (v) => setState(() => _accType = v),
                   onCurrency: (v) => setState(() => _accCur = v),
                   onColor: (v) => setState(() => _accColor = v),
+                  onDontLinkToCard: (v) =>
+                      setState(() => _accDontLinkToCard = v),
+                  onExcludeFromTotal: (v) =>
+                      setState(() => _accExcludeFromTotal = v),
                 ),
                 _PageFour(
                   nameCtrl: _cardNameCtrl,
@@ -361,12 +378,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                     ),
                   ]),
-                  if (_page == 3 || _page == 4)
+                  if (_page == 4 || _page == 5)
                     Padding(
                       padding: const EdgeInsets.only(top: 8),
                       child: TextButton(
                         onPressed: _skip,
-                        child: const Text('Skip for now'),
+                        child: Text(l10n.onboarding_skipForNow),
                       ),
                     ),
                 ],
@@ -667,12 +684,16 @@ class _PageTwo extends StatelessWidget {
 }
 
 // ── Page 3: First Account ────────────────────────────────────────────────────
-class _PageThree extends StatelessWidget {
+class _PageThree extends StatefulWidget {
   final TextEditingController nameCtrl, balCtrl;
   final String type, currency;
   final int color;
+  final bool dontLinkToCard;
+  final bool excludeFromTotal;
   final void Function(String) onType, onCurrency;
   final void Function(int) onColor;
+  final void Function(bool) onDontLinkToCard;
+  final void Function(bool) onExcludeFromTotal;
 
   const _PageThree({
     required this.nameCtrl,
@@ -680,19 +701,43 @@ class _PageThree extends StatelessWidget {
     required this.type,
     required this.currency,
     required this.color,
+    required this.dontLinkToCard,
+    required this.excludeFromTotal,
     required this.onType,
     required this.onCurrency,
     required this.onColor,
+    required this.onDontLinkToCard,
+    required this.onExcludeFromTotal,
   });
+
+  @override
+  State<_PageThree> createState() => _PageThreeState();
+}
+
+class _PageThreeState extends State<_PageThree> {
+  bool _showKeypad = false;
+
+  @override
+  void didUpdateWidget(_PageThree oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if ((widget.type == 'bank' && !widget.dontLinkToCard) && _showKeypad) {
+      setState(() => _showKeypad = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
-    final sym = currencyInfo(currency).symbol;
+    final sym = currencyInfo(widget.currency).symbol;
+    final kbOpen = MediaQuery.of(context).viewInsets.bottom > 100;
+    final showPad = _showKeypad && !kbOpen;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+      padding: EdgeInsets.only(
+        left: 24, right: 24, top: 24,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+      ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const SizedBox(height: 24),
         Container(
@@ -717,7 +762,10 @@ class _PageThree extends StatelessWidget {
         const SizedBox(height: 24),
 
         TextField(
-          controller: nameCtrl,
+          controller: widget.nameCtrl,
+          onTap: () {
+            if (_showKeypad) setState(() => _showKeypad = false);
+          },
           decoration: InputDecoration(
               labelText: l10n.onboarding_accountName,
               prefixIcon: const Icon(Icons.label_outline)),
@@ -743,7 +791,7 @@ class _PageThree extends StatelessWidget {
               ('wallet', l10n.onboarding_wallet, 'account_balance_wallet'),
             ])
               GestureDetector(
-                onTap: () => onType(opt.$1),
+                onTap: () => widget.onType(opt.$1),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 100),
                   margin: const EdgeInsets.only(right: 8),
@@ -751,20 +799,20 @@ class _PageThree extends StatelessWidget {
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
                     color:
-                        type == opt.$1 ? cs.primary : cs.surfaceContainerHigh,
+                        widget.type == opt.$1 ? cs.primary : cs.surfaceContainerHigh,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(mainAxisSize: MainAxisSize.min, children: [
                     Icon(_typeIcon(opt.$1),
                         size: 14,
-                        color: type == opt.$1 ? Colors.white : cs.onSurface),
+                        color: widget.type == opt.$1 ? Colors.white : cs.onSurface),
                     const SizedBox(width: 6),
                     Text(opt.$2,
                         style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color:
-                                type == opt.$1 ? Colors.white : cs.onSurface)),
+                                widget.type == opt.$1 ? Colors.white : cs.onSurface)),
                   ]),
                 ),
               ),
@@ -781,8 +829,8 @@ class _PageThree extends StatelessWidget {
         const SizedBox(height: 8),
         GestureDetector(
           onTap: () async {
-            final picked = await showCurrencyPicker(context, current: currency);
-            if (picked != null) onCurrency(picked);
+            final picked = await showCurrencyPicker(context, current: widget.currency);
+            if (picked != null) widget.onCurrency(picked);
           },
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -796,7 +844,7 @@ class _PageThree extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                   child: Text(
-                      '$currency  ${currencyInfo(currency).symbol}  —  ${currencyInfo(currency).name}',
+                      '${widget.currency}  ${currencyInfo(widget.currency).symbol}  —  ${currencyInfo(widget.currency).name}',
                       style: const TextStyle(
                           fontWeight: FontWeight.w600, fontSize: 13))),
               const Icon(Icons.arrow_drop_down_rounded),
@@ -805,13 +853,73 @@ class _PageThree extends StatelessWidget {
         ),
         const SizedBox(height: 14),
 
-        TextField(
-          controller: balCtrl,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: InputDecoration(
-              labelText: l10n.onboarding_startingBalance, prefixText: '$sym '),
-        ),
-        const SizedBox(height: 14),
+        if (widget.type == 'bank') ...[
+          SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            title: Text(
+              l10n.accounts_dontLinkToCard,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+            ),
+            subtitle: Text(
+              l10n.accounts_dontLinkToCardDesc,
+              style: TextStyle(
+                  fontSize: 12,
+                  color: cs.onSurface.withValues(alpha: 0.5)),
+            ),
+            value: widget.dontLinkToCard,
+            onChanged: (v) {
+              AppHaptics.tap(context, HapticStrength.light);
+              widget.onDontLinkToCard(v);
+            },
+          ),
+          const SizedBox(height: 14),
+        ],
+
+        if (widget.type != 'bank' || widget.dontLinkToCard) ...[
+          TextField(
+            controller: widget.balCtrl,
+            readOnly: true,
+            showCursor: true,
+            onTap: () {
+              FocusScope.of(context).unfocus();
+              setState(() => _showKeypad = true);
+            },
+            decoration: InputDecoration(
+              labelText: l10n.onboarding_startingBalance,
+              prefixText: '$sym ',
+              suffixIcon: IconButton(
+                icon: Icon(
+                  showPad ? Icons.keyboard_hide_outlined : Icons.dialpad_outlined,
+                  size: 20,
+                  color: cs.primary,
+                ),
+                onPressed: () {
+                  AppHaptics.tap(context, HapticStrength.light);
+                  FocusScope.of(context).unfocus();
+                  setState(() => _showKeypad = !_showKeypad);
+                },
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            title: Text(l10n.accounts_excludeFromTotalBala,
+                style: const TextStyle(
+                    fontWeight: FontWeight.w600, fontSize: 14)),
+            subtitle: Text(l10n.accounts_wontCountTowardYourHome,
+                style: TextStyle(
+                    fontSize: 12,
+                    color: cs.onSurface.withValues(alpha: 0.5)),
+            ),
+            value: widget.excludeFromTotal,
+            onChanged: (v) {
+              AppHaptics.tap(context, HapticStrength.light);
+              widget.onExcludeFromTotal(v);
+            },
+          ),
+          const SizedBox(height: 14),
+        ],
 
         // Color
         Text(l10n.onboarding_color,
@@ -827,7 +935,7 @@ class _PageThree extends StatelessWidget {
             child: Row(
                 children: _kColors
                     .map((col) => GestureDetector(
-                          onTap: () => onColor(col),
+                          onTap: () => widget.onColor(col),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 60),
                             width: 34,
@@ -837,11 +945,11 @@ class _PageThree extends StatelessWidget {
                               color: Color(col),
                               shape: BoxShape.circle,
                               border: Border.all(
-                                  color: color == col
+                                  color: widget.color == col
                                       ? cs.onSurface
                                       : Colors.transparent,
                                   width: 3),
-                              boxShadow: color == col
+                              boxShadow: widget.color == col
                                   ? [
                                       BoxShadow(
                                           color:
@@ -856,6 +964,14 @@ class _PageThree extends StatelessWidget {
                     .toList()),
           ),
         ),
+        if (showPad && (widget.type != 'bank' || widget.dontLinkToCard)) ...[
+          const SizedBox(height: 12),
+          AppNumericKeypad(
+            controller: widget.balCtrl,
+            compact: true,
+            onDone: () => setState(() => _showKeypad = false),
+          ),
+        ],
         const SizedBox(height: 20),
       ]),
     );
@@ -863,7 +979,7 @@ class _PageThree extends StatelessWidget {
 }
 
 // ── Page 4: Credit Card (Optional) ───────────────────────────────────────────
-class _PageFour extends StatelessWidget {
+class _PageFour extends StatefulWidget {
   final TextEditingController nameCtrl, balCtrl, limitCtrl;
   final String currency;
   final int color;
@@ -885,22 +1001,35 @@ class _PageFour extends StatelessWidget {
   });
 
   @override
+  State<_PageFour> createState() => _PageFourState();
+}
+
+class _PageFourState extends State<_PageFour> {
+  TextEditingController? _activeNumericCtrl;
+  bool _showKeypad = false;
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
-    final sym = currencyInfo(currency).symbol;
+    final sym = currencyInfo(widget.currency).symbol;
+    final kbOpen = MediaQuery.of(context).viewInsets.bottom > 100;
+    final showPad = _showKeypad && !kbOpen;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: EdgeInsets.only(
+        left: 24, right: 24,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+      ),
       child: ListView(children: [
         const SizedBox(height: 24),
-        Text('Add a Card',
+        Text(l10n.onboarding_addCard,
             style: Theme.of(context)
                 .textTheme
                 .headlineSmall
                 ?.copyWith(fontWeight: FontWeight.w800)),
         const SizedBox(height: 8),
-        Text('You can skip this if you don\'t want to add a card right now.',
+        Text(l10n.onboarding_skipCardDesc,
             style: TextStyle(
                 fontSize: 15, color: cs.onSurface.withValues(alpha: 0.6))),
         const SizedBox(height: 24),
@@ -918,11 +1047,11 @@ class _PageFour extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             child: Row(children: [
               for (final opt in [
-                ('credit', 'Credit Card', 'credit_card'),
-                ('debit', 'Debit Card', 'credit_card'),
+                ('credit', l10n.accounts_creditCard, 'credit_card'),
+                ('debit', l10n.onboarding_debitCard, 'credit_card'),
               ])
                 GestureDetector(
-                  onTap: () => onType(opt.$1),
+                  onTap: () => widget.onType(opt.$1),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 100),
                     margin: const EdgeInsets.only(right: 8),
@@ -930,20 +1059,20 @@ class _PageFour extends StatelessWidget {
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
                       color:
-                          type == opt.$1 ? cs.primary : cs.surfaceContainerHigh,
+                          widget.type == opt.$1 ? cs.primary : cs.surfaceContainerHigh,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(mainAxisSize: MainAxisSize.min, children: [
                       Icon(_typeIcon(opt.$1),
                           size: 14,
-                          color: type == opt.$1 ? Colors.white : cs.onSurface),
+                          color: widget.type == opt.$1 ? Colors.white : cs.onSurface),
                       const SizedBox(width: 6),
                       Text(opt.$2,
                           style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                               color:
-                                  type == opt.$1 ? Colors.white : cs.onSurface)),
+                                  widget.type == opt.$1 ? Colors.white : cs.onSurface)),
                     ]),
                   ),
                 ),
@@ -953,10 +1082,13 @@ class _PageFour extends StatelessWidget {
         const SizedBox(height: 14),
 
         TextField(
-          controller: nameCtrl,
-          decoration: const InputDecoration(
-              labelText: 'Card Name (e.g. Visa Platinum)',
-              prefixIcon: Icon(Icons.credit_card)),
+          controller: widget.nameCtrl,
+          onTap: () {
+            if (_showKeypad) setState(() => _showKeypad = false);
+          },
+          decoration: InputDecoration(
+              labelText: l10n.onboarding_cardNameLabel,
+              prefixIcon: const Icon(Icons.credit_card)),
         ),
         const SizedBox(height: 14),
 
@@ -969,8 +1101,8 @@ class _PageFour extends StatelessWidget {
         const SizedBox(height: 8),
         GestureDetector(
           onTap: () async {
-            final picked = await showCurrencyPicker(context, current: currency);
-            if (picked != null) onCurrency(picked);
+            final picked = await showCurrencyPicker(context, current: widget.currency);
+            if (picked != null) widget.onCurrency(picked);
           },
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -984,7 +1116,7 @@ class _PageFour extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                   child: Text(
-                      '$currency  ${currencyInfo(currency).symbol}  —  ${currencyInfo(currency).name}',
+                      '${widget.currency}  ${currencyInfo(widget.currency).symbol}  —  ${currencyInfo(widget.currency).name}',
                       style: const TextStyle(
                           fontWeight: FontWeight.w600, fontSize: 13))),
               const Icon(Icons.arrow_drop_down_rounded),
@@ -997,21 +1129,81 @@ class _PageFour extends StatelessWidget {
           children: [
             Expanded(
               child: TextField(
-                controller: limitCtrl,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                controller: widget.limitCtrl,
+                readOnly: true,
+                showCursor: true,
+                onTap: () {
+                  FocusScope.of(context).unfocus();
+                  setState(() {
+                    _activeNumericCtrl = widget.limitCtrl;
+                    _showKeypad = true;
+                  });
+                },
                 decoration: InputDecoration(
-                    labelText: 'Credit Limit', prefixText: '$sym '),
+                  labelText: l10n.onboarding_creditLimit,
+                  prefixText: '$sym ',
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      showPad && _activeNumericCtrl == widget.limitCtrl
+                          ? Icons.keyboard_hide_outlined
+                          : Icons.dialpad_outlined,
+                      size: 20,
+                      color: cs.primary,
+                    ),
+                    onPressed: () {
+                      AppHaptics.tap(context, HapticStrength.light);
+                      FocusScope.of(context).unfocus();
+                      setState(() {
+                        if (_showKeypad && _activeNumericCtrl == widget.limitCtrl) {
+                          _showKeypad = false;
+                        } else {
+                          _activeNumericCtrl = widget.limitCtrl;
+                          _showKeypad = true;
+                        }
+                      });
+                    },
+                  ),
+                ),
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
               child: TextField(
-                controller: balCtrl,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                controller: widget.balCtrl,
+                readOnly: true,
+                showCursor: true,
+                onTap: () {
+                  FocusScope.of(context).unfocus();
+                  setState(() {
+                    _activeNumericCtrl = widget.balCtrl;
+                    _showKeypad = true;
+                  });
+                },
                 decoration: InputDecoration(
-                    labelText: 'Amount Used', prefixText: '$sym '),
+                  labelText: l10n.onboarding_amountUsed,
+                  prefixText: '$sym ',
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      showPad && _activeNumericCtrl == widget.balCtrl
+                          ? Icons.keyboard_hide_outlined
+                          : Icons.dialpad_outlined,
+                      size: 20,
+                      color: cs.primary,
+                    ),
+                    onPressed: () {
+                      AppHaptics.tap(context, HapticStrength.light);
+                      FocusScope.of(context).unfocus();
+                      setState(() {
+                        if (_showKeypad && _activeNumericCtrl == widget.balCtrl) {
+                          _showKeypad = false;
+                        } else {
+                          _activeNumericCtrl = widget.balCtrl;
+                          _showKeypad = true;
+                        }
+                      });
+                    },
+                  ),
+                ),
               ),
             ),
           ],
@@ -1032,7 +1224,7 @@ class _PageFour extends StatelessWidget {
             child: Row(
                 children: _kColors
                     .map((col) => GestureDetector(
-                          onTap: () => onColor(col),
+                          onTap: () => widget.onColor(col),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 60),
                             width: 34,
@@ -1042,11 +1234,11 @@ class _PageFour extends StatelessWidget {
                               color: Color(col),
                               shape: BoxShape.circle,
                               border: Border.all(
-                                  color: color == col
+                                  color: widget.color == col
                                       ? cs.onSurface
                                       : Colors.transparent,
                                   width: 3),
-                              boxShadow: color == col
+                              boxShadow: widget.color == col
                                   ? [
                                       BoxShadow(
                                           color:
@@ -1061,6 +1253,14 @@ class _PageFour extends StatelessWidget {
                     .toList()),
           ),
         ),
+        if (showPad && _activeNumericCtrl != null) ...[
+          const SizedBox(height: 12),
+          AppNumericKeypad(
+            controller: _activeNumericCtrl!,
+            compact: true,
+            onDone: () => setState(() => _showKeypad = false),
+          ),
+        ],
         const SizedBox(height: 20),
       ]),
     );

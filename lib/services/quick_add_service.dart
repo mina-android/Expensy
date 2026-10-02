@@ -16,6 +16,10 @@ class QuickAddService {
   static final QuickAddService instance = QuickAddService._();
 
   static const String routeQuickAdd = 'quick_add_transaction';
+  static const String routeExpense = 'expense';
+  static const String routeIncome = 'income';
+  static const String routeTransfer = 'transfer';
+  static const String routePresets = 'presets';
 
   static const MethodChannel _methodChannel =
       MethodChannel('com.ma.expensy/quick_add');
