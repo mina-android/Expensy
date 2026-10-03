@@ -347,9 +347,9 @@ The app uses a 6-tab persistent bottom navigation bar inside `MainShell` wrapped
 
 ```mermaid
 flowchart LR
-    Root[App Startup] --> OnboardingCheck{settings.onboarded?}
-    OnboardingCheck -->|No| Onboarding[OnboardingScreen (6 Pages)]
-    Onboarding -->|Finish| Shell[MainShell (Floating Nav)]
+    Root["App Startup"] --> OnboardingCheck{"settings.onboarded?"}
+    OnboardingCheck -->|No| Onboarding["OnboardingScreen (6 Pages)"]
+    Onboarding -->|Finish| Shell["MainShell (Floating Nav)"]
     OnboardingCheck -->|Yes| Shell
 
     subgraph ShellTabs ["Persistent Floating Navigation Tabs"]
