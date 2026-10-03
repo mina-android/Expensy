@@ -1,0 +1,50 @@
+group 'es.antonborri.home_widget'
+version '1.0-SNAPSHOT'
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.13.1'
+    }
+}
+
+rootProject.allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+apply plugin: 'com.android.library'
+
+android {
+    namespace 'es.antonborri.home_widget'
+    compileSdk 35
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+    defaultConfig {
+        minSdkVersion 23
+    }
+    lintOptions {
+        disable 'InvalidPackage'
+    }
+    compileOptions {
+        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    api "androidx.glance:glance-appwidget:1.2.0"
+    // TypedValueCompat.spToPx, which follows the non-linear font scaling of
+    // Android 14 and newer the way a TextView does.
+    implementation "androidx.core:core:1.13.1"
+    implementation "androidx.work:work-runtime-ktx:2.11.2"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2"
+}

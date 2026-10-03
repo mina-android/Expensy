@@ -48,20 +48,28 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     }
   }
 
-  void _clearSelection() {
-    if (_selectedIds.isNotEmpty) {
-      setState(() => _selectedIds.clear());
-      context.read<AppProvider>().setTransactionSelectionMode(false);
+  // Memoization cache for filtered items
+  List<_TxItem>? _cachedItems;
+  Object? _lastFilterSignature;
+
+  List<_TxItem> _getFilteredItems(AppProvider app) {
+    final currentSignature = (
+      _search,
+      _filter,
+      _accFilter,
+      _minAmount,
+      _maxAmount,
+      _advCategoryFilter,
+      app.transactions,
+      app.lended,
+      app.savingsContributions,
+      app.loanPayments,
+    );
+
+    if (_cachedItems != null && _lastFilterSignature == currentSignature) {
+      return _cachedItems!;
     }
-  }
 
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final app = context.watch<AppProvider>();
-    final cs  = Theme.of(context).colorScheme;
-
-    // ── Build item list ─────────────────────────────────────────────────
     final List<_TxItem> allItems = [];
 
     // 1. Add matching regular transactions
@@ -73,7 +81,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         if (_maxAmount != null && t.amount > _maxAmount!) continue;
         if (_advCategoryFilter != null && t.categoryId != _advCategoryFilter) continue;
         if (_search.isNotEmpty) {
-          final q   = _search.toLowerCase();
+          final q = _search.toLowerCase();
           final cat = app.categoryById(t.categoryId)?.name.toLowerCase() ?? '';
           final acc = app.accountById(t.accountId)?.name.toLowerCase() ?? '';
           if (!t.description.toLowerCase().contains(q) &&
@@ -94,9 +102,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         if (_maxAmount != null && l.amount > _maxAmount!) continue;
         if (_advCategoryFilter != null) continue;
         if (_search.isNotEmpty) {
-          final q      = _search.toLowerCase();
+          final q = _search.toLowerCase();
           final person = app.personById(l.personId)?.name.toLowerCase() ?? '';
-          final acc    = l.accountId != null
+          final acc = l.accountId != null
               ? (app.accountById(l.accountId!)?.name.toLowerCase() ?? '')
               : '';
           final typeStr = l.type.toLowerCase();
@@ -114,8 +122,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     // 3. Add savings contributions
     if (_filter == 'all' || _filter == 'expense' || _filter == 'income') {
       for (final c in app.savingsContributions) {
-        if (_filter == 'expense' && c.type != 'contribution') continue; // Contribution = money out of account = expense
-        if (_filter == 'income' && c.type != 'withdrawal') continue; // Withdrawal = money into account = income
+        if (_filter == 'expense' && c.type != 'contribution') continue;
+        if (_filter == 'income' && c.type != 'withdrawal') continue;
         if (_accFilter != null && c.accountId != _accFilter) continue;
         if (_minAmount != null && c.amount < _minAmount!) continue;
         if (_maxAmount != null && c.amount > _maxAmount!) continue;
@@ -151,6 +159,27 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
     // Sort by date descending
     allItems.sort((a, b) => b.date.compareTo(a.date));
+
+    _lastFilterSignature = currentSignature;
+    _cachedItems = allItems;
+    return allItems;
+  }
+
+  void _clearSelection() {
+    if (_selectedIds.isNotEmpty) {
+      setState(() => _selectedIds.clear());
+      context.read<AppProvider>().setTransactionSelectionMode(false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final app = context.watch<AppProvider>();
+    final cs  = Theme.of(context).colorScheme;
+
+    // ── Memoized filtered item list ─────────────────────────────────────
+    final allItems = _getFilteredItems(app);
 
     // Group by date
     final groups = <String, List<_TxItem>>{};

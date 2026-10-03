@@ -19,7 +19,7 @@ class MainShell extends StatefulWidget {
   State<MainShell> createState() => _MainShellState();
 }
 
-class _MainShellState extends State<MainShell> {
+class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   int _index = 0;
 
   static const _screens = [
@@ -30,6 +30,29 @@ class _MainShellState extends State<MainShell> {
     BudgetScreen(),
     MoreScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final app = context.read<AppProvider>();
+    if (state == AppLifecycleState.resumed) {
+      app.startAutoPayTimer();
+      app.checkAndProcessAutoPay();
+    } else if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
+      app.pauseAutoPayTimer();
+    }
+  }
 
   @override
   void didChangeDependencies() {

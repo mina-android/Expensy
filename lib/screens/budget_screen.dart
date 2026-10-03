@@ -367,7 +367,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 84, right: 4),
+        padding: const EdgeInsets.only(bottom: 75, right: 4),
         child: ExpandableFab(
           label: l10n.home_add,
           color: tabRose,

@@ -6,7 +6,7 @@
 
 <h3>A finance tracker that stays on your phone, not in the cloud</h3>
 
-[![Platform](https://img.shields.io/badge/Platform-Android-3DDC84?logo=android&logoColor=white)](https://android.com) [![Version](https://img.shields.io/badge/Version-1.2.0-brightgreen)](https://github.com/mina-android/Expensy/releases) [![License](https://img.shields.io/badge/License-GPL--3.0-blue)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platform-Android-3DDC84?logo=android&logoColor=white)](https://android.com) [![Version](https://img.shields.io/badge/Version-1.2.1-brightgreen)](https://github.com/mina-android/Expensy/releases) [![License](https://img.shields.io/badge/License-GPL--3.0-blue)](LICENSE)
 
 Expensy is a simple app that helps anyone manage their money, track debts, and plan ahead with complete peace of mind.  
 It works completely offline, with no sign-ups or ads, and your financial data never leaves your phone.
@@ -111,9 +111,11 @@ Not right now. Expensy is tailored specifically for Android with native Material
 <details>
 <summary><strong>What it's built with</strong></summary>
 
-- **Flutter & Dart**: Cross-platform UI toolkit targeting Android (minSdk 21 / Android 5.0+).
+- **Flutter & Dart**: Flutter 3.47+ / Dart 3.13+ targeting Android (minSdk 21 / Android 5.0+, compileSdk 36).
+- **Toolchain**: Gradle 9.3.1, AGP 9.1.0, Kotlin 2.4.0 with AGP 9.0+ Built-in Kotlin enabled.
 - **Drift & SQLite**: Compile-time type-safe persistence executing in a dedicated background isolate via Dart FFI.
 - **Provider**: Streamlined and responsive app-wide state management.
+- **System Architecture**: Complete database ERD diagrams, lifecycle sequence charts, and data flow pipelines are documented in [`STRUCTURE.md`](STRUCTURE.md).
 - **Key Packages**: `fl_chart` (financial visualizations), `pdf` & `printing` (offline vector reports), `excel` (spreadsheets), `home_widget` (interactive Android widgets), and `flutter_local_notifications` (offline bill & budget alerts).
 
 </details>
@@ -121,7 +123,7 @@ Not right now. Expensy is tailored specifically for Android with native Material
 <details>
 <summary><strong>Run it yourself</strong></summary>
 
-You'll need Flutter 3.3+ and Android Studio with Java JDK 11+. Then:
+You'll need Flutter 3.47+ and Java JDK 21 LTS (or Android Studio with JDK 21). Then:
 
 ```bash
 git clone https://github.com/mina-android/Expensy.git
@@ -130,7 +132,15 @@ flutter pub get
 flutter run
 ```
 
-To build release APKs: `flutter build apk --split-per-abi --release`
+To build release split-per-ABI APKs:
+```bash
+flutter build apk --split-per-abi
+```
+To run tests and code analyzer:
+```bash
+flutter test
+flutter analyze
+```
 
 </details>
 

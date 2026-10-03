@@ -235,9 +235,10 @@ class _EditPersonInlineSheetState extends State<_EditPersonInlineSheet> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
     return Padding(
-      padding: const EdgeInsets.only(
-          bottom: 16,
+      padding: EdgeInsets.only(
+          bottom: bottomInset + 16,
           left: 20,
           right: 20,
           top: 20),
@@ -627,10 +628,11 @@ class _EntrySheetState extends State<_EntrySheet> {
     final app = context.watch<AppProvider>();
     final cs = Theme.of(context).colorScheme;
     final sym = currencyInfo(app.settings.currency).symbol;
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
 
     return Padding(
-      padding: const EdgeInsets.only(
-          bottom: 16,
+      padding: EdgeInsets.only(
+          bottom: bottomInset + 16,
           left: 20,
           right: 20,
           top: 20),

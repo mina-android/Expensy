@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:expensy/providers/app_provider.dart';
+import 'package:expensy/models/models.dart';
 import 'package:expensy/screens/onboarding_screen.dart';
 import 'package:expensy/l10n/app_localizations.dart';
 
@@ -143,5 +144,42 @@ void main() {
     // Starting Balance should still be visible for Cash
     expect(find.text('Starting Balance'), findsOneWidget);
     expect(find.text('Exclude from Total Balance'), findsOneWidget);
+  });
+
+  test('AppProvider nonBankAccounts includes bank accounts when dontLinkToCard is true', () {
+    final provider = AppProvider();
+    final linkedBank = Account(
+      id: 'acc_linked_bank',
+      name: 'Linked Bank',
+      type: 'bank',
+      balance: 1000,
+      colorValue: 0xFF1972E8,
+      currency: 'USD',
+      dontLinkToCard: false,
+    );
+    final standaloneBank = Account(
+      id: 'acc_standalone_bank',
+      name: 'Standalone Bank',
+      type: 'bank',
+      balance: 2000,
+      colorValue: 0xFF1972E8,
+      currency: 'USD',
+      dontLinkToCard: true,
+    );
+    final cash = Account(
+      id: 'acc_cash',
+      name: 'Cash',
+      type: 'cash',
+      balance: 500,
+      colorValue: 0xFF2E7D32,
+      currency: 'USD',
+    );
+
+    provider.accounts = [linkedBank, standaloneBank, cash];
+
+    final transactable = provider.nonBankAccounts;
+    expect(transactable.contains(linkedBank), isFalse);
+    expect(transactable.contains(standaloneBank), isTrue);
+    expect(transactable.contains(cash), isTrue);
   });
 }

@@ -23,3 +23,9 @@
 # home_widget rules
 -keep class es.antonborri.home_widget.** { *; }
 -dontwarn es.antonborri.home_widget.**
+
+# Drift & sqlite3_flutter_libs native FFI rules
+-keep class com.simonbinder.sqlite3_flutter_libs.** { *; }
+-dontwarn com.simonbinder.sqlite3_flutter_libs.**
+-keep class net.sqlcipher.** { *; }
+-dontwarn net.sqlcipher.**

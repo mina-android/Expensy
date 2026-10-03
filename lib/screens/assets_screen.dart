@@ -284,24 +284,21 @@ class _AssetSheetState extends State<_AssetSheet> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final sym = currencyInfo(_currency).symbol;
-    final kbOpen = MediaQuery.of(context).viewInsets.bottom > 100;
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    final kbOpen = bottomInset > 100;
     final showPad = _showKeypad && !kbOpen;
 
     return Padding(
       padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+          bottom: bottomInset + 16,
           left: 20,
           right: 20,
           top: 20),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.85,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Text(isEdit ? l10n.assets_editAsset : l10n.assets_addAsset,
                 style: Theme.of(context).textTheme.titleLarge
                     ?.copyWith(fontWeight: FontWeight.w800)),
@@ -432,7 +429,6 @@ class _AssetSheetState extends State<_AssetSheet> {
             ],
           ),
         ),
-      ),
     );
   }
 }

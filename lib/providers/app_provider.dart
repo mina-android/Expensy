@@ -230,15 +230,26 @@ class AppProvider extends ChangeNotifier {
     await checkAndProcessAutoPay();
     await updateHomeWidgets();
 
+    startAutoPayTimer();
+  }
+
+  /// Starts or resumes the periodic 1-minute auto-pay evaluation timer.
+  void startAutoPayTimer() {
     _autoPayTimer?.cancel();
     _autoPayTimer = Timer.periodic(const Duration(minutes: 1), (_) {
       checkAndProcessAutoPay();
     });
   }
 
+  /// Pauses the auto-pay timer while the application is in the background or paused to save battery.
+  void pauseAutoPayTimer() {
+    _autoPayTimer?.cancel();
+    _autoPayTimer = null;
+  }
+
   @override
   void dispose() {
-    _autoPayTimer?.cancel();
+    pauseAutoPayTimer();
     super.dispose();
   }
 
@@ -346,10 +357,9 @@ class AppProvider extends ChangeNotifier {
         await _refreshGoldBalances();
       }
 
-      // 2. If cache is stale (or empty), fetch fresh in the background and
-      //    update the provider when done — this is what was missing before.
-      final isStale = !(await _erService.isFresh());
-      if (isStale) {
+      // 2. If cache is stale (or empty) and cooldown elapsed, fetch fresh in the background.
+      final shouldFetch = await _erService.shouldAttemptFetch();
+      if (shouldFetch) {
         // Re-set fetching flag so UI shows spinner during background fetch.
         ratesFetching = true;
         notifyListeners();
@@ -2569,7 +2579,8 @@ class AppProvider extends ChangeNotifier {
   }
   final ValueNotifier<int> tabIndexNotifier = ValueNotifier<int>(0);
 
-  List<Account> get nonBankAccounts => accounts.where((a) => a.type != 'bank').toList();
+  List<Account> get nonBankAccounts =>
+      accounts.where((a) => a.type != 'bank' || a.dontLinkToCard).toList();
 
   void reorderCategories(int oldIndex, int newIndex, String type) {
     if (oldIndex < newIndex) newIndex -= 1;
@@ -2640,37 +2651,28 @@ class AppProvider extends ChangeNotifier {
     final person = lendedPeople.firstWhere((p) => p.id == id);
     final personLended = lended.where((l) => l.personId == id).toList();
     
-    await DBHelper.deleteLendedPerson(id);
-    for (final l in personLended) {
-      await DBHelper.deleteLended(l.id);
-    }
-    await load();
+    await deleteLendedPerson(id);
     return () async {
-      await DBHelper.insertLendedPerson(person);
+      await addLendedPerson(person);
       for (final l in personLended) {
-        await DBHelper.insertLended(l);
+        await addLended(l);
       }
-      await load();
     };
   }
 
   Future<VoidCallback> deleteRecurringWithUndo(String id) async {
     final rec = recurring.firstWhere((r) => r.id == id);
-    await DBHelper.deleteRecurring(id);
-    await load();
+    await deleteRecurring(id);
     return () async {
-      await DBHelper.insertRecurring(rec);
-      await load();
+      await addRecurring(rec);
     };
   }
 
   Future<VoidCallback> deleteWishlistWithUndo(String id) async {
     final item = wishlist.firstWhere((w) => w.id == id);
-    await DBHelper.deleteWishlist(id);
-    await load();
+    await deleteWishlist(id);
     return () async {
-      await DBHelper.insertWishlist(item);
-      await load();
+      await addWishlist(item);
     };
   }
 

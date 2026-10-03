@@ -1,6 +1,48 @@
 # Changelog
 
-## [1.2.0] - 2026-09-25
+## [1.2.1] - 2026-10-03
+
+### Performance, Battery & Code Cleanups
+- **Dead Code & Legacy Database Boilerplate Removal**:
+  - Pruned ~700 lines of obsolete `sqflite` raw SQL database opening and migration logic from [`DBHelper`](lib/database/db_helper.dart), solidifying it as a lightweight static facade delegating exclusively to Drift's isolate-backed [`AppDatabase.instance`](lib/database/app_database.dart).
+  - Streamlined undo handlers in [`AppProvider`](lib/providers/app_provider.dart) (`deleteLendedPersonWithUndo`, `deleteRecurringWithUndo`, `deleteWishlistWithUndo`) to perform targeted in-memory updates and precise mutations rather than redundant full database reload sweeps (`await load()`).
+- **Battery & Background Execution Optimizations**:
+  - Added lifecycle-aware timer pausing via `WidgetsBindingObserver` in [`MainShell`](lib/screens/main_shell.dart). When the app is in `paused` or `detached` states (in the background or screen off), [`AppProvider._autoPayTimer`](lib/providers/app_provider.dart) is cancelled. Upon returning to the foreground (`resumed`), auto-pay checks execute immediately and the timer resumes, preventing CPU wakeups while the app is idle.
+  - Implemented request attempt tracking and retry throttling cooldown in [`ExchangeRateService`](lib/services/exchange_rate_service.dart). Stale cache refreshes now enforce a minimum 15-minute retry interval on connection errors, conserving network radio power and battery on unstable connections.
+- **Rendering & Screen Performance Optimizations**:
+  - Implemented memoized filtering cache (`_getFilteredItems`) in [`TransactionsScreen`](lib/screens/transactions_screen.dart). Prevents running multi-table sequential filter passes over thousands of transactions, lended items, savings contributions, and loan payments on ephemeral widget rebuilds.
+- **Architecture & System Documentation**:
+  - Added [`STRUCTURE.md`](STRUCTURE.md) containing comprehensive database ERD diagrams (Drift schema v25), high-level system layers, cold/warm start sequences, complete application navigation flows, core business mutation pipelines, and resource management strategies.
+  - Established a mandatory project rule across [`AI_INSTRUCTIONS.md`](AI_INSTRUCTIONS.md) and [`CLAUDE.md`](CLAUDE.md) requiring automatic updates to all 5 core documentation files (`README.md`, `CHANGELOG.md`, `CLAUDE.md`, `AI_INSTRUCTIONS.md`, and `STRUCTURE.md`) after every message execution / code update.
+
+- **Unlinked Bank Account Selection in Transactions & Transfers**:
+  - Fixed an issue in [`AccountCardPicker`](lib/widgets/shared_widgets.dart) where bank accounts with "Don't link to card" (`dontLinkToCard: true`) were excluded due to an unconditional `a.type != 'bank'` filter. Updated the filter to `a.type != 'bank' || a.dontLinkToCard`, enabling unlinked bank accounts to appear in account selectors across Add Transaction (`AddTransactionScreen`), Transfers (`TransferScreen`), Recurring Payments (`RecurringScreen`), Presets (`PresetSheet`), and Loans (`LoansScreen`, `LoanDetailScreen`).
+- **Floating Action Button (FAB) Navigation Bar Clearance & Spacing**:
+  - Increased the gap between the Add (`+`) Expandable FAB and the floating navigation bar by 3 pixels (offset increased from `bottom: 72` to `bottom: 75`, with `right: 4`) across the Home (`HomeScreen`), Recurring (`RecurringScreen`), Budget (`BudgetScreen`), and Accounts (`AccountsScreen`) screens for improved visual clearance.
+- **Keyboard Avoidance in Modal Bottom Sheets (Wishlist, Lent Money, Assets)**:
+  - Fixed soft keyboard occlusion in the Wishlist item sheet (`_WishSheet` in `lib/screens/wishlist_screen.dart`), Lent Money Person sheets (`_PersonSheet` in `lib/screens/lended_screen.dart` and `_EditPersonInlineSheet` in `lib/screens/lended_person_screen.dart`), and Lended entry sheet (`_EntrySheet` in `lib/screens/lended_person_screen.dart`) by replacing static bottom padding with dynamic keyboard insets (`MediaQuery.viewInsetsOf(context).bottom + 16`).
+  - Fixed Assets bottom sheet (`_AssetSheet` in `lib/screens/assets_screen.dart`) by removing the conflicting static `ConstrainedBox(maxHeight: size.height * 0.85)` constraint that previously forced the sheet title and name fields off-screen when the keyboard expanded. The sheet now lifts smoothly above the keyboard and scrolls comfortably.
+- **Git Ignore Rules**:
+  - Added `.metadata`, `artifacts/`, `analysis_options.yaml`, `devtools_options.yaml`, and `untranslated.json` to `.gitignore`, keeping development and local analysis metadata untracked.
+- **Home Screen FAB Accent Color**:
+  - Matched the Home screen Expandable FAB color to the Home navbar tab color (`tabBlue`: `#1972E8` light mode, `#64B5F6` dark mode), creating visual parity with the Recurring (`tabPurple`), Accounts (`tabOrange`), and Budgets tabs.
+
+### Changed & Updated
+- **Flutter, Gradle, AGP & Kotlin Toolchain Modernization**:
+  - Upgraded Flutter SDK to `3.47.6` (Dart `3.13.5`).
+  - Upgraded Gradle distribution wrapper to `9.3.1` (from `8.11.1`).
+  - Upgraded Android Gradle Plugin (AGP) to `9.1.0` (from `8.9.1`).
+  - Upgraded Kotlin Gradle Plugin (KGP) to `2.4.0` (from `2.1.0`).
+  - Configured Gradle daemon to use JDK 21 LTS (`jdk-21.0.12`).
+  - Migrated app to AGP 9.0+ **Built-in Kotlin**: removed legacy `kotlin-android` plugin and deprecated `kotlinOptions` block from `app/build.gradle`, and enabled `android.builtInKotlin=true` in `gradle.properties`.
+  - Resolved AGP 9 deprecation warnings for `app`, `dynamic_color`, and `home_widget` (migrated `home_widget` to Built-in Kotlin build script via local override in `plugins/home_widget`).
+  - Removed deprecated `synthetic-package: false` from `l10n.yaml`.
+  - Upgraded Android `desugar_jdk_libs` to `2.1.5` in `android/app/build.gradle` for optimized Java 8+ API desugaring on Android 5.0–7.1.
+  - Added native R8/Proguard rules in `android/app/proguard-rules.pro` for `drift` and `sqlite3_flutter_libs` to safeguard native FFI reflection in minified release builds.
+  - Disabled legacy Jetifier (`android.enableJetifier=false` in `android/gradle.properties`), reducing Android Gradle build and compilation times.
+  - Hardened `google_fonts` (`>=8.2.1 <9.0.0`) and `dynamic_color` (`>=1.9.0 <2.0.0`) version ranges to prevent type collisions with experimental `material_ui` decoupled packages while allowing non-breaking patches.
+  - Maintained 100% build health with zero analyzer issues, all 79 tests passing, and verified debug, release, and split-per-ABI APK compilation (`app-arm64-v8a-release.apk`, `app-armeabi-v7a-release.apk`, `app-x86_64-release.apk`).
+
 ### Added
 - **Auto Pay on Due Date for Recurring Payments & Incomes**:
   - Added `autoPayEnabled` and configurable `autoPayTime` (defaults to 09:00) to `RecurringPayment` model, SQLite schema v25, and Drift tables.

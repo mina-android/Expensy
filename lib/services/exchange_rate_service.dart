@@ -21,7 +21,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ExchangeRateService {
   static const _ratesKey = 'er_rates';
   static const _fetchedKey = 'er_fetched_at';
+  static const _attemptedKey = 'er_attempted_at';
   static const _staleAfter = Duration(hours: 24);
+  static const _minRetryInterval = Duration(minutes: 15);
   static const _apiUrl = 'https://open.er-api.com/v6/latest/USD';
 
   /// Free currency API by fawazahmed0 — includes metals (XAU, XAG…).
@@ -91,10 +93,23 @@ class ExchangeRateService {
     return amount / fromRate * toRate;
   }
 
+  /// Returns true if either the cache is stale and sufficient cooldown has elapsed since the last attempt.
+  Future<bool> shouldAttemptFetch() async {
+    if (await isFresh()) return false;
+    final prefs = await SharedPreferences.getInstance();
+    final lastAttempt = prefs.getString(_attemptedKey);
+    if (lastAttempt == null) return true;
+    final parsed = DateTime.tryParse(lastAttempt);
+    if (parsed == null) return true;
+    return DateTime.now().difference(parsed) >= _minRetryInterval;
+  }
+
   // ── Internals ───────────────────────────────────────────────────────────
 
   /// Fetches main currency rates then injects XAU if not already present.
   Future<Map<String, double>?> _fetchAndCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_attemptedKey, DateTime.now().toIso8601String());
     try {
       final resp = await http
           .get(Uri.parse(_apiUrl))
@@ -116,7 +131,6 @@ class ExchangeRateService {
         if (xauRate != null) rates['XAU'] = xauRate;
       }
 
-      final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_ratesKey, jsonEncode(rates));
       await prefs.setString(_fetchedKey, DateTime.now().toIso8601String());
       return rates;

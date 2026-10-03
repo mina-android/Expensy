@@ -691,9 +691,10 @@ class _WishSheetState extends State<_WishSheet> {
     final app = context.watch<AppProvider>();
     final l10n = AppLocalizations.of(context)!;
     final sym = currencyInfo(app.settings.currency).symbol;
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
     return Padding(
-      padding: const EdgeInsets.only(
-          bottom: 16,
+      padding: EdgeInsets.only(
+          bottom: bottomInset + 16,
           left: 20,
           right: 20,
           top: 20),

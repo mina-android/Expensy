@@ -277,7 +277,7 @@ class AccountCardPicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final filtered = accounts.where((a) => a.type != 'bank').toList();
+    final filtered = accounts.where((a) => a.type != 'bank' || a.dontLinkToCard).toList();
     final items = allowNone
         ? [null, ...filtered.map((a) => a as Account?)]
         : filtered.map((a) => a as Account?).toList();
