@@ -59,6 +59,10 @@ class Account {
 
   /// True when this account tracks a physical gold holding.
   bool get isGold => type == 'gold';
+  bool get isDebit => type == 'debit';
+  bool get isCredit => type == 'credit';
+  bool get isPrepaid => type == 'prepaid';
+  bool get isCard => isDebit || isCredit || isPrepaid;
 
   Map<String, dynamic> toMap() => {
         'id': id,
@@ -248,6 +252,7 @@ class AppTransaction {
 
   /// Currency the amount was entered in. Empty string = same as account currency.
   String currency;
+  final String? transferGroupId;
 
   AppTransaction({
     required this.id,
@@ -259,6 +264,7 @@ class AppTransaction {
     required this.date,
     this.note = '',
     this.currency = '',
+    this.transferGroupId,
   });
 
   Map<String, dynamic> toMap() => {
@@ -271,6 +277,7 @@ class AppTransaction {
         'date': date.toIso8601String(),
         'note': note,
         'currency': currency,
+        'transfer_group_id': transferGroupId,
       };
 
   static AppTransaction fromMap(Map<String, dynamic> m) => AppTransaction(
@@ -285,9 +292,11 @@ class AppTransaction {
             : DateTime.now(),
         note: (m['note'] as String?) ?? '',
         currency: (m['currency'] as String?) ?? '',
+        transferGroupId: m['transfer_group_id'] as String?,
       );
 
   AppTransaction copyWith({
+    String? id,
     String? type,
     double? amount,
     String? description,
@@ -296,9 +305,10 @@ class AppTransaction {
     DateTime? date,
     String? note,
     String? currency,
+    String? transferGroupId,
   }) =>
       AppTransaction(
-        id: id,
+        id: id ?? this.id,
         type: type ?? this.type,
         amount: amount ?? this.amount,
         description: description ?? this.description,
@@ -307,6 +317,7 @@ class AppTransaction {
         date: date ?? this.date,
         note: note ?? this.note,
         currency: currency ?? this.currency,
+        transferGroupId: transferGroupId ?? this.transferGroupId,
       );
 }
 
@@ -1449,6 +1460,232 @@ class ExpensyWrappedData {
     required this.zeroSpendDays,
     required this.totalDaysInMonth,
   });
+}
+
+class Certificate {
+  final String id;
+  String name;
+  double amount;
+  String currency;
+  DateTime startDate;
+  DateTime endDate;
+  double interestRate;
+  String collectionType; // daily | monthly | yearly
+  int collectionDay;
+  double? customPayoutAmount;
+  String accountId;
+  bool reminderEnabled;
+  String reminderTime;
+  bool reminderEarlyEnabled;
+  String notes;
+  bool isSettled;
+  DateTime createdAt;
+  DateTime? lastCollectedDate;
+  double totalCollectedAmount;
+
+  Certificate({
+    required this.id,
+    required this.name,
+    required this.amount,
+    this.currency = 'EGP',
+    required this.startDate,
+    required this.endDate,
+    required this.interestRate,
+    this.collectionType = 'monthly',
+    this.collectionDay = 1,
+    this.customPayoutAmount,
+    required this.accountId,
+    this.reminderEnabled = false,
+    this.reminderTime = '09:00',
+    this.reminderEarlyEnabled = false,
+    this.notes = '',
+    this.isSettled = false,
+    DateTime? createdAt,
+    this.lastCollectedDate,
+    this.totalCollectedAmount = 0.0,
+  }) : createdAt = createdAt ?? DateTime.now();
+
+  double get periodicPayout {
+    if (customPayoutAmount != null && customPayoutAmount! > 0) {
+      return customPayoutAmount!;
+    }
+    final annualYield = amount * (interestRate / 100.0);
+    switch (collectionType) {
+      case 'daily':
+        return annualYield / 365.0;
+      case 'yearly':
+        return annualYield;
+      case 'monthly':
+      default:
+        return annualYield / 12.0;
+    }
+  }
+
+  int get totalDays => endDate.difference(startDate).inDays.clamp(1, 36500);
+
+  double get totalExpectedReturn {
+    final annualYield = amount * (interestRate / 100.0);
+    final days = endDate.difference(startDate).inDays;
+    if (days <= 0) return 0.0;
+    return (annualYield / 365.0) * days;
+  }
+
+  double get progress {
+    final now = DateTime.now();
+    if (now.isBefore(startDate)) return 0.0;
+    if (now.isAfter(endDate)) return 1.0;
+    final totalMs = endDate.difference(startDate).inMilliseconds;
+    if (totalMs <= 0) return 1.0;
+    final elapsedMs = now.difference(startDate).inMilliseconds;
+    return (elapsedMs / totalMs).clamp(0.0, 1.0);
+  }
+
+  bool get isMatured => DateTime.now().isAfter(endDate);
+
+  DateTime? get nextCollectionDate {
+    if (isSettled || isMatured) return null;
+    final now = DateTime.now();
+    final anchor = lastCollectedDate ?? startDate;
+
+    DateTime candidate;
+    switch (collectionType) {
+      case 'daily':
+        candidate = anchor.add(const Duration(days: 1));
+        if (candidate.isBefore(now)) {
+          candidate = DateTime(now.year, now.month, now.day);
+        }
+        break;
+      case 'yearly':
+        candidate =
+            DateTime(anchor.year + 1, anchor.month, collectionDay.clamp(1, 28));
+        while (candidate.isBefore(now)) {
+          candidate =
+              DateTime(candidate.year + 1, candidate.month, candidate.day);
+        }
+        break;
+      case 'monthly':
+      default:
+        int year = anchor.year;
+        int month = anchor.month + 1;
+        if (month > 12) {
+          year++;
+          month = 1;
+        }
+        final maxDays = DateTime(year, month + 1, 0).day;
+        final day = collectionDay.clamp(1, maxDays);
+        candidate = DateTime(year, month, day);
+        while (candidate.isBefore(now)) {
+          month++;
+          if (month > 12) {
+            year++;
+            month = 1;
+          }
+          final mDays = DateTime(year, month + 1, 0).day;
+          candidate = DateTime(year, month, collectionDay.clamp(1, mDays));
+        }
+        break;
+    }
+
+    if (candidate.isAfter(endDate)) return endDate;
+    return candidate;
+  }
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'name': name,
+        'amount': amount,
+        'currency': currency,
+        'start_date': startDate.toIso8601String(),
+        'end_date': endDate.toIso8601String(),
+        'interest_rate': interestRate,
+        'collection_type': collectionType,
+        'collection_day': collectionDay,
+        'custom_payout_amount': customPayoutAmount,
+        'account_id': accountId,
+        'reminder_enabled': reminderEnabled ? 1 : 0,
+        'reminder_time': reminderTime,
+        'reminder_early_enabled': reminderEarlyEnabled ? 1 : 0,
+        'notes': notes,
+        'is_settled': isSettled ? 1 : 0,
+        'created_at': createdAt.toIso8601String(),
+        'last_collected_date': lastCollectedDate?.toIso8601String(),
+        'total_collected_amount': totalCollectedAmount,
+      };
+
+  static Certificate fromMap(Map<String, dynamic> m) => Certificate(
+        id: (m['id'] as String?) ?? '',
+        name: (m['name'] as String?) ?? '',
+        amount: (m['amount'] as num?)?.toDouble() ?? 0.0,
+        currency: (m['currency'] as String?) ?? 'EGP',
+        startDate: m['start_date'] != null
+            ? DateTime.parse(m['start_date'] as String)
+            : DateTime.now(),
+        endDate: m['end_date'] != null
+            ? DateTime.parse(m['end_date'] as String)
+            : DateTime.now().add(const Duration(days: 365)),
+        interestRate: (m['interest_rate'] as num?)?.toDouble() ?? 0.0,
+        collectionType: (m['collection_type'] as String?) ?? 'monthly',
+        collectionDay: (m['collection_day'] as int?) ?? 1,
+        customPayoutAmount: (m['custom_payout_amount'] as num?)?.toDouble(),
+        accountId: (m['account_id'] as String?) ?? '',
+        reminderEnabled: (m['reminder_enabled'] as int? ?? 0) == 1,
+        reminderTime: (m['reminder_time'] as String?) ?? '09:00',
+        reminderEarlyEnabled: (m['reminder_early_enabled'] as int? ?? 0) == 1,
+        notes: (m['notes'] as String?) ?? '',
+        isSettled: (m['is_settled'] as int? ?? 0) == 1,
+        createdAt: m['created_at'] != null
+            ? DateTime.parse(m['created_at'] as String)
+            : DateTime.now(),
+        lastCollectedDate: m['last_collected_date'] != null
+            ? DateTime.parse(m['last_collected_date'] as String)
+            : null,
+        totalCollectedAmount:
+            (m['total_collected_amount'] as num?)?.toDouble() ?? 0.0,
+      );
+
+  Certificate copyWith({
+    String? name,
+    double? amount,
+    String? currency,
+    DateTime? startDate,
+    DateTime? endDate,
+    double? interestRate,
+    String? collectionType,
+    int? collectionDay,
+    double? customPayoutAmount,
+    String? accountId,
+    bool? reminderEnabled,
+    String? reminderTime,
+    bool? reminderEarlyEnabled,
+    String? notes,
+    bool? isSettled,
+    DateTime? lastCollectedDate,
+    double? totalCollectedAmount,
+    bool clearCustomPayout = false,
+  }) =>
+      Certificate(
+        id: id,
+        name: name ?? this.name,
+        amount: amount ?? this.amount,
+        currency: currency ?? this.currency,
+        startDate: startDate ?? this.startDate,
+        endDate: endDate ?? this.endDate,
+        interestRate: interestRate ?? this.interestRate,
+        collectionType: collectionType ?? this.collectionType,
+        collectionDay: collectionDay ?? this.collectionDay,
+        customPayoutAmount: clearCustomPayout
+            ? null
+            : (customPayoutAmount ?? this.customPayoutAmount),
+        accountId: accountId ?? this.accountId,
+        reminderEnabled: reminderEnabled ?? this.reminderEnabled,
+        reminderTime: reminderTime ?? this.reminderTime,
+        reminderEarlyEnabled: reminderEarlyEnabled ?? this.reminderEarlyEnabled,
+        notes: notes ?? this.notes,
+        isSettled: isSettled ?? this.isSettled,
+        createdAt: createdAt,
+        lastCollectedDate: lastCollectedDate ?? this.lastCollectedDate,
+        totalCollectedAmount: totalCollectedAmount ?? this.totalCollectedAmount,
+      );
 }
 
 

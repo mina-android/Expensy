@@ -95,6 +95,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final currency = app.settings.currency;
     final userName = app.settings.userName;
     final totalBalance = app.totalBalance;
+    final homeAccounts = app.accounts.where((a) => !a.isCard).toList();
+    final homeCards = app.accounts.where((a) => a.isCard).toList();
 
     String fmt(double v) => formatAmount(v, currency);
 
@@ -539,7 +541,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
 
           // ── Accounts Section (Realistic Cards) ───────────────────────
-          if (app.accounts.isNotEmpty) ...[
+          if (homeAccounts.isNotEmpty) ...[
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
@@ -556,7 +558,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     GestureDetector(
                       onTap: () {
                         AppHaptics.tap(context, HapticStrength.light);
-                        app.tabIndexNotifier.value = 3; // Accounts tab
+                        app.accountsTabNotifier.value = 0; // Accounts tab
+                        app.tabIndexNotifier.value = 3;
                       },
                       child: Text(
                         '${l10n.home_manage} →',
@@ -584,28 +587,34 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: child,
                     );
                   },
-                  itemCount: app.accounts.length + 1,
+                  itemCount: homeAccounts.length + 1,
                   onReorderStart: (_) =>
                       AppHaptics.tap(context, HapticStrength.heavy),
                   onReorderItem: (oldIdx, newIdx) {
-                    if (oldIdx < app.accounts.length &&
-                        newIdx <= app.accounts.length) {
+                    if (oldIdx < homeAccounts.length &&
+                        newIdx <= homeAccounts.length) {
                       AppHaptics.tap(context, HapticStrength.light);
-                      app.reorderAccounts(
-                          oldIdx,
-                          newIdx > app.accounts.length
-                              ? app.accounts.length - 1
-                              : newIdx);
+                      final oldAcc = homeAccounts[oldIdx];
+                      final oldAppIdx = app.accounts.indexOf(oldAcc);
+                      final targetAcc = newIdx < homeAccounts.length
+                          ? homeAccounts[newIdx]
+                          : null;
+                      final newAppIdx = targetAcc != null
+                          ? app.accounts.indexOf(targetAcc)
+                          : app.accounts.length;
+                      if (oldAppIdx != -1) {
+                        app.reorderAccounts(oldAppIdx, newAppIdx);
+                      }
                     }
                   },
                   itemBuilder: (_, i) {
-                    if (i == app.accounts.length) {
+                    if (i == homeAccounts.length) {
                       // Add Account Card
                       return GestureDetector(
                         key: const ValueKey('add_account_card'),
                         onTap: () {
                           AppHaptics.tap(context, HapticStrength.light);
-                          AccountsScreen.openSheet(context);
+                          AccountsScreen.openSheet(context, isCard: false);
                         },
                         child: Container(
                           margin: const EdgeInsets.only(right: 10),
@@ -648,9 +657,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       );
                     }
 
-                    final acc = app.accounts[i];
+                    final acc = homeAccounts[i];
                     final color = Color(acc.colorValue);
-                    final isCard = acc.type == 'credit' || acc.type == 'debit';
 
                     return GestureDetector(
                       key: ValueKey(acc.id),
@@ -659,7 +667,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         AccountsScreen.openSheet(
                           context,
                           existing: acc,
-                          isCard: acc.type == 'credit',
+                          isCard: false,
                         );
                       },
                       child: Container(
@@ -711,17 +719,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ),
                                 Icon(
-                                  isCard
-                                      ? Icons.contactless_rounded
-                                      : (acc.isGold
-                                          ? Icons.workspace_premium_rounded
-                                          : Icons.account_balance_rounded),
+                                  acc.isGold
+                                      ? Icons.workspace_premium_rounded
+                                      : Icons.account_balance_rounded,
                                   size: 15,
                                   color: Colors.white.withValues(alpha: 0.8),
                                 ),
                               ],
                             ),
-                            // Middle: Account name & Card number last 4
+                            // Middle: Account name
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -735,19 +741,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
-                                if (isCard &&
-                                    acc.cardNumberLast4 != null &&
-                                    acc.cardNumberLast4!.isNotEmpty)
-                                  Text(
-                                    '•••• ${acc.cardNumberLast4}',
-                                    style: TextStyle(
-                                      color: Colors.white
-                                          .withValues(alpha: 0.7),
-                                      fontSize: 10,
-                                      letterSpacing: 1.0,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
                               ],
                             ),
                             // Bottom: Balance
@@ -786,6 +779,258 @@ class _HomeScreenState extends State<HomeScreen> {
                                     app.canShowConverted(acc))
                                   Text(
                                     '≈ ${formatAmount(app.convertToMain(acc.type == 'bank' ? app.getBankTotalBalance(acc.id) : acc.balance, acc.currency), currency)}',
+                                    style: TextStyle(
+                                      color: Colors.white
+                                          .withValues(alpha: 0.75),
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
+
+          // ── Cards Section (Mini Cards Carousel) ─────────────────────
+          if (homeCards.isNotEmpty) ...[
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      l10n.home_cards,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        AppHaptics.tap(context, HapticStrength.light);
+                        app.accountsTabNotifier.value = 1; // Cards tab
+                        app.tabIndexNotifier.value = 3;
+                      },
+                      child: Text(
+                        '${l10n.home_manage} →',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                          color: cs.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: 116,
+                child: ReorderableListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  proxyDecorator: (child, index, animation) {
+                    return Material(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(18),
+                      child: child,
+                    );
+                  },
+                  itemCount: homeCards.length + 1,
+                  onReorderStart: (_) =>
+                      AppHaptics.tap(context, HapticStrength.heavy),
+                  onReorderItem: (oldIdx, newIdx) {
+                    if (oldIdx < homeCards.length &&
+                        newIdx <= homeCards.length) {
+                      AppHaptics.tap(context, HapticStrength.light);
+                      final oldAcc = homeCards[oldIdx];
+                      final oldAppIdx = app.accounts.indexOf(oldAcc);
+                      final targetAcc = newIdx < homeCards.length
+                          ? homeCards[newIdx]
+                          : null;
+                      final newAppIdx = targetAcc != null
+                          ? app.accounts.indexOf(targetAcc)
+                          : app.accounts.length;
+                      if (oldAppIdx != -1) {
+                        app.reorderAccounts(oldAppIdx, newAppIdx);
+                      }
+                    }
+                  },
+                  itemBuilder: (_, i) {
+                    if (i == homeCards.length) {
+                      // Add Card item
+                      return GestureDetector(
+                        key: const ValueKey('add_card_carousel_item'),
+                        onTap: () {
+                          AppHaptics.tap(context, HapticStrength.light);
+                          AccountsScreen.openSheet(context, isCard: true);
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 10),
+                          width: 120,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: cs.surfaceContainerLow,
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
+                              color: cs.outlineVariant.withValues(alpha: 0.4),
+                              style: BorderStyle.solid,
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: cs.primary.withValues(alpha: 0.12),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(Icons.add_rounded,
+                                    color: cs.primary, size: 22),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                l10n.home_addCard,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: cs.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+
+                    final acc = homeCards[i];
+                    final color = Color(acc.colorValue);
+
+                    return GestureDetector(
+                      key: ValueKey('card_${acc.id}'),
+                      onTap: () {
+                        AppHaptics.tap(context, HapticStrength.light);
+                        AccountsScreen.openSheet(
+                          context,
+                          existing: acc,
+                          isCard: true,
+                        );
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.only(right: 10),
+                        width: 172,
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              color.withValues(alpha: 0.88),
+                              color,
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(18),
+                          boxShadow: [
+                            BoxShadow(
+                              color: color.withValues(alpha: 0.25),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Top row: Type chip & contactless icon
+                            Row(
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    acc.type.toUpperCase(),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.contactless_rounded,
+                                  size: 15,
+                                  color: Colors.white.withValues(alpha: 0.8),
+                                ),
+                              ],
+                            ),
+                            // Middle: Card name & Card number last 4
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  acc.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                if (acc.cardNumberLast4 != null &&
+                                    acc.cardNumberLast4!.isNotEmpty)
+                                  Text(
+                                    '•••• ${acc.cardNumberLast4}',
+                                    style: TextStyle(
+                                      color: Colors.white
+                                          .withValues(alpha: 0.7),
+                                      fontSize: 10,
+                                      letterSpacing: 1.0,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            // Bottom: Balance
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  hideBalance
+                                      ? '• • •'
+                                      : formatAmount(
+                                          app.getEffectiveBalance(acc),
+                                          acc.currency),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14.5,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                                if (!hideBalance &&
+                                    app.canShowConverted(acc))
+                                  Text(
+                                    '≈ ${formatAmount(app.convertToMain(app.getEffectiveBalance(acc), acc.currency), currency)}',
                                     style: TextStyle(
                                       color: Colors.white
                                           .withValues(alpha: 0.75),

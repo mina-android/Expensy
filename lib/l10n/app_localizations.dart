@@ -2996,6 +2996,18 @@ abstract class AppLocalizations {
   /// **'Add Account'**
   String get home_addAccount;
 
+  /// No description provided for @home_cards.
+  ///
+  /// In en, this message translates to:
+  /// **'Cards'**
+  String get home_cards;
+
+  /// No description provided for @home_addCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Card'**
+  String get home_addCard;
+
   /// No description provided for @home_monthlyOverview.
   ///
   /// In en, this message translates to:
@@ -4831,6 +4843,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Due on {day}'**
   String accounts_dueOnDay(int day);
+
+  /// No description provided for @accounts_cannotDeleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot Delete Account'**
+  String get accounts_cannotDeleteAccount;
+
+  /// No description provided for @common_ok.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get common_ok;
+
+  /// No description provided for @certificates_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Time Deposits & Certificates'**
+  String get certificates_title;
+
+  /// No description provided for @certificates_addCertificate.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Certificate'**
+  String get certificates_addCertificate;
+
+  /// No description provided for @certificates_editCertificate.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Certificate'**
+  String get certificates_editCertificate;
+
+  /// No description provided for @certificates_noCertificates.
+  ///
+  /// In en, this message translates to:
+  /// **'No Certificates Yet'**
+  String get certificates_noCertificates;
+
+  /// No description provided for @certificates_noCertificatesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Track your high-yield certificates, deposits, and auto-collected interest returns.'**
+  String get certificates_noCertificatesDesc;
+
+  /// No description provided for @certificates_active.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get certificates_active;
+
+  /// No description provided for @certificates_matured.
+  ///
+  /// In en, this message translates to:
+  /// **'Matured'**
+  String get certificates_matured;
+
+  /// No description provided for @certificates_amount.
+  ///
+  /// In en, this message translates to:
+  /// **'Principal Amount'**
+  String get certificates_amount;
+
+  /// No description provided for @certificates_collectionType.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest Collection'**
+  String get certificates_collectionType;
+
+  /// No description provided for @certificates_collectedSoFar.
+  ///
+  /// In en, this message translates to:
+  /// **'Collected So Far'**
+  String get certificates_collectedSoFar;
+
+  /// No description provided for @certificates_expectedTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Expected Return'**
+  String get certificates_expectedTotal;
+
+  /// No description provided for @certificates_startDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Date'**
+  String get certificates_startDate;
+
+  /// No description provided for @certificates_endDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Maturity Date'**
+  String get certificates_endDate;
+
+  /// No description provided for @certificates_redeem.
+  ///
+  /// In en, this message translates to:
+  /// **'Redeem Certificate'**
+  String get certificates_redeem;
+
+  /// No description provided for @certificates_redeemConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to redeem \"{name}\"? The principal of {amount} will be returned to your bank account.'**
+  String certificates_redeemConfirm(String name, String amount);
+
+  /// No description provided for @certificates_redeemedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Certificate redeemed and principal returned successfully.'**
+  String get certificates_redeemedSuccess;
+
+  /// No description provided for @certificates_name.
+  ///
+  /// In en, this message translates to:
+  /// **'Certificate Name'**
+  String get certificates_name;
+
+  /// No description provided for @certificates_interestRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Annual Interest Rate (%)'**
+  String get certificates_interestRate;
+
+  /// No description provided for @certificates_linkedBankAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked Bank Account'**
+  String get certificates_linkedBankAccount;
+
+  /// No description provided for @certificates_periodicYield.
+  ///
+  /// In en, this message translates to:
+  /// **'Periodic Interest Return'**
+  String get certificates_periodicYield;
+
+  /// No description provided for @certificates_paymentReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Payout Reminder Notification'**
+  String get certificates_paymentReminder;
+
+  /// No description provided for @certificates_reminderTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder Time'**
+  String get certificates_reminderTime;
+
+  /// No description provided for @certificates_reminder2DaysBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder 2 days before'**
+  String get certificates_reminder2DaysBefore;
+
+  /// No description provided for @certificates_deleteCertificate.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Certificate'**
+  String get certificates_deleteCertificate;
+
+  /// No description provided for @certificates_confirmDeleteCertificate.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this certificate? All associated deposit and interest transactions will be removed and money returned to your account.'**
+  String get certificates_confirmDeleteCertificate;
+
+  /// No description provided for @certificates_deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Certificate deleted'**
+  String get certificates_deleted;
+
+  /// No description provided for @onboarding_stayOnTopOfFinances.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay on Top of Your Finances'**
+  String get onboarding_stayOnTopOfFinances;
+
+  /// No description provided for @onboarding_stayOnTopOfFinancesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable timely reminders so you never miss a payment, overdue bill, or budget threshold.'**
+  String get onboarding_stayOnTopOfFinancesDesc;
+
+  /// No description provided for @onboarding_featureBillTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Bill & Due Date Reminders'**
+  String get onboarding_featureBillTitle;
+
+  /// No description provided for @onboarding_featureBillDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Get alerted before credit card statement dates and loan installments are due.'**
+  String get onboarding_featureBillDesc;
+
+  /// No description provided for @onboarding_featureBudgetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget Tracking Alerts'**
+  String get onboarding_featureBudgetTitle;
+
+  /// No description provided for @onboarding_featureBudgetDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Receive alerts when you reach 80% or 100% of your category spending limit.'**
+  String get onboarding_featureBudgetDesc;
+
+  /// No description provided for @onboarding_featureRecurringTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recurring Subscriptions'**
+  String get onboarding_featureRecurringTitle;
+
+  /// No description provided for @onboarding_featureRecurringDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay informed before recurring bills and memberships auto-renew.'**
+  String get onboarding_featureRecurringDesc;
+
+  /// No description provided for @onboarding_allowNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow Notifications'**
+  String get onboarding_allowNotifications;
+
+  /// No description provided for @onboarding_maybeLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Maybe Later'**
+  String get onboarding_maybeLater;
 }
 
 class _AppLocalizationsDelegate

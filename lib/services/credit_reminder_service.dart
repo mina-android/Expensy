@@ -50,7 +50,7 @@ class CreditReminderService {
     for (var i = 0; i < accountId.length; i++) {
       hash = 31 * hash + accountId.codeUnitAt(i);
     }
-    return (hash & 0x7FFFFFFF) + 800000;
+    return ((hash & 0x7FFFFFFF) % 1000000) + 800000;
   }
 
   int _advanceId(String accountId) {
@@ -58,7 +58,7 @@ class CreditReminderService {
     for (var i = 0; i < accountId.length; i++) {
       hash = 31 * hash + accountId.codeUnitAt(i);
     }
-    return (hash & 0x7FFFFFFF) + 900000;
+    return ((hash & 0x7FFFFFFF) % 1000000) + 900000;
   }
 
   tz.TZDateTime? _nextReminderDate(
@@ -112,59 +112,63 @@ class CreditReminderService {
   }
 
   Future<void> scheduleReminder(Account acc) async {
-    if (acc.type != 'credit' ||
-        !acc.creditReminderEnabled ||
-        acc.dueDay == null) {
-      return;
-    }
-    await _ensureInit();
-    if (acc.balance >= 0) {
-      await cancelReminder(acc.id);
-      return;
-    }
-    if (!(await hasPermission())) return;
+    try {
+      if (acc.type != 'credit' ||
+          !acc.creditReminderEnabled ||
+          acc.dueDay == null) {
+        return;
+      }
+      await _ensureInit();
+      if (acc.balance >= 0) {
+        await cancelReminder(acc.id);
+        return;
+      }
+      if (!(await hasPermission())) return;
 
-    final parts = acc.creditReminderTime.split(':');
-    final hour = int.tryParse(parts[0]) ?? 9;
-    final minute = parts.length > 1 ? (int.tryParse(parts[1]) ?? 0) : 0;
+      final parts = acc.creditReminderTime.split(':');
+      final hour = int.tryParse(parts[0]) ?? 9;
+      final minute = parts.length > 1 ? (int.tryParse(parts[1]) ?? 0) : 0;
 
-    // 1. On due date reminder
-    final tzDate = _nextReminderDate(acc.dueDay!, 0, hour, minute);
-    if (tzDate != null) {
-      final body = 'Your ${acc.name} bill is due today.';
-      await _plugin.zonedSchedule(
-        id: _notifId(acc.id),
-        title: '💳 Bill Due Today',
-        body: body,
-        scheduledDate: tzDate,
-        notificationDetails: _buildDetails(),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        payload: acc.id,
-      );
-    }
-
-    // 2. Early reminder (2 days before)
-    if (acc.creditEarlyReminderEnabled) {
-      final advTzDate = _nextReminderDate(acc.dueDay!, 2, hour, minute);
-      if (advTzDate != null) {
-        final body = 'Your ${acc.name} bill is due in 2 days.';
+      // 1. On due date reminder
+      final tzDate = _nextReminderDate(acc.dueDay!, 0, hour, minute);
+      if (tzDate != null) {
+        final body = 'Your ${acc.name} bill is due today.';
         await _plugin.zonedSchedule(
-          id: _advanceId(acc.id),
-          title: '💳 Bill Due Soon',
+          id: _notifId(acc.id),
+          title: '💳 Bill Due Today',
           body: body,
-          scheduledDate: advTzDate,
+          scheduledDate: tzDate,
           notificationDetails: _buildDetails(),
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
           payload: acc.id,
         );
       }
-    }
+
+      // 2. Early reminder (2 days before)
+      if (acc.creditEarlyReminderEnabled) {
+        final advTzDate = _nextReminderDate(acc.dueDay!, 2, hour, minute);
+        if (advTzDate != null) {
+          final body = 'Your ${acc.name} bill is due in 2 days.';
+          await _plugin.zonedSchedule(
+            id: _advanceId(acc.id),
+            title: '💳 Bill Due Soon',
+            body: body,
+            scheduledDate: advTzDate,
+            notificationDetails: _buildDetails(),
+            androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+            payload: acc.id,
+          );
+        }
+      }
+    } catch (_) {}
   }
 
   Future<void> cancelReminder(String accountId) async {
-    await _ensureInit();
-    await _plugin.cancel(id: _notifId(accountId));
-    await _plugin.cancel(id: _advanceId(accountId));
+    try {
+      await _ensureInit();
+      await _plugin.cancel(id: _notifId(accountId));
+      await _plugin.cancel(id: _advanceId(accountId));
+    } catch (_) {}
   }
 
   Future<void> rescheduleAll(List<Account> accounts) async {

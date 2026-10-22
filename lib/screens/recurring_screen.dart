@@ -12,6 +12,7 @@ import '../widgets/fintech_components.dart';
 import '../services/notification_service.dart';
 import '../utils/haptics.dart';
 import 'recurring_detail_screen.dart';
+import '../utils/nav_metrics.dart';
 
 class RecurringScreen extends StatefulWidget {
   const RecurringScreen({super.key});
@@ -289,15 +290,14 @@ class _RecurringScreenState extends State<RecurringScreen> {
           ),
         ],
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 75, right: 4),
-        child: ExpandableFab(
-          label: l10n.home_add,
-          color: tabPurple,
-          onIncome: () => openRecurringSheet(context, defaultType: 'income'),
-          onExpense: () => openRecurringSheet(context, defaultType: 'expense'),
-        ),
+      floatingActionButtonLocation: NavAwareFabLocation(
+        bottomOffset: NavMetrics.fabBottomOffset(context),
+      ),
+      floatingActionButton: ExpandableFab(
+        label: l10n.home_add,
+        color: tabPurple,
+        onIncome: () => openRecurringSheet(context, defaultType: 'income'),
+        onExpense: () => openRecurringSheet(context, defaultType: 'expense'),
       ),
     );
   }
@@ -397,7 +397,7 @@ class _RecurringList extends StatelessWidget {
           subMessage: l10n.recurring_tapPlusToAddOne);
     }
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(14, 4, 14, 140),
+      padding: EdgeInsets.fromLTRB(14, 4, 14, NavMetrics.scrollBottomPadding(context)),
       itemCount: items.length,
       itemBuilder: (_, i) => _RecurringCard(
           key: ValueKey(items[i].id), r: items[i], app: app, fmt: fmt),
@@ -602,17 +602,64 @@ class _RecurringCardState extends State<_RecurringCard> {
                   final ok = await showDialog<bool>(
                       context: context,
                       builder: (ctx) => AlertDialog(
-                            title: Text(l10n.recurring_skipNextPayment),
-                            content: Text(l10n.recurring_nextDate(
-                                DateFormat('d MMM yyyy')
-                                    .format(r.calcNextDate()))),
+                            icon: Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF785900)
+                                    .withValues(alpha: 0.12),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.skip_next_rounded,
+                                  color: Color(0xFF785900), size: 26),
+                            ),
+                            title: Text(l10n.recurring_skipNextPayment,
+                                textAlign: TextAlign.center),
+                            content: Text(
+                              l10n.recurring_nextDate(DateFormat('d MMM yyyy')
+                                  .format(r.calcNextDate())),
+                              textAlign: TextAlign.center,
+                            ),
+                            actionsAlignment: MainAxisAlignment.center,
                             actions: [
-                              TextButton(
-                                  onPressed: () => Navigator.pop(ctx, false),
-                                  child: Text(l10n.recurring_cancel)),
-                              FilledButton(
-                                  onPressed: () => Navigator.pop(ctx, true),
-                                  child: Text(l10n.recurring_skip)),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: OutlinedButton(
+                                      style: OutlinedButton.styleFrom(
+                                        minimumSize:
+                                            const Size.fromHeight(46),
+                                        side: BorderSide(
+                                            color: cs.outlineVariant
+                                                .withValues(alpha: 0.6)),
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(14)),
+                                      ),
+                                      onPressed: () =>
+                                          Navigator.pop(ctx, false),
+                                      child: Text(l10n.recurring_cancel),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: FilledButton(
+                                      style: FilledButton.styleFrom(
+                                        backgroundColor:
+                                            const Color(0xFF785900),
+                                        minimumSize:
+                                            const Size.fromHeight(46),
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(14)),
+                                      ),
+                                      onPressed: () =>
+                                          Navigator.pop(ctx, true),
+                                      child: Text(l10n.recurring_skip),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ],
                           ));
                   if (ok == true && context.mounted) {
@@ -1038,12 +1085,10 @@ class _RecurringSheetState extends State<_RecurringSheet> {
                 )),
             const SizedBox(width: 10),
             Expanded(
-                child: DropdownButtonFormField<String>(
-              initialValue: _freqUnit,
-              decoration: const InputDecoration(
-                  isDense: true,
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 12, vertical: 12)),
+                child: AppDropdownFormField<String>(
+              value: _freqUnit,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               items: [
                 DropdownMenuItem(
                     value: 'days', child: Text(l10n.recurring_days)),
@@ -1194,99 +1239,89 @@ class _RecurringSheetState extends State<_RecurringSheet> {
             const SizedBox(height: 8),
           ],
 
-          const Divider(height: 24),
-          SwitchListTile.adaptive(
-            contentPadding: EdgeInsets.zero,
-            secondary: Icon(
-              _reminderEnabled
-                  ? Icons.notifications_active_outlined
-                  : Icons.notifications_none_outlined,
-              color: _reminderEnabled ? cs.primary : null,
-            ),
-            title: Text(l10n.recurring_paymentReminder,
-                style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: _reminderEnabled ? cs.primary : null)),
-            subtitle: Text(
-              _reminderEnabled
-                  ? 'You\'ll be notified on the due date'
-                  : 'Get notified when a payment is due',
-              style: TextStyle(
-                  fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5)),
-            ),
+          const SizedBox(height: 14),
+          FintechReminderToggle(
             value: _reminderEnabled,
             onChanged: _toggleReminder,
-          ),
-
-          if (_reminderEnabled) ...[
-            const SizedBox(height: 4),
-            InkWell(
-              onTap: _pickTime,
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                decoration: BoxDecoration(
-                  color: cs.primaryContainer.withValues(alpha: 0.5),
+            title: l10n.recurring_paymentReminder,
+            subtitle: _reminderEnabled
+                ? 'You\'ll be notified on the due date'
+                : 'Get notified when a payment is due',
+            activeColor: cs.primary,
+            expandedContent: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                InkWell(
+                  onTap: _pickTime,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: cs.primary.withValues(alpha: 0.35)),
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: cs.primaryContainer.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: cs.primary.withValues(alpha: 0.35)),
+                    ),
+                    child: Row(children: [
+                      Icon(Icons.access_time_rounded, size: 20, color: cs.primary),
+                      const SizedBox(width: 12),
+                      Expanded(
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                            Text(l10n.recurring_remindMeAt,
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color: cs.onSurface.withValues(alpha: 0.55))),
+                            Text(_reminderTime.format(context),
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    color: cs.primary)),
+                          ])),
+                      Icon(Icons.chevron_right_rounded, color: cs.primary),
+                    ]),
+                  ),
                 ),
-                child: Row(children: [
-                  Icon(Icons.access_time_rounded, size: 20, color: cs.primary),
-                  const SizedBox(width: 12),
-                  Expanded(
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                        Text(l10n.recurring_remindMeAt,
-                            style: TextStyle(
-                                fontSize: 11,
-                                color: cs.onSurface.withValues(alpha: 0.55))),
-                        Text(_reminderTime.format(context),
-                            style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: cs.primary)),
-                      ])),
-                  Icon(Icons.chevron_right_rounded, color: cs.primary),
-                ]),
-              ),
+                const SizedBox(height: 6),
+                Padding(
+                  padding: const EdgeInsets.only(left: 2),
+                  child: Text(
+                    l10n.recurring_notificationWillFire,
+                    style: TextStyle(
+                        fontSize: 11, color: cs.onSurface.withValues(alpha: 0.4)),
+                  ),
+                ),
+                const Divider(height: 16),
+                SwitchListTile.adaptive(
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                  secondary: Icon(
+                    _earlyReminderEnabled
+                        ? Icons.notifications_active_outlined
+                        : Icons.notifications_outlined,
+                    color: _earlyReminderEnabled ? cs.secondary : null,
+                    size: 20,
+                  ),
+                  title: Text(l10n.recurring_remind2DaysBefore,
+                      style: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                          color: _earlyReminderEnabled ? cs.secondary : null)),
+                  subtitle: Text(
+                    _earlyReminderEnabled
+                        ? 'Extra heads-up 2 days early at the same time'
+                        : 'Also get notified 2 days before the due date',
+                    style: TextStyle(
+                        fontSize: 11, color: cs.onSurface.withValues(alpha: 0.5)),
+                  ),
+                  value: _earlyReminderEnabled,
+                  activeColor: cs.secondary,
+                  onChanged: (v) => setState(() => _earlyReminderEnabled = v),
+                ),
+              ],
             ),
-            const SizedBox(height: 4),
-            Padding(
-              padding: const EdgeInsets.only(left: 2),
-              child: Text(
-                l10n.recurring_notificationWillFire,
-                style: TextStyle(
-                    fontSize: 11, color: cs.onSurface.withValues(alpha: 0.4)),
-              ),
-            ),
-            const SizedBox(height: 8),
-            SwitchListTile.adaptive(
-              contentPadding: const EdgeInsets.only(left: 4),
-              secondary: Icon(
-                _earlyReminderEnabled
-                    ? Icons.notifications_active_outlined
-                    : Icons.notifications_outlined,
-                color: _earlyReminderEnabled ? cs.secondary : null,
-                size: 22,
-              ),
-              title: Text(l10n.recurring_remind2DaysBefore,
-                  style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: _earlyReminderEnabled ? cs.secondary : null)),
-              subtitle: Text(
-                _earlyReminderEnabled
-                    ? 'Extra heads-up 2 days early at the same time'
-                    : 'Also get notified 2 days before the due date',
-                style: TextStyle(
-                    fontSize: 11, color: cs.onSurface.withValues(alpha: 0.5)),
-              ),
-              value: _earlyReminderEnabled,
-              onChanged: (v) => setState(() => _earlyReminderEnabled = v),
-            ),
-          ],
+          ),
           const Divider(height: 24),
           SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,

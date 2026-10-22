@@ -6,7 +6,7 @@
 
 <h3>A finance tracker that stays on your phone, not in the cloud</h3>
 
-[![Platform](https://img.shields.io/badge/Platform-Android-3DDC84?logo=android&logoColor=white)](https://android.com) [![Version](https://img.shields.io/badge/Version-1.2.1-brightgreen)](https://github.com/mina-android/Expensy/releases) [![License](https://img.shields.io/badge/License-GPL--3.0-blue)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platform-Android-3DDC84?logo=android&logoColor=white)](https://android.com) [![Version](https://img.shields.io/badge/Version-1.2.2-brightgreen)](https://github.com/mina-android/Expensy/releases) [![License](https://img.shields.io/badge/License-GPL--3.0-blue)](LICENSE)
 
 Expensy is a simple app that helps anyone manage their money, track debts, and plan ahead with complete peace of mind.  
 It works completely offline, with no sign-ups or ads, and your financial data never leaves your phone.
@@ -19,15 +19,16 @@ It works completely offline, with no sign-ups or ads, and your financial data ne
 
 ## ✨ What you can do
 
-- **💳 Accounts & credit card settlement**: Track bank accounts, cash, digital wallets, credit cards, and gold holdings. Pay your monthly credit card balance in a single tap from a linked bank account.
+- **💳 Accounts & Cards with dynamic balance inheritance**: Manage bank accounts, cash, digital wallets, debit cards, credit cards, and gold holdings. The Home screen features dedicated carousels for Accounts and Cards with quick "+ Add" action tiles. Debit cards mirror linked bank balances, credit cards manage revolving debts and statements, and a dedicated Cards tab organizes all cards with adjacent badge indicators.
+- **🏦 Time Deposits & Certificates of Deposit**: Track fixed-term certificates and time deposits with flexible daily, monthly, or yearly yield collection deposited straight into your bank account. Features rich loan-style detail pages, early redemption, 2-day-early reminder notifications, and full transaction balance restoral upon deposit deletion.
 - **⚡ 1-Tap quick presets & built-in calculator**: Pin your frequent daily expenses right on your home screen for one-tap logging, and calculate taxes or split totals instantly with the tactile in-app keypad.
 - **🎯 Rollover budgets & safe-to-spend pacer**: Set category spending targets where unused funds roll over into next month, and see at a glance how much you can comfortably spend each day.
 - **🔄 Subscriptions, bills & auto-pay**: Keep tabs on recurring bills, installment plans, and salaries, complete with custom auto-pay times and scheduled reminder notifications.
 - **📈 Wealth management & net worth**: Get a clear picture of what you own versus what you owe, with automatic daily net worth snapshots, asset tracking, and interactive growth charts.
-- **🔔 Gentle reminders**: Get a nudge when a recurring bill is due, when an installment is approaching, or when someone's repayment date arrives so nothing slips through the cracks.
+- **🔔 Gentle reminders**: Get a nudge when a recurring bill is due, an installment is approaching, a deposit interest payout is scheduled, or when someone's repayment date arrives so nothing slips through the cracks.
 - **📤 Share your data**: Turn what you've logged into a clean, multi-page vector PDF statement or a spreadsheet in a couple of taps, rendered 100% offline.
-- **💾 Backups that just work**: Switching phones? Save an unencrypted or encrypted JSON backup file directly to your device storage and restore everything in seconds.
-- **🎨 Easy on the eyes**: Built with modern Material You dynamic theming, 29 vibrant accent colors, a true AMOLED pure-black mode, and edge-to-edge status bar styling.
+- **💾 Selective & Encrypted backups**: Export or restore the entire database or choose specific financial domains (accounts, recurring rules, loans, certificates, budgets). Supports plaintext or password-protected AES-GCM encrypted backups.
+- **🎨 Easy on the eyes & elevated Fintech aesthetics**: Built with modern Material You dynamic theming, 29 vibrant accent colors, a true AMOLED pure-black mode, edge-to-edge status bar styling, fintech onboarding flows, modernized 24px dialogs, and responsive floating navigation.
 
 ---
 

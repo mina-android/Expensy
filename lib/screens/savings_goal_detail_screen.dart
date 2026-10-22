@@ -377,14 +377,10 @@ class _ContributionSheetState extends State<_ContributionSheet> {
           if (widget.app.nonBankAccounts.isEmpty)
             Text(l10n.savings_noAccounts)
           else ...[
-            DropdownButtonFormField<String>(
-              initialValue: _selectedAccountId,
-              decoration: InputDecoration(
-                labelText:
-                    widget.isContribution ? l10n.savings_fromAccount : l10n.savings_toAccount,
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              ),
+            AppDropdownFormField<String>(
+              value: _selectedAccountId,
+              labelText:
+                  widget.isContribution ? l10n.savings_fromAccount : l10n.savings_toAccount,
               items: widget.app.nonBankAccounts
                   .map((a) => DropdownMenuItem(
                         value: a.id,

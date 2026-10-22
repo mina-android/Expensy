@@ -73,6 +73,7 @@ class CategoriesScreen extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => _CategorySheet(existing: existing),
@@ -225,14 +226,17 @@ class _CategorySheetState extends State<_CategorySheet> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
-    return Padding(
-      padding: const EdgeInsets.only(
-          bottom: 16,
-          left: 20,
-          right: 20,
-          top: 20),
-      child: SingleChildScrollView(
+    return SafeArea(
+      top: true,
+      child: Padding(
+        padding: EdgeInsets.only(
+            bottom: bottomInset + 16,
+            left: 20,
+            right: 20,
+            top: 16),
+        child: SingleChildScrollView(
         child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -472,6 +476,7 @@ class _CategorySheetState extends State<_CategorySheet> {
                     : l10n.categories_addCategory),
               ),
             ]),
+        ),
       ),
     );
   }

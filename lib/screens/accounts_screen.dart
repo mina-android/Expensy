@@ -11,6 +11,7 @@ import '../widgets/shared_widgets.dart';
 import '../widgets/fintech_components.dart';
 import '../widgets/credit_card_settlement_sheet.dart';
 import '../utils/haptics.dart';
+import '../utils/nav_metrics.dart';
 
 class AccountsScreen extends StatefulWidget {
   const AccountsScreen({super.key});
@@ -36,6 +37,27 @@ class _AccountsScreenState extends State<AccountsScreen> {
   int _tabIndex = 0;
 
   @override
+  void initState() {
+    super.initState();
+    final app = context.read<AppProvider>();
+    _tabIndex = app.accountsTabNotifier.value;
+    app.accountsTabNotifier.addListener(_onTabNotified);
+  }
+
+  void _onTabNotified() {
+    final newTab = context.read<AppProvider>().accountsTabNotifier.value;
+    if (mounted && _tabIndex != newTab) {
+      setState(() => _tabIndex = newTab);
+    }
+  }
+
+  @override
+  void dispose() {
+    context.read<AppProvider>().accountsTabNotifier.removeListener(_onTabNotified);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
@@ -47,11 +69,11 @@ class _AccountsScreenState extends State<AccountsScreen> {
         app.accounts.any((a) => a.currency != app.settings.currency);
 
     final regularAccounts = app.accounts
-        .where((a) => !['credit', 'debit'].contains(a.type))
+        .where((a) => !a.isCard)
         .toList();
 
     final cardAccounts = app.accounts
-        .where((a) => ['credit', 'debit'].contains(a.type))
+        .where((a) => a.isCard)
         .toList();
 
     return Scaffold(
@@ -185,7 +207,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
                         )
                       : ListView.builder(
                           key: const ValueKey('accounts_list'),
-                          padding: const EdgeInsets.fromLTRB(14, 4, 14, 140),
+                          padding: EdgeInsets.fromLTRB(14, 4, 14, NavMetrics.scrollBottomPadding(context)),
                           itemCount: regularAccounts.length,
                           itemBuilder: (_, i) =>
                               _AccountCard(acc: regularAccounts[i]),
@@ -198,7 +220,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
                         )
                       : ListView.builder(
                           key: const ValueKey('cards_list'),
-                          padding: const EdgeInsets.fromLTRB(14, 4, 14, 140),
+                          padding: EdgeInsets.fromLTRB(14, 4, 14, NavMetrics.scrollBottomPadding(context)),
                           itemCount: cardAccounts.length,
                           itemBuilder: (_, i) =>
                               _RealWorldCard(acc: cardAccounts[i]),
@@ -207,27 +229,26 @@ class _AccountsScreenState extends State<AccountsScreen> {
           ),
         ],
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 75, right: 4),
-        child: ExpandableFab(
-          label: l10n.home_add,
-          color: tabOrange,
-          items: [
-            ExpandableFabItem(
-              label: 'Add Account',
-              icon: Icons.account_balance_wallet_rounded,
-              color: tabOrange,
-              onTap: () => AccountsScreen.openSheet(context, isCard: false),
-            ),
-            ExpandableFabItem(
-              label: 'Add Card',
-              icon: Icons.credit_card_rounded,
-              color: tabOrange,
-              onTap: () => AccountsScreen.openSheet(context, isCard: true),
-            ),
-          ],
-        ),
+      floatingActionButtonLocation: NavAwareFabLocation(
+        bottomOffset: NavMetrics.fabBottomOffset(context),
+      ),
+      floatingActionButton: ExpandableFab(
+        label: l10n.home_add,
+        color: tabOrange,
+        items: [
+          ExpandableFabItem(
+            label: 'Add Account',
+            icon: Icons.account_balance_wallet_rounded,
+            color: tabOrange,
+            onTap: () => AccountsScreen.openSheet(context, isCard: false),
+          ),
+          ExpandableFabItem(
+            label: 'Add Card',
+            icon: Icons.credit_card_rounded,
+            color: tabOrange,
+            onTap: () => AccountsScreen.openSheet(context, isCard: true),
+          ),
+        ],
       ),
     );
   }
@@ -450,11 +471,44 @@ class _AccountCard extends StatelessWidget {
                 icon: const Icon(Icons.edit_outlined, size: 20),
                 color: color,
                 onPressed: () =>
-                    AccountsScreen.openSheet(context, existing: acc)),
+                    AccountsScreen.openSheet(context, existing: acc, isCard: acc.isCard)),
             IconButton(
                 icon: const Icon(Icons.delete_outline_rounded, size: 20),
                 color: cs.error,
                 onPressed: () async {
+                  final blockReason = app.getAccountDeletionBlockReason(acc.id);
+                  if (blockReason != null) {
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        icon: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: cs.error.withValues(alpha: 0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.info_outline_rounded,
+                              color: cs.error, size: 24),
+                        ),
+                        title: Text(l10n.accounts_cannotDeleteAccount,
+                            textAlign: TextAlign.center),
+                        content: Text(blockReason, textAlign: TextAlign.center),
+                        actionsAlignment: MainAxisAlignment.center,
+                        actions: [
+                          FilledButton(
+                            style: FilledButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14)),
+                            ),
+                            onPressed: () => Navigator.pop(ctx),
+                            child: Text(l10n.common_ok),
+                          ),
+                        ],
+                      ),
+                    );
+                    return;
+                  }
                   final undo = await context
                       .read<AppProvider>()
                       .deleteAccountWithUndo(acc.id);
@@ -478,8 +532,7 @@ class _AccountCard extends StatelessWidget {
   Widget _regularStatsRow(BuildContext context, AppProvider app, ColorScheme cs,
       Color color, bool showConverted) {
     final l10n = AppLocalizations.of(context)!;
-    final displayBalance =
-        acc.type == 'bank' ? app.getBankTotalBalance(acc.id) : acc.balance;
+    final displayBalance = app.getEffectiveBalance(acc);
     return Row(children: [
       _Stat(
         label: l10n.accounts_balance,
@@ -678,8 +731,6 @@ class _AccountSheetState extends State<_AccountSheet> {
   String _currency = 'EGP';
   int _color = 0xFF6750A4;
   bool _excludeFromTotal = false;
-  bool _excludeFromBankTotal = false;
-  bool _dontLinkToCard = false;
   int _goldKarat = 24;
 
   // Reminders
@@ -692,6 +743,8 @@ class _AccountSheetState extends State<_AccountSheet> {
   bool get isEdit => widget.existing != null;
   bool get isGold => _type == 'gold';
   bool get isCredit => _type == 'credit';
+  bool get isDebit => _type == 'debit';
+  bool get isPrepaid => _type == 'prepaid';
   bool get isCard => widget.isCard;
 
   @override
@@ -699,7 +752,7 @@ class _AccountSheetState extends State<_AccountSheet> {
     super.initState();
     final app = context.read<AppProvider>();
     _currency = app.settings.currency;
-    _type = isCard ? 'credit' : 'bank';
+    _type = widget.existing?.type ?? 'bank';
 
     final e = widget.existing;
     if (e != null) {
@@ -708,34 +761,36 @@ class _AccountSheetState extends State<_AccountSheet> {
       _currency = e.currency;
       _color = e.colorValue;
       _excludeFromTotal = e.excludeFromTotal;
-      _dontLinkToCard = e.dontLinkToCard;
       if (e.isGold) {
         _goldKarat = e.goldKarat ?? 24;
         _gramsCtrl.text = e.goldGrams?.toStringAsFixed(2) ?? '';
       } else {
         _balCtrl.text = e.balance.toStringAsFixed(2);
       }
-      if (e.type == 'credit' || e.type == 'debit') {
-        _cardHolderNameCtrl.text = e.cardHolderName ?? '';
-        _cardNumberLast4Ctrl.text = e.cardNumberLast4 ?? '';
-        _cardExpiryCtrl.text = e.cardExpiry ?? '';
-        _linkedAccountId = e.linkedAccountId;
-        _excludeFromBankTotal = e.excludeFromBankTotal;
-        if (e.type == 'credit') {
-          _creditLimitCtrl.text = e.creditLimit?.toString() ?? '';
-          _statementDayCtrl.text = e.statementDay?.toString() ?? '';
-          _dueDayCtrl.text = e.dueDay?.toString() ?? '';
-          _minPaymentAmountCtrl.text = e.minPaymentAmount?.toString() ?? '';
-          _creditReminderEnabled = e.creditReminderEnabled;
-          _creditEarlyReminderEnabled = e.creditEarlyReminderEnabled;
-          final parts = e.creditReminderTime.split(':');
-          if (parts.length == 2) {
-            _creditReminderTime = TimeOfDay(
-              hour: int.tryParse(parts[0]) ?? 9,
-              minute: int.tryParse(parts[1]) ?? 0,
-            );
-          }
+      _cardHolderNameCtrl.text = e.cardHolderName ?? '';
+      _cardNumberLast4Ctrl.text = e.cardNumberLast4 ?? '';
+      _cardExpiryCtrl.text = e.cardExpiry ?? '';
+      _linkedAccountId = e.linkedAccountId;
+      if (e.type == 'credit') {
+        _creditLimitCtrl.text = e.creditLimit?.toString() ?? '';
+        _statementDayCtrl.text = e.statementDay?.toString() ?? '';
+        _dueDayCtrl.text = e.dueDay?.toString() ?? '';
+        _minPaymentAmountCtrl.text = e.minPaymentAmount?.toString() ?? '';
+        _creditReminderEnabled = e.creditReminderEnabled;
+        _creditEarlyReminderEnabled = e.creditEarlyReminderEnabled;
+        final parts = e.creditReminderTime.split(':');
+        if (parts.length == 2) {
+          _creditReminderTime = TimeOfDay(
+            hour: int.tryParse(parts[0]) ?? 9,
+            minute: int.tryParse(parts[1]) ?? 0,
+          );
         }
+      }
+    } else {
+      _type = 'credit';
+      final banks = app.accounts.where((a) => a.type == 'bank').toList();
+      if (banks.isNotEmpty) {
+        _linkedAccountId = banks.first.id;
       }
     }
     // (Live preview now updated via ValueListenableBuilder)
@@ -863,14 +918,6 @@ class _AccountSheetState extends State<_AccountSheet> {
           '${_creditReminderTime.hour.toString().padLeft(2, '0')}:${_creditReminderTime.minute.toString().padLeft(2, '0')}';
 
       if (isEdit) {
-        if (_type == 'bank' && _dontLinkToCard) {
-          final linkedCards = app.accounts
-              .where((a) => a.linkedAccountId == widget.existing!.id)
-              .toList();
-          for (final card in linkedCards) {
-            await app.updateAccount(card.copyWith(clearLinkedAccount: true));
-          }
-        }
         await app.updateAccount(widget.existing!.copyWith(
           name: name,
           type: _type,
@@ -878,8 +925,8 @@ class _AccountSheetState extends State<_AccountSheet> {
           balance: balance,
           colorValue: _color,
           excludeFromTotal: _excludeFromTotal,
-          excludeFromBankTotal: _excludeFromBankTotal,
-          dontLinkToCard: _type == 'bank' ? _dontLinkToCard : false,
+          excludeFromBankTotal: false,
+          dontLinkToCard: false,
           cardHolderName: cardHolderName,
           cardNumberLast4: cardNumberLast4,
           cardExpiry: cardExpiry,
@@ -904,8 +951,8 @@ class _AccountSheetState extends State<_AccountSheet> {
           balance: balance,
           colorValue: _color,
           excludeFromTotal: _excludeFromTotal,
-          excludeFromBankTotal: _excludeFromBankTotal,
-          dontLinkToCard: _type == 'bank' ? _dontLinkToCard : false,
+          excludeFromBankTotal: false,
+          dontLinkToCard: false,
           cardHolderName: cardHolderName,
           cardNumberLast4: cardNumberLast4,
           cardExpiry: cardExpiry,
@@ -931,18 +978,13 @@ class _AccountSheetState extends State<_AccountSheet> {
     final cs = Theme.of(context).colorScheme;
     final preview = isGold ? _previewGoldValue(app) : null;
 
-    final typeOptions = isCard
-        ? [
-            ['credit', 'Credit Card'],
-            ['debit', 'Debit Card'],
-          ]
-        : [
-            ['bank', l10n.accounts_bank],
-            ['cash', l10n.accounts_cash],
-            ['savings', l10n.accounts_savings],
-            ['wallet', l10n.accounts_eWallet],
-            ['gold', l10n.accounts_gold],
-          ];
+    final typeOptions = [
+      ['bank', l10n.accounts_bank],
+      ['cash', l10n.accounts_cash],
+      ['savings', l10n.accounts_savings],
+      ['wallet', l10n.accounts_eWallet],
+      ['gold', l10n.accounts_gold],
+    ];
 
     return Padding(
       padding: EdgeInsets.only(
@@ -970,8 +1012,7 @@ class _AccountSheetState extends State<_AccountSheet> {
           const SizedBox(height: 16),
 
           TextField(
-            textInputAction: (isCard || _type != 'bank' || _dontLinkToCard) ? TextInputAction.next : TextInputAction.done,
-            onSubmitted: (isCard || _type != 'bank' || _dontLinkToCard) ? null : (_) => _submit(),
+            textInputAction: TextInputAction.next,
             controller: _nameCtrl,
             decoration: InputDecoration(
               labelText: isCard
@@ -1069,26 +1110,6 @@ class _AccountSheetState extends State<_AccountSheet> {
           ),
           const SizedBox(height: 14),
 
-          // ── Bank: Don't link to Card toggle ─────────────────────────
-          if (_type == 'bank') ...[
-            SwitchListTile.adaptive(
-              contentPadding: EdgeInsets.zero,
-              title: Text(
-                l10n.accounts_dontLinkToCard,
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-              ),
-              subtitle: Text(
-                l10n.accounts_dontLinkToCardDesc,
-                style: TextStyle(
-                    fontSize: 12,
-                    color: cs.onSurface.withValues(alpha: 0.5)),
-              ),
-              value: _dontLinkToCard,
-              onChanged: (v) => setState(() => _dontLinkToCard = v),
-            ),
-            const SizedBox(height: 14),
-          ],
-
           // ── Gold-specific fields ────────────────────────────────────
           if (isGold) ...[
             // Karat selector
@@ -1184,7 +1205,7 @@ class _AccountSheetState extends State<_AccountSheet> {
                     ),
             ),
             const SizedBox(height: 14),
-          ] else if (_type != 'bank' || _dontLinkToCard) ...[
+          ] else ...[
             // ── Regular balance field ─────────────────────────────────
             TextField(textInputAction: TextInputAction.done, onSubmitted: (_) => _submit(), 
               controller: _balCtrl,
@@ -1232,6 +1253,7 @@ class _AccountSheetState extends State<_AccountSheet> {
               controller: _cardExpiryCtrl,
               keyboardType: TextInputType.datetime,
               maxLength: 5,
+              inputFormatters: [CardExpiryInputFormatter()],
               decoration: InputDecoration(
                 labelText: l10n.accounts_expiryDate,
                 prefixIcon: const Icon(Icons.calendar_month),
@@ -1335,7 +1357,7 @@ class _AccountSheetState extends State<_AccountSheet> {
                                   : cs.onSurface)),
                     ),
                   ),
-                  ...app.accounts.where((a) => a.type == 'bank' && !a.dontLinkToCard).map((a) {
+                  ...app.accounts.where((a) => a.type == 'bank').map((a) {
                     final sel = _linkedAccountId == a.id;
                     return GestureDetector(
                       onTap: () => setState(() => _linkedAccountId = a.id),
@@ -1375,8 +1397,7 @@ class _AccountSheetState extends State<_AccountSheet> {
           ],
 
           // ── Exclude from total ──────────────────────────────────────
-          if (_type != 'bank' || _dontLinkToCard)
-            SwitchListTile.adaptive(
+          SwitchListTile.adaptive(
               contentPadding: EdgeInsets.zero,
               title: Text(l10n.accounts_excludeFromTotalBala,
                   style: const TextStyle(
@@ -1388,21 +1409,6 @@ class _AccountSheetState extends State<_AccountSheet> {
               value: _excludeFromTotal,
               onChanged: (v) => setState(() => _excludeFromTotal = v),
             ),
-          if (isCard && _linkedAccountId != null) ...[
-            const SizedBox(height: 14),
-            SwitchListTile.adaptive(
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.accounts_excludeCardBalance,
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-              subtitle: Text(
-                  l10n.accounts_excludeCardBalanceDesc,
-                  style: TextStyle(
-                      fontSize: 12,
-                      color: cs.onSurface.withValues(alpha: 0.5))),
-              value: _excludeFromBankTotal,
-              onChanged: (v) => setState(() => _excludeFromBankTotal = v),
-            ),
-          ],
           const SizedBox(height: 14),
 
           // ── Color picker ────────────────────────────────────────────
@@ -1509,7 +1515,6 @@ class _CardSheetState extends State<_CardSheet> {
   String _currency = 'EGP';
   int _color = 0xFF6750A4;
   bool _excludeFromTotal = false;
-  bool _excludeFromBankTotal = false;
   int _goldKarat = 24;
 
   // Reminders
@@ -1522,6 +1527,8 @@ class _CardSheetState extends State<_CardSheet> {
   bool get isEdit => widget.existing != null;
   bool get isGold => _type == 'gold';
   bool get isCredit => _type == 'credit';
+  bool get isDebit => _type == 'debit';
+  bool get isPrepaid => _type == 'prepaid';
   bool get isCard => widget.isCard;
 
   @override
@@ -1529,7 +1536,7 @@ class _CardSheetState extends State<_CardSheet> {
     super.initState();
     final app = context.read<AppProvider>();
     _currency = app.settings.currency;
-    _type = isCard ? 'credit' : 'bank';
+    _type = widget.existing?.type ?? 'credit';
 
     final e = widget.existing;
     if (e != null) {
@@ -1544,27 +1551,30 @@ class _CardSheetState extends State<_CardSheet> {
       } else {
         _balCtrl.text = e.balance.toStringAsFixed(2);
       }
-      if (e.type == 'credit' || e.type == 'debit') {
-        _cardHolderNameCtrl.text = e.cardHolderName ?? '';
-        _cardNumberLast4Ctrl.text = e.cardNumberLast4 ?? '';
-        _cardExpiryCtrl.text = e.cardExpiry ?? '';
-        _linkedAccountId = e.linkedAccountId;
-        _excludeFromBankTotal = e.excludeFromBankTotal;
-        if (e.type == 'credit') {
-          _creditLimitCtrl.text = e.creditLimit?.toString() ?? '';
-          _statementDayCtrl.text = e.statementDay?.toString() ?? '';
-          _dueDayCtrl.text = e.dueDay?.toString() ?? '';
-          _minPaymentAmountCtrl.text = e.minPaymentAmount?.toString() ?? '';
-          _creditReminderEnabled = e.creditReminderEnabled;
-          _creditEarlyReminderEnabled = e.creditEarlyReminderEnabled;
-          final parts = e.creditReminderTime.split(':');
-          if (parts.length == 2) {
-            _creditReminderTime = TimeOfDay(
-              hour: int.tryParse(parts[0]) ?? 9,
-              minute: int.tryParse(parts[1]) ?? 0,
-            );
-          }
+      _cardHolderNameCtrl.text = e.cardHolderName ?? '';
+      _cardNumberLast4Ctrl.text = e.cardNumberLast4 ?? '';
+      _cardExpiryCtrl.text = e.cardExpiry ?? '';
+      _linkedAccountId = e.linkedAccountId;
+      if (e.type == 'credit') {
+        _creditLimitCtrl.text = e.creditLimit?.toString() ?? '';
+        _statementDayCtrl.text = e.statementDay?.toString() ?? '';
+        _dueDayCtrl.text = e.dueDay?.toString() ?? '';
+        _minPaymentAmountCtrl.text = e.minPaymentAmount?.toString() ?? '';
+        _creditReminderEnabled = e.creditReminderEnabled;
+        _creditEarlyReminderEnabled = e.creditEarlyReminderEnabled;
+        final parts = e.creditReminderTime.split(':');
+        if (parts.length == 2) {
+          _creditReminderTime = TimeOfDay(
+            hour: int.tryParse(parts[0]) ?? 9,
+            minute: int.tryParse(parts[1]) ?? 0,
+          );
         }
+      }
+    } else {
+      _type = 'credit';
+      final banks = app.accounts.where((a) => a.type == 'bank').toList();
+      if (banks.isNotEmpty) {
+        _linkedAccountId = banks.first.id;
       }
     }
     // (Live preview now updated via ValueListenableBuilder)
@@ -1663,9 +1673,16 @@ class _CardSheetState extends State<_CardSheet> {
         ));
       }
     } else {
-      // Regular account or Card
-      final balance = double.tryParse(_balCtrl.text) ??
-          (isEdit ? widget.existing!.balance : 0);
+      if (isDebit) {
+        if (_linkedAccountId == null) {
+          showAppSnackbar(context, 'Please select a linked bank account for this debit card.');
+          return;
+        }
+      }
+
+      final balance = isDebit
+          ? (isEdit ? widget.existing!.balance : 0.0)
+          : (double.tryParse(_balCtrl.text) ?? (isEdit ? widget.existing!.balance : 0.0));
       double? creditLimit;
       int? dueDay;
       int? statementDay;
@@ -1675,17 +1692,15 @@ class _CardSheetState extends State<_CardSheet> {
       String? cardExpiry;
       String? linkedAccountId;
 
-      if (isCard) {
-        cardHolderName = _cardHolderNameCtrl.text.trim();
-        cardNumberLast4 = _cardNumberLast4Ctrl.text.trim();
-        cardExpiry = _cardExpiryCtrl.text.trim();
-        linkedAccountId = _linkedAccountId;
-        if (isCredit) {
-          creditLimit = double.tryParse(_creditLimitCtrl.text);
-          dueDay = int.tryParse(_dueDayCtrl.text);
-          statementDay = int.tryParse(_statementDayCtrl.text);
-          minPaymentAmount = double.tryParse(_minPaymentAmountCtrl.text);
-        }
+      cardHolderName = _cardHolderNameCtrl.text.trim();
+      cardNumberLast4 = _cardNumberLast4Ctrl.text.trim();
+      cardExpiry = _cardExpiryCtrl.text.trim();
+      linkedAccountId = isPrepaid ? null : _linkedAccountId;
+      if (isCredit) {
+        creditLimit = double.tryParse(_creditLimitCtrl.text);
+        dueDay = int.tryParse(_dueDayCtrl.text);
+        statementDay = int.tryParse(_statementDayCtrl.text);
+        minPaymentAmount = double.tryParse(_minPaymentAmountCtrl.text);
       }
 
       final reminderTimeStr =
@@ -1699,7 +1714,7 @@ class _CardSheetState extends State<_CardSheet> {
           balance: balance,
           colorValue: _color,
           excludeFromTotal: _excludeFromTotal,
-          excludeFromBankTotal: _excludeFromBankTotal,
+          excludeFromBankTotal: false,
           cardHolderName: cardHolderName,
           cardNumberLast4: cardNumberLast4,
           cardExpiry: cardExpiry,
@@ -1711,9 +1726,9 @@ class _CardSheetState extends State<_CardSheet> {
           creditEarlyReminderEnabled: _creditEarlyReminderEnabled,
           creditReminderTime: reminderTimeStr,
           linkedAccountId: linkedAccountId,
-          clearLinkedAccount: _linkedAccountId == null,
+          clearLinkedAccount: linkedAccountId == null,
           clearGold: true,
-          clearCredit: !isCredit && !isCard,
+          clearCredit: !isCredit,
         ));
       } else {
         await app.addAccount(Account(
@@ -1724,7 +1739,7 @@ class _CardSheetState extends State<_CardSheet> {
           balance: balance,
           colorValue: _color,
           excludeFromTotal: _excludeFromTotal,
-          excludeFromBankTotal: _excludeFromBankTotal,
+          excludeFromBankTotal: false,
           cardHolderName: cardHolderName,
           cardNumberLast4: cardNumberLast4,
           cardExpiry: cardExpiry,
@@ -1750,18 +1765,11 @@ class _CardSheetState extends State<_CardSheet> {
     final cs = Theme.of(context).colorScheme;
     final preview = isGold ? _previewGoldValue(app) : null;
 
-    final typeOptions = isCard
-        ? [
-            ['credit', 'Credit Card'],
-            ['debit', 'Debit Card'],
-          ]
-        : [
-            ['bank', l10n.accounts_bank],
-            ['cash', l10n.accounts_cash],
-            ['savings', l10n.accounts_savings],
-            ['wallet', l10n.accounts_eWallet],
-            ['gold', l10n.accounts_gold],
-          ];
+    final typeOptions = [
+      ['credit', 'Credit Card'],
+      ['debit', 'Debit Card'],
+      ['prepaid', 'Prepaid Card'],
+    ];
 
     return Padding(
       padding: EdgeInsets.only(
@@ -1981,16 +1989,38 @@ class _CardSheetState extends State<_CardSheet> {
                     ),
             ),
             const SizedBox(height: 14),
-          ] else if (_type != 'bank') ...[
+          ] else if (isDebit) ...[
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: cs.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: cs.primary.withValues(alpha: 0.2)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline_rounded, size: 20, color: cs.primary),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Debit cards share balance with their linked bank account.',
+                      style: TextStyle(fontSize: 13, color: cs.onSurface),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ] else ...[
             // ── Regular balance field ─────────────────────────────────
             TextField(textInputAction: TextInputAction.next, 
               controller: _balCtrl,
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
               decoration: InputDecoration(
-                  labelText: isEdit
-                      ? l10n.accounts_balance
-                      : l10n.accounts_initialBalance,
+                  labelText: isCredit
+                      ? (isEdit ? 'Current Debt / Balance' : 'Initial Debt / Balance')
+                      : (isEdit ? l10n.accounts_balance : l10n.accounts_initialBalance),
                   prefixText: '${currencyInfo(_currency).symbol} '),
             ),
           ],
@@ -2029,6 +2059,7 @@ class _CardSheetState extends State<_CardSheet> {
               controller: _cardExpiryCtrl,
               keyboardType: TextInputType.datetime,
               maxLength: 5,
+              inputFormatters: [CardExpiryInputFormatter()],
               decoration: InputDecoration(
                 labelText: l10n.accounts_expiryDate,
                 prefixIcon: const Icon(Icons.calendar_month),
@@ -2098,9 +2129,9 @@ class _CardSheetState extends State<_CardSheet> {
             ),
           ],
 
-          if (isCard) ...[
+          if (!isPrepaid) ...[
             const SizedBox(height: 16),
-            Text(l10n.accounts_linkedAccountOptional,
+            Text(isDebit ? 'Linked Bank Account (Required)' : l10n.accounts_linkedAccountOptional,
                 style: Theme.of(context)
                     .textTheme
                     .labelMedium
@@ -2110,29 +2141,30 @@ class _CardSheetState extends State<_CardSheet> {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  GestureDetector(
-                    onTap: () => setState(() => _linkedAccountId = null),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 140),
-                      margin: const EdgeInsets.only(right: 10),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 14),
-                      decoration: BoxDecoration(
-                        color: _linkedAccountId == null
-                            ? cs.primary
-                            : cs.surfaceContainerHigh,
-                        borderRadius: BorderRadius.circular(16),
+                  if (!isDebit)
+                    GestureDetector(
+                      onTap: () => setState(() => _linkedAccountId = null),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 140),
+                        margin: const EdgeInsets.only(right: 10),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: _linkedAccountId == null
+                              ? cs.primary
+                              : cs.surfaceContainerHigh,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Text(l10n.shared_widgets_none,
+                            style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: _linkedAccountId == null
+                                    ? Colors.white
+                                    : cs.onSurface)),
                       ),
-                      child: Text(l10n.shared_widgets_none,
-                          style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: _linkedAccountId == null
-                                  ? Colors.white
-                                  : cs.onSurface)),
                     ),
-                  ),
-                  ...app.accounts.where((a) => a.type == 'bank' && !a.dontLinkToCard).map((a) {
+                  ...app.accounts.where((a) => a.type == 'bank').map((a) {
                     final sel = _linkedAccountId == a.id;
                     return GestureDetector(
                       onTap: () => setState(() => _linkedAccountId = a.id),
@@ -2172,7 +2204,7 @@ class _CardSheetState extends State<_CardSheet> {
           ],
 
           // ── Exclude from total ──────────────────────────────────────
-          if (_type != 'bank')
+          if (!isDebit)
             SwitchListTile.adaptive(
               contentPadding: EdgeInsets.zero,
               title: Text(l10n.accounts_excludeFromTotalBala,
@@ -2185,21 +2217,6 @@ class _CardSheetState extends State<_CardSheet> {
               value: _excludeFromTotal,
               onChanged: (v) => setState(() => _excludeFromTotal = v),
             ),
-          if (isCard && _linkedAccountId != null) ...[
-            const SizedBox(height: 14),
-            SwitchListTile.adaptive(
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.accounts_excludeCardBalance,
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-              subtitle: Text(
-                  l10n.accounts_excludeCardBalanceDesc,
-                  style: TextStyle(
-                      fontSize: 12,
-                      color: cs.onSurface.withValues(alpha: 0.5))),
-              value: _excludeFromBankTotal,
-              onChanged: (v) => setState(() => _excludeFromBankTotal = v),
-            ),
-          ],
           const SizedBox(height: 14),
 
           // ── Color picker ────────────────────────────────────────────
@@ -2349,6 +2366,39 @@ class _RealWorldCard extends StatelessWidget {
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
                 onPressed: () async {
+                  final blockReason = app.getAccountDeletionBlockReason(acc.id);
+                  if (blockReason != null) {
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        icon: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: cs.error.withValues(alpha: 0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.info_outline_rounded,
+                              color: cs.error, size: 24),
+                        ),
+                        title: Text(l10n.accounts_cannotDeleteAccount,
+                            textAlign: TextAlign.center),
+                        content: Text(blockReason, textAlign: TextAlign.center),
+                        actionsAlignment: MainAxisAlignment.center,
+                        actions: [
+                          FilledButton(
+                            style: FilledButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14)),
+                            ),
+                            onPressed: () => Navigator.pop(ctx),
+                            child: Text(l10n.common_ok),
+                          ),
+                        ],
+                      ),
+                    );
+                    return;
+                  }
                   if (await showDeleteConfirm(context, acc.name) &&
                       context.mounted) {
                     final undo = await context
@@ -2368,13 +2418,37 @@ class _RealWorldCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(acc.name,
+                      Flexible(
+                        child: Text(
+                          acc.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700)),
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          acc.type.toUpperCase(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                   const Spacer(),
@@ -2461,7 +2535,7 @@ class _RealWorldCard extends StatelessWidget {
                                   fontSize: 9,
                                   letterSpacing: 1)),
                           const SizedBox(height: 2),
-                          Text(formatAmount(acc.balance, acc.currency),
+                          Text(formatAmount(app.getEffectiveBalance(acc), acc.currency),
                               style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 16,

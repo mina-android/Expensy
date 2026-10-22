@@ -1633,6 +1633,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get home_addAccount => '添加账户';
 
   @override
+  String get home_cards => '卡片';
+
+  @override
+  String get home_addCard => '添加卡片';
+
+  @override
   String get home_monthlyOverview => '月度概览';
 
   @override
@@ -2584,4 +2590,122 @@ class AppLocalizationsZh extends AppLocalizations {
   String accounts_dueOnDay(int day) {
     return '到期日：$day号';
   }
+
+  @override
+  String get accounts_cannotDeleteAccount => '无法删除账户';
+
+  @override
+  String get common_ok => '确定';
+
+  @override
+  String get certificates_title => '定期存款与大额存单';
+
+  @override
+  String get certificates_addCertificate => '添加存单';
+
+  @override
+  String get certificates_editCertificate => '编辑存单';
+
+  @override
+  String get certificates_noCertificates => '暂无存单';
+
+  @override
+  String get certificates_noCertificatesDesc => '跟踪您的高收益定期存单、利息收益及自动付息。';
+
+  @override
+  String get certificates_active => '进行中';
+
+  @override
+  String get certificates_matured => '已到期';
+
+  @override
+  String get certificates_amount => '本金金额';
+
+  @override
+  String get certificates_collectionType => '付息方式';
+
+  @override
+  String get certificates_collectedSoFar => '已收利息';
+
+  @override
+  String get certificates_expectedTotal => '预计总收益';
+
+  @override
+  String get certificates_startDate => '起息日';
+
+  @override
+  String get certificates_endDate => '到期日';
+
+  @override
+  String get certificates_redeem => '支取 / 赎回存单';
+
+  @override
+  String certificates_redeemConfirm(String name, String amount) {
+    return '确定要提前赎回 \"$name\" 吗？本金 $amount 将原路退回至您的银行账户。';
+  }
+
+  @override
+  String get certificates_redeemedSuccess => '存单已赎回，本金已成功退回。';
+
+  @override
+  String get certificates_name => '存单名称';
+
+  @override
+  String get certificates_interestRate => '年化利率 (%)';
+
+  @override
+  String get certificates_linkedBankAccount => '关联银行账户';
+
+  @override
+  String get certificates_periodicYield => '每期利息收益';
+
+  @override
+  String get certificates_paymentReminder => '利息派发提醒通知';
+
+  @override
+  String get certificates_reminderTime => '提醒时间';
+
+  @override
+  String get certificates_reminder2DaysBefore => '提前2天提醒';
+
+  @override
+  String get certificates_deleteCertificate => '删除存单';
+
+  @override
+  String get certificates_confirmDeleteCertificate =>
+      '确定要删除此存单吗？所有关联的本金与利息交易都将被清除，资金将退回您的账户。';
+
+  @override
+  String get certificates_deleted => '存单已删除';
+
+  @override
+  String get onboarding_stayOnTopOfFinances => '随时掌控您的财务';
+
+  @override
+  String get onboarding_stayOnTopOfFinancesDesc =>
+      '开启准时提醒，不再错过账单还款、还款日或预算超支提醒。';
+
+  @override
+  String get onboarding_featureBillTitle => '账单与还款日提醒';
+
+  @override
+  String get onboarding_featureBillDesc => '在信用卡账单日与贷款还款日前收到贴心提醒。';
+
+  @override
+  String get onboarding_featureBudgetTitle => '预算监控提醒';
+
+  @override
+  String get onboarding_featureBudgetDesc => '当类别支出达到预算的80%或100%时即刻收到预警通知。';
+
+  @override
+  String get onboarding_featureRecurringTitle => '周期性订阅';
+
+  @override
+  String get onboarding_featureRecurringDesc => '在定期账单和会员服务自动续费前提前知晓。';
+
+  @override
+  String get onboarding_allowNotifications => '允许通知';
+
+  @override
+  String get onboarding_maybeLater => '稍后再说';
 }

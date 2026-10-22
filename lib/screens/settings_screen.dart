@@ -376,17 +376,24 @@ class SettingsScreen extends StatelessWidget {
                       title: Text(l10n.settings_weekStartsOn,
                           style: const TextStyle(
                               fontWeight: FontWeight.w700, fontSize: 14)),
-                      trailing: DropdownButton<String>(
+                      trailing: AppDropdown<String>(
                         value: s.weekStart,
-                        underline: const SizedBox(),
-                        borderRadius: BorderRadius.circular(12),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         items: [
                           DropdownMenuItem(
                               value: 'monday',
-                              child: Text(l10n.settings_monday)),
+                              child: Text(
+                                l10n.settings_monday,
+                                style: const TextStyle(
+                                    fontSize: 13, fontWeight: FontWeight.w600),
+                              )),
                           DropdownMenuItem(
                               value: 'sunday',
-                              child: Text(l10n.settings_sunday)),
+                              child: Text(
+                                l10n.settings_sunday,
+                                style: const TextStyle(
+                                    fontSize: 13, fontWeight: FontWeight.w600),
+                              )),
                         ],
                         onChanged: (v) {
                           if (v != null) app.updateSetting('weekStart', v);
@@ -643,25 +650,58 @@ class SettingsScreen extends StatelessWidget {
 
   void _editName(BuildContext context, AppProvider app) {
     final l10n = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
     final ctrl = TextEditingController(text: app.settings.userName);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(l10n.settings_displayName),
+        icon: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: cs.primary.withValues(alpha: 0.12),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(Icons.person_rounded, color: cs.primary, size: 24),
+        ),
+        title: Text(l10n.settings_displayName, textAlign: TextAlign.center),
         content: TextField(
             controller: ctrl,
             autofocus: true,
-            decoration: InputDecoration(labelText: l10n.settings_yourName)),
+            decoration: InputDecoration(
+              labelText: l10n.settings_yourName,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            )),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(l10n.settings_cancel)),
-          FilledButton(
-            onPressed: () {
-              app.updateSetting('userName', ctrl.text.trim());
-              Navigator.pop(ctx);
-            },
-            child: Text(l10n.settings_save),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
+                  ),
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text(l10n.settings_cancel),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
+                  ),
+                  onPressed: () {
+                    app.updateSetting('userName', ctrl.text.trim());
+                    Navigator.pop(ctx);
+                  },
+                  child: Text(l10n.settings_save),
+                ),
+              ),
+            ],
           ),
         ],
       ),

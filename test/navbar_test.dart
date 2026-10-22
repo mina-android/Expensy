@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:expensy/widgets/rounded_square_border.dart';
 import 'package:expensy/screens/main_shell.dart';
+import 'package:expensy/screens/home_screen.dart';
+import 'package:expensy/screens/transactions_screen.dart';
+import 'package:expensy/screens/recurring_screen.dart';
+import 'package:expensy/screens/accounts_screen.dart';
+import 'package:expensy/screens/budget_screen.dart';
+import 'package:expensy/screens/more_screen.dart';
 import 'package:expensy/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:expensy/providers/app_provider.dart';
@@ -111,6 +117,53 @@ void main() {
       await tester.tap(receiptTabFinder);
       await tester.pumpAndSettle();
       expect(app.tabIndexNotifier.value, equals(1));
+    });
+
+    testWidgets('Tapping all tabs displays each screen and never renders blank SizedBox', (tester) async {
+      final app = AppProvider();
+      await tester.pumpWidget(
+        ChangeNotifierProvider<AppProvider>.value(
+          value: app,
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: MainShell(),
+          ),
+        ),
+      );
+
+      // Tab 0: Home is visible
+      expect(find.byType(HomeScreen), findsOneWidget);
+
+      final tabIcons = [
+        Icons.receipt_long_outlined,          // 1: Transactions
+        Icons.repeat_rounded,                  // 2: Recurring
+        Icons.account_balance_wallet_outlined, // 3: Accounts
+        Icons.pie_chart_outline_rounded,       // 4: Budgets
+        Icons.more_horiz_outlined,             // 5: More
+      ];
+
+      final expectedTypes = [
+        TransactionsScreen,
+        RecurringScreen,
+        AccountsScreen,
+        BudgetScreen,
+        MoreScreen,
+      ];
+
+      for (int i = 0; i < tabIcons.length; i++) {
+        final iconFinder = find.descendant(
+          of: find.byType(NavigationBar),
+          matching: find.byIcon(tabIcons[i]),
+        );
+        expect(iconFinder, findsOneWidget);
+        await tester.tap(iconFinder);
+        await tester.pumpAndSettle();
+
+        expect(app.tabIndexNotifier.value, equals(i + 1));
+        // Verify screen widget is actually mounted and visible
+        expect(find.byType(expectedTypes[i]), findsOneWidget);
+      }
     });
   });
 }

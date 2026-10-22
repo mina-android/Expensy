@@ -64,21 +64,130 @@ void main() {
     await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();
 
-    // Page 5: Add a Card screen
-    expect(find.text('Add a Card'), findsOneWidget);
+    // Page 5: Add a Debit Card screen
+    expect(find.text('Add a Debit Card'), findsOneWidget);
     expect(
-        find.text("You can skip this if you don't want to add a card right now."),
+        find.text('Link a debit card to your new bank account for effortless expense tracking.'),
         findsOneWidget);
-    // Verify "Skip for now" button is present on the Add a Card screen!
+    // Verify "Skip for now" button is present on the Debit Card screen!
     final skipBtn = find.text('Skip for now');
     expect(skipBtn, findsOneWidget);
 
-    // Tapping "Skip for now" skips card creation
+    // Tapping "Skip for now" advances to Notification Access Request page
     await tester.tap(skipBtn);
     await tester.pumpAndSettle();
+
+    expect(find.text('Stay on Top of Your Finances'), findsOneWidget);
+    expect(find.text('Allow Notifications'), findsOneWidget);
+    expect(find.text('Maybe Later'), findsOneWidget);
   });
 
-  testWidgets('Onboarding bank account shows Don\'t link to Card toggle and hides balance until toggled',
+  testWidgets('Onboarding name validation highlights red when empty and continue is clicked',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    final provider = AppProvider();
+
+    await tester.pumpWidget(
+      ChangeNotifierProvider<AppProvider>.value(
+        value: provider,
+        child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: Locale('en'),
+          home: OnboardingScreen(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Page 0: Language
+    await tester.tap(find.text('English'));
+    await tester.pumpAndSettle(const Duration(milliseconds: 400));
+
+    // Page 1: Welcome -> Start Fresh
+    await tester.tap(find.text('Start Fresh'));
+    await tester.pumpAndSettle();
+
+    // Page 2: Name -> Click continue without entering a name
+    expect(find.text("Let's get you set up"), findsOneWidget);
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+
+    // Expect red validation error "Name is required"
+    expect(find.text('Name is required'), findsOneWidget);
+
+    // Enter name -> error clears
+    await tester.enterText(find.byType(TextField), 'Alice');
+    await tester.pumpAndSettle();
+    expect(find.text('Name is required'), findsNothing);
+
+    // Continue to Currency
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+    expect(find.text('Default Currency'), findsOneWidget);
+  });
+
+  testWidgets('Onboarding non-bank account bypasses debit card page directly to notifications',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    final provider = AppProvider();
+
+    await tester.pumpWidget(
+      ChangeNotifierProvider<AppProvider>.value(
+        value: provider,
+        child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: Locale('en'),
+          home: OnboardingScreen(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Page 0: Language
+    await tester.tap(find.text('English'));
+    await tester.pumpAndSettle(const Duration(milliseconds: 400));
+
+    // Page 1: Welcome
+    await tester.tap(find.text('Start Fresh'));
+    await tester.pumpAndSettle();
+
+    // Page 2: Name
+    await tester.enterText(find.byType(TextField), 'Alice');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+
+    // Page 3: Currency
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+
+    // Page 4: Account -> Select Cash
+    await tester.tap(find.text('Cash'));
+    await tester.pumpAndSettle();
+
+    // Continue -> Should bypass debit card page and go directly to notifications
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Add a Debit Card'), findsNothing);
+    expect(find.text('Stay on Top of Your Finances'), findsOneWidget);
+  });
+
+  testWidgets('Onboarding bank account displays balance field directly without unlinking toggle',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 2.0;
@@ -122,16 +231,9 @@ void main() {
 
     // Page 4: First Account (defaults to Bank)
     expect(find.text('Your First Account'), findsOneWidget);
-    expect(find.text("Don't link to Card"), findsOneWidget);
-    // Initially, Starting Balance and Exclude from Total Balance are hidden for Bank
-    expect(find.text('Starting Balance'), findsNothing);
-    expect(find.text('Exclude from Total Balance'), findsNothing);
-
-    // Toggle "Don't link to Card" ON
-    await tester.tap(find.text("Don't link to Card"));
-    await tester.pumpAndSettle();
-
-    // Now Starting Balance and Exclude from Total Balance should be visible
+    // Don't link to card is removed
+    expect(find.text("Don't link to Card"), findsNothing);
+    // Starting Balance and Exclude from Total Balance are now immediately visible for Bank accounts
     expect(find.text('Starting Balance'), findsOneWidget);
     expect(find.text('Exclude from Total Balance'), findsOneWidget);
 
@@ -139,47 +241,36 @@ void main() {
     await tester.tap(find.text('Cash'));
     await tester.pumpAndSettle();
 
-    // "Don't link to Card" should NOT be visible for Cash
-    expect(find.text("Don't link to Card"), findsNothing);
     // Starting Balance should still be visible for Cash
     expect(find.text('Starting Balance'), findsOneWidget);
     expect(find.text('Exclude from Total Balance'), findsOneWidget);
   });
 
-  test('AppProvider nonBankAccounts includes bank accounts when dontLinkToCard is true', () {
+  test('Debit card dynamically inherits effective balance from linked bank account', () {
     final provider = AppProvider();
-    final linkedBank = Account(
-      id: 'acc_linked_bank',
-      name: 'Linked Bank',
+    final bank = Account(
+      id: 'acc_bank_1',
+      name: 'Main Bank',
       type: 'bank',
-      balance: 1000,
+      balance: 5000,
       colorValue: 0xFF1972E8,
       currency: 'USD',
-      dontLinkToCard: false,
     );
-    final standaloneBank = Account(
-      id: 'acc_standalone_bank',
-      name: 'Standalone Bank',
-      type: 'bank',
-      balance: 2000,
+    final debitCard = Account(
+      id: 'acc_debit_card',
+      name: 'Bank Debit Card',
+      type: 'debit',
+      balance: 0,
+      linkedAccountId: 'acc_bank_1',
       colorValue: 0xFF1972E8,
-      currency: 'USD',
-      dontLinkToCard: true,
-    );
-    final cash = Account(
-      id: 'acc_cash',
-      name: 'Cash',
-      type: 'cash',
-      balance: 500,
-      colorValue: 0xFF2E7D32,
       currency: 'USD',
     );
 
-    provider.accounts = [linkedBank, standaloneBank, cash];
+    provider.accounts = [bank, debitCard];
 
-    final transactable = provider.nonBankAccounts;
-    expect(transactable.contains(linkedBank), isFalse);
-    expect(transactable.contains(standaloneBank), isTrue);
-    expect(transactable.contains(cash), isTrue);
+    // Debit card inherits bank balance via getEffectiveBalance
+    expect(provider.getEffectiveBalance(debitCard), 5000.0);
+    // Total balance only counts bank, debit is excluded from double counting
+    expect(provider.totalBalance, 5000.0);
   });
 }

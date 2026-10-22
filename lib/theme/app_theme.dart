@@ -173,6 +173,7 @@ ThemeData buildTheme({
 }
 
 ThemeData _base(ColorScheme cs, String appFont) {
+  final isDark = cs.brightness == Brightness.dark;
   final baseTextTheme = ThemeData(brightness: cs.brightness).textTheme;
   final fontTextTheme = _applyFont(appFont, baseTextTheme);
 
@@ -225,6 +226,48 @@ ThemeData _base(ColorScheme cs, String appFont) {
     ),
     listTileTheme: ListTileThemeData(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    ),
+    dropdownMenuTheme: DropdownMenuThemeData(
+      menuStyle: MenuStyle(
+        shape: WidgetStateProperty.all(
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        ),
+        elevation: WidgetStateProperty.all(6),
+        backgroundColor: WidgetStateProperty.all(
+          isDark ? cs.surfaceContainerHigh : cs.surfaceContainerLowest,
+        ),
+      ),
+    ),
+    popupMenuTheme: PopupMenuThemeData(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 6,
+      color: isDark ? cs.surfaceContainerHigh : cs.surfaceContainerLowest,
+    ),
+    dialogTheme: DialogThemeData(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      backgroundColor: isDark ? cs.surfaceContainerHigh : cs.surface,
+      surfaceTintColor: Colors.transparent,
+      elevation: 8,
+      titleTextStyle: fontTextTheme.titleLarge?.copyWith(
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.3,
+        color: cs.onSurface,
+      ),
+      contentTextStyle: fontTextTheme.bodyMedium?.copyWith(
+        color: cs.onSurface.withValues(alpha: 0.75),
+        height: 1.4,
+      ),
+    ),
+    menuTheme: MenuThemeData(
+      style: MenuStyle(
+        shape: WidgetStateProperty.all(
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        ),
+        elevation: WidgetStateProperty.all(6),
+        backgroundColor: WidgetStateProperty.all(
+          isDark ? cs.surfaceContainerHigh : cs.surfaceContainerLowest,
+        ),
+      ),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,

@@ -1,0 +1,19 @@
+name: expensy_saf
+description: Lightweight Storage Access Framework (SAF) and Android Keystore secret store plugin for Expensy auto-backups.
+version: 0.0.1
+publish_to: 'none'
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+  flutter: '>=3.19.0'
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.ma.expensy.saf
+        pluginClass: ExpensySafPlugin
+
+dependencies:
+  flutter:
+    sdk: flutter

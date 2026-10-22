@@ -1678,6 +1678,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get home_addAccount => 'Добавить счет';
 
   @override
+  String get home_cards => 'Карты';
+
+  @override
+  String get home_addCard => 'Добавить карту';
+
+  @override
   String get home_monthlyOverview => 'Ежемесячный обзор';
 
   @override
@@ -2679,4 +2685,128 @@ class AppLocalizationsRu extends AppLocalizations {
   String accounts_dueOnDay(int day) {
     return 'Срок: $day-го числа';
   }
+
+  @override
+  String get accounts_cannotDeleteAccount => 'Невозможно удалить счет';
+
+  @override
+  String get common_ok => 'OK';
+
+  @override
+  String get certificates_title => 'Срочные вклады и сертификаты';
+
+  @override
+  String get certificates_addCertificate => 'Добавить сертификат';
+
+  @override
+  String get certificates_editCertificate => 'Редактировать сертификат';
+
+  @override
+  String get certificates_noCertificates => 'Сертификатов пока нет';
+
+  @override
+  String get certificates_noCertificatesDesc =>
+      'Отслеживайте доходные вклады, сертификаты и выплаты процентов.';
+
+  @override
+  String get certificates_active => 'Активен';
+
+  @override
+  String get certificates_matured => 'Завершен';
+
+  @override
+  String get certificates_amount => 'Сумма вклада';
+
+  @override
+  String get certificates_collectionType => 'Выплата процентов';
+
+  @override
+  String get certificates_collectedSoFar => 'Получено на данный момент';
+
+  @override
+  String get certificates_expectedTotal => 'Ожидаемый общий доход';
+
+  @override
+  String get certificates_startDate => 'Дата начала';
+
+  @override
+  String get certificates_endDate => 'Дата погашения';
+
+  @override
+  String get certificates_redeem => 'Погасить сертификат';
+
+  @override
+  String certificates_redeemConfirm(String name, String amount) {
+    return 'Вы уверены, что хотите погасить \"$name\"? Сумма вклада $amount будет возвращена на банковский счет.';
+  }
+
+  @override
+  String get certificates_redeemedSuccess =>
+      'Сертификат успешно погашен, сумма возвращена на счет.';
+
+  @override
+  String get certificates_name => 'Название сертификата';
+
+  @override
+  String get certificates_interestRate => 'Годовая процентная ставка (%)';
+
+  @override
+  String get certificates_linkedBankAccount => 'Связанный банковский счет';
+
+  @override
+  String get certificates_periodicYield => 'Периодический процентный доход';
+
+  @override
+  String get certificates_paymentReminder => 'Напоминание о выплате процентов';
+
+  @override
+  String get certificates_reminderTime => 'Время напоминания';
+
+  @override
+  String get certificates_reminder2DaysBefore => 'Напоминание за 2 дня';
+
+  @override
+  String get certificates_deleteCertificate => 'Удалить сертификат';
+
+  @override
+  String get certificates_confirmDeleteCertificate =>
+      'Вы уверены, что хотите удалить этот сертификат? Все связанные операции будут удалены, а средства возвращены на ваш счет.';
+
+  @override
+  String get certificates_deleted => 'Сертификат удален';
+
+  @override
+  String get onboarding_stayOnTopOfFinances => 'Контролируйте свои финансы';
+
+  @override
+  String get onboarding_stayOnTopOfFinancesDesc =>
+      'Включите своевременные напоминания, чтобы не пропустить платежи, просроченные счета или лимиты бюджета.';
+
+  @override
+  String get onboarding_featureBillTitle =>
+      'Напоминания о счетах и датах платежей';
+
+  @override
+  String get onboarding_featureBillDesc =>
+      'Получайте оповещения перед датами выписок по кредитным картам и взносами по кредитам.';
+
+  @override
+  String get onboarding_featureBudgetTitle => 'Оповещения по бюджету';
+
+  @override
+  String get onboarding_featureBudgetDesc =>
+      'Получайте предупреждения при достижении 80% или 100% лимита расходов по категории.';
+
+  @override
+  String get onboarding_featureRecurringTitle => 'Регулярные подписки';
+
+  @override
+  String get onboarding_featureRecurringDesc =>
+      'Будьте в курсе до автоматического продления регулярных счетов и подписок.';
+
+  @override
+  String get onboarding_allowNotifications => 'Разрешить уведомления';
+
+  @override
+  String get onboarding_maybeLater => 'Возможно позже';
 }

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
+import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
@@ -20,6 +21,11 @@ import '../l10n/app_localizations.dart';
 import 'package:home_widget/home_widget.dart';
 import '../services/credit_reminder_service.dart';
 import '../services/loan_reminder_service.dart';
+import '../services/certificate_reminder_service.dart';
+import '../services/backup_builder.dart';
+import '../services/backup_encryption_service.dart';
+import '../services/auto_backup_service.dart';
+import 'package:expensy_saf/expensy_saf.dart';
 import '../theme/app_theme.dart';
 
 class AppSettings {
@@ -43,7 +49,7 @@ class AppSettings {
   AppSettings({
     this.currency      = 'EGP',
     this.themeSeed     = 'violet',
-    this.themeMode     = 'dark',
+    this.themeMode     = 'system',
     this.weekStart     = 'monday',
     this.hideBalance   = false,
     this.userName      = '',
@@ -175,6 +181,7 @@ class AppProvider extends ChangeNotifier {
 
   List<Loan> loans = [];
   List<LoanPayment> loanPayments = [];
+  List<Certificate> certificates = [];
 
   final _erService = ExchangeRateService();
   final _notif       = NotificationService();
@@ -191,6 +198,28 @@ class AppProvider extends ChangeNotifier {
   final _uuid = const Uuid();
   String newId() => _uuid.v4();
 
+  Future<void> _mutationQueue = Future.value();
+  int _mutexDepth = 0;
+
+  Future<T> _serializeMutation<T>(Future<T> Function() action) async {
+    if (_mutexDepth > 0) {
+      return await action();
+    }
+    final completer = Completer<T>();
+    _mutationQueue = _mutationQueue.then((_) async {
+      _mutexDepth++;
+      try {
+        final result = await action();
+        completer.complete(result);
+      } catch (e, stack) {
+        completer.completeError(e, stack);
+      } finally {
+        _mutexDepth--;
+      }
+    });
+    return completer.future;
+  }
+
   // ── Boot ─────────────────────────────────────────────────────────────
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
@@ -199,6 +228,7 @@ class AppProvider extends ChangeNotifier {
       settings = AppSettings.fromJson(jsonDecode(raw) as Map<String, dynamic>);
     }
     accounts     = await DBHelper.getAccounts();
+    await migrateLegacyCardBalances();
     categories   = await DBHelper.getCategories();
     transactions = await DBHelper.getTransactions();
     recurring    = await DBHelper.getRecurring();
@@ -215,6 +245,7 @@ class AppProvider extends ChangeNotifier {
     recurringHistoryCount = await DBHelper.getRecurringHistoryCount();
     presets      = await DBHelper.getPresets();
     splits       = await DBHelper.getAllSplits();
+    certificates = await DBHelper.getCertificates();
     _rebuildSplitsCache();
     _loaded = true;
     notifyListeners();
@@ -228,7 +259,11 @@ class AppProvider extends ChangeNotifier {
     _loadRates();
     await _recordNetWorthSnapshot();
     await checkAndProcessAutoPay();
-    await updateHomeWidgets();
+    await checkAndProcessCertificates();
+    await CertificateReminderService().rescheduleAllCertificates(certificates);
+    updateHomeWidgets();
+    await refreshAutoBackupState();
+    AutoBackupService.runCatchUpIfNeeded();
 
     startAutoPayTimer();
   }
@@ -250,10 +285,20 @@ class AppProvider extends ChangeNotifier {
   @override
   void dispose() {
     pauseAutoPayTimer();
+    _homeWidgetDebounceTimer?.cancel();
     super.dispose();
   }
 
-  Future<void> updateHomeWidgets() async {
+  Timer? _homeWidgetDebounceTimer;
+
+  void updateHomeWidgets() {
+    _homeWidgetDebounceTimer?.cancel();
+    _homeWidgetDebounceTimer = Timer(const Duration(milliseconds: 750), () {
+      _executeWidgetUpdate();
+    });
+  }
+
+  Future<void> _executeWidgetUpdate() async {
     try {
       final pinnedIds = settings.pinnedWidgetAccountIds;
       final pinnedAccounts = accounts.where((a) => pinnedIds.contains(a.id)).take(3).toList();
@@ -262,7 +307,9 @@ class AppProvider extends ChangeNotifier {
       }
       final accountsJson = jsonEncode(pinnedAccounts.map((a) => {
         'name': a.name,
-        'balance': formatAmount(a.balance, a.currency.isNotEmpty ? a.currency : settings.currency),
+        'balance': settings.hideBalance
+            ? '••••••'
+            : formatAmount(a.balance, a.currency.isNotEmpty ? a.currency : settings.currency),
       }).toList());
       await HomeWidget.saveWidgetData('accounts_widget_data', accountsJson);
       await HomeWidget.updateWidget(name: 'AccountsWidgetProvider');
@@ -475,42 +522,55 @@ class AppProvider extends ChangeNotifier {
 
   // ── Helpers ───────────────────────────────────────────────────────────
 
-  double get totalBalance => accounts
-      .where((a) => !a.excludeFromTotal)
-      .fold(0.0, (sum, a) {
-        final absBalance = a.balance.abs();
-        if (exchangeRates.isEmpty || a.currency == settings.currency) {
-          return sum + absBalance;
-        }
-        return sum +
-            (_erService.convert(
-                    absBalance, a.currency, settings.currency, exchangeRates) ??
-                absBalance);
-      });
+  /// Effective balance for display: debit cards mirror their parent bank account balance,
+  /// other accounts return their stored balance.
+  double getEffectiveBalance(Account acc) {
+    if (acc.isDebit && acc.linkedAccountId != null) {
+      final parent = accountById(acc.linkedAccountId!);
+      if (parent != null) {
+        return parent.balance;
+      }
+    }
+    return acc.balance;
+  }
 
-  double get totalBalanceAll => accounts
-      .fold(0.0, (sum, a) {
-        final absBalance = a.balance.abs();
-        if (exchangeRates.isEmpty || a.currency == settings.currency) {
-          return sum + absBalance;
-        }
-        return sum +
-            (_erService.convert(
-                    absBalance, a.currency, settings.currency, exchangeRates) ??
-                absBalance);
-      });
+  /// Signed net total balance across all active accounts (liquid assets minus credit debt).
+  /// Debit cards are excluded to prevent double-counting their linked bank account funds.
+  double get totalBalance {
+    double sum = 0.0;
+    for (final a in accounts) {
+      if (a.isDebit) continue;
+      if (a.excludeFromTotal || a.excludeFromBankTotal) continue;
+      sum += convertToMain(a.balance, a.currency);
+    }
+    return sum;
+  }
+
+  double get totalBalanceAll {
+    double sum = 0.0;
+    for (final a in accounts) {
+      if (a.isDebit) continue;
+      sum += convertToMain(a.balance, a.currency);
+    }
+    return sum;
+  }
 
   // ── Wealth Management & Net Worth Helpers ──────────────────────────────
 
   /// Liquid Cash and Bank accounts with positive balances converted to main currency.
   double get totalLiquidAccountsValue => accounts
-      .where((a) => a.balance > 0 && !a.isGold)
+      .where((a) => a.balance > 0 && !a.isGold && !a.isDebit)
       .fold(0.0, (sum, a) => sum + convertToMain(a.balance, a.currency));
 
   /// Physical Gold holding value converted to main currency.
   double get totalGoldValue => accounts
       .where((a) => a.balance > 0 && a.isGold)
       .fold(0.0, (sum, a) => sum + convertToMain(a.balance, a.currency));
+
+  /// Active Time Deposits & Certificates value converted to main currency.
+  double get totalCertificatesValue => certificates
+      .where((c) => !c.isSettled)
+      .fold(0.0, (sum, c) => sum + convertToMain(c.amount, c.currency));
 
   /// Unsettled money lent to others (receivables) converted to main currency.
   double get totalLentMoneyValue => lended
@@ -522,11 +582,12 @@ class AppProvider extends ChangeNotifier {
         return sum + convertToMain(l.amount, cur);
       });
 
-  /// Total combined assets: liquid accounts + gold + fixed/investment assets + lent money.
+  /// Total combined assets: liquid accounts + gold + fixed/investment assets + certificates + lent money.
   double get totalWealthAssets =>
       totalLiquidAccountsValue +
       totalGoldValue +
       totalAssetsValue +
+      totalCertificatesValue +
       totalLentMoneyValue;
 
   /// Credit card debt and overdraft accounts (accounts with negative balances) converted to main currency.
@@ -647,19 +708,96 @@ class AppProvider extends ChangeNotifier {
     recordNetWorthSnapshot();
   }
 
+  Future<void> migrateLegacyCardBalances() async {
+    bool changed = false;
+    for (final a in List<Account>.from(accounts)) {
+      if (a.isDebit && a.linkedAccountId != null && a.balance != 0.0) {
+        final parent = accountById(a.linkedAccountId!);
+        if (parent != null) {
+          final transferAmount = a.balance;
+          final updatedParent =
+              parent.copyWith(balance: parent.balance + transferAmount);
+          final updatedCard = a.copyWith(balance: 0.0);
+          await DBHelper.updateAccount(updatedParent);
+          await DBHelper.updateAccount(updatedCard);
+          final pIdx = accounts.indexWhere((acc) => acc.id == parent.id);
+          if (pIdx != -1) accounts[pIdx] = updatedParent;
+          final cIdx = accounts.indexWhere((acc) => acc.id == a.id);
+          if (cIdx != -1) accounts[cIdx] = updatedCard;
+          changed = true;
+        }
+      }
+    }
+    if (changed) {
+      notifyListeners();
+    }
+  }
+
+  String? getAccountDeletionBlockReason(String id) {
+    final activeRecurring = recurring.where((r) => r.accountId == id).length;
+    if (activeRecurring > 0) {
+      return 'Account has $activeRecurring active recurring payments. Please reassign or delete them first.';
+    }
+    final activeLoans = loans
+        .where((l) => l.accountId == id || l.transferAccountId == id)
+        .length;
+    if (activeLoans > 0) {
+      return 'Account has $activeLoans active loans. Please reassign or delete them first.';
+    }
+    final usedPresets = presets.where((p) => p.accountId == id).length;
+    if (usedPresets > 0) {
+      return 'Account is used by $usedPresets transaction presets. Please reassign or delete them first.';
+    }
+    final linkedCards = accounts.where((a) => a.linkedAccountId == id).length;
+    if (linkedCards > 0) {
+      return 'Account is linked to $linkedCards cards. Please unlink or delete them first.';
+    }
+    return null;
+  }
+
   Future<VoidCallback> deleteAccountWithUndo(String id) async {
     final a = accounts.firstWhere((acc) => acc.id == id);
+    final txs = transactions.where((t) => t.accountId == id).toList();
+    final txIds = txs.map((t) => t.id).toSet();
+    final attachedSplits =
+        splits.where((s) => txIds.contains(s.transactionId)).toList();
+
     await deleteAccount(id);
+
     return () async {
-      await addAccount(a);
+      await DBHelper.restoreAccountSnapshot(
+        a,
+        txs,
+        attachedSplits,
+      );
+      accounts.add(a);
+      transactions.addAll(txs);
+      transactions.sort((x, y) => y.date.compareTo(x.date));
+      splits.addAll(attachedSplits);
+      _rebuildSplitsCache();
+      notifyListeners();
+      updateHomeWidgets();
+      recordNetWorthSnapshot();
     };
   }
 
   Future<void> deleteAccount(String id) async {
     await CreditReminderService().cancelReminder(id);
-    await DBHelper.deleteAccount(id);
-    accounts     = await DBHelper.getAccounts();
-    transactions = await DBHelper.getTransactions();
+    await DBHelper.deleteAccountCascade(id);
+    accounts.removeWhere((a) => a.id == id);
+    final txIds = transactions
+        .where((t) => t.accountId == id)
+        .map((t) => t.id)
+        .toSet();
+    transactions.removeWhere((t) => t.accountId == id);
+    splits.removeWhere((s) => txIds.contains(s.transactionId));
+    _rebuildSplitsCache();
+
+    if (settings.pinnedWidgetAccountIds.contains(id)) {
+      settings.pinnedWidgetAccountIds.remove(id);
+      _saveSettings();
+    }
+
     notifyListeners();
     updateHomeWidgets();
     recordNetWorthSnapshot();
@@ -876,27 +1014,98 @@ class AppProvider extends ChangeNotifier {
     return (reverse ? -sign : sign) * amount;
   }
 
-  Future<void> addTransaction(AppTransaction t) async {
-    await DBHelper.insertTransaction(t);
-    await _updateAccountBalance(t.accountId, _txDelta(t));
-    transactions = await DBHelper.getTransactions();
-    notifyListeners();
-    await _checkBudgetAlert(t);
-    updateHomeWidgets();
-    recordNetWorthSnapshot();
+  void _patchAccountBalance(String accountId, double delta) {
+    final idx = accounts.indexWhere((a) => a.id == accountId);
+    if (idx != -1) {
+      final a = accounts[idx];
+      if (a.isGold) return;
+      accounts[idx] = a.copyWith(balance: a.balance + delta);
+    }
   }
 
-  Future<void> updateTransaction(AppTransaction updated,
-      AppTransaction original) async {
-    await _updateAccountBalance(original.accountId, _txDelta(original, reverse: true));
-    await _updateAccountBalance(updated.accountId, _txDelta(updated));
-    await DBHelper.updateTransaction(updated);
-    transactions = await DBHelper.getTransactions();
-    accounts     = await DBHelper.getAccounts();
-    notifyListeners();
-    await _checkBudgetAlert(updated);
-    updateHomeWidgets();
-    recordNetWorthSnapshot();
+  void _insertTransactionInMemory(AppTransaction t) {
+    final idx = transactions.indexWhere((existing) => t.date.isAfter(existing.date));
+    if (idx == -1) {
+      transactions.add(t);
+    } else {
+      transactions.insert(idx, t);
+    }
+  }
+
+  void _updateTransactionInMemory(AppTransaction t) {
+    final idx = transactions.indexWhere((existing) => existing.id == t.id);
+    if (idx != -1) {
+      transactions[idx] = t;
+      transactions.sort((a, b) => b.date.compareTo(a.date));
+    } else {
+      _insertTransactionInMemory(t);
+    }
+  }
+
+  Future<void> addTransaction(AppTransaction t) async {
+    await _serializeMutation(() async {
+      final delta = _txDelta(t);
+      String effectiveAccountId = t.accountId;
+      final acc = accountById(t.accountId);
+      if (acc != null && acc.isDebit && acc.linkedAccountId != null) {
+        effectiveAccountId = acc.linkedAccountId!;
+      }
+      final txToSave = effectiveAccountId != t.accountId
+          ? t.copyWith(accountId: effectiveAccountId)
+          : t;
+
+      await DBHelper.applyTransactionWithBalance(txToSave, delta);
+
+      _patchAccountBalance(effectiveAccountId, delta);
+      _insertTransactionInMemory(txToSave);
+
+      notifyListeners();
+      await _checkBudgetAlert(txToSave);
+      updateHomeWidgets();
+      recordNetWorthSnapshot();
+    });
+  }
+
+  Future<void> updateTransaction(
+      AppTransaction updated, AppTransaction original) async {
+    await _serializeMutation(() async {
+      final oldDelta = _txDelta(original, reverse: true);
+      final newDelta = _txDelta(updated);
+
+      String oldAccId = original.accountId;
+      final oldAcc = accountById(original.accountId);
+      if (oldAcc != null && oldAcc.isDebit && oldAcc.linkedAccountId != null) {
+        oldAccId = oldAcc.linkedAccountId!;
+      }
+
+      String newAccId = updated.accountId;
+      final newAcc = accountById(updated.accountId);
+      if (newAcc != null && newAcc.isDebit && newAcc.linkedAccountId != null) {
+        newAccId = newAcc.linkedAccountId!;
+      }
+
+      final txToSave = newAccId != updated.accountId
+          ? updated.copyWith(accountId: newAccId)
+          : updated;
+
+      if (oldAccId == newAccId) {
+        final netDelta = oldDelta + newDelta;
+        await DBHelper.applyUpdateTransactionWithBalance(txToSave, netDelta);
+        _patchAccountBalance(oldAccId, netDelta);
+      } else {
+        await DBHelper.applyUpdateTransactionWithBalance(txToSave, newDelta);
+        _patchAccountBalance(newAccId, newDelta);
+        await DBHelper.applyTransactionWithBalance(
+            original.copyWith(id: newId()), oldDelta);
+        _patchAccountBalance(oldAccId, oldDelta);
+      }
+
+      _updateTransactionInMemory(txToSave);
+      notifyListeners();
+      await _checkBudgetAlert(txToSave);
+      updateHomeWidgets();
+      recordNetWorthSnapshot();
+    });
   }
 
   Future<void> _checkBudgetAlert(AppTransaction t) async {
@@ -928,17 +1137,43 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> deleteTransaction(String id) async {
-    final t = transactions.where((x) => x.id == id).firstOrNull;
-    if (t == null) return;
-    await _updateAccountBalance(t.accountId, _txDelta(t, reverse: true));
-    await DBHelper.deleteTransaction(id);
-    splits.removeWhere((s) => s.transactionId == id);
-    _splitsByTxId.remove(id);
-    transactions = await DBHelper.getTransactions();
-    accounts     = await DBHelper.getAccounts();
-    notifyListeners();
-    updateHomeWidgets();
-    recordNetWorthSnapshot();
+    await _serializeMutation(() async {
+      final t = transactions.where((x) => x.id == id).firstOrNull;
+      if (t != null) {
+        if (t.transferGroupId != null && t.transferGroupId!.isNotEmpty) {
+          final pair = transactions
+              .where((tx) => tx.transferGroupId == t.transferGroupId)
+              .toList();
+          for (final member in pair) {
+            final delta = _txDelta(member, reverse: true);
+            await DBHelper.applyDeleteTransactionWithBalance(
+                member.id, member.accountId, delta);
+            _patchAccountBalance(member.accountId, delta);
+            splits.removeWhere((s) => s.transactionId == member.id);
+            _splitsByTxId.remove(member.id);
+            transactions.removeWhere((tx) => tx.id == member.id);
+          }
+          notifyListeners();
+          updateHomeWidgets();
+          recordNetWorthSnapshot();
+          return;
+        }
+
+        final delta = _txDelta(t, reverse: true);
+        await DBHelper.applyDeleteTransactionWithBalance(
+            t.id, t.accountId, delta);
+        _patchAccountBalance(t.accountId, delta);
+      } else {
+        await DBHelper.deleteTransaction(id);
+      }
+
+      splits.removeWhere((s) => s.transactionId == id);
+      _splitsByTxId.remove(id);
+      transactions.removeWhere((tx) => tx.id == id);
+      notifyListeners();
+      updateHomeWidgets();
+      recordNetWorthSnapshot();
+    });
   }
 
   Future<void> addTransfer({
@@ -948,47 +1183,59 @@ class AppProvider extends ChangeNotifier {
     double? toAmount,
     String note = '',
   }) async {
-    final fromAcc = accountById(fromId);
-    final toAcc   = accountById(toId);
-    final fromCurrency = fromAcc?.currency ?? settings.currency;
-    final toCurrency   = toAcc?.currency   ?? settings.currency;
+    await _serializeMutation(() async {
+      final fromAcc = accountById(fromId);
+      final toAcc   = accountById(toId);
+      final fromCurrency = fromAcc?.currency ?? settings.currency;
+      final toCurrency   = toAcc?.currency   ?? settings.currency;
 
-    final double creditAmount;
-    if (toAmount != null) {
-      creditAmount = toAmount;
-    } else if (fromCurrency == toCurrency) {
-      creditAmount = fromAmount;
-    } else {
-      creditAmount = convertBetween(fromAmount, fromCurrency, toCurrency)
-          ?? fromAmount;
-    }
+      final double creditAmount;
+      if (toAmount != null) {
+        creditAmount = toAmount;
+      } else if (fromCurrency == toCurrency) {
+        creditAmount = fromAmount;
+      } else {
+        creditAmount = convertBetween(fromAmount, fromCurrency, toCurrency)
+            ?? fromAmount;
+      }
 
-    final now = DateTime.now();
-    final catId = categories.where((c) => c.type == 'expense').isNotEmpty
-        ? categories.firstWhere((c) => c.type == 'expense').id
-        : '';
+      final now = DateTime.now();
+      final catId = categories.where((c) => c.type == 'expense').isNotEmpty
+          ? categories.firstWhere((c) => c.type == 'expense').id
+          : '';
+      final transferGroupId = newId();
 
-    final debit = AppTransaction(
-      id: newId(), type: 'expense', amount: fromAmount,
-      description: 'Transfer out', accountId: fromId,
-      categoryId: catId, date: now, note: note,
-      currency: fromCurrency,
-    );
-    final credit = AppTransaction(
-      id: newId(), type: 'income', amount: creditAmount,
-      description: 'Transfer in', accountId: toId,
-      categoryId: catId, date: now, note: note,
-      currency: toCurrency,
-    );
-    await DBHelper.insertTransaction(debit);
-    await _updateAccountBalance(fromId, -fromAmount);
-    await DBHelper.insertTransaction(credit);
-    await _updateAccountBalance(toId, creditAmount);
-    transactions = await DBHelper.getTransactions();
-    accounts     = await DBHelper.getAccounts();
-    notifyListeners();
-    updateHomeWidgets();
-    recordNetWorthSnapshot();
+      final debit = AppTransaction(
+        id: newId(), type: 'expense', amount: fromAmount,
+        description: 'Transfer out', accountId: fromId,
+        categoryId: catId, date: now, note: note,
+        currency: fromCurrency,
+        transferGroupId: transferGroupId,
+      );
+      final credit = AppTransaction(
+        id: newId(), type: 'income', amount: creditAmount,
+        description: 'Transfer in', accountId: toId,
+        categoryId: catId, date: now, note: note,
+        currency: toCurrency,
+        transferGroupId: transferGroupId,
+      );
+
+      await DBHelper.applyTransferWithBalances(
+        debit,
+        credit,
+        -fromAmount,
+        creditAmount,
+      );
+
+      _patchAccountBalance(fromId, -fromAmount);
+      _patchAccountBalance(toId, creditAmount);
+      _insertTransactionInMemory(debit);
+      _insertTransactionInMemory(credit);
+
+      notifyListeners();
+      updateHomeWidgets();
+      recordNetWorthSnapshot();
+    });
   }
 
   // ── Presets ───────────────────────────────────────────────────────────
@@ -1096,22 +1343,33 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> markRecurringPaid(RecurringPayment r) async {
+  Future<void> markRecurringPaid(RecurringPayment r, {DateTime? occurrenceDate}) async {
+    final effectiveDate = occurrenceDate ?? DateTime.now();
     final t = AppTransaction(
-      id: newId(), type: r.paymentType, amount: r.amount,
+      id: newId(),
+      type: r.paymentType,
+      amount: r.amount,
       description: '${r.name} (recurring)',
-      accountId: r.accountId, categoryId: r.categoryId,
-      date: DateTime.now(),
+      accountId: r.accountId,
+      categoryId: r.categoryId,
+      date: effectiveDate,
     );
     await addTransaction(t);
-    await _recordHistory(r, 'paid');
+    await _recordHistory(r, 'paid', date: effectiveDate);
 
     final updated = RecurringPayment(
-      id: r.id, name: r.name, accountId: r.accountId,
-      categoryId: r.categoryId, amount: r.amount,
-      paymentType: r.paymentType, freqVal: r.freqVal, freqUnit: r.freqUnit,
-      startDate: r.startDate, nextDate: r.calcNextDate(),
-      endDate: r.endDate, paidPayments: r.paidPayments + 1,
+      id: r.id,
+      name: r.name,
+      accountId: r.accountId,
+      categoryId: r.categoryId,
+      amount: r.amount,
+      paymentType: r.paymentType,
+      freqVal: r.freqVal,
+      freqUnit: r.freqUnit,
+      startDate: r.startDate,
+      nextDate: r.calcNextDate(),
+      endDate: r.endDate,
+      paidPayments: r.paidPayments + 1,
       reminderEnabled: r.reminderEnabled,
       reminderTime: r.reminderTime,
       earlyReminderEnabled: r.earlyReminderEnabled,
@@ -1121,7 +1379,10 @@ class AppProvider extends ChangeNotifier {
       autoPayTime: r.autoPayTime,
     );
     await DBHelper.updateRecurring(updated);
-    recurring = await DBHelper.getRecurring();
+    final idx = recurring.indexWhere((item) => item.id == r.id);
+    if (idx != -1) {
+      recurring[idx] = updated;
+    }
     notifyListeners();
     await _notif.cancelReminder(r.id);
     await _notif.scheduleReminder(updated, settings.currency);
@@ -1131,11 +1392,18 @@ class AppProvider extends ChangeNotifier {
     await _recordHistory(r, 'skipped');
 
     final updated = RecurringPayment(
-      id: r.id, name: r.name, accountId: r.accountId,
-      categoryId: r.categoryId, amount: r.amount,
-      paymentType: r.paymentType, freqVal: r.freqVal, freqUnit: r.freqUnit,
-      startDate: r.startDate, nextDate: r.calcNextDate(),
-      endDate: r.endDate, paidPayments: r.paidPayments + 1,
+      id: r.id,
+      name: r.name,
+      accountId: r.accountId,
+      categoryId: r.categoryId,
+      amount: r.amount,
+      paymentType: r.paymentType,
+      freqVal: r.freqVal,
+      freqUnit: r.freqUnit,
+      startDate: r.startDate,
+      nextDate: r.calcNextDate(),
+      endDate: r.endDate,
+      paidPayments: r.paidPayments + 1,
       reminderEnabled: r.reminderEnabled,
       reminderTime: r.reminderTime,
       earlyReminderEnabled: r.earlyReminderEnabled,
@@ -1145,47 +1413,84 @@ class AppProvider extends ChangeNotifier {
       autoPayTime: r.autoPayTime,
     );
     await DBHelper.updateRecurring(updated);
-    recurring = await DBHelper.getRecurring();
+    final idx = recurring.indexWhere((item) => item.id == r.id);
+    if (idx != -1) {
+      recurring[idx] = updated;
+    }
     notifyListeners();
     await _notif.cancelReminder(r.id);
     await _notif.scheduleReminder(updated, settings.currency);
   }
 
   /// Automatically marks any recurring items paid if they are due today or overdue
-  /// and have auto-pay enabled.
+  /// and have auto-pay enabled. Uses occurrence dates and handles catch-up cycles up to 24 iterations.
   Future<void> checkAndProcessAutoPay() async {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final autoPayList = recurring.where((r) {
-      if (!r.autoPayEnabled) return false;
-      final dueDate = DateTime(r.nextDate.year, r.nextDate.month, r.nextDate.day);
-      if (dueDate.isBefore(today)) return true;
-      if (dueDate.isAtSameMomentAs(today)) {
-        // Compare autoPayTime with current time
-        final parts = r.autoPayTime.split(':');
-        final targetHour = int.tryParse(parts[0]) ?? 9;
-        final targetMinute = parts.length > 1 ? (int.tryParse(parts[1]) ?? 0) : 0;
-        final currentMinutes = now.hour * 60 + now.minute;
-        final targetMinutes = targetHour * 60 + targetMinute;
-        return currentMinutes >= targetMinutes;
-      }
-      return false;
-    }).toList();
+    await _serializeMutation(() async {
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
 
-    for (final r in autoPayList) {
-      await markRecurringPaid(r);
-    }
+      for (var r in List<RecurringPayment>.from(recurring)) {
+        if (!r.autoPayEnabled) continue;
+        int catchUpIterations = 0;
+        const maxCatchUp = 24;
+
+        while (catchUpIterations < maxCatchUp) {
+          if (r.endDate != null && r.nextDate.isAfter(r.endDate!)) break;
+
+          final dueDate =
+              DateTime(r.nextDate.year, r.nextDate.month, r.nextDate.day);
+          bool isDue = false;
+
+          if (dueDate.isBefore(today)) {
+            isDue = true;
+          } else if (dueDate.isAtSameMomentAs(today)) {
+            final parts = r.autoPayTime.split(':');
+            final targetHour = int.tryParse(parts[0]) ?? 9;
+            final targetMinute =
+                parts.length > 1 ? (int.tryParse(parts[1]) ?? 0) : 0;
+            final currentMinutes = now.hour * 60 + now.minute;
+            final targetMinutes = targetHour * 60 + targetMinute;
+            isDue = currentMinutes >= targetMinutes;
+          }
+
+          if (!isDue) break;
+
+          final parts = r.autoPayTime.split(':');
+          final hour = int.tryParse(parts[0]) ?? 9;
+          final minute = parts.length > 1 ? (int.tryParse(parts[1]) ?? 0) : 0;
+          final occurrenceDate = DateTime(
+            r.nextDate.year,
+            r.nextDate.month,
+            r.nextDate.day,
+            hour,
+            minute,
+          );
+
+          await markRecurringPaid(r, occurrenceDate: occurrenceDate);
+          catchUpIterations++;
+
+          final updatedR =
+              recurring.firstWhereOrNull((item) => item.id == r.id);
+          if (updatedR == null ||
+              updatedR.nextDate.isAtSameMomentAs(r.nextDate)) {
+            break;
+          }
+          r = updatedR;
+        }
+      }
+    });
   }
 
   // ── Recurring History ─────────────────────────────────────────────────
 
-  Future<void> _recordHistory(RecurringPayment r, String action) async {
+  Future<void> _recordHistory(RecurringPayment r, String action,
+      {DateTime? date}) async {
     final acct = accountById(r.accountId);
     final entry = RecurringHistoryEntry(
       id: newId(),
       recurringId: r.id,
       action: action,
-      date: DateTime.now(),
+      date: date ?? DateTime.now(),
       amount: r.amount,
       currency: acct?.currency ?? settings.currency,
     );
@@ -1530,6 +1835,7 @@ class AppProvider extends ChangeNotifier {
     return transactions
         .where((t) =>
             t.type == 'expense' &&
+            (t.transferGroupId == null || t.transferGroupId!.isEmpty) &&
             !t.date.isBefore(start) &&
             t.date.isBefore(end))
         .fold(0.0, (sum, t) {
@@ -1838,6 +2144,7 @@ class AppProvider extends ChangeNotifier {
     final end = DateTime(month.year, month.month + 1, 1);
     return transactions.where((t) =>
         t.type == 'expense' &&
+        (t.transferGroupId == null || t.transferGroupId!.isEmpty) &&
         !t.date.isBefore(start) &&
         t.date.isBefore(end)).fold(0.0, (sum, t) {
       final acct = accountById(t.accountId);
@@ -1854,6 +2161,7 @@ class AppProvider extends ChangeNotifier {
     final end = DateTime(month.year, month.month + 1, 1);
     return transactions.where((t) =>
         t.type == 'income' &&
+        (t.transferGroupId == null || t.transferGroupId!.isEmpty) &&
         !t.date.isBefore(start) &&
         t.date.isBefore(end)).fold(0.0, (sum, t) {
       final acct = accountById(t.accountId);
@@ -1879,6 +2187,7 @@ class AppProvider extends ChangeNotifier {
     final monthExpenses = transactions
         .where((t) =>
             t.type == 'expense' &&
+            (t.transferGroupId == null || t.transferGroupId!.isEmpty) &&
             !t.date.isBefore(start) &&
             t.date.isBefore(end))
         .toList();
@@ -2306,40 +2615,299 @@ class AppProvider extends ChangeNotifier {
     return saveUri?.toString();
   }
 
+  // ── Auto Backup ────────────────────────────────────────────────────────
+  AutoBackupState _autoBackup = const AutoBackupState(
+    enabled: false,
+    folderUri: '',
+    folderName: '',
+    retention: 7,
+    encrypted: false,
+    lastSuccessMs: 0,
+    lastAttemptMs: 0,
+    lastError: '',
+    lastFile: '',
+    lastSize: 0,
+    nextRunMs: 0,
+  );
+  AutoBackupState get autoBackup => _autoBackup;
+
+  Future<void> refreshAutoBackupState() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.reload();
+    _autoBackup = AutoBackupState.fromPrefs(prefs);
+    notifyListeners();
+  }
+
+  Future<bool> chooseAutoBackupFolder() async {
+    final picked = await ExpensySaf.pickDirectory();
+    if (picked == null) return false;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('ab_tree_uri', picked.uri);
+    await prefs.setString('ab_folder_name', picked.name);
+    await prefs.remove('ab_last_error');
+    await refreshAutoBackupState();
+    await AutoBackupService.scheduleNext(force: true);
+    return true;
+  }
+
+  Future<void> setAutoBackupEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (enabled && (prefs.getString('ab_tree_uri')?.isEmpty ?? true)) {
+      final success = await chooseAutoBackupFolder();
+      if (!success) return;
+    }
+    await prefs.setBool('ab_enabled', enabled);
+    if (!enabled) {
+      final oldUri = prefs.getString('ab_tree_uri');
+      if (oldUri != null && oldUri.isNotEmpty) {
+        await ExpensySaf.releaseDirectory(oldUri);
+      }
+      await ExpensySaf.clearSecret(AutoBackupService.secretKey);
+      await prefs.remove('ab_tree_uri');
+      await prefs.remove('ab_folder_name');
+      await prefs.setBool('ab_encrypted', false);
+    }
+    await refreshAutoBackupState();
+    await AutoBackupService.scheduleNext(force: true);
+  }
+
+  Future<void> setAutoBackupRetention(int retention) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('ab_retention', retention);
+    await refreshAutoBackupState();
+  }
+
+  Future<void> setAutoBackupEncryption({required bool on, String? password}) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (on) {
+      if (password == null || password.isEmpty) {
+        throw const FormatException('Password cannot be empty');
+      }
+      const sample = '{"test":true}';
+      final enc = await BackupEncryptionService.encrypt(jsonStr: sample, password: password);
+      final dec = await BackupEncryptionService.decrypt(bytes: enc, password: password);
+      if (dec != sample) {
+        throw const FormatException('Encryption self-test verification failed');
+      }
+      final saved = await ExpensySaf.setSecret(AutoBackupService.secretKey, password);
+      if (!saved) {
+        throw const FormatException('Failed to securely store encryption key in Android KeyStore');
+      }
+      await prefs.setBool('ab_encrypted', true);
+    } else {
+      await ExpensySaf.clearSecret(AutoBackupService.secretKey);
+      await prefs.setBool('ab_encrypted', false);
+    }
+    await refreshAutoBackupState();
+  }
+
+  Future<AutoBackupResult> runAutoBackupNow() async {
+    final result = await AutoBackupService.runNow(BackupTrigger.manual);
+    await refreshAutoBackupState();
+    return result;
+  }
+
+  // ── Certificates ──────────────────────────────────────────────────────────
+  Future<void> addCertificate(Certificate c) async {
+    await _serializeMutation(() async {
+      final catId = categories.where((cat) => cat.type == 'expense').isNotEmpty
+          ? categories.firstWhere((cat) => cat.type == 'expense').id
+          : '';
+      final now = DateTime.now();
+      final tx = AppTransaction(
+        id: newId(),
+        type: 'expense',
+        amount: c.amount,
+        description: 'Certificate Principal: ${c.name}',
+        accountId: c.accountId,
+        categoryId: catId,
+        date: now,
+        note: 'Deposit for certificate: ${c.name} [cert:${c.id}]',
+        currency: c.currency,
+      );
+      await addTransaction(tx);
+
+      await DBHelper.insertCertificate(c);
+      certificates.insert(0, c);
+      notifyListeners();
+      recordNetWorthSnapshot();
+      await CertificateReminderService().scheduleReminder(c);
+    });
+  }
+
+  Future<void> updateCertificate(Certificate c) async {
+    await _serializeMutation(() async {
+      await DBHelper.updateCertificate(c);
+      final idx = certificates.indexWhere((item) => item.id == c.id);
+      if (idx != -1) {
+        certificates[idx] = c;
+      }
+      notifyListeners();
+      recordNetWorthSnapshot();
+      await CertificateReminderService().scheduleReminder(c);
+    });
+  }
+
+  Future<void> deleteCertificate(String id) async {
+    await _serializeMutation(() async {
+      await CertificateReminderService().cancelReminder(id);
+      final cert = certificates.firstWhereOrNull((c) => c.id == id);
+      if (cert != null) {
+        // Find all transactions associated with this certificate
+        final relatedTxs = transactions.where((t) {
+          final hasCertTag = t.note.contains('[cert:$id]');
+          final matchesCert = t.accountId == cert.accountId &&
+              (t.description.contains(cert.name) || t.note.contains(cert.name)) &&
+              (t.description.startsWith('Certificate Principal:') ||
+                  t.description.startsWith('Certificate Yield:') ||
+                  t.description.startsWith('Certificate Redemption:'));
+          return hasCertTag || matchesCert;
+        }).toList();
+
+        // Delete each transaction, automatically reverting its balance delta
+        for (final tx in relatedTxs) {
+          final delta = _txDelta(tx, reverse: true);
+          await DBHelper.applyDeleteTransactionWithBalance(
+              tx.id, tx.accountId, delta);
+          _patchAccountBalance(tx.accountId, delta);
+          splits.removeWhere((s) => s.transactionId == tx.id);
+          _splitsByTxId.remove(tx.id);
+          transactions.removeWhere((t) => t.id == tx.id);
+        }
+      }
+
+      await DBHelper.deleteCertificate(id);
+      certificates.removeWhere((item) => item.id == id);
+      notifyListeners();
+      updateHomeWidgets();
+      recordNetWorthSnapshot();
+    });
+  }
+
+  Future<void> redeemCertificate(String id, {bool returnPrincipal = true}) async {
+    await _serializeMutation(() async {
+      await CertificateReminderService().cancelReminder(id);
+      final cert = certificates.firstWhereOrNull((c) => c.id == id);
+      if (cert == null || cert.isSettled) return;
+
+      if (returnPrincipal) {
+        final catId = categories.where((cat) => cat.type == 'income').isNotEmpty
+            ? categories.firstWhere((cat) => cat.type == 'income').id
+            : '';
+        final now = DateTime.now();
+        final tx = AppTransaction(
+          id: newId(),
+          type: 'income',
+          amount: cert.amount,
+          description: 'Certificate Redemption: ${cert.name}',
+          accountId: cert.accountId,
+          categoryId: catId,
+          date: now,
+          note: 'Principal return for ${cert.name} [cert:${cert.id}]',
+          currency: cert.currency,
+        );
+        await addTransaction(tx);
+      }
+
+      final settled = cert.copyWith(isSettled: true);
+      await DBHelper.updateCertificate(settled);
+      final idx = certificates.indexWhere((item) => item.id == id);
+      if (idx != -1) {
+        certificates[idx] = settled;
+      }
+      notifyListeners();
+      recordNetWorthSnapshot();
+    });
+  }
+
+  Future<void> checkAndProcessCertificates() async {
+    await _serializeMutation(() async {
+      final now = DateTime.now();
+      for (var c in List<Certificate>.from(certificates)) {
+        if (c.isSettled) continue;
+
+        if (now.isAfter(c.endDate)) {
+          await redeemCertificate(c.id, returnPrincipal: true);
+          continue;
+        }
+
+        final nextDate = c.nextCollectionDate;
+        if (nextDate != null &&
+            (now.isAfter(nextDate) || now.isAtSameMomentAs(nextDate))) {
+          final payout = c.periodicPayout;
+          if (payout > 0) {
+            final catId = categories.where((cat) => cat.type == 'income').isNotEmpty
+                ? categories.firstWhere((cat) => cat.type == 'income').id
+                : '';
+            final tx = AppTransaction(
+              id: newId(),
+              type: 'income',
+              amount: payout,
+              description: 'Certificate Yield: ${c.name}',
+              accountId: c.accountId,
+              categoryId: catId,
+              date: nextDate,
+              note: 'Yield collection for ${c.name} [cert:${c.id}]',
+              currency: c.currency,
+            );
+            await addTransaction(tx);
+
+            final updated = c.copyWith(
+              lastCollectedDate: nextDate,
+              totalCollectedAmount: c.totalCollectedAmount + payout,
+            );
+            await DBHelper.updateCertificate(updated);
+            final idx = certificates.indexWhere((item) => item.id == c.id);
+            if (idx != -1) {
+              certificates[idx] = updated;
+            }
+          }
+        }
+      }
+    });
+  }
+
   // ── Backup ────────────────────────────────────────────────────────────
-  Future<String?> createBackup({String? dialogTitle}) async {
-    final data = await DBHelper.exportAll();
-    data['settings'] = settings.toJson();
-    final json  = const JsonEncoder.withIndent('  ').convert(data);
-    final uint8 = Uint8List.fromList(utf8.encode(json));
-    final ts    = DateTime.now().millisecondsSinceEpoch;
+  Future<String?> createBackup({String? dialogTitle, String? password}) async {
+    final artifact = await BackupBuilder.build(
+      settingsJson: settings.toJson(),
+      password: password,
+      namePrefix: 'expensy_backup',
+    );
 
     final saveUri = await FilePickerPlatform.instance.saveFile(
       dialogTitle: dialogTitle,
-      fileName: 'expensy_backup_$ts.json',
-      bytes: uint8,
-      mimeType: 'application/json',
+      fileName: artifact.fileName,
+      bytes: artifact.bytes,
+      mimeType: artifact.mimeType,
     );
     return saveUri?.toString();
   }
 
-  Future<int> restoreBackup() async {
-    final pickedFiles = await FilePickerPlatform.instance.pickFiles(
-    );
-    if (pickedFiles.isEmpty) return 0;
+  Future<Map<String, dynamic>?> pickAndParseBackupFile({String? password}) async {
+    final pickedFiles = await FilePickerPlatform.instance.pickFiles();
+    if (pickedFiles.isEmpty) return null;
     final picked = pickedFiles.first;
     final ext = picked.extension?.toLowerCase();
-    if (ext != 'json') {
-      throw const FormatException('Please select a .json file.');
+
+    List<int> bytes;
+    final path = picked.path;
+    if (path != null) {
+      bytes = await File(path).readAsBytes();
+    } else {
+      bytes = await picked.readAsBytes();
     }
 
     String jsonStr;
-    final path = picked.path;
-    if (path != null) {
-      jsonStr = await File(path).readAsString();
-    } else {
-      final bytes = await picked.readAsBytes();
+    if (BackupEncryptionService.isEncrypted(bytes) || ext == 'enc') {
+      if (password == null || password.isEmpty) {
+        throw const FormatException('NEEDS_PASSWORD');
+      }
+      jsonStr = await BackupEncryptionService.decrypt(bytes: bytes, password: password);
+    } else if (ext == 'json') {
       jsonStr = utf8.decode(bytes);
+    } else {
+      throw const FormatException('Please select a .json or .enc file.');
     }
 
     final dynamic decoded = jsonDecode(jsonStr);
@@ -2352,13 +2920,16 @@ class AppProvider extends ChangeNotifier {
     const knownKeys = {
       'accounts', 'categories', 'transactions', 'recurring_payments',
       'wishlist', 'lended_people', 'lended_money', 'assets', 'budgets',
-      'recurring_history', 'version', 'settings',
+      'recurring_history', 'certificates', 'version', 'settings',
     };
     if (!data.keys.any(knownKeys.contains)) {
       throw const FormatException(
           'Invalid backup file: no recognisable Expensy data found.');
     }
+    return data;
+  }
 
+  Future<int> restoreBackupData(Map<String, dynamic> data) async {
     await DBHelper.importAll(data);
 
     if (data['settings'] is Map) {
@@ -2369,16 +2940,94 @@ class AppProvider extends ChangeNotifier {
 
     _historyCache.clear();
     await load();
-    // Re-register every recurring and lent/borrowed reminder from the
-    // restored data — same call the original (pre-account-based-lending)
-    // codebase made here.
     await _notif.rescheduleAll(recurring, settings.currency);
     await _lendedNotif.rescheduleAllLended(lended, settings.currency,
         personNameOf: (id) => personById(id)?.name ?? '');
     await _loanNotif.rescheduleAllLoans(loans, settings.currency);
     await CreditReminderService().rescheduleAll(accounts);
+    await CertificateReminderService().rescheduleAllCertificates(certificates);
 
     return (data['_originalVersion'] as int?) ?? (data['version'] as int?) ?? 1;
+  }
+
+  Future<int> restoreBackup({String? password}) async {
+    final data = await pickAndParseBackupFile(password: password);
+    if (data == null) return 0;
+    return restoreBackupData(data);
+  }
+
+  static const Map<String, List<String>> entityGroupTables = {
+    'accounts': ['accounts'],
+    'transactions': [
+      'transactions',
+      'transaction_splits',
+      'transaction_presets'
+    ],
+    'categories': ['categories'],
+    'recurring': ['recurring_payments', 'recurring_history'],
+    'loans': ['loans', 'loan_payments'],
+    'lent_money': ['lended_people', 'lended_money'],
+    'certificates': ['certificates'],
+    'budgets': ['budgets'],
+    'assets': ['assets'],
+    'wishlist_goals': ['wishlist', 'savings_goals', 'savings_contributions'],
+  };
+
+  Future<String?> createSelectiveBackup(Set<String> selectedGroups,
+      {String? dialogTitle}) async {
+    final tables = <String>{};
+    for (final group in selectedGroups) {
+      final tList = entityGroupTables[group];
+      if (tList != null) tables.addAll(tList);
+    }
+    final dt = DateTime.now();
+    final timestamp = DateFormat('yyyyMMdd_HHmmss').format(dt);
+    final data = await DBHelper.exportSelective(tables);
+    data['exported_at'] = dt.toIso8601String();
+
+    final jsonStr = const JsonEncoder.withIndent('  ').convert(data);
+    final bytes = Uint8List.fromList(utf8.encode(jsonStr));
+
+    final saveUri = await FilePickerPlatform.instance.saveFile(
+      dialogTitle: dialogTitle,
+      fileName: 'expensy_selective_backup_$timestamp.json',
+      bytes: bytes,
+      mimeType: 'application/json',
+    );
+    return saveUri?.toString();
+  }
+
+  Future<void> restoreSelective(
+      Map<String, dynamic> data, Set<String> selectedGroups) async {
+    final tables = <String>{};
+    for (final group in selectedGroups) {
+      final tList = entityGroupTables[group];
+      if (tList != null) tables.addAll(tList);
+    }
+
+    await DBHelper.importSelective(data, tables);
+    _historyCache.clear();
+    await load();
+
+    if (selectedGroups.contains('recurring')) {
+      await _notif.rescheduleAll(recurring, settings.currency);
+    }
+    if (selectedGroups.contains('lent_money')) {
+      await _lendedNotif.rescheduleAllLended(
+        lended,
+        settings.currency,
+        personNameOf: (id) => personById(id)?.name ?? '',
+      );
+    }
+    if (selectedGroups.contains('loans')) {
+      await _loanNotif.rescheduleAllLoans(loans, settings.currency);
+    }
+    if (selectedGroups.contains('accounts')) {
+      await CreditReminderService().rescheduleAll(accounts);
+    }
+    if (selectedGroups.contains('certificates')) {
+      await CertificateReminderService().rescheduleAllCertificates(certificates);
+    }
   }
 
   // ── External Backups ──────────────────────────────────────────────────
@@ -2578,6 +3227,7 @@ class AppProvider extends ChangeNotifier {
     }
   }
   final ValueNotifier<int> tabIndexNotifier = ValueNotifier<int>(0);
+  final ValueNotifier<int> accountsTabNotifier = ValueNotifier<int>(0);
 
   List<Account> get nonBankAccounts =>
       accounts.where((a) => a.type != 'bank' || a.dontLinkToCard).toList();
@@ -2627,6 +3277,10 @@ class AppProvider extends ChangeNotifier {
     final item = accounts.removeAt(oldIndex);
     accounts.insert(newIndex, item);
     notifyListeners();
+    final ids = accounts.map((a) => a.id).toList();
+    _serializeMutation(() async {
+      await DBHelper.updateAccountOrder(ids);
+    });
   }
 
   double getBankTotalBalance(String id) {

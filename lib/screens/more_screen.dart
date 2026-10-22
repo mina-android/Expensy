@@ -19,6 +19,7 @@ import 'lended_screen.dart';
 import 'assets_screen.dart';
 import 'categories_screen.dart';
 import 'loans_screen.dart';
+import 'certificates_screen.dart';
 import 'export_screen.dart';
 import 'backup_screen.dart';
 import 'settings_screen.dart';
@@ -79,6 +80,13 @@ class MoreScreen extends StatelessWidget {
             sub: l10n.more_loansSub(loansLen),
             color: const Color(0xFF4A148C),
             screen: const LoansScreen(),
+          ),
+          _Item(
+            icon: Icons.card_membership_rounded,
+            label: l10n.certificates_title,
+            sub: '${app.certificates.where((c) => !c.isSettled).length} active',
+            color: const Color(0xFF00897B),
+            screen: const CertificatesScreen(),
           ),
         ],
       ),

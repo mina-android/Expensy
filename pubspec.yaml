@@ -1,7 +1,7 @@
 name: expensy
 description: A fully offline expense manager with Material You design.
 publish_to: 'none'
-version: 1.2.1+14
+version: 1.2.2+19
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
@@ -31,11 +31,16 @@ dependencies:
   archive: ^3.6.1
   home_widget: ^0.10.0
   package_info_plus: ^10.2.1
+  collection: ^1.18.0
   shimmer: ^4.0.0
   drift: ^2.35.0
   sqlite3_flutter_libs: ^0.6.0+eol
   pdf: ^3.12.0
   printing: ^5.14.3
+  cryptography: ^2.7.0
+  workmanager: ^0.5.2
+  expensy_saf:
+    path: plugins/expensy_saf
 
 dev_dependencies:
   flutter_test:
@@ -53,4 +58,5 @@ flutter:
 dependency_overrides:
   home_widget:
     path: plugins/home_widget
-
+  workmanager:
+    path: plugins/workmanager

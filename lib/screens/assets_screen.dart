@@ -30,29 +30,19 @@ class AssetsScreen extends StatelessWidget {
         // ── Summary card ────────────────────────────────────────────────
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
-              ),
+          child: Row(children: [
+            FintechSummaryChip(
+              label: l10n.assets_totalAssets,
+              value: formatAmount(total, app.settings.currency),
+              color: const Color(0xFF1565C0),
             ),
-            child: Row(children: [
-              Expanded(child: _SumCol(
-                label: l10n.assets_totalAssets,
-                value: formatAmount(total, app.settings.currency),
-                color: const Color(0xFF1565C0),
-              )),
-              Container(width: 1, height: 28, color: cs.outlineVariant.withValues(alpha: 0.2)),
-              Expanded(child: _SumCol(
-                label: l10n.assets_items,
-                value: '${app.assets.length}',
-                color: cs.onSurface,
-              )),
-            ]),
-          ),
+            const SizedBox(width: 8),
+            FintechSummaryChip(
+              label: l10n.assets_items,
+              value: '${app.assets.length}',
+              color: cs.primary,
+            ),
+          ]),
         ),
 
         // ── Asset list ──────────────────────────────────────────────────
@@ -78,6 +68,7 @@ class AssetsScreen extends StatelessWidget {
       ]),
       floatingActionButton: FintechFab(
         tooltip: l10n.assets_addAsset,
+        color: const Color(0xFF1565C0),
         onPressed: () => _openSheet(context),
       ),
     );
@@ -92,22 +83,6 @@ class AssetsScreen extends StatelessWidget {
       builder: (_) => _AssetSheet(existing: existing),
     );
   }
-}
-
-// ── Summary column ───────────────────────────────────────────────────────────
-class _SumCol extends StatelessWidget {
-  final String label, value;
-  final Color color;
-  const _SumCol({required this.label, required this.value, required this.color});
-
-  @override
-  Widget build(BuildContext context) => Column(children: [
-    Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600,
-        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55))),
-    const SizedBox(height: 3),
-    Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800,
-        color: color), textAlign: TextAlign.center),
-  ]);
 }
 
 // ── Asset card ────────────────────────────────────────────────────────────────

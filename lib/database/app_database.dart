@@ -38,6 +38,7 @@ LazyDatabase _openConnection() {
   LoanPayments,
   TransactionPresets,
   TransactionSplits,
+  Certificates,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? e]) : super(e ?? _openConnection());
@@ -50,7 +51,7 @@ class AppDatabase extends _$AppDatabase {
     _instance = db;
   }
 
-  static const int _version = 25;
+  static const int _version = 27;
   static int get currentSchemaVersion => _version;
 
   @override
@@ -70,34 +71,96 @@ class AppDatabase extends _$AppDatabase {
               'CREATE INDEX IF NOT EXISTS idx_ts_transaction_id ON transaction_splits(transaction_id);');
           await customStatement(
               'CREATE INDEX IF NOT EXISTS idx_tp_order_index ON transaction_presets(order_index);');
+          await customStatement(
+              'CREATE INDEX IF NOT EXISTS idx_tx_date ON transactions(date DESC);');
+          await customStatement(
+              'CREATE INDEX IF NOT EXISTS idx_tx_account ON transactions(account_id);');
+          await customStatement(
+              'CREATE INDEX IF NOT EXISTS idx_tx_category ON transactions(category_id);');
           await _insertDefaultCategories();
         },
         onUpgrade: (m, from, to) async {
-          if (from < 21) {
-            await m.createTable(transactionPresets);
-            await m.createTable(transactionSplits);
-            await customStatement(
-                'CREATE INDEX IF NOT EXISTS idx_ts_transaction_id ON transaction_splits(transaction_id);');
-            await customStatement(
-                'CREATE INDEX IF NOT EXISTS idx_tp_order_index ON transaction_presets(order_index);');
-          }
-          if (from < 22) {
-            await m.addColumn(budgets, budgets.allowRollover);
-          }
-          if (from < 23) {
-            await m.addColumn(wishlist, wishlist.goalId);
-            await m.addColumn(savingsGoals, savingsGoals.wishlistItemId);
-          }
-          if (from < 24) {
-            await m.addColumn(accounts, accounts.dontLinkToCard);
-          }
-          if (from < 25) {
-            await m.addColumn(recurringPayments, recurringPayments.autoPayEnabled);
-            await m.addColumn(recurringPayments, recurringPayments.autoPayTime);
+          try {
+            if (from < 21) {
+              await m.createTable(transactionPresets);
+              await m.createTable(transactionSplits);
+              await customStatement(
+                  'CREATE INDEX IF NOT EXISTS idx_ts_transaction_id ON transaction_splits(transaction_id);');
+              await customStatement(
+                  'CREATE INDEX IF NOT EXISTS idx_tp_order_index ON transaction_presets(order_index);');
+            }
+            if (from < 22) {
+              await m.addColumn(budgets, budgets.allowRollover);
+            }
+            if (from < 23) {
+              await m.addColumn(wishlist, wishlist.goalId);
+              await m.addColumn(savingsGoals, savingsGoals.wishlistItemId);
+            }
+            if (from < 24) {
+              await m.addColumn(accounts, accounts.dontLinkToCard);
+            }
+            if (from < 25) {
+              await m.addColumn(recurringPayments, recurringPayments.autoPayEnabled);
+              await m.addColumn(recurringPayments, recurringPayments.autoPayTime);
+            }
+            if (from < 26) {
+              await m.createTable(certificates);
+              await m.addColumn(transactions, transactions.transferGroupId);
+              await customStatement(
+                  'CREATE INDEX IF NOT EXISTS idx_tx_date ON transactions(date DESC);');
+              await customStatement(
+                  'CREATE INDEX IF NOT EXISTS idx_tx_account ON transactions(account_id);');
+              await customStatement(
+                  'CREATE INDEX IF NOT EXISTS idx_tx_category ON transactions(category_id);');
+            }
+            if (from < 27) {
+              await m.addColumn(certificates, certificates.reminderEarlyEnabled);
+            }
+          } catch (e, stack) {
+            debugPrint('Defensive migration warning: $e\n$stack');
           }
         },
         beforeOpen: (details) async {
-          await customStatement('PRAGMA foreign_keys = ON;');
+          try {
+            await customStatement('PRAGMA foreign_keys = ON;');
+          } catch (e) {
+            debugPrint('PRAGMA foreign_keys enable error: $e');
+          }
+
+          // Defensive column verification to heal any partial or interrupted migration
+          try {
+            await customStatement('ALTER TABLE accounts ADD COLUMN dont_link_to_card INTEGER NOT NULL DEFAULT 0;');
+          } catch (_) {}
+          try {
+            await customStatement('ALTER TABLE budgets ADD COLUMN allow_rollover INTEGER NOT NULL DEFAULT 0;');
+          } catch (_) {}
+          try {
+            await customStatement('ALTER TABLE wishlist ADD COLUMN goal_id TEXT;');
+          } catch (_) {}
+          try {
+            await customStatement('ALTER TABLE savings_goals ADD COLUMN wishlist_item_id TEXT;');
+          } catch (_) {}
+          try {
+            await customStatement('ALTER TABLE recurring_payments ADD COLUMN auto_pay_enabled INTEGER NOT NULL DEFAULT 0;');
+          } catch (_) {}
+          try {
+            await customStatement("ALTER TABLE recurring_payments ADD COLUMN auto_pay_time TEXT NOT NULL DEFAULT '09:00';");
+          } catch (_) {}
+          try {
+            await customStatement(
+                'CREATE TABLE IF NOT EXISTS certificates (id TEXT PRIMARY KEY NOT NULL, name TEXT NOT NULL, amount REAL NOT NULL, currency TEXT NOT NULL DEFAULT \'EGP\', start_date TEXT NOT NULL, end_date TEXT NOT NULL, interest_rate REAL NOT NULL, collection_type TEXT NOT NULL DEFAULT \'monthly\', collection_day INTEGER NOT NULL DEFAULT 1, custom_payout_amount REAL, account_id TEXT NOT NULL, reminder_enabled INTEGER NOT NULL DEFAULT 0, reminder_time TEXT NOT NULL DEFAULT \'09:00\', reminder_early_enabled INTEGER NOT NULL DEFAULT 0, notes TEXT NOT NULL DEFAULT \'\', is_settled INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL, last_collected_date TEXT, total_collected_amount REAL NOT NULL DEFAULT 0.0);');
+          } catch (_) {}
+          try {
+            await customStatement('ALTER TABLE certificates ADD COLUMN reminder_early_enabled INTEGER NOT NULL DEFAULT 0;');
+          } catch (_) {}
+          try {
+            await customStatement('ALTER TABLE transactions ADD COLUMN transfer_group_id TEXT;');
+          } catch (_) {}
+          try {
+            await customStatement('CREATE INDEX IF NOT EXISTS idx_tx_date ON transactions(date DESC);');
+            await customStatement('CREATE INDEX IF NOT EXISTS idx_tx_account ON transactions(account_id);');
+            await customStatement('CREATE INDEX IF NOT EXISTS idx_tx_category ON transactions(category_id);');
+          } catch (_) {}
         },
       );
 
@@ -170,6 +233,17 @@ class AppDatabase extends _$AppDatabase {
   Future<void> updateAccount(Account a) async =>
       updateMap('accounts', a.toMap(), 'id', a.id);
 
+  Future<void> updateAccountOrder(List<String> accountIds) async {
+    await transaction(() async {
+      for (int i = 0; i < accountIds.length; i++) {
+        await customUpdate(
+          'UPDATE accounts SET order_index = ? WHERE id = ?',
+          variables: [Variable<int>(i), Variable<String>(accountIds[i])],
+        );
+      }
+    });
+  }
+
   Future<void> deleteAccount(String id) async {
     await transaction(() async {
       await customUpdate('DELETE FROM transactions WHERE account_id = ?',
@@ -223,6 +297,23 @@ class AppDatabase extends _$AppDatabase {
   Future<void> insertTransaction(AppTransaction t) async =>
       insertMap('transactions', t.toMap());
 
+  Future<void> applyTransactionWithBalance(
+      AppTransaction t, double balanceDelta) async {
+    await transaction(() async {
+      await insertTransaction(t);
+      if (balanceDelta != 0) {
+        await customUpdate(
+          "UPDATE accounts SET balance = balance + ? WHERE id = ? AND type != 'gold'",
+          variables: [
+            Variable<double>(balanceDelta),
+            Variable<String>(t.accountId),
+          ],
+          updates: {accounts},
+        );
+      }
+    });
+  }
+
   Future<void> updateTransaction(AppTransaction t) async =>
       updateMap('transactions', t.toMap(), 'id', t.id);
 
@@ -235,6 +326,121 @@ class AppDatabase extends _$AppDatabase {
           variables: [Variable<String>(id)]);
     });
   }
+
+  Future<void> applyUpdateTransactionWithBalance(
+      AppTransaction t, double balanceDelta) async {
+    await transaction(() async {
+      await updateTransaction(t);
+      if (balanceDelta != 0) {
+        await customUpdate(
+          "UPDATE accounts SET balance = balance + ? WHERE id = ? AND type != 'gold'",
+          variables: [
+            Variable<double>(balanceDelta),
+            Variable<String>(t.accountId),
+          ],
+          updates: {accounts},
+        );
+      }
+    });
+  }
+
+  Future<void> applyDeleteTransactionWithBalance(
+      String id, String accountId, double balanceDelta) async {
+    await transaction(() async {
+      await deleteTransaction(id);
+      if (balanceDelta != 0) {
+        await customUpdate(
+          "UPDATE accounts SET balance = balance + ? WHERE id = ? AND type != 'gold'",
+          variables: [
+            Variable<double>(balanceDelta),
+            Variable<String>(accountId),
+          ],
+          updates: {accounts},
+        );
+      }
+    });
+  }
+
+  Future<void> applyTransferWithBalances(
+    AppTransaction outTx,
+    AppTransaction inTx,
+    double fromAccountDelta,
+    double toAccountDelta,
+  ) async {
+    await transaction(() async {
+      await insertTransaction(outTx);
+      await insertTransaction(inTx);
+      if (fromAccountDelta != 0) {
+        await customUpdate(
+          "UPDATE accounts SET balance = balance + ? WHERE id = ? AND type != 'gold'",
+          variables: [
+            Variable<double>(fromAccountDelta),
+            Variable<String>(outTx.accountId),
+          ],
+          updates: {accounts},
+        );
+      }
+      if (toAccountDelta != 0) {
+        await customUpdate(
+          "UPDATE accounts SET balance = balance + ? WHERE id = ? AND type != 'gold'",
+          variables: [
+            Variable<double>(toAccountDelta),
+            Variable<String>(inTx.accountId),
+          ],
+          updates: {accounts},
+        );
+      }
+    });
+  }
+
+  Future<void> deleteAccountCascade(String accountId) async {
+    await transaction(() async {
+      await customUpdate(
+        'DELETE FROM transaction_splits WHERE transaction_id IN (SELECT id FROM transactions WHERE account_id = ?)',
+        variables: [Variable<String>(accountId)],
+      );
+      await customUpdate(
+        'DELETE FROM transactions WHERE account_id = ?',
+        variables: [Variable<String>(accountId)],
+      );
+      await customUpdate(
+        'DELETE FROM accounts WHERE id = ?',
+        variables: [Variable<String>(accountId)],
+      );
+    });
+  }
+
+  Future<void> restoreAccountSnapshot(
+    Account account,
+    List<AppTransaction> transactions,
+    List<TransactionSplit> splits,
+  ) async {
+    await transaction(() async {
+      await insertAccount(account);
+      for (final t in transactions) {
+        await insertTransaction(t);
+      }
+      for (final s in splits) {
+        await insertMap('transaction_splits', s.toMap());
+      }
+    });
+  }
+
+  // ── Certificates ──────────────────────────────────────────────────────────
+  Future<List<Certificate>> getCertificates() async {
+    final rows = await customSelect(
+        'SELECT * FROM certificates ORDER BY start_date DESC').get();
+    return rows.map((r) => Certificate.fromMap(r.data)).toList();
+  }
+
+  Future<void> insertCertificate(Certificate c) async =>
+      insertMap('certificates', c.toMap());
+
+  Future<void> updateCertificate(Certificate c) async =>
+      updateMap('certificates', c.toMap(), 'id', c.id);
+
+  Future<void> deleteCertificate(String id) async =>
+      deleteRow('certificates', 'id', id);
 
   // ── Recurring Payments ───────────────────────────────────────────────────
   Future<List<RecurringPayment>> getRecurring() async {
@@ -595,8 +801,8 @@ class AppDatabase extends _$AppDatabase {
   }
 
   // ── Backup / Export / Import ──────────────────────────────────────────────
-  Future<Map<String, dynamic>> exportAll() async {
-    final tables = [
+  Future<Map<String, dynamic>> exportAll() => transaction(() async {
+    const tables = [
       'accounts',
       'categories',
       'transactions',
@@ -613,21 +819,31 @@ class AppDatabase extends _$AppDatabase {
       'loan_payments',
       'transaction_presets',
       'transaction_splits',
+      'certificates',
     ];
-    final results = await Future.wait(
-      tables.map((t) async {
-        final rows = await customSelect('SELECT * FROM $t').get();
-        return rows.map((r) => r.data).toList();
-      }),
-    );
-    return {
-      for (int i = 0; i < tables.length; i++) tables[i]: results[i],
-      'version': _version,
-    };
-  }
+    final out = <String, dynamic>{};
+    for (final t in tables) {
+      final rows = await customSelect('SELECT * FROM $t').get();
+      out[t] = rows.map((r) => r.data).toList();
+    }
+    out['version'] = _version;
+    return out;
+  });
 
-  Future<void> importAll(Map<String, dynamic> data) async {
-    _normaliseBackup(data);
+  Future<Map<String, dynamic>> exportSelective(Set<String> tables) =>
+      transaction(() async {
+        final out = <String, dynamic>{};
+        for (final t in tables) {
+          final rows = await customSelect('SELECT * FROM $t').get();
+          out[t] = rows.map((r) => r.data).toList();
+        }
+        out['version'] = _version;
+        out['selective'] = true;
+        return out;
+      });
+
+  Future<void> importAll(Map<String, dynamic> rawData) async {
+    final data = _normaliseBackup(rawData);
     await transaction(() async {
       for (final table in [
         'accounts',
@@ -646,19 +862,43 @@ class AppDatabase extends _$AppDatabase {
         'loan_payments',
         'transaction_presets',
         'transaction_splits',
+        'certificates',
       ]) {
         await customStatement('DELETE FROM $table');
-        final rows =
-            (data[table] as List?)?.cast<Map<String, dynamic>>() ?? [];
-        for (final raw in rows) {
-          final row = Map<String, dynamic>.from(raw);
+        final rows = _rows(data, table);
+        for (final row in rows) {
           await insertMap(table, row);
         }
       }
     });
   }
 
-  static void _normaliseBackup(Map<String, dynamic> data) {
+  Future<void> importSelective(
+      Map<String, dynamic> rawData, Set<String> tables) async {
+    final data = _normaliseBackup(rawData);
+    await transaction(() async {
+      for (final table in tables) {
+        if (!data.containsKey(table)) continue;
+        await customStatement('DELETE FROM $table');
+        final rows = _rows(data, table);
+        for (final row in rows) {
+          await insertMap(table, row);
+        }
+      }
+    });
+  }
+
+  static Map<String, dynamic> _normaliseBackup(Map<String, dynamic> rawData) {
+    final data = <String, dynamic>{};
+    for (final entry in rawData.entries) {
+      if (entry.value is List) {
+        data[entry.key] = (entry.value as List)
+            .map((item) => item is Map ? Map<String, dynamic>.from(item) : item)
+            .toList();
+      } else {
+        data[entry.key] = entry.value;
+      }
+    }
     for (final row in _rows(data, 'transaction_presets')) {
       row.putIfAbsent('currency', () => '');
       row.putIfAbsent('note', () => '');
@@ -686,6 +926,18 @@ class AppDatabase extends _$AppDatabase {
     for (final row in _rows(data, 'transactions')) {
       row.putIfAbsent('note', () => '');
       row.putIfAbsent('currency', () => '');
+      row.putIfAbsent('transfer_group_id', () => null);
+    }
+
+    for (final row in _rows(data, 'certificates')) {
+      row.putIfAbsent('currency', () => 'EGP');
+      row.putIfAbsent('collection_type', () => 'monthly');
+      row.putIfAbsent('collection_day', () => 1);
+      row.putIfAbsent('reminder_enabled', () => 0);
+      row.putIfAbsent('reminder_time', () => '09:00');
+      row.putIfAbsent('notes', () => '');
+      row.putIfAbsent('is_settled', () => 0);
+      row.putIfAbsent('total_collected_amount', () => 0.0);
     }
 
     for (final row in _rows(data, 'recurring_payments')) {
@@ -815,11 +1067,13 @@ class AppDatabase extends _$AppDatabase {
     for (final row in _rows(data, 'loan_payments')) {
       row.putIfAbsent('notes', () => '');
     }
+    return data;
   }
 
   static List<Map<String, dynamic>> _rows(
       Map<String, dynamic> data, String table) {
-    return (data[table] as List?)?.cast<Map<String, dynamic>>() ??
-        <Map<String, dynamic>>[];
+    final rawList = data[table] as List?;
+    if (rawList == null) return <Map<String, dynamic>>[];
+    return rawList.whereType<Map<String, dynamic>>().toList();
   }
 }

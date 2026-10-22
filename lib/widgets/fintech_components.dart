@@ -1,5 +1,7 @@
 // lib/widgets/fintech_components.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import '../utils/haptics.dart';
 
 /// Modern edge-to-edge transparent top header that respects system status bar padding.
@@ -610,4 +612,359 @@ class FintechExtendedFab extends StatelessWidget {
     );
   }
 }
+
+// ── Reusable Fintech Components (Item 4 & 8) ──────────────────────────────────
+
+/// Standardized modern fintech reminder toggle container with leading icon,
+/// title, optional subtitle, switch, and collapsible child content.
+class FintechReminderToggle extends StatelessWidget {
+  final bool value;
+  final ValueChanged<bool> onChanged;
+  final String title;
+  final String? subtitle;
+  final IconData icon;
+  final Color? activeColor;
+  final Widget? expandedContent;
+
+  const FintechReminderToggle({
+    super.key,
+    required this.value,
+    required this.onChanged,
+    required this.title,
+    this.subtitle,
+    this.icon = Icons.notifications_active_outlined,
+    this.activeColor,
+    this.expandedContent,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accent = activeColor ?? cs.primary;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surfaceContainer.withValues(alpha: isDark ? 0.35 : 0.55),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: value
+              ? accent.withValues(alpha: 0.35)
+              : (isDark
+                  ? Colors.white.withValues(alpha: 0.06)
+                  : Colors.black.withValues(alpha: 0.04)),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SwitchListTile.adaptive(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+            secondary: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: (value ? accent : cs.onSurface).withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                icon,
+                color: value ? accent : cs.onSurface.withValues(alpha: 0.6),
+                size: 20,
+              ),
+            ),
+            title: Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+            ),
+            subtitle: subtitle != null
+                ? Text(
+                    subtitle!,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: cs.onSurface.withValues(alpha: 0.6),
+                    ),
+                  )
+                : null,
+            activeColor: accent,
+            value: value,
+            onChanged: (v) {
+              AppHaptics.tap(context, HapticStrength.light);
+              onChanged(v);
+            },
+          ),
+          if (value && expandedContent != null) ...[
+            Divider(
+              height: 1,
+              thickness: 1,
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.06)
+                  : Colors.black.withValues(alpha: 0.04),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: expandedContent!,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Standardized date field button matching LoansScreen InputDecoration style.
+class FintechDateField extends StatelessWidget {
+  final String label;
+  final DateTime value;
+  final ValueChanged<DateTime> onDateSelected;
+  final DateTime? firstDate;
+  final DateTime? lastDate;
+  final IconData prefixIcon;
+  final DateFormat? formatter;
+
+  const FintechDateField({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.onDateSelected,
+    this.firstDate,
+    this.lastDate,
+    this.prefixIcon = Icons.calendar_today_outlined,
+    this.formatter,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final fmt = formatter ?? DateFormat('MMM dd, yyyy');
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () async {
+        AppHaptics.tap(context, HapticStrength.light);
+        final picked = await showDatePicker(
+          context: context,
+          initialDate: value,
+          firstDate: firstDate ?? DateTime(2000),
+          lastDate: lastDate ?? DateTime(2100),
+        );
+        if (picked != null) {
+          onDateSelected(picked);
+        }
+      },
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(prefixIcon, size: 20),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        ),
+        child: Text(
+          fmt.format(value),
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        ),
+      ),
+    );
+  }
+}
+
+/// Metric summary chip with tinted surface container, colored border, and
+/// uppercase label matching LoansScreen design.
+class FintechSummaryChip extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+
+  const FintechSummaryChip({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: isDark ? 0.15 : 0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withValues(alpha: 0.25)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label.toUpperCase(),
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: color,
+                letterSpacing: 0.5,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 3),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: color,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Auto-formats MM/YY expiry dates, auto-inserting the slash after 2 digits.
+class CardExpiryInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    var text = newValue.text.replaceAll('/', '');
+    if (text.length > 4) {
+      text = text.substring(0, 4);
+    }
+
+    final buffer = StringBuffer();
+    for (int i = 0; i < text.length; i++) {
+      if (i == 2) buffer.write('/');
+      buffer.write(text[i]);
+    }
+
+    final formatted = buffer.toString();
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+}
+
+/// Modern standardized Fintech confirmation or informational dialog.
+class FintechDialog extends StatelessWidget {
+  final Widget? icon;
+  final String title;
+  final String content;
+  final String? confirmText;
+  final String? cancelText;
+  final VoidCallback? onConfirm;
+  final bool isDestructive;
+
+  const FintechDialog({
+    super.key,
+    this.icon,
+    required this.title,
+    required this.content,
+    this.confirmText,
+    this.cancelText,
+    this.onConfirm,
+    this.isDestructive = false,
+  });
+
+  static Future<bool?> show(
+    BuildContext context, {
+    Widget? icon,
+    required String title,
+    required String content,
+    String? confirmText,
+    String? cancelText,
+    VoidCallback? onConfirm,
+    bool isDestructive = false,
+  }) {
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => FintechDialog(
+        icon: icon,
+        title: title,
+        content: content,
+        confirmText: confirmText,
+        cancelText: cancelText,
+        onConfirm: onConfirm,
+        isDestructive: isDestructive,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      backgroundColor: isDark ? cs.surfaceContainerHigh : cs.surface,
+      surfaceTintColor: Colors.transparent,
+      elevation: 10,
+      icon: icon != null
+          ? Center(
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: (isDestructive ? cs.error : cs.primary)
+                      .withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: icon,
+              ),
+            )
+          : null,
+      title: Text(
+        title,
+        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+        textAlign: icon != null ? TextAlign.center : TextAlign.start,
+      ),
+      content: Text(
+        content,
+        style: TextStyle(
+          color: cs.onSurface.withValues(alpha: 0.75),
+          height: 1.4,
+          fontSize: 14,
+        ),
+        textAlign: icon != null ? TextAlign.center : TextAlign.start,
+      ),
+      actionsAlignment: MainAxisAlignment.end,
+      actions: [
+        if (cancelText != null)
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              cancelText!,
+              style: TextStyle(
+                color: cs.onSurface.withValues(alpha: 0.7),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        if (confirmText != null)
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: isDestructive ? cs.error : cs.primary,
+              foregroundColor: isDestructive ? cs.onError : cs.onPrimary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            onPressed: () {
+              Navigator.pop(context, true);
+              onConfirm?.call();
+            },
+            child: Text(
+              confirmText!,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 

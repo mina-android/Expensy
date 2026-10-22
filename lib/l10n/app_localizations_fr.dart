@@ -1683,6 +1683,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get home_addAccount => 'Ajouter un compte';
 
   @override
+  String get home_cards => 'Cartes';
+
+  @override
+  String get home_addCard => 'Ajouter une carte';
+
+  @override
   String get home_monthlyOverview => 'Aperçu mensuel';
 
   @override
@@ -2695,4 +2701,130 @@ class AppLocalizationsFr extends AppLocalizations {
   String accounts_dueOnDay(int day) {
     return 'Échéance le $day';
   }
+
+  @override
+  String get accounts_cannotDeleteAccount =>
+      'Impossible de supprimer le compte';
+
+  @override
+  String get common_ok => 'OK';
+
+  @override
+  String get certificates_title => 'Dépôts à terme & Certificats';
+
+  @override
+  String get certificates_addCertificate => 'Ajouter un certificat';
+
+  @override
+  String get certificates_editCertificate => 'Modifier le certificat';
+
+  @override
+  String get certificates_noCertificates => 'Aucun certificat pour le moment';
+
+  @override
+  String get certificates_noCertificatesDesc =>
+      'Suivez vos dépôts à terme, rendements et versements d\'intérêts automatiques.';
+
+  @override
+  String get certificates_active => 'Actif';
+
+  @override
+  String get certificates_matured => 'Arrivé à échéance';
+
+  @override
+  String get certificates_amount => 'Montant principal';
+
+  @override
+  String get certificates_collectionType => 'Versement des intérêts';
+
+  @override
+  String get certificates_collectedSoFar => 'Déjà perçu';
+
+  @override
+  String get certificates_expectedTotal => 'Rendement total attendu';
+
+  @override
+  String get certificates_startDate => 'Date de début';
+
+  @override
+  String get certificates_endDate => 'Date d\'échéance';
+
+  @override
+  String get certificates_redeem => 'Racheter le certificat';
+
+  @override
+  String certificates_redeemConfirm(String name, String amount) {
+    return 'Êtes-vous sûr de vouloir racheter \"$name\" ? Le capital de $amount sera reversé sur votre compte bancaire.';
+  }
+
+  @override
+  String get certificates_redeemedSuccess =>
+      'Certificat racheté et capital restitué avec succès.';
+
+  @override
+  String get certificates_name => 'Nom du certificat';
+
+  @override
+  String get certificates_interestRate => 'Taux d\'intérêt annuel (%)';
+
+  @override
+  String get certificates_linkedBankAccount => 'Compte bancaire associé';
+
+  @override
+  String get certificates_periodicYield => 'Rendement périodique des intérêts';
+
+  @override
+  String get certificates_paymentReminder => 'Rappel de versement des intérêts';
+
+  @override
+  String get certificates_reminderTime => 'Heure du rappel';
+
+  @override
+  String get certificates_reminder2DaysBefore => 'Rappel 2 jours avant';
+
+  @override
+  String get certificates_deleteCertificate => 'Supprimer le certificat';
+
+  @override
+  String get certificates_confirmDeleteCertificate =>
+      'Êtes-vous sûr de vouloir supprimer ce certificat ? Toutes les transactions associées seront supprimées et les fonds reversés sur votre compte.';
+
+  @override
+  String get certificates_deleted => 'Certificat supprimé';
+
+  @override
+  String get onboarding_stayOnTopOfFinances =>
+      'Gardez le contrôle de vos finances';
+
+  @override
+  String get onboarding_stayOnTopOfFinancesDesc =>
+      'Activez les rappels pour ne manquer aucun paiement, facture en retard ou dépassement de budget.';
+
+  @override
+  String get onboarding_featureBillTitle =>
+      'Rappels de factures et d\'échéances';
+
+  @override
+  String get onboarding_featureBillDesc =>
+      'Soyez alerté avant les dates de relevé de carte et les échéances de prêt.';
+
+  @override
+  String get onboarding_featureBudgetTitle => 'Alertes de suivi de budget';
+
+  @override
+  String get onboarding_featureBudgetDesc =>
+      'Recevez des alertes lorsque vous atteignez 80% ou 100% de votre limite de dépenses.';
+
+  @override
+  String get onboarding_featureRecurringTitle => 'Abonnements récurrents';
+
+  @override
+  String get onboarding_featureRecurringDesc =>
+      'Restez informé avant le renouvellement automatique de vos abonnements.';
+
+  @override
+  String get onboarding_allowNotifications => 'Autoriser les notifications';
+
+  @override
+  String get onboarding_maybeLater => 'Peut-être plus tard';
 }

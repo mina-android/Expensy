@@ -57,6 +57,7 @@ class Transactions extends Table {
   TextColumn get date => text().named('date')();
   TextColumn get note => text().named('note').withDefault(const Constant(''))();
   TextColumn get currency => text().named('currency').withDefault(const Constant(''))();
+  TextColumn get transferGroupId => text().named('transfer_group_id').nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -305,4 +306,33 @@ class TransactionSplits extends Table {
 
   @override
   String get tableName => 'transaction_splits';
+}
+
+@DataClassName('CertificateEntry')
+class Certificates extends Table {
+  TextColumn get id => text().named('id')();
+  TextColumn get name => text().named('name')();
+  RealColumn get amount => real().named('amount')();
+  TextColumn get currency => text().named('currency').withDefault(const Constant('EGP'))();
+  TextColumn get startDate => text().named('start_date')();
+  TextColumn get endDate => text().named('end_date')();
+  RealColumn get interestRate => real().named('interest_rate')();
+  TextColumn get collectionType => text().named('collection_type').withDefault(const Constant('monthly'))();
+  IntColumn get collectionDay => integer().named('collection_day').withDefault(const Constant(1))();
+  RealColumn get customPayoutAmount => real().named('custom_payout_amount').nullable()();
+  TextColumn get accountId => text().named('account_id')();
+  IntColumn get reminderEnabled => integer().named('reminder_enabled').withDefault(const Constant(0))();
+  TextColumn get reminderTime => text().named('reminder_time').withDefault(const Constant('09:00'))();
+  IntColumn get reminderEarlyEnabled => integer().named('reminder_early_enabled').withDefault(const Constant(0))();
+  TextColumn get notes => text().named('notes').withDefault(const Constant(''))();
+  IntColumn get isSettled => integer().named('is_settled').withDefault(const Constant(0))();
+  TextColumn get createdAt => text().named('created_at')();
+  TextColumn get lastCollectedDate => text().named('last_collected_date').nullable()();
+  RealColumn get totalCollectedAmount => real().named('total_collected_amount').withDefault(const Constant(0.0))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  String get tableName => 'certificates';
 }

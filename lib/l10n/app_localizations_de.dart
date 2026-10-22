@@ -1676,6 +1676,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get home_addAccount => 'Konto hinzufügen';
 
   @override
+  String get home_cards => 'Karten';
+
+  @override
+  String get home_addCard => 'Karte hinzufügen';
+
+  @override
   String get home_monthlyOverview => 'Monatsübersicht';
 
   @override
@@ -2687,4 +2693,129 @@ class AppLocalizationsDe extends AppLocalizations {
   String accounts_dueOnDay(int day) {
     return 'Fällig am $day.';
   }
+
+  @override
+  String get accounts_cannotDeleteAccount => 'Konto kann nicht gelöscht werden';
+
+  @override
+  String get common_ok => 'OK';
+
+  @override
+  String get certificates_title => 'Termingelder & Sparbriefe';
+
+  @override
+  String get certificates_addCertificate => 'Zertifikat hinzufügen';
+
+  @override
+  String get certificates_editCertificate => 'Zertifikat bearbeiten';
+
+  @override
+  String get certificates_noCertificates => 'Noch keine Zertifikate';
+
+  @override
+  String get certificates_noCertificatesDesc =>
+      'Verfolgen Sie Ihre Festgelder, Zinserträge und automatischen Auszahlungen.';
+
+  @override
+  String get certificates_active => 'Aktiv';
+
+  @override
+  String get certificates_matured => 'Fällig';
+
+  @override
+  String get certificates_amount => 'Anlagebetrag';
+
+  @override
+  String get certificates_collectionType => 'Zinsauszahlung';
+
+  @override
+  String get certificates_collectedSoFar => 'Bisher erhalten';
+
+  @override
+  String get certificates_expectedTotal => 'Erwartete Gesamtrendite';
+
+  @override
+  String get certificates_startDate => 'Startdatum';
+
+  @override
+  String get certificates_endDate => 'Fälligkeitsdatum';
+
+  @override
+  String get certificates_redeem => 'Zertifikat auflösen';
+
+  @override
+  String certificates_redeemConfirm(String name, String amount) {
+    return 'Möchten Sie \"$name\" wirklich auflösen? Der Anlagebetrag von $amount wird Ihrem Bankkonto gutgeschrieben.';
+  }
+
+  @override
+  String get certificates_redeemedSuccess =>
+      'Zertifikat aufgelöst und Anlagebetrag erfolgreich gutgeschrieben.';
+
+  @override
+  String get certificates_name => 'Zertifikatsname';
+
+  @override
+  String get certificates_interestRate => 'Jährlicher Zinssatz (%)';
+
+  @override
+  String get certificates_linkedBankAccount => 'Verknüpftes Bankkonto';
+
+  @override
+  String get certificates_periodicYield => 'Periodischer Zinsertrag';
+
+  @override
+  String get certificates_paymentReminder => 'Erinnerung an Zinsgutschrift';
+
+  @override
+  String get certificates_reminderTime => 'Erinnerungszeit';
+
+  @override
+  String get certificates_reminder2DaysBefore => 'Erinnerung 2 Tage vorher';
+
+  @override
+  String get certificates_deleteCertificate => 'Zertifikat löschen';
+
+  @override
+  String get certificates_confirmDeleteCertificate =>
+      'Möchten Sie dieses Zertifikat wirklich löschen? Alle zugehörigen Buchungen werden entfernt und der Betrag Ihrem Konto gutgeschrieben.';
+
+  @override
+  String get certificates_deleted => 'Zertifikat gelöscht';
+
+  @override
+  String get onboarding_stayOnTopOfFinances =>
+      'Behalten Sie Ihre Finanzen im Blick';
+
+  @override
+  String get onboarding_stayOnTopOfFinancesDesc =>
+      'Aktivieren Sie Erinnerungen, um keine Zahlung, überfällige Rechnung oder Budgetgrenze zu verpassen.';
+
+  @override
+  String get onboarding_featureBillTitle =>
+      'Rechnungs- & Fälligkeitserinnerungen';
+
+  @override
+  String get onboarding_featureBillDesc =>
+      'Erhalten Sie rechtzeitig Benachrichtigungen vor Kreditkartenabrechnungen und Kreditraten.';
+
+  @override
+  String get onboarding_featureBudgetTitle => 'Budgetwarnungen';
+
+  @override
+  String get onboarding_featureBudgetDesc =>
+      'Erhalten Sie Benachrichtigungen bei 80% oder 100% Ihres Ausgabenlimits.';
+
+  @override
+  String get onboarding_featureRecurringTitle => 'Wiederkehrende Abonnements';
+
+  @override
+  String get onboarding_featureRecurringDesc =>
+      'Bleiben Sie informiert, bevor sich Abonnements automatisch verlängern.';
+
+  @override
+  String get onboarding_allowNotifications => 'Benachrichtigungen erlauben';
+
+  @override
+  String get onboarding_maybeLater => 'Vielleicht später';
 }

@@ -1679,6 +1679,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get home_addAccount => 'Aggiungi conto';
 
   @override
+  String get home_cards => 'Carte';
+
+  @override
+  String get home_addCard => 'Aggiungi carta';
+
+  @override
   String get home_monthlyOverview => 'Panoramica mensile';
 
   @override
@@ -2676,4 +2682,129 @@ class AppLocalizationsIt extends AppLocalizations {
   String accounts_dueOnDay(int day) {
     return 'Scadenza il $day';
   }
+
+  @override
+  String get accounts_cannotDeleteAccount => 'Impossibile eliminare l\'account';
+
+  @override
+  String get common_ok => 'OK';
+
+  @override
+  String get certificates_title => 'Depositi a Termine e Certificati';
+
+  @override
+  String get certificates_addCertificate => 'Aggiungi certificato';
+
+  @override
+  String get certificates_editCertificate => 'Modifica certificato';
+
+  @override
+  String get certificates_noCertificates => 'Nessun certificato';
+
+  @override
+  String get certificates_noCertificatesDesc =>
+      'Monitora i tuoi depositi ad alto rendimento, interessi maturati e scadenze.';
+
+  @override
+  String get certificates_active => 'Attivo';
+
+  @override
+  String get certificates_matured => 'Scaduto';
+
+  @override
+  String get certificates_amount => 'Importo capitale';
+
+  @override
+  String get certificates_collectionType => 'Incasso interessi';
+
+  @override
+  String get certificates_collectedSoFar => 'Incassato finora';
+
+  @override
+  String get certificates_expectedTotal => 'Rendimento totale previsto';
+
+  @override
+  String get certificates_startDate => 'Data di inizio';
+
+  @override
+  String get certificates_endDate => 'Data di scadenza';
+
+  @override
+  String get certificates_redeem => 'Riscatta certificato';
+
+  @override
+  String certificates_redeemConfirm(String name, String amount) {
+    return 'Sei sicuro di voler riscattare \"$name\"? Il capitale di $amount verrà riaccreditato sul tuo conto bancario.';
+  }
+
+  @override
+  String get certificates_redeemedSuccess =>
+      'Certificato riscattato e capitale riaccreditato con successo.';
+
+  @override
+  String get certificates_name => 'Nome certificato';
+
+  @override
+  String get certificates_interestRate => 'Tasso di interesse annuo (%)';
+
+  @override
+  String get certificates_linkedBankAccount => 'Conto bancario collegato';
+
+  @override
+  String get certificates_periodicYield =>
+      'Rendimento periodico degli interessi';
+
+  @override
+  String get certificates_paymentReminder => 'Notifica promemoria liquidazione';
+
+  @override
+  String get certificates_reminderTime => 'Ora del promemoria';
+
+  @override
+  String get certificates_reminder2DaysBefore => 'Promemoria 2 giorni prima';
+
+  @override
+  String get certificates_deleteCertificate => 'Elimina certificato';
+
+  @override
+  String get certificates_confirmDeleteCertificate =>
+      'Sei sicuro di voler eliminare questo certificato? Tutte le transazioni associate verranno rimosse e i fondi riaccreditati sul tuo conto.';
+
+  @override
+  String get certificates_deleted => 'Certificato eliminato';
+
+  @override
+  String get onboarding_stayOnTopOfFinances =>
+      'Tieni sotto controllo le tue finanze';
+
+  @override
+  String get onboarding_stayOnTopOfFinancesDesc =>
+      'Attiva promemoria tempestivi per non perdere mai un pagamento, una scadenza o una soglia di budget.';
+
+  @override
+  String get onboarding_featureBillTitle => 'Promemoria bollette e scadenze';
+
+  @override
+  String get onboarding_featureBillDesc =>
+      'Ricevi avvisi prima delle date dell\'estratto conto e delle rate dei prestiti.';
+
+  @override
+  String get onboarding_featureBudgetTitle => 'Avvisi di monitoraggio budget';
+
+  @override
+  String get onboarding_featureBudgetDesc =>
+      'Ricevi notifiche quando raggiungi l\'80% o il 100% del limite di spesa.';
+
+  @override
+  String get onboarding_featureRecurringTitle => 'Abbonamenti ricorrenti';
+
+  @override
+  String get onboarding_featureRecurringDesc =>
+      'Rimani informato prima del rinnovo automatico di abbonamenti e fatture.';
+
+  @override
+  String get onboarding_allowNotifications => 'Consenti notifiche';
+
+  @override
+  String get onboarding_maybeLater => 'Forse più tardi';
 }

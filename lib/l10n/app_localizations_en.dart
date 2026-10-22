@@ -1666,6 +1666,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get home_addAccount => 'Add Account';
 
   @override
+  String get home_cards => 'Cards';
+
+  @override
+  String get home_addCard => 'Add Card';
+
+  @override
   String get home_monthlyOverview => 'Monthly Overview';
 
   @override
@@ -2664,4 +2670,127 @@ class AppLocalizationsEn extends AppLocalizations {
   String accounts_dueOnDay(int day) {
     return 'Due on $day';
   }
+
+  @override
+  String get accounts_cannotDeleteAccount => 'Cannot Delete Account';
+
+  @override
+  String get common_ok => 'OK';
+
+  @override
+  String get certificates_title => 'Time Deposits & Certificates';
+
+  @override
+  String get certificates_addCertificate => 'Add Certificate';
+
+  @override
+  String get certificates_editCertificate => 'Edit Certificate';
+
+  @override
+  String get certificates_noCertificates => 'No Certificates Yet';
+
+  @override
+  String get certificates_noCertificatesDesc =>
+      'Track your high-yield certificates, deposits, and auto-collected interest returns.';
+
+  @override
+  String get certificates_active => 'Active';
+
+  @override
+  String get certificates_matured => 'Matured';
+
+  @override
+  String get certificates_amount => 'Principal Amount';
+
+  @override
+  String get certificates_collectionType => 'Interest Collection';
+
+  @override
+  String get certificates_collectedSoFar => 'Collected So Far';
+
+  @override
+  String get certificates_expectedTotal => 'Total Expected Return';
+
+  @override
+  String get certificates_startDate => 'Start Date';
+
+  @override
+  String get certificates_endDate => 'Maturity Date';
+
+  @override
+  String get certificates_redeem => 'Redeem Certificate';
+
+  @override
+  String certificates_redeemConfirm(String name, String amount) {
+    return 'Are you sure you want to redeem \"$name\"? The principal of $amount will be returned to your bank account.';
+  }
+
+  @override
+  String get certificates_redeemedSuccess =>
+      'Certificate redeemed and principal returned successfully.';
+
+  @override
+  String get certificates_name => 'Certificate Name';
+
+  @override
+  String get certificates_interestRate => 'Annual Interest Rate (%)';
+
+  @override
+  String get certificates_linkedBankAccount => 'Linked Bank Account';
+
+  @override
+  String get certificates_periodicYield => 'Periodic Interest Return';
+
+  @override
+  String get certificates_paymentReminder => 'Payout Reminder Notification';
+
+  @override
+  String get certificates_reminderTime => 'Reminder Time';
+
+  @override
+  String get certificates_reminder2DaysBefore => 'Reminder 2 days before';
+
+  @override
+  String get certificates_deleteCertificate => 'Delete Certificate';
+
+  @override
+  String get certificates_confirmDeleteCertificate =>
+      'Are you sure you want to delete this certificate? All associated deposit and interest transactions will be removed and money returned to your account.';
+
+  @override
+  String get certificates_deleted => 'Certificate deleted';
+
+  @override
+  String get onboarding_stayOnTopOfFinances => 'Stay on Top of Your Finances';
+
+  @override
+  String get onboarding_stayOnTopOfFinancesDesc =>
+      'Enable timely reminders so you never miss a payment, overdue bill, or budget threshold.';
+
+  @override
+  String get onboarding_featureBillTitle => 'Bill & Due Date Reminders';
+
+  @override
+  String get onboarding_featureBillDesc =>
+      'Get alerted before credit card statement dates and loan installments are due.';
+
+  @override
+  String get onboarding_featureBudgetTitle => 'Budget Tracking Alerts';
+
+  @override
+  String get onboarding_featureBudgetDesc =>
+      'Receive alerts when you reach 80% or 100% of your category spending limit.';
+
+  @override
+  String get onboarding_featureRecurringTitle => 'Recurring Subscriptions';
+
+  @override
+  String get onboarding_featureRecurringDesc =>
+      'Stay informed before recurring bills and memberships auto-renew.';
+
+  @override
+  String get onboarding_allowNotifications => 'Allow Notifications';
+
+  @override
+  String get onboarding_maybeLater => 'Maybe Later';
 }

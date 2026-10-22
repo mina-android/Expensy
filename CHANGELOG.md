@@ -1,5 +1,181 @@
 # Changelog
 
+## [1.2.2] - 2026-10-22
+
+### Comprehensive Fintech UI/UX Polish, Core Reusability & Functional Hardening
+- **Account Carousel Ordering Persistence**:
+  - Implemented asynchronous batch account order persistence in SQLite (`AppDatabase.updateAccountOrder`) and `DBHelper.updateAccountOrder`.
+  - Updated `AppProvider.reorderAccounts` to persist user-arranged carousel order to `order_index` in SQLite, ensuring custom carousel layouts remain intact across app closes and restarts.
+- **Category Sheet Status Bar Safe Padding**:
+  - Added `SafeArea(top: true)` and top clearance inside `_CategorySheet` along with `useSafeArea: true` to prevent top header elements, drag handles, and titles from sliding behind the Android device status bar icons and clock.
+- **Reusable Fintech Component Suite (`fintech_components.dart`)**:
+  - `FintechReminderToggle`: Standardized reusable container for reminder toggles with leading icon, title, subtitle, adaptive switch, and collapsible custom content.
+  - `FintechDateField`: Unified date selection field styled with `InputDecorator`, calendar icon, and date picker modal.
+  - `FintechSummaryChip`: Reusable metric chip with tinted background, border styling, and uppercase labels.
+  - `CardExpiryInputFormatter`: Automatic slash formatter for card expiry dates (`MM/YY`) automatically inserting `/` after 2 digits.
+  - `FintechDialog`: Standardized modern dialog with 24px border radii, tinted icon containers, high-contrast typography, and adaptive primary/destructive buttons.
+- **Add Button Accent Color Synchronization**:
+  - Matched `FintechFab` action buttons across all sub-tools to their respective page icon colors:
+    - Wishlist: `Color(0xFF7D5260)`
+    - Lent Money: `Color(0xFFE65140)`
+    - Assets: `Color(0xFF1565C0)`
+    - Loans: `Color(0xFF4A148C)`
+- **Unified Info Cards in Lent Money & Assets**:
+  - Aligned summary statistics rows in `LendedScreen` and `AssetsScreen` with the modern `FintechSummaryChip` layout from `LoansScreen`.
+- **Time Deposits (Certificates) Form Polish & Empty State**:
+  - Upgraded date selectors in `CertificateSheet` to `FintechDateField` matching Loans.
+  - Integrated `FintechReminderToggle` in Time Deposits form.
+  - Removed central piggy bank icon from `CertificatesScreen` and modernized empty state copy to match Loans.
+- **Card Expiry Auto-Formatting**:
+  - Attached `CardExpiryInputFormatter` to card expiry date fields in `AccountsScreen`.
+- **Backup & What's Included Synchronization**:
+  - Added live counts for Time Deposits & Certificates to the "What's included" section in `BackupScreen`.
+- **Default App Theme on Fresh Install**:
+  - Updated `AppSettings.themeMode` default to `'system'` (Follow System) on fresh installations.
+
+### Fintech UI Overhaul, Cards Separation & Time Deposits Restructure
+- **Onboarding Fintech Aesthetics & Localization**:
+  - Replaced generic Material buttons across all onboarding pages with custom `_FintechPrimaryButton` and `_FintechSecondaryButton` components featuring gradient fills, translucent glowing borders, tactile `AppHaptics` feedback, and prominent typography.
+  - Redesigned Notification Permission step with localized copy across all 11 supported languages (English, Arabic, German, Spanish, French, Hindi, Italian, Japanese, Portuguese, Russian, Chinese) replacing hardcoded strings.
+  - Ensured fluid responsive centering and spacing across mobile viewports.
+- **Home & Accounts Cards Separation**:
+  - Separated cards and accounts views on Home: The Home screen now features two distinct horizontal carousels:
+    1. **Accounts Carousel**: Exclusively displays non-card liquid accounts (`!a.isCard`: Bank, Cash, Savings, Digital Wallet, Gold) with "+ Add Account" action tile.
+    2. **Cards Carousel**: Exclusively displays all registered cards (`a.isCard`: Debit, Credit, Prepaid) with card numbers, contactless indicators, effective balances, and "+ Add Card" action tile.
+  - Linked carousel "Manage →" actions with `accountsTabNotifier` to jump directly into the respective Accounts or Cards tab on `AccountsScreen`.
+  - In `_RealWorldCard`, repositioned the card type indicator badge (Debit, Credit, Prepaid) immediately adjacent to the card name for clean visual grouping.
+- **Time Deposits (Certificates) Financial Balance Restoral & UI**:
+  - **Deletion Balance Recovery**: Deleting a time deposit now identifies and deletes all associated transactions (initial principal deduction expense tagged `[cert:id]` and collected yield income payouts), cleanly reversing account balance deltas via `applyDeleteTransactionWithBalance` and restoring the linked bank account to its pre-deposit balance.
+  - **Redesigned Detail Page**: Completely revamped `CertificateDetailScreen` to match the structured layout of `LoanDetailScreen`, featuring a prominent balance summary card, visual maturity progress bar, 2-column key statistics grid with dividers, and early redemption / settled status indicators.
+  - **UI Cleanups**: Removed "track your high-yield" header text and central add button from `CertificatesScreen`. Replaced bottom-right action button with a unified `FintechFab`.
+  - **Rounded Dropdowns**: Added 16px corner radius and modern border styling to the "interest collection" frequency dropdown menu.
+  - **Payout Reminders**: Added customizable reminder time selection and a "Reminder 2 days before" toggle with Drift schema bump to v27 (`reminder_early_enabled`). Registered background notification delivery through `CertificateReminderService`.
+- **Settings & Category Layout Polishing**:
+  - Compacted the "Week starts on" dropdown menu button in Settings with dense padding and scaled font sizing, preventing overlap with the adjacent auto-backup toggle and outer borders.
+  - Added safe status-bar top padding to the category creation and editing modal sheet to eliminate clipping under the device status bar.
+- **App-Wide Fintech Dialog Modernization**:
+  - Updated global `DialogThemeData` with 24px border radii, elevated container shapes, and subtle borders.
+  - Modernized confirmation and delete dialogs across Accounts, Categories, Loans, Recurring, and Settings tabs with fintech warning badges and standardized primary/cancel action buttons.
+
+### Migration & Upgrade Data Integrity Fixes (1.2.1 to 1.2.2)
+- **Resolved Upgrade Data Loss & Crash Traps**:
+  - Maintained complete backwards compatibility across Drift schema versions v1 through v26 with robust transactional `onUpgrade` migrations.
+  - Placed legacy card balance migration (`migrateLegacyCardBalances`) securely within schema `onUpgrade` (`from < 27` / `from < 26`), guarded by exception-safe boundaries to guarantee data is preserved when upgrading from version 1.2.1 to 1.2.2.
+  - Aligned database versioning and isolated initialization so `load()` never clears or overwrites existing user tables.
+  - Ensured all background initializers (`NotificationBootstrap.init()`, `WorkmanagerService.initialize()`) have resilient error boundaries so the app launches instantly on upgrade without splash screen hangs.
+
+### Bank Accounts & Cards Architecture Restructure (Issue #21)
+- **Bank Accounts as Primary Asset Holders**:
+  - Restored full configuration and asset balance fields directly to Bank Accounts (including initial balance, currency, and total balance exclusion toggle); eliminated obsolete `dontLinkToCard` toggle.
+- **Dynamic Debit Card Balance Inheritance**:
+  - Debit cards dynamically mirror and inherit their balance from the parent linked Bank Account (`app.getEffectiveBalance(a)`). Setting an independent initial balance on a debit card is prohibited and hidden.
+  - Transactions performed on debit cards redirect their balance adjustments in SQLite (`AppDatabase._resolveTargetAccountId`) and in-memory cache directly to the linked Bank Account.
+  - Excluded debit cards from `totalBalance` and `totalLiquidAccountsValue` aggregations to eliminate double-counting of bank funds.
+- **Explicit Card Types Classification**:
+  - Added dedicated card types: **Debit Card** (mirrors linked bank account), **Credit Card** (standalone revolving account with credit limit, debt balance, statement/due dates, payment reminders, and optional settlement bank account), and **Prepaid Card** (standalone card holding its own independent balance).
+  - Card sheets and lists render distinct badges and visual indicators for Debit, Credit, and Prepaid types.
+- **Dependency Guard on Account & Card Deletion**:
+  - Guarded account and card deletion against active dependencies (recurring payments, loans, presets, linked debit cards), presenting actionable conflict warnings to prevent orphaned relational records.
+
+### Time Deposits & Certificates Tool (Financial Tools)
+- **New Financial Management Screen**:
+  - Introduced "Time Deposits and Certificates" under Financial Tools in the More tab ([`CertificatesScreen`](lib/screens/certificates_screen.dart), [`CertificateDetailScreen`](lib/screens/certificate_detail_screen.dart), [`CertificateSheet`](lib/widgets/certificate_sheet.dart)).
+- **Financial Certificate Model & Lifecycle**:
+  - Drift schema v26 table `Certificates` tracking Certificate Name, Principal Amount, Currency, Start & End Dates, Annual Interest Rate (%), Collection Frequency (`daily`, `monthly`, `yearly`), Collection Day (1–31), Linked Bank Account for payouts, Payment Reminder toggle, Notes, settled status, and custom payout overrides.
+  - Periodic payout calculation and maturity progression tracking.
+- **Automated Payout Collection & Maturity Settlement**:
+  - Evaluates due collection dates and auto-deposits yield payouts into the linked bank account as income transactions (`checkAndProcessCertificates()`).
+  - Automatically matures certificates upon reaching end date, returning principal to the linked bank account, with full support for early redemption/breaking.
+  - Factors active certificate principals into `totalWealthAssets` and `liveNetWorth`.
+
+### Selective Backup & Granular Entity Restore
+- **Targeted Domain Export & Restore**:
+  - Added "Selective Backup..." and "Selective Restore..." features in [`BackupScreen`](lib/screens/backup_screen.dart) supporting 10 distinct domain categories: Accounts, Recurring Payments (with occurrence history), Loans, Assets, Certificates, Budgets, Wishlist, Lent Money, Categories, and Transactions.
+  - Granular restore replaces only the selected entity tables in an isolated transaction without resetting the whole database or wiping existing accounts and transactions.
+  - Full backward compatibility with complete `.expensy.json` backups and GreenStash imports.
+
+### Navigation Metrics & Dynamic FAB Clearance (FAB_FIX_PLAN)
+- **`NavMetrics` Architecture**:
+  - Centralized responsive bottom navigation metrics in [`NavMetrics`](lib/utils/nav_metrics.dart) (`navBarHeight`, `navBarBottomMargin`, `fabBottomOffset`, `scrollBottomPadding`).
+- **`NavBarFrame` Component**:
+  - Floating navigation bar with dynamic inset handling that adapts automatically to 3-button navigation, gesture navigation, and Android edge-to-edge layouts.
+  - Removed frozen outer `MediaQuery` from `main.dart` that previously prevented live inset updates.
+- **`NavAwareFabLocation`**:
+  - Custom FAB location dynamically floating above the floating navigation bar based on `NavMetrics.fabBottomOffset(context)` and locale text direction (LTR / RTL).
+- **Dynamic Scroll Padding**:
+  - Replaced hardcoded scroll padding with `NavMetrics.scrollBottomPadding(context)` across Home, Recurring, Accounts, and Budget tabs.
+
+### Fintech Onboarding Redesign & Branching Workflow
+- **7-Step Fintech Onboarding Wizard**:
+  - Refactored onboarding into a modern, tactile sequence: Language Selection, Welcome Hero & Backup Restore, Name Input, Currency Selection, Account Setup, Debit Card Creation, and Notification Permission Request.
+- **Dynamic Branching**:
+  - Restoring a backup on Step 2 skips directly to Step 7 (Notification Permission Request).
+  - Selecting "Bank" account navigates to Step 6.4 (Debit Card creation with live interactive realistic card preview); other account types or skipping routes directly to Step 7.
+- **Validation & Fintech Aesthetics**:
+  - Instant red validation error on empty name submission, clearing immediately upon typing.
+  - Popular currency quick-select chips (`USD`, `EUR`, `EGP`, `GBP`, `SAR`, `AED`) plus searchable currency sheet.
+  - 52px high-contrast pill action buttons with 16px corner radius and glassmorphic elevated cards.
+
+### Unified Fintech Dropdown Styling
+- Unified dropdown menus and selection pickers across the app with consistent fintech styling, rounded corners (16px/20px border radius), subtle surface elevation, and tactile haptic feedback.
+
+### Financial Correctness & Core Engine Hardening
+- **Signed Balance Aggregations**: Fixed balance totals to sum signed values rather than absolute values, properly treating credit balances and overdrafts as liabilities.
+- **Mutex Write Serialization**: Protected state mutations with an async mutex queue (`_serializeMutation`) to prevent concurrent write race conditions.
+- **Atomic Balance Mutations**: Added atomic SQL-level transaction and transfer methods (`applyTransactionWithBalance`, `applyTransferWithBalances`) in [`AppDatabase`](lib/database/app_database.dart).
+- **Auto-Pay Catchup Loop**: Fixed multi-cycle auto-pay evaluation with proper historical occurrence dates and end-date boundary guards.
+- **Encrypted Backups**: PBKDF2 (100,000 rounds) + AES-GCM-256 authenticated encryption with password prompt.
+
+### 11-Locale Localization Parity
+- Full string parity across all 11 supported locales (`en`, `ar`, `de`, `es`, `fr`, `hi`, `it`, `ja`, `pt`, `ru`, `zh`) with 0 untranslated strings.
+
+### Financial Correctness, Power, Architecture & Security Hardening
+- **Core Financial Correctness & Atomicity (Phase 1)**:
+  - Fixed total balance calculation across [`AppProvider`](lib/providers/app_provider.dart) (`totalBalance` and `totalBalanceAll`) to sum signed balances (`convertToMain(a.balance, a.currency)`) rather than unsigned `balance.abs()`, correctly factoring credit card balances and overdrafts as liabilities.
+  - Added async mutation queue (`_serializeMutation`) to serialize write transactions and eliminate concurrent read-modify-write race conditions.
+  - Implemented atomic multi-row database operations in [`AppDatabase`](lib/database/app_database.dart) and [`DBHelper`](lib/database/db_helper.dart): `applyTransactionWithBalance`, `applyTransactionUpdateWithBalance`, `applyTransactionDeleteWithBalance`, and `applyTransferWithBalances`.
+  - Added in-memory cache patching (`_insertTransactionInMemory`, `_updateTransactionInMemory`, `_deleteTransactionInMemory`, `_patchAccountBalanceInMemory`) to eliminate redundant full DB reload sweeps (`load()`) on transaction CRUD.
+  - Updated `markRecurringPaid` to accept `occurrenceDate` and fixed `checkAndProcessAutoPay()` with multi-cycle catchup loop and `endDate` boundary guard.
+  - Added deletion blocking validation (`getAccountDeletionBlockReason`) and atomic account snapshot & undo restoration (`deleteAccountCascade` / `restoreAccountSnapshot`) preventing orphan recurring rules and transactions.
+
+- **Notifications & Battery Power Optimization (Phase 2)**:
+  - Created [`NotificationBootstrap`](lib/services/notification_bootstrap.dart) to consolidate notification channel setup and timezone initialization into a single unified pass during app startup.
+  - Integrated `workmanager: ^0.5.2` with [`WorkmanagerService`](lib/services/workmanager_service.dart) for background periodic auto-pay checks (12-hour periodic cadence with battery constraint).
+  - Replaced continuous 1-minute periodic timer with dynamic one-shot `scheduleNextAutoPayTimer()` waking only when the earliest scheduled auto-pay task is due.
+  - Debounced home widget updates with 750ms trailing window in `updateHomeWidgets()` and masked widget balances with `'••••••'` when `hideBalance` is active.
+  - Throttled budget alerts in `_checkBudgetAlert` to alert only once per budget period.
+  - Standardized notification permission requests with floating snackbar alerts via [`NotificationPermissions.ensure`](lib/utils/notification_permissions.dart).
+
+- **Performance & Screen Architecture (Phase 3)**:
+  - Implemented lazy tab instantiation in [`MainShell`](lib/screens/main_shell.dart): non-initial tabs are held as lightweight placeholders until their tab is visited.
+  - Cleaned up `tabIndexNotifier` listener in `MainShell.dispose()` to prevent memory leaks across hot reloads and shell disposal.
+
+- **Schema v26 Transfers Model (Phase 4)**:
+  - Added `transfer_group_id` column to `transactions` table in [`tables.dart`](lib/database/tables.dart) and updated [`models.dart`](lib/models/models.dart).
+  - Bumped schema version to `26` with migration adding indexes (`idx_tx_date`, `idx_tx_account`, `idx_tx_category`, `idx_tx_transfer_group`) and backfilling legacy transfer pairs.
+  - Updated aggregations across `budgetSpentInPeriod`, `monthTotalExpense`, `monthTotalIncome`, `getWrappedData`, and analytics screens to exclude transfer pairs.
+  - Implemented paired transfer edits and atomic paired deletion in [`AppProvider`](lib/providers/app_provider.dart).
+
+- **Accessibility & i18n (Phase 5)**:
+  - Removed restrictive `accessibleNavigation: false` MediaQuery override from [`main.dart`](lib/main.dart).
+  - Wrapped navigation bar destinations in `Semantics` with labels, tooltips, and button traits for screen readers.
+
+- **Encrypted Backups (Phase 6)**:
+  - Added `cryptography: ^2.7.0` and created [`BackupEncryptionService`](lib/services/backup_encryption_service.dart) implementing PBKDF2 (100,000 rounds) + AES-GCM-256 authenticated encryption.
+  - Added password prompt modal to [`BackupScreen`](lib/screens/backup_screen.dart) for optional encrypted backup creation and password entry on encrypted restore.
+  - Implemented pre-restore database snapshot with automatic rollback if restore encounters format or corruption errors.
+
+- **Android Toolchain & Packaging**:
+  - Migrated `plugins/workmanager` to Android Gradle Plugin 9.1.0 Built-in Kotlin DSL and removed deprecated Flutter v1 embedding APIs (`ShimPluginRegistry`, `PluginRegistrantCallback`, `Registrar`).
+  - Compiled and verified production split APKs (`arm64-v8a`, `armeabi-v7a`, `x86_64`) signed with release keystore.
+
+- **Hygiene & Build Hardening (Phase 0)**:
+  - Removed machine-specific `org.gradle.java.home` from `android/gradle.properties`.
+  - Enforced fail-closed release signing in `android/app/build.gradle` requiring `key.properties`.
+  - Removed unused permissions `USE_EXACT_ALARM` and `READ_MEDIA_IMAGES` from `AndroidManifest.xml`.
+  - Fixed 32-bit integer notification ID overflow in `CreditReminderService`.
+  - Removed dead `showAddTransactionTypeSheet` and obsolete packages (`archive`, `cupertino_icons`).
+
 ## [1.2.1] - 2026-10-03
 
 ### Performance, Battery & Code Cleanups

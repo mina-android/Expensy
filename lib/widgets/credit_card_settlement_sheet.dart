@@ -410,65 +410,49 @@ class _CreditCardSettlementSheetState extends State<CreditCardSettlementSheet> {
                 ),
               )
             else
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                decoration: BoxDecoration(
-                  color: cs.surfaceContainerHigh,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: cs.outlineVariant.withValues(alpha: 0.4),
-                  ),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    isExpanded: true,
-                    value: _sourceAccountId,
-                    icon: const Icon(Icons.keyboard_arrow_down_rounded),
-                    dropdownColor: cs.surfaceContainerHigh,
-                    borderRadius: BorderRadius.circular(16),
-                    items: eligibleSources.map((acc) {
-                      return DropdownMenuItem<String>(
-                        value: acc.id,
-                        child: Row(
-                          children: [
-                            AccountTypeIcon(
-                              type: acc.type,
-                              size: 16,
-                              color: Color(acc.colorValue),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                acc.name,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            Text(
-                              formatAmount(acc.balance, acc.currency),
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: acc.balance >= 0
-                                    ? cs.primary
-                                    : cs.error,
-                              ),
-                            ),
-                          ],
+              AppDropdown<String>(
+                isExpanded: true,
+                value: _sourceAccountId,
+                items: eligibleSources.map((acc) {
+                  return DropdownMenuItem<String>(
+                    value: acc.id,
+                    child: Row(
+                      children: [
+                        AccountTypeIcon(
+                          type: acc.type,
+                          size: 16,
+                          color: Color(acc.colorValue),
                         ),
-                      );
-                    }).toList(),
-                    onChanged: (id) {
-                      if (id != null) {
-                        setState(() => _sourceAccountId = id);
-                      }
-                    },
-                  ),
-                ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            acc.name,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Text(
+                          formatAmount(acc.balance, acc.currency),
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: acc.balance >= 0
+                                ? cs.primary
+                                : cs.error,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+                onChanged: (id) {
+                  if (id != null) {
+                    setState(() => _sourceAccountId = id);
+                  }
+                },
               ),
 
             // Warning if payment exceeds balance

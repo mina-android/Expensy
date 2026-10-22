@@ -1620,6 +1620,12 @@ class $TransactionsTable extends Transactions
       type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultValue: const Constant(''));
+  static const VerificationMeta _transferGroupIdMeta =
+      const VerificationMeta('transferGroupId');
+  @override
+  late final GeneratedColumn<String> transferGroupId = GeneratedColumn<String>(
+      'transfer_group_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -1630,7 +1636,8 @@ class $TransactionsTable extends Transactions
         categoryId,
         date,
         note,
-        currency
+        currency,
+        transferGroupId
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1695,6 +1702,12 @@ class $TransactionsTable extends Transactions
       context.handle(_currencyMeta,
           currency.isAcceptableOrUnknown(data['currency']!, _currencyMeta));
     }
+    if (data.containsKey('transfer_group_id')) {
+      context.handle(
+          _transferGroupIdMeta,
+          transferGroupId.isAcceptableOrUnknown(
+              data['transfer_group_id']!, _transferGroupIdMeta));
+    }
     return context;
   }
 
@@ -1722,6 +1735,8 @@ class $TransactionsTable extends Transactions
           .read(DriftSqlType.string, data['${effectivePrefix}note'])!,
       currency: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}currency'])!,
+      transferGroupId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}transfer_group_id']),
     );
   }
 
@@ -1742,6 +1757,7 @@ class TransactionEntry extends DataClass
   final String date;
   final String note;
   final String currency;
+  final String? transferGroupId;
   const TransactionEntry(
       {required this.id,
       required this.type,
@@ -1751,7 +1767,8 @@ class TransactionEntry extends DataClass
       required this.categoryId,
       required this.date,
       required this.note,
-      required this.currency});
+      required this.currency,
+      this.transferGroupId});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1764,6 +1781,9 @@ class TransactionEntry extends DataClass
     map['date'] = Variable<String>(date);
     map['note'] = Variable<String>(note);
     map['currency'] = Variable<String>(currency);
+    if (!nullToAbsent || transferGroupId != null) {
+      map['transfer_group_id'] = Variable<String>(transferGroupId);
+    }
     return map;
   }
 
@@ -1778,6 +1798,9 @@ class TransactionEntry extends DataClass
       date: Value(date),
       note: Value(note),
       currency: Value(currency),
+      transferGroupId: transferGroupId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(transferGroupId),
     );
   }
 
@@ -1794,6 +1817,7 @@ class TransactionEntry extends DataClass
       date: serializer.fromJson<String>(json['date']),
       note: serializer.fromJson<String>(json['note']),
       currency: serializer.fromJson<String>(json['currency']),
+      transferGroupId: serializer.fromJson<String?>(json['transferGroupId']),
     );
   }
   @override
@@ -1809,6 +1833,7 @@ class TransactionEntry extends DataClass
       'date': serializer.toJson<String>(date),
       'note': serializer.toJson<String>(note),
       'currency': serializer.toJson<String>(currency),
+      'transferGroupId': serializer.toJson<String?>(transferGroupId),
     };
   }
 
@@ -1821,7 +1846,8 @@ class TransactionEntry extends DataClass
           String? categoryId,
           String? date,
           String? note,
-          String? currency}) =>
+          String? currency,
+          Value<String?> transferGroupId = const Value.absent()}) =>
       TransactionEntry(
         id: id ?? this.id,
         type: type ?? this.type,
@@ -1832,6 +1858,9 @@ class TransactionEntry extends DataClass
         date: date ?? this.date,
         note: note ?? this.note,
         currency: currency ?? this.currency,
+        transferGroupId: transferGroupId.present
+            ? transferGroupId.value
+            : this.transferGroupId,
       );
   TransactionEntry copyWithCompanion(TransactionsCompanion data) {
     return TransactionEntry(
@@ -1846,6 +1875,9 @@ class TransactionEntry extends DataClass
       date: data.date.present ? data.date.value : this.date,
       note: data.note.present ? data.note.value : this.note,
       currency: data.currency.present ? data.currency.value : this.currency,
+      transferGroupId: data.transferGroupId.present
+          ? data.transferGroupId.value
+          : this.transferGroupId,
     );
   }
 
@@ -1860,14 +1892,15 @@ class TransactionEntry extends DataClass
           ..write('categoryId: $categoryId, ')
           ..write('date: $date, ')
           ..write('note: $note, ')
-          ..write('currency: $currency')
+          ..write('currency: $currency, ')
+          ..write('transferGroupId: $transferGroupId')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode => Object.hash(id, type, amount, description, accountId,
-      categoryId, date, note, currency);
+      categoryId, date, note, currency, transferGroupId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1880,7 +1913,8 @@ class TransactionEntry extends DataClass
           other.categoryId == this.categoryId &&
           other.date == this.date &&
           other.note == this.note &&
-          other.currency == this.currency);
+          other.currency == this.currency &&
+          other.transferGroupId == this.transferGroupId);
 }
 
 class TransactionsCompanion extends UpdateCompanion<TransactionEntry> {
@@ -1893,6 +1927,7 @@ class TransactionsCompanion extends UpdateCompanion<TransactionEntry> {
   final Value<String> date;
   final Value<String> note;
   final Value<String> currency;
+  final Value<String?> transferGroupId;
   final Value<int> rowid;
   const TransactionsCompanion({
     this.id = const Value.absent(),
@@ -1904,6 +1939,7 @@ class TransactionsCompanion extends UpdateCompanion<TransactionEntry> {
     this.date = const Value.absent(),
     this.note = const Value.absent(),
     this.currency = const Value.absent(),
+    this.transferGroupId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   TransactionsCompanion.insert({
@@ -1916,6 +1952,7 @@ class TransactionsCompanion extends UpdateCompanion<TransactionEntry> {
     required String date,
     this.note = const Value.absent(),
     this.currency = const Value.absent(),
+    this.transferGroupId = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         type = Value(type),
@@ -1934,6 +1971,7 @@ class TransactionsCompanion extends UpdateCompanion<TransactionEntry> {
     Expression<String>? date,
     Expression<String>? note,
     Expression<String>? currency,
+    Expression<String>? transferGroupId,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1946,6 +1984,7 @@ class TransactionsCompanion extends UpdateCompanion<TransactionEntry> {
       if (date != null) 'date': date,
       if (note != null) 'note': note,
       if (currency != null) 'currency': currency,
+      if (transferGroupId != null) 'transfer_group_id': transferGroupId,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1960,6 +1999,7 @@ class TransactionsCompanion extends UpdateCompanion<TransactionEntry> {
       Value<String>? date,
       Value<String>? note,
       Value<String>? currency,
+      Value<String?>? transferGroupId,
       Value<int>? rowid}) {
     return TransactionsCompanion(
       id: id ?? this.id,
@@ -1971,6 +2011,7 @@ class TransactionsCompanion extends UpdateCompanion<TransactionEntry> {
       date: date ?? this.date,
       note: note ?? this.note,
       currency: currency ?? this.currency,
+      transferGroupId: transferGroupId ?? this.transferGroupId,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2005,6 +2046,9 @@ class TransactionsCompanion extends UpdateCompanion<TransactionEntry> {
     if (currency.present) {
       map['currency'] = Variable<String>(currency.value);
     }
+    if (transferGroupId.present) {
+      map['transfer_group_id'] = Variable<String>(transferGroupId.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2023,6 +2067,7 @@ class TransactionsCompanion extends UpdateCompanion<TransactionEntry> {
           ..write('date: $date, ')
           ..write('note: $note, ')
           ..write('currency: $currency, ')
+          ..write('transferGroupId: $transferGroupId, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -8923,6 +8968,911 @@ class TransactionSplitsCompanion
   }
 }
 
+class $CertificatesTable extends Certificates
+    with TableInfo<$CertificatesTable, CertificateEntry> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CertificatesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
+  @override
+  late final GeneratedColumn<double> amount = GeneratedColumn<double>(
+      'amount', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _currencyMeta =
+      const VerificationMeta('currency');
+  @override
+  late final GeneratedColumn<String> currency = GeneratedColumn<String>(
+      'currency', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('EGP'));
+  static const VerificationMeta _startDateMeta =
+      const VerificationMeta('startDate');
+  @override
+  late final GeneratedColumn<String> startDate = GeneratedColumn<String>(
+      'start_date', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _endDateMeta =
+      const VerificationMeta('endDate');
+  @override
+  late final GeneratedColumn<String> endDate = GeneratedColumn<String>(
+      'end_date', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _interestRateMeta =
+      const VerificationMeta('interestRate');
+  @override
+  late final GeneratedColumn<double> interestRate = GeneratedColumn<double>(
+      'interest_rate', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _collectionTypeMeta =
+      const VerificationMeta('collectionType');
+  @override
+  late final GeneratedColumn<String> collectionType = GeneratedColumn<String>(
+      'collection_type', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('monthly'));
+  static const VerificationMeta _collectionDayMeta =
+      const VerificationMeta('collectionDay');
+  @override
+  late final GeneratedColumn<int> collectionDay = GeneratedColumn<int>(
+      'collection_day', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1));
+  static const VerificationMeta _customPayoutAmountMeta =
+      const VerificationMeta('customPayoutAmount');
+  @override
+  late final GeneratedColumn<double> customPayoutAmount =
+      GeneratedColumn<double>('custom_payout_amount', aliasedName, true,
+          type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _accountIdMeta =
+      const VerificationMeta('accountId');
+  @override
+  late final GeneratedColumn<String> accountId = GeneratedColumn<String>(
+      'account_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _reminderEnabledMeta =
+      const VerificationMeta('reminderEnabled');
+  @override
+  late final GeneratedColumn<int> reminderEnabled = GeneratedColumn<int>(
+      'reminder_enabled', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _reminderTimeMeta =
+      const VerificationMeta('reminderTime');
+  @override
+  late final GeneratedColumn<String> reminderTime = GeneratedColumn<String>(
+      'reminder_time', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('09:00'));
+  static const VerificationMeta _reminderEarlyEnabledMeta =
+      const VerificationMeta('reminderEarlyEnabled');
+  @override
+  late final GeneratedColumn<int> reminderEarlyEnabled = GeneratedColumn<int>(
+      'reminder_early_enabled', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+      'notes', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(''));
+  static const VerificationMeta _isSettledMeta =
+      const VerificationMeta('isSettled');
+  @override
+  late final GeneratedColumn<int> isSettled = GeneratedColumn<int>(
+      'is_settled', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _lastCollectedDateMeta =
+      const VerificationMeta('lastCollectedDate');
+  @override
+  late final GeneratedColumn<String> lastCollectedDate =
+      GeneratedColumn<String>('last_collected_date', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _totalCollectedAmountMeta =
+      const VerificationMeta('totalCollectedAmount');
+  @override
+  late final GeneratedColumn<double> totalCollectedAmount =
+      GeneratedColumn<double>('total_collected_amount', aliasedName, false,
+          type: DriftSqlType.double,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(0.0));
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        name,
+        amount,
+        currency,
+        startDate,
+        endDate,
+        interestRate,
+        collectionType,
+        collectionDay,
+        customPayoutAmount,
+        accountId,
+        reminderEnabled,
+        reminderTime,
+        reminderEarlyEnabled,
+        notes,
+        isSettled,
+        createdAt,
+        lastCollectedDate,
+        totalCollectedAmount
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'certificates';
+  @override
+  VerificationContext validateIntegrity(Insertable<CertificateEntry> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('amount')) {
+      context.handle(_amountMeta,
+          amount.isAcceptableOrUnknown(data['amount']!, _amountMeta));
+    } else if (isInserting) {
+      context.missing(_amountMeta);
+    }
+    if (data.containsKey('currency')) {
+      context.handle(_currencyMeta,
+          currency.isAcceptableOrUnknown(data['currency']!, _currencyMeta));
+    }
+    if (data.containsKey('start_date')) {
+      context.handle(_startDateMeta,
+          startDate.isAcceptableOrUnknown(data['start_date']!, _startDateMeta));
+    } else if (isInserting) {
+      context.missing(_startDateMeta);
+    }
+    if (data.containsKey('end_date')) {
+      context.handle(_endDateMeta,
+          endDate.isAcceptableOrUnknown(data['end_date']!, _endDateMeta));
+    } else if (isInserting) {
+      context.missing(_endDateMeta);
+    }
+    if (data.containsKey('interest_rate')) {
+      context.handle(
+          _interestRateMeta,
+          interestRate.isAcceptableOrUnknown(
+              data['interest_rate']!, _interestRateMeta));
+    } else if (isInserting) {
+      context.missing(_interestRateMeta);
+    }
+    if (data.containsKey('collection_type')) {
+      context.handle(
+          _collectionTypeMeta,
+          collectionType.isAcceptableOrUnknown(
+              data['collection_type']!, _collectionTypeMeta));
+    }
+    if (data.containsKey('collection_day')) {
+      context.handle(
+          _collectionDayMeta,
+          collectionDay.isAcceptableOrUnknown(
+              data['collection_day']!, _collectionDayMeta));
+    }
+    if (data.containsKey('custom_payout_amount')) {
+      context.handle(
+          _customPayoutAmountMeta,
+          customPayoutAmount.isAcceptableOrUnknown(
+              data['custom_payout_amount']!, _customPayoutAmountMeta));
+    }
+    if (data.containsKey('account_id')) {
+      context.handle(_accountIdMeta,
+          accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta));
+    } else if (isInserting) {
+      context.missing(_accountIdMeta);
+    }
+    if (data.containsKey('reminder_enabled')) {
+      context.handle(
+          _reminderEnabledMeta,
+          reminderEnabled.isAcceptableOrUnknown(
+              data['reminder_enabled']!, _reminderEnabledMeta));
+    }
+    if (data.containsKey('reminder_time')) {
+      context.handle(
+          _reminderTimeMeta,
+          reminderTime.isAcceptableOrUnknown(
+              data['reminder_time']!, _reminderTimeMeta));
+    }
+    if (data.containsKey('reminder_early_enabled')) {
+      context.handle(
+          _reminderEarlyEnabledMeta,
+          reminderEarlyEnabled.isAcceptableOrUnknown(
+              data['reminder_early_enabled']!, _reminderEarlyEnabledMeta));
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+          _notesMeta, notes.isAcceptableOrUnknown(data['notes']!, _notesMeta));
+    }
+    if (data.containsKey('is_settled')) {
+      context.handle(_isSettledMeta,
+          isSettled.isAcceptableOrUnknown(data['is_settled']!, _isSettledMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('last_collected_date')) {
+      context.handle(
+          _lastCollectedDateMeta,
+          lastCollectedDate.isAcceptableOrUnknown(
+              data['last_collected_date']!, _lastCollectedDateMeta));
+    }
+    if (data.containsKey('total_collected_amount')) {
+      context.handle(
+          _totalCollectedAmountMeta,
+          totalCollectedAmount.isAcceptableOrUnknown(
+              data['total_collected_amount']!, _totalCollectedAmountMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CertificateEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CertificateEntry(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      amount: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}amount'])!,
+      currency: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}currency'])!,
+      startDate: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}start_date'])!,
+      endDate: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}end_date'])!,
+      interestRate: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}interest_rate'])!,
+      collectionType: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}collection_type'])!,
+      collectionDay: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}collection_day'])!,
+      customPayoutAmount: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}custom_payout_amount']),
+      accountId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}account_id'])!,
+      reminderEnabled: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}reminder_enabled'])!,
+      reminderTime: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}reminder_time'])!,
+      reminderEarlyEnabled: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}reminder_early_enabled'])!,
+      notes: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}notes'])!,
+      isSettled: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}is_settled'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}created_at'])!,
+      lastCollectedDate: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}last_collected_date']),
+      totalCollectedAmount: attachedDatabase.typeMapping.read(
+          DriftSqlType.double,
+          data['${effectivePrefix}total_collected_amount'])!,
+    );
+  }
+
+  @override
+  $CertificatesTable createAlias(String alias) {
+    return $CertificatesTable(attachedDatabase, alias);
+  }
+}
+
+class CertificateEntry extends DataClass
+    implements Insertable<CertificateEntry> {
+  final String id;
+  final String name;
+  final double amount;
+  final String currency;
+  final String startDate;
+  final String endDate;
+  final double interestRate;
+  final String collectionType;
+  final int collectionDay;
+  final double? customPayoutAmount;
+  final String accountId;
+  final int reminderEnabled;
+  final String reminderTime;
+  final int reminderEarlyEnabled;
+  final String notes;
+  final int isSettled;
+  final String createdAt;
+  final String? lastCollectedDate;
+  final double totalCollectedAmount;
+  const CertificateEntry(
+      {required this.id,
+      required this.name,
+      required this.amount,
+      required this.currency,
+      required this.startDate,
+      required this.endDate,
+      required this.interestRate,
+      required this.collectionType,
+      required this.collectionDay,
+      this.customPayoutAmount,
+      required this.accountId,
+      required this.reminderEnabled,
+      required this.reminderTime,
+      required this.reminderEarlyEnabled,
+      required this.notes,
+      required this.isSettled,
+      required this.createdAt,
+      this.lastCollectedDate,
+      required this.totalCollectedAmount});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    map['amount'] = Variable<double>(amount);
+    map['currency'] = Variable<String>(currency);
+    map['start_date'] = Variable<String>(startDate);
+    map['end_date'] = Variable<String>(endDate);
+    map['interest_rate'] = Variable<double>(interestRate);
+    map['collection_type'] = Variable<String>(collectionType);
+    map['collection_day'] = Variable<int>(collectionDay);
+    if (!nullToAbsent || customPayoutAmount != null) {
+      map['custom_payout_amount'] = Variable<double>(customPayoutAmount);
+    }
+    map['account_id'] = Variable<String>(accountId);
+    map['reminder_enabled'] = Variable<int>(reminderEnabled);
+    map['reminder_time'] = Variable<String>(reminderTime);
+    map['reminder_early_enabled'] = Variable<int>(reminderEarlyEnabled);
+    map['notes'] = Variable<String>(notes);
+    map['is_settled'] = Variable<int>(isSettled);
+    map['created_at'] = Variable<String>(createdAt);
+    if (!nullToAbsent || lastCollectedDate != null) {
+      map['last_collected_date'] = Variable<String>(lastCollectedDate);
+    }
+    map['total_collected_amount'] = Variable<double>(totalCollectedAmount);
+    return map;
+  }
+
+  CertificatesCompanion toCompanion(bool nullToAbsent) {
+    return CertificatesCompanion(
+      id: Value(id),
+      name: Value(name),
+      amount: Value(amount),
+      currency: Value(currency),
+      startDate: Value(startDate),
+      endDate: Value(endDate),
+      interestRate: Value(interestRate),
+      collectionType: Value(collectionType),
+      collectionDay: Value(collectionDay),
+      customPayoutAmount: customPayoutAmount == null && nullToAbsent
+          ? const Value.absent()
+          : Value(customPayoutAmount),
+      accountId: Value(accountId),
+      reminderEnabled: Value(reminderEnabled),
+      reminderTime: Value(reminderTime),
+      reminderEarlyEnabled: Value(reminderEarlyEnabled),
+      notes: Value(notes),
+      isSettled: Value(isSettled),
+      createdAt: Value(createdAt),
+      lastCollectedDate: lastCollectedDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastCollectedDate),
+      totalCollectedAmount: Value(totalCollectedAmount),
+    );
+  }
+
+  factory CertificateEntry.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CertificateEntry(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      amount: serializer.fromJson<double>(json['amount']),
+      currency: serializer.fromJson<String>(json['currency']),
+      startDate: serializer.fromJson<String>(json['startDate']),
+      endDate: serializer.fromJson<String>(json['endDate']),
+      interestRate: serializer.fromJson<double>(json['interestRate']),
+      collectionType: serializer.fromJson<String>(json['collectionType']),
+      collectionDay: serializer.fromJson<int>(json['collectionDay']),
+      customPayoutAmount:
+          serializer.fromJson<double?>(json['customPayoutAmount']),
+      accountId: serializer.fromJson<String>(json['accountId']),
+      reminderEnabled: serializer.fromJson<int>(json['reminderEnabled']),
+      reminderTime: serializer.fromJson<String>(json['reminderTime']),
+      reminderEarlyEnabled:
+          serializer.fromJson<int>(json['reminderEarlyEnabled']),
+      notes: serializer.fromJson<String>(json['notes']),
+      isSettled: serializer.fromJson<int>(json['isSettled']),
+      createdAt: serializer.fromJson<String>(json['createdAt']),
+      lastCollectedDate:
+          serializer.fromJson<String?>(json['lastCollectedDate']),
+      totalCollectedAmount:
+          serializer.fromJson<double>(json['totalCollectedAmount']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'amount': serializer.toJson<double>(amount),
+      'currency': serializer.toJson<String>(currency),
+      'startDate': serializer.toJson<String>(startDate),
+      'endDate': serializer.toJson<String>(endDate),
+      'interestRate': serializer.toJson<double>(interestRate),
+      'collectionType': serializer.toJson<String>(collectionType),
+      'collectionDay': serializer.toJson<int>(collectionDay),
+      'customPayoutAmount': serializer.toJson<double?>(customPayoutAmount),
+      'accountId': serializer.toJson<String>(accountId),
+      'reminderEnabled': serializer.toJson<int>(reminderEnabled),
+      'reminderTime': serializer.toJson<String>(reminderTime),
+      'reminderEarlyEnabled': serializer.toJson<int>(reminderEarlyEnabled),
+      'notes': serializer.toJson<String>(notes),
+      'isSettled': serializer.toJson<int>(isSettled),
+      'createdAt': serializer.toJson<String>(createdAt),
+      'lastCollectedDate': serializer.toJson<String?>(lastCollectedDate),
+      'totalCollectedAmount': serializer.toJson<double>(totalCollectedAmount),
+    };
+  }
+
+  CertificateEntry copyWith(
+          {String? id,
+          String? name,
+          double? amount,
+          String? currency,
+          String? startDate,
+          String? endDate,
+          double? interestRate,
+          String? collectionType,
+          int? collectionDay,
+          Value<double?> customPayoutAmount = const Value.absent(),
+          String? accountId,
+          int? reminderEnabled,
+          String? reminderTime,
+          int? reminderEarlyEnabled,
+          String? notes,
+          int? isSettled,
+          String? createdAt,
+          Value<String?> lastCollectedDate = const Value.absent(),
+          double? totalCollectedAmount}) =>
+      CertificateEntry(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        amount: amount ?? this.amount,
+        currency: currency ?? this.currency,
+        startDate: startDate ?? this.startDate,
+        endDate: endDate ?? this.endDate,
+        interestRate: interestRate ?? this.interestRate,
+        collectionType: collectionType ?? this.collectionType,
+        collectionDay: collectionDay ?? this.collectionDay,
+        customPayoutAmount: customPayoutAmount.present
+            ? customPayoutAmount.value
+            : this.customPayoutAmount,
+        accountId: accountId ?? this.accountId,
+        reminderEnabled: reminderEnabled ?? this.reminderEnabled,
+        reminderTime: reminderTime ?? this.reminderTime,
+        reminderEarlyEnabled: reminderEarlyEnabled ?? this.reminderEarlyEnabled,
+        notes: notes ?? this.notes,
+        isSettled: isSettled ?? this.isSettled,
+        createdAt: createdAt ?? this.createdAt,
+        lastCollectedDate: lastCollectedDate.present
+            ? lastCollectedDate.value
+            : this.lastCollectedDate,
+        totalCollectedAmount: totalCollectedAmount ?? this.totalCollectedAmount,
+      );
+  CertificateEntry copyWithCompanion(CertificatesCompanion data) {
+    return CertificateEntry(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      amount: data.amount.present ? data.amount.value : this.amount,
+      currency: data.currency.present ? data.currency.value : this.currency,
+      startDate: data.startDate.present ? data.startDate.value : this.startDate,
+      endDate: data.endDate.present ? data.endDate.value : this.endDate,
+      interestRate: data.interestRate.present
+          ? data.interestRate.value
+          : this.interestRate,
+      collectionType: data.collectionType.present
+          ? data.collectionType.value
+          : this.collectionType,
+      collectionDay: data.collectionDay.present
+          ? data.collectionDay.value
+          : this.collectionDay,
+      customPayoutAmount: data.customPayoutAmount.present
+          ? data.customPayoutAmount.value
+          : this.customPayoutAmount,
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      reminderEnabled: data.reminderEnabled.present
+          ? data.reminderEnabled.value
+          : this.reminderEnabled,
+      reminderTime: data.reminderTime.present
+          ? data.reminderTime.value
+          : this.reminderTime,
+      reminderEarlyEnabled: data.reminderEarlyEnabled.present
+          ? data.reminderEarlyEnabled.value
+          : this.reminderEarlyEnabled,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      isSettled: data.isSettled.present ? data.isSettled.value : this.isSettled,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      lastCollectedDate: data.lastCollectedDate.present
+          ? data.lastCollectedDate.value
+          : this.lastCollectedDate,
+      totalCollectedAmount: data.totalCollectedAmount.present
+          ? data.totalCollectedAmount.value
+          : this.totalCollectedAmount,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CertificateEntry(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('amount: $amount, ')
+          ..write('currency: $currency, ')
+          ..write('startDate: $startDate, ')
+          ..write('endDate: $endDate, ')
+          ..write('interestRate: $interestRate, ')
+          ..write('collectionType: $collectionType, ')
+          ..write('collectionDay: $collectionDay, ')
+          ..write('customPayoutAmount: $customPayoutAmount, ')
+          ..write('accountId: $accountId, ')
+          ..write('reminderEnabled: $reminderEnabled, ')
+          ..write('reminderTime: $reminderTime, ')
+          ..write('reminderEarlyEnabled: $reminderEarlyEnabled, ')
+          ..write('notes: $notes, ')
+          ..write('isSettled: $isSettled, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('lastCollectedDate: $lastCollectedDate, ')
+          ..write('totalCollectedAmount: $totalCollectedAmount')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      name,
+      amount,
+      currency,
+      startDate,
+      endDate,
+      interestRate,
+      collectionType,
+      collectionDay,
+      customPayoutAmount,
+      accountId,
+      reminderEnabled,
+      reminderTime,
+      reminderEarlyEnabled,
+      notes,
+      isSettled,
+      createdAt,
+      lastCollectedDate,
+      totalCollectedAmount);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CertificateEntry &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.amount == this.amount &&
+          other.currency == this.currency &&
+          other.startDate == this.startDate &&
+          other.endDate == this.endDate &&
+          other.interestRate == this.interestRate &&
+          other.collectionType == this.collectionType &&
+          other.collectionDay == this.collectionDay &&
+          other.customPayoutAmount == this.customPayoutAmount &&
+          other.accountId == this.accountId &&
+          other.reminderEnabled == this.reminderEnabled &&
+          other.reminderTime == this.reminderTime &&
+          other.reminderEarlyEnabled == this.reminderEarlyEnabled &&
+          other.notes == this.notes &&
+          other.isSettled == this.isSettled &&
+          other.createdAt == this.createdAt &&
+          other.lastCollectedDate == this.lastCollectedDate &&
+          other.totalCollectedAmount == this.totalCollectedAmount);
+}
+
+class CertificatesCompanion extends UpdateCompanion<CertificateEntry> {
+  final Value<String> id;
+  final Value<String> name;
+  final Value<double> amount;
+  final Value<String> currency;
+  final Value<String> startDate;
+  final Value<String> endDate;
+  final Value<double> interestRate;
+  final Value<String> collectionType;
+  final Value<int> collectionDay;
+  final Value<double?> customPayoutAmount;
+  final Value<String> accountId;
+  final Value<int> reminderEnabled;
+  final Value<String> reminderTime;
+  final Value<int> reminderEarlyEnabled;
+  final Value<String> notes;
+  final Value<int> isSettled;
+  final Value<String> createdAt;
+  final Value<String?> lastCollectedDate;
+  final Value<double> totalCollectedAmount;
+  final Value<int> rowid;
+  const CertificatesCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.amount = const Value.absent(),
+    this.currency = const Value.absent(),
+    this.startDate = const Value.absent(),
+    this.endDate = const Value.absent(),
+    this.interestRate = const Value.absent(),
+    this.collectionType = const Value.absent(),
+    this.collectionDay = const Value.absent(),
+    this.customPayoutAmount = const Value.absent(),
+    this.accountId = const Value.absent(),
+    this.reminderEnabled = const Value.absent(),
+    this.reminderTime = const Value.absent(),
+    this.reminderEarlyEnabled = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.isSettled = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.lastCollectedDate = const Value.absent(),
+    this.totalCollectedAmount = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CertificatesCompanion.insert({
+    required String id,
+    required String name,
+    required double amount,
+    this.currency = const Value.absent(),
+    required String startDate,
+    required String endDate,
+    required double interestRate,
+    this.collectionType = const Value.absent(),
+    this.collectionDay = const Value.absent(),
+    this.customPayoutAmount = const Value.absent(),
+    required String accountId,
+    this.reminderEnabled = const Value.absent(),
+    this.reminderTime = const Value.absent(),
+    this.reminderEarlyEnabled = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.isSettled = const Value.absent(),
+    required String createdAt,
+    this.lastCollectedDate = const Value.absent(),
+    this.totalCollectedAmount = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        name = Value(name),
+        amount = Value(amount),
+        startDate = Value(startDate),
+        endDate = Value(endDate),
+        interestRate = Value(interestRate),
+        accountId = Value(accountId),
+        createdAt = Value(createdAt);
+  static Insertable<CertificateEntry> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<double>? amount,
+    Expression<String>? currency,
+    Expression<String>? startDate,
+    Expression<String>? endDate,
+    Expression<double>? interestRate,
+    Expression<String>? collectionType,
+    Expression<int>? collectionDay,
+    Expression<double>? customPayoutAmount,
+    Expression<String>? accountId,
+    Expression<int>? reminderEnabled,
+    Expression<String>? reminderTime,
+    Expression<int>? reminderEarlyEnabled,
+    Expression<String>? notes,
+    Expression<int>? isSettled,
+    Expression<String>? createdAt,
+    Expression<String>? lastCollectedDate,
+    Expression<double>? totalCollectedAmount,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (amount != null) 'amount': amount,
+      if (currency != null) 'currency': currency,
+      if (startDate != null) 'start_date': startDate,
+      if (endDate != null) 'end_date': endDate,
+      if (interestRate != null) 'interest_rate': interestRate,
+      if (collectionType != null) 'collection_type': collectionType,
+      if (collectionDay != null) 'collection_day': collectionDay,
+      if (customPayoutAmount != null)
+        'custom_payout_amount': customPayoutAmount,
+      if (accountId != null) 'account_id': accountId,
+      if (reminderEnabled != null) 'reminder_enabled': reminderEnabled,
+      if (reminderTime != null) 'reminder_time': reminderTime,
+      if (reminderEarlyEnabled != null)
+        'reminder_early_enabled': reminderEarlyEnabled,
+      if (notes != null) 'notes': notes,
+      if (isSettled != null) 'is_settled': isSettled,
+      if (createdAt != null) 'created_at': createdAt,
+      if (lastCollectedDate != null) 'last_collected_date': lastCollectedDate,
+      if (totalCollectedAmount != null)
+        'total_collected_amount': totalCollectedAmount,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CertificatesCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? name,
+      Value<double>? amount,
+      Value<String>? currency,
+      Value<String>? startDate,
+      Value<String>? endDate,
+      Value<double>? interestRate,
+      Value<String>? collectionType,
+      Value<int>? collectionDay,
+      Value<double?>? customPayoutAmount,
+      Value<String>? accountId,
+      Value<int>? reminderEnabled,
+      Value<String>? reminderTime,
+      Value<int>? reminderEarlyEnabled,
+      Value<String>? notes,
+      Value<int>? isSettled,
+      Value<String>? createdAt,
+      Value<String?>? lastCollectedDate,
+      Value<double>? totalCollectedAmount,
+      Value<int>? rowid}) {
+    return CertificatesCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      amount: amount ?? this.amount,
+      currency: currency ?? this.currency,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      interestRate: interestRate ?? this.interestRate,
+      collectionType: collectionType ?? this.collectionType,
+      collectionDay: collectionDay ?? this.collectionDay,
+      customPayoutAmount: customPayoutAmount ?? this.customPayoutAmount,
+      accountId: accountId ?? this.accountId,
+      reminderEnabled: reminderEnabled ?? this.reminderEnabled,
+      reminderTime: reminderTime ?? this.reminderTime,
+      reminderEarlyEnabled: reminderEarlyEnabled ?? this.reminderEarlyEnabled,
+      notes: notes ?? this.notes,
+      isSettled: isSettled ?? this.isSettled,
+      createdAt: createdAt ?? this.createdAt,
+      lastCollectedDate: lastCollectedDate ?? this.lastCollectedDate,
+      totalCollectedAmount: totalCollectedAmount ?? this.totalCollectedAmount,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (amount.present) {
+      map['amount'] = Variable<double>(amount.value);
+    }
+    if (currency.present) {
+      map['currency'] = Variable<String>(currency.value);
+    }
+    if (startDate.present) {
+      map['start_date'] = Variable<String>(startDate.value);
+    }
+    if (endDate.present) {
+      map['end_date'] = Variable<String>(endDate.value);
+    }
+    if (interestRate.present) {
+      map['interest_rate'] = Variable<double>(interestRate.value);
+    }
+    if (collectionType.present) {
+      map['collection_type'] = Variable<String>(collectionType.value);
+    }
+    if (collectionDay.present) {
+      map['collection_day'] = Variable<int>(collectionDay.value);
+    }
+    if (customPayoutAmount.present) {
+      map['custom_payout_amount'] = Variable<double>(customPayoutAmount.value);
+    }
+    if (accountId.present) {
+      map['account_id'] = Variable<String>(accountId.value);
+    }
+    if (reminderEnabled.present) {
+      map['reminder_enabled'] = Variable<int>(reminderEnabled.value);
+    }
+    if (reminderTime.present) {
+      map['reminder_time'] = Variable<String>(reminderTime.value);
+    }
+    if (reminderEarlyEnabled.present) {
+      map['reminder_early_enabled'] = Variable<int>(reminderEarlyEnabled.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (isSettled.present) {
+      map['is_settled'] = Variable<int>(isSettled.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (lastCollectedDate.present) {
+      map['last_collected_date'] = Variable<String>(lastCollectedDate.value);
+    }
+    if (totalCollectedAmount.present) {
+      map['total_collected_amount'] =
+          Variable<double>(totalCollectedAmount.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CertificatesCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('amount: $amount, ')
+          ..write('currency: $currency, ')
+          ..write('startDate: $startDate, ')
+          ..write('endDate: $endDate, ')
+          ..write('interestRate: $interestRate, ')
+          ..write('collectionType: $collectionType, ')
+          ..write('collectionDay: $collectionDay, ')
+          ..write('customPayoutAmount: $customPayoutAmount, ')
+          ..write('accountId: $accountId, ')
+          ..write('reminderEnabled: $reminderEnabled, ')
+          ..write('reminderTime: $reminderTime, ')
+          ..write('reminderEarlyEnabled: $reminderEarlyEnabled, ')
+          ..write('notes: $notes, ')
+          ..write('isSettled: $isSettled, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('lastCollectedDate: $lastCollectedDate, ')
+          ..write('totalCollectedAmount: $totalCollectedAmount, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -8951,6 +9901,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $TransactionPresetsTable(this);
   late final $TransactionSplitsTable transactionSplits =
       $TransactionSplitsTable(this);
+  late final $CertificatesTable certificates = $CertificatesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -8973,7 +9924,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         loans,
         loanPayments,
         transactionPresets,
-        transactionSplits
+        transactionSplits,
+        certificates
       ];
 }
 
@@ -9671,6 +10623,7 @@ typedef $$TransactionsTableCreateCompanionBuilder = TransactionsCompanion
   required String date,
   Value<String> note,
   Value<String> currency,
+  Value<String?> transferGroupId,
   Value<int> rowid,
 });
 typedef $$TransactionsTableUpdateCompanionBuilder = TransactionsCompanion
@@ -9684,6 +10637,7 @@ typedef $$TransactionsTableUpdateCompanionBuilder = TransactionsCompanion
   Value<String> date,
   Value<String> note,
   Value<String> currency,
+  Value<String?> transferGroupId,
   Value<int> rowid,
 });
 
@@ -9722,6 +10676,10 @@ class $$TransactionsTableFilterComposer
 
   ColumnFilters<String> get currency => $composableBuilder(
       column: $table.currency, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get transferGroupId => $composableBuilder(
+      column: $table.transferGroupId,
+      builder: (column) => ColumnFilters(column));
 }
 
 class $$TransactionsTableOrderingComposer
@@ -9759,6 +10717,10 @@ class $$TransactionsTableOrderingComposer
 
   ColumnOrderings<String> get currency => $composableBuilder(
       column: $table.currency, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get transferGroupId => $composableBuilder(
+      column: $table.transferGroupId,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$TransactionsTableAnnotationComposer
@@ -9796,6 +10758,9 @@ class $$TransactionsTableAnnotationComposer
 
   GeneratedColumn<String> get currency =>
       $composableBuilder(column: $table.currency, builder: (column) => column);
+
+  GeneratedColumn<String> get transferGroupId => $composableBuilder(
+      column: $table.transferGroupId, builder: (column) => column);
 }
 
 class $$TransactionsTableTableManager extends RootTableManager<
@@ -9833,6 +10798,7 @@ class $$TransactionsTableTableManager extends RootTableManager<
             Value<String> date = const Value.absent(),
             Value<String> note = const Value.absent(),
             Value<String> currency = const Value.absent(),
+            Value<String?> transferGroupId = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               TransactionsCompanion(
@@ -9845,6 +10811,7 @@ class $$TransactionsTableTableManager extends RootTableManager<
             date: date,
             note: note,
             currency: currency,
+            transferGroupId: transferGroupId,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -9857,6 +10824,7 @@ class $$TransactionsTableTableManager extends RootTableManager<
             required String date,
             Value<String> note = const Value.absent(),
             Value<String> currency = const Value.absent(),
+            Value<String?> transferGroupId = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               TransactionsCompanion.insert(
@@ -9869,6 +10837,7 @@ class $$TransactionsTableTableManager extends RootTableManager<
             date: date,
             note: note,
             currency: currency,
+            transferGroupId: transferGroupId,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -13405,6 +14374,408 @@ typedef $$TransactionSplitsTableProcessedTableManager = ProcessedTableManager<
     ),
     TransactionSplitEntry,
     PrefetchHooks Function()>;
+typedef $$CertificatesTableCreateCompanionBuilder = CertificatesCompanion
+    Function({
+  required String id,
+  required String name,
+  required double amount,
+  Value<String> currency,
+  required String startDate,
+  required String endDate,
+  required double interestRate,
+  Value<String> collectionType,
+  Value<int> collectionDay,
+  Value<double?> customPayoutAmount,
+  required String accountId,
+  Value<int> reminderEnabled,
+  Value<String> reminderTime,
+  Value<int> reminderEarlyEnabled,
+  Value<String> notes,
+  Value<int> isSettled,
+  required String createdAt,
+  Value<String?> lastCollectedDate,
+  Value<double> totalCollectedAmount,
+  Value<int> rowid,
+});
+typedef $$CertificatesTableUpdateCompanionBuilder = CertificatesCompanion
+    Function({
+  Value<String> id,
+  Value<String> name,
+  Value<double> amount,
+  Value<String> currency,
+  Value<String> startDate,
+  Value<String> endDate,
+  Value<double> interestRate,
+  Value<String> collectionType,
+  Value<int> collectionDay,
+  Value<double?> customPayoutAmount,
+  Value<String> accountId,
+  Value<int> reminderEnabled,
+  Value<String> reminderTime,
+  Value<int> reminderEarlyEnabled,
+  Value<String> notes,
+  Value<int> isSettled,
+  Value<String> createdAt,
+  Value<String?> lastCollectedDate,
+  Value<double> totalCollectedAmount,
+  Value<int> rowid,
+});
+
+class $$CertificatesTableFilterComposer
+    extends Composer<_$AppDatabase, $CertificatesTable> {
+  $$CertificatesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get amount => $composableBuilder(
+      column: $table.amount, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get currency => $composableBuilder(
+      column: $table.currency, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get startDate => $composableBuilder(
+      column: $table.startDate, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get endDate => $composableBuilder(
+      column: $table.endDate, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get interestRate => $composableBuilder(
+      column: $table.interestRate, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get collectionType => $composableBuilder(
+      column: $table.collectionType,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get collectionDay => $composableBuilder(
+      column: $table.collectionDay, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get customPayoutAmount => $composableBuilder(
+      column: $table.customPayoutAmount,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get accountId => $composableBuilder(
+      column: $table.accountId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get reminderEnabled => $composableBuilder(
+      column: $table.reminderEnabled,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get reminderTime => $composableBuilder(
+      column: $table.reminderTime, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get reminderEarlyEnabled => $composableBuilder(
+      column: $table.reminderEarlyEnabled,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get notes => $composableBuilder(
+      column: $table.notes, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get isSettled => $composableBuilder(
+      column: $table.isSettled, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get lastCollectedDate => $composableBuilder(
+      column: $table.lastCollectedDate,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get totalCollectedAmount => $composableBuilder(
+      column: $table.totalCollectedAmount,
+      builder: (column) => ColumnFilters(column));
+}
+
+class $$CertificatesTableOrderingComposer
+    extends Composer<_$AppDatabase, $CertificatesTable> {
+  $$CertificatesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get amount => $composableBuilder(
+      column: $table.amount, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get currency => $composableBuilder(
+      column: $table.currency, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get startDate => $composableBuilder(
+      column: $table.startDate, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get endDate => $composableBuilder(
+      column: $table.endDate, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get interestRate => $composableBuilder(
+      column: $table.interestRate,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get collectionType => $composableBuilder(
+      column: $table.collectionType,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get collectionDay => $composableBuilder(
+      column: $table.collectionDay,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get customPayoutAmount => $composableBuilder(
+      column: $table.customPayoutAmount,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get accountId => $composableBuilder(
+      column: $table.accountId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get reminderEnabled => $composableBuilder(
+      column: $table.reminderEnabled,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get reminderTime => $composableBuilder(
+      column: $table.reminderTime,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get reminderEarlyEnabled => $composableBuilder(
+      column: $table.reminderEarlyEnabled,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+      column: $table.notes, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get isSettled => $composableBuilder(
+      column: $table.isSettled, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get lastCollectedDate => $composableBuilder(
+      column: $table.lastCollectedDate,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get totalCollectedAmount => $composableBuilder(
+      column: $table.totalCollectedAmount,
+      builder: (column) => ColumnOrderings(column));
+}
+
+class $$CertificatesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CertificatesTable> {
+  $$CertificatesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<double> get amount =>
+      $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<String> get currency =>
+      $composableBuilder(column: $table.currency, builder: (column) => column);
+
+  GeneratedColumn<String> get startDate =>
+      $composableBuilder(column: $table.startDate, builder: (column) => column);
+
+  GeneratedColumn<String> get endDate =>
+      $composableBuilder(column: $table.endDate, builder: (column) => column);
+
+  GeneratedColumn<double> get interestRate => $composableBuilder(
+      column: $table.interestRate, builder: (column) => column);
+
+  GeneratedColumn<String> get collectionType => $composableBuilder(
+      column: $table.collectionType, builder: (column) => column);
+
+  GeneratedColumn<int> get collectionDay => $composableBuilder(
+      column: $table.collectionDay, builder: (column) => column);
+
+  GeneratedColumn<double> get customPayoutAmount => $composableBuilder(
+      column: $table.customPayoutAmount, builder: (column) => column);
+
+  GeneratedColumn<String> get accountId =>
+      $composableBuilder(column: $table.accountId, builder: (column) => column);
+
+  GeneratedColumn<int> get reminderEnabled => $composableBuilder(
+      column: $table.reminderEnabled, builder: (column) => column);
+
+  GeneratedColumn<String> get reminderTime => $composableBuilder(
+      column: $table.reminderTime, builder: (column) => column);
+
+  GeneratedColumn<int> get reminderEarlyEnabled => $composableBuilder(
+      column: $table.reminderEarlyEnabled, builder: (column) => column);
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<int> get isSettled =>
+      $composableBuilder(column: $table.isSettled, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get lastCollectedDate => $composableBuilder(
+      column: $table.lastCollectedDate, builder: (column) => column);
+
+  GeneratedColumn<double> get totalCollectedAmount => $composableBuilder(
+      column: $table.totalCollectedAmount, builder: (column) => column);
+}
+
+class $$CertificatesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $CertificatesTable,
+    CertificateEntry,
+    $$CertificatesTableFilterComposer,
+    $$CertificatesTableOrderingComposer,
+    $$CertificatesTableAnnotationComposer,
+    $$CertificatesTableCreateCompanionBuilder,
+    $$CertificatesTableUpdateCompanionBuilder,
+    (
+      CertificateEntry,
+      BaseReferences<_$AppDatabase, $CertificatesTable, CertificateEntry>
+    ),
+    CertificateEntry,
+    PrefetchHooks Function()> {
+  $$CertificatesTableTableManager(_$AppDatabase db, $CertificatesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CertificatesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CertificatesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CertificatesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<double> amount = const Value.absent(),
+            Value<String> currency = const Value.absent(),
+            Value<String> startDate = const Value.absent(),
+            Value<String> endDate = const Value.absent(),
+            Value<double> interestRate = const Value.absent(),
+            Value<String> collectionType = const Value.absent(),
+            Value<int> collectionDay = const Value.absent(),
+            Value<double?> customPayoutAmount = const Value.absent(),
+            Value<String> accountId = const Value.absent(),
+            Value<int> reminderEnabled = const Value.absent(),
+            Value<String> reminderTime = const Value.absent(),
+            Value<int> reminderEarlyEnabled = const Value.absent(),
+            Value<String> notes = const Value.absent(),
+            Value<int> isSettled = const Value.absent(),
+            Value<String> createdAt = const Value.absent(),
+            Value<String?> lastCollectedDate = const Value.absent(),
+            Value<double> totalCollectedAmount = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CertificatesCompanion(
+            id: id,
+            name: name,
+            amount: amount,
+            currency: currency,
+            startDate: startDate,
+            endDate: endDate,
+            interestRate: interestRate,
+            collectionType: collectionType,
+            collectionDay: collectionDay,
+            customPayoutAmount: customPayoutAmount,
+            accountId: accountId,
+            reminderEnabled: reminderEnabled,
+            reminderTime: reminderTime,
+            reminderEarlyEnabled: reminderEarlyEnabled,
+            notes: notes,
+            isSettled: isSettled,
+            createdAt: createdAt,
+            lastCollectedDate: lastCollectedDate,
+            totalCollectedAmount: totalCollectedAmount,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String name,
+            required double amount,
+            Value<String> currency = const Value.absent(),
+            required String startDate,
+            required String endDate,
+            required double interestRate,
+            Value<String> collectionType = const Value.absent(),
+            Value<int> collectionDay = const Value.absent(),
+            Value<double?> customPayoutAmount = const Value.absent(),
+            required String accountId,
+            Value<int> reminderEnabled = const Value.absent(),
+            Value<String> reminderTime = const Value.absent(),
+            Value<int> reminderEarlyEnabled = const Value.absent(),
+            Value<String> notes = const Value.absent(),
+            Value<int> isSettled = const Value.absent(),
+            required String createdAt,
+            Value<String?> lastCollectedDate = const Value.absent(),
+            Value<double> totalCollectedAmount = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CertificatesCompanion.insert(
+            id: id,
+            name: name,
+            amount: amount,
+            currency: currency,
+            startDate: startDate,
+            endDate: endDate,
+            interestRate: interestRate,
+            collectionType: collectionType,
+            collectionDay: collectionDay,
+            customPayoutAmount: customPayoutAmount,
+            accountId: accountId,
+            reminderEnabled: reminderEnabled,
+            reminderTime: reminderTime,
+            reminderEarlyEnabled: reminderEarlyEnabled,
+            notes: notes,
+            isSettled: isSettled,
+            createdAt: createdAt,
+            lastCollectedDate: lastCollectedDate,
+            totalCollectedAmount: totalCollectedAmount,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable<$CertificatesTable, CertificateEntry>(table),
+                    BaseReferences<_$AppDatabase, $CertificatesTable,
+                        CertificateEntry>(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$CertificatesTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $CertificatesTable,
+    CertificateEntry,
+    $$CertificatesTableFilterComposer,
+    $$CertificatesTableOrderingComposer,
+    $$CertificatesTableAnnotationComposer,
+    $$CertificatesTableCreateCompanionBuilder,
+    $$CertificatesTableUpdateCompanionBuilder,
+    (
+      CertificateEntry,
+      BaseReferences<_$AppDatabase, $CertificatesTable, CertificateEntry>
+    ),
+    CertificateEntry,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -13445,4 +14816,6 @@ class $AppDatabaseManager {
       $$TransactionPresetsTableTableManager(_db, _db.transactionPresets);
   $$TransactionSplitsTableTableManager get transactionSplits =>
       $$TransactionSplitsTableTableManager(_db, _db.transactionSplits);
+  $$CertificatesTableTableManager get certificates =>
+      $$CertificatesTableTableManager(_db, _db.certificates);
 }

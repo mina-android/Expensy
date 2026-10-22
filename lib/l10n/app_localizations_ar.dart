@@ -1659,6 +1659,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get home_addAccount => 'إضافة حساب';
 
   @override
+  String get home_cards => 'البطاقات';
+
+  @override
+  String get home_addCard => 'إضافة بطاقة';
+
+  @override
   String get home_monthlyOverview => 'نظرة شهرية عامة';
 
   @override
@@ -2661,4 +2667,128 @@ class AppLocalizationsAr extends AppLocalizations {
   String accounts_dueOnDay(int day) {
     return 'الاستحقاق يوم $day';
   }
+
+  @override
+  String get accounts_cannotDeleteAccount => 'لا يمكن حذف الحساب';
+
+  @override
+  String get common_ok => 'موافق';
+
+  @override
+  String get certificates_title => 'الودائع لأجل والشهادات';
+
+  @override
+  String get certificates_addCertificate => 'إضافة شهادة';
+
+  @override
+  String get certificates_editCertificate => 'تعديل الشهادة';
+
+  @override
+  String get certificates_noCertificates => 'لا توجد شهادات حتى الآن';
+
+  @override
+  String get certificates_noCertificatesDesc =>
+      'تتبع الشهادات والودائع ذات العائد المرتفع والأرباح التلقائية.';
+
+  @override
+  String get certificates_active => 'نشطة';
+
+  @override
+  String get certificates_matured => 'مستحقة';
+
+  @override
+  String get certificates_amount => 'المبلغ الأصلي';
+
+  @override
+  String get certificates_collectionType => 'دورية صرف الفائدة';
+
+  @override
+  String get certificates_collectedSoFar => 'المحصل حتى الآن';
+
+  @override
+  String get certificates_expectedTotal => 'إجمالي العائد المتوقع';
+
+  @override
+  String get certificates_startDate => 'تاريخ البدء';
+
+  @override
+  String get certificates_endDate => 'تاريخ الاستحقاق';
+
+  @override
+  String get certificates_redeem => 'استرداد الشهادة';
+
+  @override
+  String certificates_redeemConfirm(String name, String amount) {
+    return 'هل أنت متأكد من استرداد \"$name\"؟ سيتم استرجاع أصل المبلغ بقيمة $amount إلى حسابك البنكي.';
+  }
+
+  @override
+  String get certificates_redeemedSuccess =>
+      'تم استرداد الشهادة وإرجاع أصل المبلغ بنجاح.';
+
+  @override
+  String get certificates_name => 'اسم الشهادة';
+
+  @override
+  String get certificates_interestRate => 'معدل الفائدة السنوي (%)';
+
+  @override
+  String get certificates_linkedBankAccount => 'الحساب البنكي المرتبط';
+
+  @override
+  String get certificates_periodicYield => 'عائد الفائدة الدوري';
+
+  @override
+  String get certificates_paymentReminder => 'إشعار تذكير بالأرباح';
+
+  @override
+  String get certificates_reminderTime => 'وقت التذكير';
+
+  @override
+  String get certificates_reminder2DaysBefore => 'تذكير قبلها بيومين';
+
+  @override
+  String get certificates_deleteCertificate => 'حذف الشهادة';
+
+  @override
+  String get certificates_confirmDeleteCertificate =>
+      'هل أنت متأكد من حذف هذه الشهادة؟ سيتم حذف جميع معاملات الإيداع والأرباح المرتبطة بها واسترجاع المبلغ إلى حسابك.';
+
+  @override
+  String get certificates_deleted => 'تم حذف الشهادة';
+
+  @override
+  String get onboarding_stayOnTopOfFinances => 'ابقَ مطلعاً على أموالك';
+
+  @override
+  String get onboarding_stayOnTopOfFinancesDesc =>
+      'فعّل التنبيهات حتى لا يفوتك أي موعد سداد أو فاتورة أو تجاوز للميزانية.';
+
+  @override
+  String get onboarding_featureBillTitle =>
+      'تذكيرات الفواتير وتواريخ الاستحقاق';
+
+  @override
+  String get onboarding_featureBillDesc =>
+      'احصل على تنبيهات قبل تواريخ كشوفات بطاقات الائتمان وأقساط القروض.';
+
+  @override
+  String get onboarding_featureBudgetTitle => 'تنبيهات تتبع الميزانية';
+
+  @override
+  String get onboarding_featureBudgetDesc =>
+      'تلقَّ تنبيهات عند الوصول إلى 80% أو 100% من حد الإنفاق للفئة.';
+
+  @override
+  String get onboarding_featureRecurringTitle => 'الاشتراكات المتكررة';
+
+  @override
+  String get onboarding_featureRecurringDesc =>
+      'ابقَ على علم قبل تجديد الفواتير والاشتراكات المتكررة تلقائياً.';
+
+  @override
+  String get onboarding_allowNotifications => 'السماح بالإشعارات';
+
+  @override
+  String get onboarding_maybeLater => 'ربما لاحقاً';
 }

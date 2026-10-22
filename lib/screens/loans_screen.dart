@@ -56,13 +56,13 @@ class _LoansScreenState extends State<LoansScreen> {
               padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
               child: Row(
                 children: [
-                  _SumChip(
+                  FintechSummaryChip(
                     label: l10n.loans_outstandingDebt,
                     value: formatAmount(app.totalOutstandingLoanDebt, cur),
                     color: const Color(0xFF4A148C),
                   ),
                   const SizedBox(width: 8),
-                  _SumChip(
+                  FintechSummaryChip(
                     label: l10n.loans_monthlyObligation,
                     value: formatAmount(app.totalMonthlyLoanObligation, cur),
                     color: cs.primary,
@@ -131,52 +131,8 @@ class _LoansScreenState extends State<LoansScreen> {
       ),
       floatingActionButton: FintechFab(
         tooltip: l10n.loans_addLoan,
+        color: const Color(0xFF4A148C),
         onPressed: () => _openSheet(context),
-      ),
-    );
-  }
-}
-
-class _SumChip extends StatelessWidget {
-  final String label, value;
-  final Color color;
-  const _SumChip({required this.label, required this.value, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: isDark ? 0.15 : 0.1),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withValues(alpha: 0.25)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: color,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-                color: color,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -710,10 +666,10 @@ class _LoanSheetState extends State<LoanSheet> {
               const SizedBox(height: 12),
 
               // Reminder Toggle
-              SwitchListTile(
+              FintechReminderToggle(
                 value: _reminderEnabled,
-                title: Text(l10n.loans_paymentReminder, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                contentPadding: EdgeInsets.zero,
+                title: l10n.loans_paymentReminder,
+                activeColor: const Color(0xFF4A148C),
                 onChanged: (val) async {
                   if (val) {
                     final granted = await LoanReminderService().hasPermission();
@@ -726,17 +682,13 @@ class _LoanSheetState extends State<LoanSheet> {
                   }
                   setState(() => _reminderEnabled = val);
                 },
-              ),
-              if (_reminderEnabled) ...[
-                Row(
+                expandedContent: Row(
                   children: [
                     Expanded(
-                      child: DropdownButtonFormField<int>(
-                        initialValue: _reminderDay,
-                        decoration: InputDecoration(
-                          labelText: l10n.loans_reminderDay,
-                          prefixIcon: const Icon(Icons.today),
-                        ),
+                      child: AppDropdownFormField<int>(
+                        value: _reminderDay,
+                        labelText: l10n.loans_reminderDay,
+                        prefixIcon: const Icon(Icons.today_rounded),
                         items: List.generate(31, (i) => i + 1)
                             .map((day) => DropdownMenuItem(value: day, child: Text(day.toString())))
                             .toList(),
@@ -777,8 +729,8 @@ class _LoanSheetState extends State<LoanSheet> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-              ],
+              ),
+              const SizedBox(height: 14),
 
               // Notes
               TextFormField(

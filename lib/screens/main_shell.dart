@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
+import '../services/auto_backup_service.dart';
 import '../l10n/app_localizations.dart';
 import 'home_screen.dart';
 import 'transactions_screen.dart';
@@ -12,6 +13,7 @@ import 'budget_screen.dart';
 import 'more_screen.dart';
 import '../utils/haptics.dart';
 import '../widgets/rounded_square_border.dart';
+import '../utils/nav_metrics.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -49,6 +51,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       app.startAutoPayTimer();
       app.checkAndProcessAutoPay();
+      AutoBackupService.runCatchUpIfNeeded();
     } else if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
       app.pauseAutoPayTimer();
     }
@@ -122,10 +125,8 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
         child: Scaffold(
           extendBody: true,
           body: FadeIndexedStack(index: _index, children: _screens),
-        bottomNavigationBar: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-            child: Container(
+        bottomNavigationBar: NavBarFrame(
+          child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(22),
                 border: Border.all(
@@ -255,7 +256,6 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
             ),
           ),
         ),
-      ),
       ),
       ),
       ),

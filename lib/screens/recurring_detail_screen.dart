@@ -73,28 +73,65 @@ class _RecurringDetailScreenState extends State<RecurringDetailScreen> {
               showDialog(
                 context: context,
                 builder: (c) => AlertDialog(
-                  title: Text(l10n.recurring_del),
-                  content: Text(l10n.recurring_confirmDelete),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(c),
-                      child: Text(l10n.shared_widgets_cancel),
+                  icon: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: cs.error.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
                     ),
-                    TextButton(
-                      style: TextButton.styleFrom(foregroundColor: const Color(0xFFC62828)),
-                      onPressed: () async {
-                        Navigator.pop(c); // close dialog
-                        Navigator.pop(context); // close screen
-                        final undo = await app.deleteRecurringWithUndo(r.id);
-                        if (context.mounted) {
-                          showAppSnackbar(
-                            context,
-                            l10n.common_itemDeleted(r.name),
-                            onUndo: undo,
-                          );
-                        }
-                      },
-                      child: Text(l10n.shared_widgets_delete_),
+                    child: Icon(Icons.delete_outline_rounded,
+                        color: cs.error, size: 26),
+                  ),
+                  title:
+                      Text(l10n.recurring_del, textAlign: TextAlign.center),
+                  content: Text(l10n.recurring_confirmDelete,
+                      textAlign: TextAlign.center),
+                  actionsAlignment: MainAxisAlignment.center,
+                  actions: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size.fromHeight(46),
+                              side: BorderSide(
+                                  color: cs.outlineVariant
+                                      .withValues(alpha: 0.6)),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14)),
+                            ),
+                            onPressed: () => Navigator.pop(c),
+                            child: Text(l10n.shared_widgets_cancel),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: FilledButton(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: cs.error,
+                              foregroundColor: cs.onError,
+                              minimumSize: const Size.fromHeight(46),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14)),
+                            ),
+                            onPressed: () async {
+                              Navigator.pop(c); // close dialog
+                              Navigator.pop(context); // close screen
+                              final undo =
+                                  await app.deleteRecurringWithUndo(r.id);
+                              if (context.mounted) {
+                                showAppSnackbar(
+                                  context,
+                                  l10n.common_itemDeleted(r.name),
+                                  onUndo: undo,
+                                );
+                              }
+                            },
+                            child: Text(l10n.shared_widgets_delete_),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

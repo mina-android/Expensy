@@ -1,4 +1,4 @@
-﻿// lib/database/db_helper.dart
+// lib/database/db_helper.dart
 import 'app_database.dart';
 import '../models/models.dart';
 
@@ -6,12 +6,7 @@ import '../models/models.dart';
 /// by delegating all CRUD and aggregate operations directly to [AppDatabase.instance]
 /// (Drift backed by SQLite in a background isolate).
 class DBHelper {
-  static const int _version = 25;
-
-  /// Public accessor for the current DB/backup schema version, so UI code
-  /// (e.g. the Backup screen) never has to hardcode a copy that can drift
-  /// out of sync with the real schema version.
-  static int get schemaVersion => _version;
+  static int get schemaVersion => AppDatabase.currentSchemaVersion;
   // ── Accounts ─────────────────────────────────────────────────────────
   static Future<List<Account>> getAccounts() =>
       AppDatabase.instance.getAccounts();
@@ -21,6 +16,9 @@ class DBHelper {
 
   static Future<void> updateAccount(Account a) =>
       AppDatabase.instance.updateAccount(a);
+
+  static Future<void> updateAccountOrder(List<String> accountIds) =>
+      AppDatabase.instance.updateAccountOrder(accountIds);
 
   static Future<void> deleteAccount(String id) =>
       AppDatabase.instance.deleteAccount(id);
@@ -261,8 +259,69 @@ class DBHelper {
   static Future<Map<String, dynamic>> exportAll() =>
       AppDatabase.instance.exportAll();
 
+  static Future<Map<String, dynamic>> exportSelective(Set<String> tables) =>
+      AppDatabase.instance.exportSelective(tables);
+
   static Future<void> importAll(Map<String, dynamic> data) =>
       AppDatabase.instance.importAll(data);
+
+  static Future<void> importSelective(
+          Map<String, dynamic> data, Set<String> tables) =>
+      AppDatabase.instance.importSelective(data, tables);
+
+  // ── Atomic Balances & Transactions ────────────────────────────────────
+  static Future<void> applyTransactionWithBalance(
+          AppTransaction t, double balanceDelta) =>
+      AppDatabase.instance.applyTransactionWithBalance(t, balanceDelta);
+
+  static Future<void> applyUpdateTransactionWithBalance(
+          AppTransaction t, double balanceDelta) =>
+      AppDatabase.instance.applyUpdateTransactionWithBalance(t, balanceDelta);
+
+  static Future<void> applyDeleteTransactionWithBalance(
+          String id, String accountId, double balanceDelta) =>
+      AppDatabase.instance
+          .applyDeleteTransactionWithBalance(id, accountId, balanceDelta);
+
+  static Future<void> applyTransferWithBalances(
+    AppTransaction outTx,
+    AppTransaction inTx,
+    double fromAccountDelta,
+    double toAccountDelta,
+  ) =>
+      AppDatabase.instance.applyTransferWithBalances(
+        outTx,
+        inTx,
+        fromAccountDelta,
+        toAccountDelta,
+      );
+
+  static Future<void> deleteAccountCascade(String accountId) =>
+      AppDatabase.instance.deleteAccountCascade(accountId);
+
+  static Future<void> restoreAccountSnapshot(
+    Account account,
+    List<AppTransaction> transactions,
+    List<TransactionSplit> splits,
+  ) =>
+      AppDatabase.instance.restoreAccountSnapshot(
+        account,
+        transactions,
+        splits,
+      );
+
+  // ── Certificates ──────────────────────────────────────────────────────
+  static Future<List<Certificate>> getCertificates() =>
+      AppDatabase.instance.getCertificates();
+
+  static Future<void> insertCertificate(Certificate c) =>
+      AppDatabase.instance.insertCertificate(c);
+
+  static Future<void> updateCertificate(Certificate c) =>
+      AppDatabase.instance.updateCertificate(c);
+
+  static Future<void> deleteCertificate(String id) =>
+      AppDatabase.instance.deleteCertificate(id);
 
   // ── Net Worth Snapshots ───────────────────────────────────────────────
   static Future<List<NetWorthSnapshot>> getNetWorthSnapshots(

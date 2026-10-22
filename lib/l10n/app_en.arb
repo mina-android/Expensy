@@ -722,6 +722,8 @@
   "home_manage": "Manage",
   "home_seeAll": "See All",
   "home_addAccount": "Add Account",
+  "home_cards": "Cards",
+  "home_addCard": "Add Card",
   "home_monthlyOverview": "Monthly Overview",
   "home_savingsRate": "Savings Rate",
   "insights_insights": "Insights",
@@ -1113,5 +1115,53 @@
         "type": "int"
       }
     }
-  }
+  },
+  "accounts_cannotDeleteAccount": "Cannot Delete Account",
+  "common_ok": "OK",
+  "certificates_title": "Time Deposits & Certificates",
+  "certificates_addCertificate": "Add Certificate",
+  "certificates_editCertificate": "Edit Certificate",
+  "certificates_noCertificates": "No Certificates Yet",
+  "certificates_noCertificatesDesc": "Track your high-yield certificates, deposits, and auto-collected interest returns.",
+  "certificates_active": "Active",
+  "certificates_matured": "Matured",
+  "certificates_amount": "Principal Amount",
+  "certificates_collectionType": "Interest Collection",
+  "certificates_collectedSoFar": "Collected So Far",
+  "certificates_expectedTotal": "Total Expected Return",
+  "certificates_startDate": "Start Date",
+  "certificates_endDate": "Maturity Date",
+  "certificates_redeem": "Redeem Certificate",
+  "certificates_redeemConfirm": "Are you sure you want to redeem \"{name}\"? The principal of {amount} will be returned to your bank account.",
+  "@certificates_redeemConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "certificates_redeemedSuccess": "Certificate redeemed and principal returned successfully.",
+  "certificates_name": "Certificate Name",
+  "certificates_interestRate": "Annual Interest Rate (%)",
+  "certificates_linkedBankAccount": "Linked Bank Account",
+  "certificates_periodicYield": "Periodic Interest Return",
+  "certificates_paymentReminder": "Payout Reminder Notification",
+  "certificates_reminderTime": "Reminder Time",
+  "certificates_reminder2DaysBefore": "Reminder 2 days before",
+  "certificates_deleteCertificate": "Delete Certificate",
+  "certificates_confirmDeleteCertificate": "Are you sure you want to delete this certificate? All associated deposit and interest transactions will be removed and money returned to your account.",
+  "certificates_deleted": "Certificate deleted",
+  "onboarding_stayOnTopOfFinances": "Stay on Top of Your Finances",
+  "onboarding_stayOnTopOfFinancesDesc": "Enable timely reminders so you never miss a payment, overdue bill, or budget threshold.",
+  "onboarding_featureBillTitle": "Bill & Due Date Reminders",
+  "onboarding_featureBillDesc": "Get alerted before credit card statement dates and loan installments are due.",
+  "onboarding_featureBudgetTitle": "Budget Tracking Alerts",
+  "onboarding_featureBudgetDesc": "Receive alerts when you reach 80% or 100% of your category spending limit.",
+  "onboarding_featureRecurringTitle": "Recurring Subscriptions",
+  "onboarding_featureRecurringDesc": "Stay informed before recurring bills and memberships auto-renew.",
+  "onboarding_allowNotifications": "Allow Notifications",
+  "onboarding_maybeLater": "Maybe Later"
 }

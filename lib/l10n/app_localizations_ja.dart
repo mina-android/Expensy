@@ -1642,6 +1642,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get home_addAccount => '口座を追加';
 
   @override
+  String get home_cards => 'カード';
+
+  @override
+  String get home_addCard => 'カードを追加';
+
+  @override
   String get home_monthlyOverview => '月間概要';
 
   @override
@@ -1881,7 +1887,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get onboarding_chooseLanguage => '言語を選択';
 
   @override
-  String get error_required => 'このフィールドは必須です';
+  String get error_required => 'この項目は必須です';
 
   @override
   String recurring_subscriptions(Object count) {
@@ -2595,4 +2601,123 @@ class AppLocalizationsJa extends AppLocalizations {
   String accounts_dueOnDay(int day) {
     return '$day日に期日';
   }
+
+  @override
+  String get accounts_cannotDeleteAccount => '口座を削除できません';
+
+  @override
+  String get common_ok => 'OK';
+
+  @override
+  String get certificates_title => '定期預金・証書';
+
+  @override
+  String get certificates_addCertificate => '証書を追加';
+
+  @override
+  String get certificates_editCertificate => '証書を編集';
+
+  @override
+  String get certificates_noCertificates => '証書はまだありません';
+
+  @override
+  String get certificates_noCertificatesDesc => '高利回りの定期預金や証書、自動受取利息を記録します。';
+
+  @override
+  String get certificates_active => '有効';
+
+  @override
+  String get certificates_matured => '満期';
+
+  @override
+  String get certificates_amount => '元本金額';
+
+  @override
+  String get certificates_collectionType => '利息受取頻度';
+
+  @override
+  String get certificates_collectedSoFar => 'これまでの受取合計';
+
+  @override
+  String get certificates_expectedTotal => '予想受取合計利息';
+
+  @override
+  String get certificates_startDate => '開始日';
+
+  @override
+  String get certificates_endDate => '満期日';
+
+  @override
+  String get certificates_redeem => '証書を解約・償還';
+
+  @override
+  String certificates_redeemConfirm(String name, String amount) {
+    return '本当に \"$name\" を解約しますか？ 元本 $amount が銀行口座に返金されます。';
+  }
+
+  @override
+  String get certificates_redeemedSuccess => '証書が解約され、元本が正常に返金されました。';
+
+  @override
+  String get certificates_name => '証書名';
+
+  @override
+  String get certificates_interestRate => '年利 (%)';
+
+  @override
+  String get certificates_linkedBankAccount => '連携銀行口座';
+
+  @override
+  String get certificates_periodicYield => '定期利息受取額';
+
+  @override
+  String get certificates_paymentReminder => '利息受取リマインダー通知';
+
+  @override
+  String get certificates_reminderTime => 'リマインダー時刻';
+
+  @override
+  String get certificates_reminder2DaysBefore => '2日前のリマインダー';
+
+  @override
+  String get certificates_deleteCertificate => '証書を削除';
+
+  @override
+  String get certificates_confirmDeleteCertificate =>
+      '本当にこの証書を削除しますか？ 関連するすべての取引が削除され、口座に資金が返金されます。';
+
+  @override
+  String get certificates_deleted => '証書を削除しました';
+
+  @override
+  String get onboarding_stayOnTopOfFinances => 'お金の流れを常に把握';
+
+  @override
+  String get onboarding_stayOnTopOfFinancesDesc =>
+      '支払い期限や請求書、予算の上限を見逃さないようリマインダーを設定しましょう。';
+
+  @override
+  String get onboarding_featureBillTitle => '請求書とお支払い期限のリマインダー';
+
+  @override
+  String get onboarding_featureBillDesc => 'クレジットカードの締め日やローンの支払期日前に通知を受け取ります。';
+
+  @override
+  String get onboarding_featureBudgetTitle => '予算アラート';
+
+  @override
+  String get onboarding_featureBudgetDesc =>
+      '支出限度額の80%または100%に達したときにアラートを受信します。';
+
+  @override
+  String get onboarding_featureRecurringTitle => '定期サブスクリプション';
+
+  @override
+  String get onboarding_featureRecurringDesc => 'サブスクリプションが自動更新される前にお知らせします。';
+
+  @override
+  String get onboarding_allowNotifications => '通知を許可する';
+
+  @override
+  String get onboarding_maybeLater => 'あとで設定';
 }

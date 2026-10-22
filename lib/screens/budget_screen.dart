@@ -12,6 +12,7 @@ import '../widgets/app_numeric_keypad.dart';
 import 'savings_goal_detail_screen.dart';
 import '../utils/haptics.dart';
 import '../utils/snackbar.dart';
+import '../utils/nav_metrics.dart';
 
 class BudgetScreen extends StatefulWidget {
   const BudgetScreen({super.key});
@@ -339,7 +340,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                         )
                       : ListView.builder(
                           key: const ValueKey('budgets_list'),
-                          padding: const EdgeInsets.fromLTRB(14, 4, 14, 140),
+                          padding: EdgeInsets.fromLTRB(14, 4, 14, NavMetrics.scrollBottomPadding(context)),
                           itemCount: app.budgets.length,
                           itemBuilder: (_, i) => _BudgetCard(
                             budget: app.budgets[i],
@@ -354,7 +355,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                         )
                       : ListView.builder(
                           key: const ValueKey('goals_list'),
-                          padding: const EdgeInsets.fromLTRB(14, 4, 14, 140),
+                          padding: EdgeInsets.fromLTRB(14, 4, 14, NavMetrics.scrollBottomPadding(context)),
                           itemCount: goals.length,
                           itemBuilder: (_, i) => _GoalCard(
                             goal: goals[i],
@@ -365,33 +366,32 @@ class _BudgetScreenState extends State<BudgetScreen> {
           ),
         ],
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 75, right: 4),
-        child: ExpandableFab(
-          label: l10n.home_add,
-          color: tabRose,
-          items: [
-            ExpandableFabItem(
-              label: l10n.budget_addBudget,
-              icon: Icons.pie_chart_rounded,
-              color: tabRose,
-              onTap: () => BudgetScreen._openSheet(context),
+      floatingActionButtonLocation: NavAwareFabLocation(
+        bottomOffset: NavMetrics.fabBottomOffset(context),
+      ),
+      floatingActionButton: ExpandableFab(
+        label: l10n.home_add,
+        color: tabRose,
+        items: [
+          ExpandableFabItem(
+            label: l10n.budget_addBudget,
+            icon: Icons.pie_chart_rounded,
+            color: tabRose,
+            onTap: () => BudgetScreen._openSheet(context),
+          ),
+          ExpandableFabItem(
+            label: l10n.budget_addGoal,
+            icon: Icons.savings_rounded,
+            color: tabRose,
+            onTap: () => showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+              builder: (_) => const SavingsGoalSheet(),
             ),
-            ExpandableFabItem(
-              label: l10n.budget_addGoal,
-              icon: Icons.savings_rounded,
-              color: tabRose,
-              onTap: () => showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-                builder: (_) => const SavingsGoalSheet(),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

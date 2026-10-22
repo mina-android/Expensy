@@ -337,7 +337,18 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     return showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(l10n.add_transaction_possibleDuplicate),
+        icon: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: const Color(0xFFF57C00).withValues(alpha: 0.12),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.warning_amber_rounded,
+              color: Color(0xFFF57C00), size: 24),
+        ),
+        title: Text(l10n.add_transaction_possibleDuplicate,
+            textAlign: TextAlign.center),
         content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -353,12 +364,31 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   )),
             ]),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(l10n.add_transaction_goBack)),
-          FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: Text(l10n.add_transaction_saveAnyway)),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
+                  ),
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: Text(l10n.add_transaction_goBack),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
+                  ),
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: Text(l10n.add_transaction_saveAnyway),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );

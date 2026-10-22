@@ -26,11 +26,12 @@ flowchart TD
     subgraph Database ["Persistence Layer (Drift / SQLite Isolate)"]
         AppDB["AppDatabase (Drift NativeDatabase via Dart FFI)"]
         Facade["DBHelper (Static Backward-Compatible Facade)"]
-        Tables["17 Drift Relational Tables (Schema v25)"]
+        Tables["18 Drift Relational Tables (Schema v27 with certificates & card balance inheritance)"]
     end
 
     subgraph Background ["Native & Asynchronous Services"]
-        Notif["NotificationService & Reminder Services"]
+        Notif["NotificationBootstrap & Reminder Services"]
+        WM["WorkmanagerService (Periodic Background Auto-Pay)"]
         ERService["ExchangeRateService (HTTP to open.er-api & Fawaz Gold)"]
         Widgets["HomeWidget (Accounts & Budget Glanceables)"]
         QuickAdd["QuickAddService (MethodChannel / EventChannel)"]
@@ -52,11 +53,12 @@ flowchart TD
 
 ## 2. Database Entity-Relationship Diagram (ERD)
 
-The database runs on SQLite through Drift (`AppDatabase`, Schema Version 25). Operations are executed asynchronously in a background isolate via Dart FFI.
+The database runs on SQLite through Drift (`AppDatabase`, Schema Version 27). Operations are executed asynchronously in a background isolate via Dart FFI.
 
 ```mermaid
 erDiagram
     ACCOUNTS ||--o{ TRANSACTIONS : "holds"
+    ACCOUNTS ||--o{ CERTIFICATES : "receives payouts into"
     CATEGORIES ||--o{ TRANSACTIONS : "categorizes"
     TRANSACTIONS ||--o{ TRANSACTION_SPLITS : "split into"
     CATEGORIES ||--o{ TRANSACTION_SPLITS : "assigned to"
@@ -129,6 +131,7 @@ erDiagram
         TEXT date "ISO8601"
         TEXT note
         TEXT currency "Empty string = match account"
+        TEXT transfer_group_id "Nullable: links paired transfer legs"
     }
 
     TRANSACTION_SPLITS {
@@ -288,6 +291,28 @@ erDiagram
         TEXT created_at "ISO8601"
     }
 
+    CERTIFICATES {
+        TEXT id PK
+        TEXT name
+        REAL amount
+        TEXT currency
+        TEXT start_date "ISO8601"
+        TEXT end_date "ISO8601"
+        REAL interest_rate
+        TEXT collection_type "daily | monthly | yearly"
+        INTEGER collection_day "1-31"
+        REAL custom_payout_amount "Nullable"
+        TEXT account_id FK "-> accounts.id (Linked Bank Account)"
+        INTEGER reminder_enabled
+        TEXT reminder_time "HH:mm"
+        INTEGER reminder_early_enabled "0 or 1"
+        TEXT notes
+        INTEGER is_settled
+        TEXT created_at "ISO8601"
+        TEXT last_collected_date "Nullable ISO8601"
+        REAL total_collected_amount
+    }
+
     NET_WORTH_SNAPSHOTS {
         TEXT id PK
         TEXT date "yyyy-MM-dd UNIQUE"
@@ -364,9 +389,9 @@ flowchart LR
     Shell --> ShellTabs
 
     subgraph MoreHub ["More Screen Hub Destinations"]
-        Tools["Tools: Currency Converter, Wishlist, Lent Money, Assets, Loans"]
+        Tools["Tools: Currency Converter, Wishlist, Lent Money, Assets, Loans, Time Deposits & Certificates"]
         Analytics["Analytics: Net Worth Screen, Statistics, Insights, Calendar, Yearly, Wrapped"]
-        SettingsDest["Data & Settings: Export/Import, Backup, App Settings"]
+        SettingsDest["Data & Settings: Export/Import, Full/Selective Backup & Restore, App Settings"]
     end
 
     Tab5 --> MoreHub
@@ -459,6 +484,23 @@ flowchart LR
     Minus --> NetWorth
 ```
 
+### 5.4 Time Deposits Lifecycle & Balance Recovery Cascade
+When a certificate / time deposit is created, principal deduction transactions are tagged with `[cert:<id>]`. Yield payouts collected over time are similarly tracked. Upon deletion of a certificate:
+1. All linked transactions (both initial principal deduction and collected interest payments) are identified in `AppDatabase.transactions`.
+2. Each transaction is deleted using `DBHelper.applyDeleteTransactionWithBalance`, reversing the balance delta on the linked bank account.
+3. In-memory accounts are updated via `_patchAccountBalance`, restoring the account balance exactly to its pre-deposit state without leaving orphan transaction logs.
+4. Payout reminders are scheduled through `CertificateReminderService` on the collection due date and optionally 2 days early at the designated `reminder_time`.
+
+### 5.5 Account & Card View Partitioning
+Accounts and cards are presented cleanly across dedicated views:
+- **Home Screen Carousels:** The Home screen features two dedicated horizontal carousels:
+  1. **Accounts Carousel:** Displays non-card liquid accounts (`app.accounts.where((a) => !a.isCard)`: Bank, Cash, Savings, Digital Wallet, Gold) with a dedicated "+ Add Account" action tile.
+  2. **Cards Carousel:** Displays registered cards (`app.accounts.where((a) => a.isCard)`: Debit, Credit, Prepaid) with card numbers, contactless indicators, effective balances, and a dedicated "+ Add Card" action tile.
+  Both carousels link their "Manage →" actions via `AppProvider.accountsTabNotifier` (`0` for Accounts, `1` for Cards) directly into the `AccountsScreen`.
+- **Accounts Tab - Accounts & Cards Views:** `AccountsScreen` hosts two synchronized sub-tabs:
+  1. **Accounts Tab (`_tabIndex = 0`):** Full dashboard of all asset-holding liquid accounts.
+  2. **Cards Tab (`_tabIndex = 1`):** Complete management of Debit, Credit, and Prepaid cards with inline type badges placed beside card names.
+
 ---
 
 ## 6. Battery, Background & Resource Management
@@ -476,3 +518,34 @@ flowchart LR
 
 4. **Memoized Filter Caching:**
    - `TransactionsScreen` memoizes the unified search and sort pass across transactions, lended items, savings contributions, and loans via `_lastFilterSignature`, eliminating redundant loop evaluations on every widget rebuild or cursor animation.
+
+---
+
+## 7. Onboarding & Navigation Layout Metrics
+
+### 7.1 Modern Fintech Onboarding Architecture
+The initial onboarding experience runs as an indexed stack of seven fintech steps with reactive conditional branches:
+
+```mermaid
+flowchart TD
+    Step0["Step 1: Choose Language\n(Immediate persistence)"] --> Step1["Step 2: Welcome & Restore"]
+    
+    Step1 -->|Restore Backup Success| Step6["Step 7: Notifications Access\n(Allow / Maybe Later)"]
+    Step1 -->|Start Fresh| Step2["Step 3: Name Entry\n(Validation & Haptic feedback)"]
+    
+    Step2 --> Step3["Step 4: Default Currency\n(Hero card + Popular chips + Full picker)"]
+    Step3 --> Step4["Step 5: Account Setup\n(Name, Type, Balance, Color)"]
+    
+    Step4 -->|Type == 'bank' & Continue| Step5["Step 6: Debit Card Creation\n(Live realistic preview, cardholder, last4, expiry)"]
+    Step4 -->|Skip for now| Step6
+    Step4 -->|Type != 'bank'| Step6
+    
+    Step5 -->|Continue / Skip| Step6
+    Step6 --> Complete["Finish Setup -> MainShell"]
+```
+
+### 7.2 Navigation Metrics & Dynamic Clearance
+`NavMetrics` (`lib/utils/nav_metrics.dart`) decouples bottom navigation height and system window insets from individual screens:
+- **`NavBarFrame`:** Anchors the floating navigation bar with responsive bottom margins and device window insets.
+- **`NavAwareFabLocation`:** Position floating action buttons dynamically above the floating navbar factoring text direction (`LTR`/`RTL`) and `NavMetrics.fabBottomOffset(context)`.
+- **`NavMetrics.scrollBottomPadding(context)`:** Injects dynamic bottom scroll padding across all list views to prevent content occlusion.

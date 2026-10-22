@@ -11,6 +11,7 @@
 // right local wall-clock time regardless of the IANA location name.
 
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz_data;
@@ -38,28 +39,37 @@ class NotificationService {
 
     // Load timezone definitions. We don't need setLocalLocation() because
     // _toUtcTZDate() converts local times to UTC using the device offset directly.
-    tz_data.initializeTimeZones();
+    try {
+      tz_data.initializeTimeZones();
 
-    const androidSettings =
-        AndroidInitializationSettings('ic_notification');
-    await _plugin
-        .initialize(settings: const InitializationSettings(android: androidSettings));
-    _initialized = true;
+      const androidSettings =
+          AndroidInitializationSettings('ic_notification');
+      await _plugin
+          .initialize(settings: const InitializationSettings(android: androidSettings));
+      _initialized = true;
 
-    // Eagerly register the recurring payment notification channel so it's
-    // visible in system settings from the very first app launch.
-    // The lended channel is registered by LendedNotificationService.initialize().
-    final android = _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
-    if (android != null) {
-      await android.createNotificationChannel(const AndroidNotificationChannel(
-        _channelId,
-        _channelName,
-        description: _channelDesc,
-        importance: Importance.high,
-        playSound: true,
-        enableVibration: true,
-      ));
+      final android = _plugin.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
+      if (android != null) {
+        await android.createNotificationChannel(const AndroidNotificationChannel(
+          _channelId,
+          _channelName,
+          description: _channelDesc,
+          importance: Importance.high,
+          playSound: true,
+          enableVibration: true,
+        ));
+        await android.createNotificationChannel(const AndroidNotificationChannel(
+          'expensy_backup',
+          'Automatic Backup Alerts',
+          description: 'Notifications for automated backup status and error alerts',
+          importance: Importance.high,
+          playSound: true,
+          enableVibration: true,
+        ));
+      }
+    } catch (e) {
+      debugPrint('Notification initialize warning: $e');
     }
   }
 
@@ -152,24 +162,31 @@ class NotificationService {
 
   /// Cancel both the on-day and the advance notification for [paymentId].
   Future<void> cancelReminder(String paymentId) async {
-    await _ensureInit();
-    await _plugin.cancel(id: _notifId(paymentId));
-    await _plugin.cancel(id: _advanceId(paymentId)); // safe even when not scheduled
+    try {
+      await _ensureInit();
+      await _plugin.cancel(id: _notifId(paymentId));
+      await _plugin.cancel(id: _advanceId(paymentId)); // safe even when not scheduled
+    } catch (e) {
+      debugPrint('Notification cancelReminder warning: $e');
+    }
   }
 
-  /// Cancel all pending recurring payment notifications and reschedule only
+  /// Cancel recurring payment notifications and reschedule only
   /// the enabled ones. Used after a backup restore.
-  ///
-  /// NOTE: This only handles recurring payments. Lent/borrowed reminders
-  /// are rescheduled separately by LendedNotificationService.rescheduleAllLended().
   Future<void> rescheduleAll(
     List<RecurringPayment> payments,
     String mainCurrency,
   ) async {
-    await _ensureInit();
-    await _plugin.cancelAll();
-    for (final r in payments.where((p) => p.reminderEnabled)) {
-      await scheduleReminder(r, mainCurrency);
+    try {
+      await _ensureInit();
+      for (final r in payments) {
+        await cancelReminder(r.id);
+      }
+      for (final r in payments.where((p) => p.reminderEnabled)) {
+        await scheduleReminder(r, mainCurrency);
+      }
+    } catch (e) {
+      debugPrint('Notification rescheduleAll warning: $e');
     }
   }
 
@@ -225,6 +242,10 @@ class NotificationService {
       );
 
   Future<void> _ensureInit() async {
-    if (!_initialized) await initialize();
+    try {
+      if (!_initialized) await initialize();
+    } catch (e) {
+      debugPrint('Notification _ensureInit warning: $e');
+    }
   }
 }

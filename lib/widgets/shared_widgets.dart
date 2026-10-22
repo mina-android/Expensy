@@ -237,21 +237,58 @@ class LinearProgressCard extends StatelessWidget {
 Future<bool> showDeleteConfirm(BuildContext context, String name) async {
   AppHaptics.tap(context, HapticStrength.medium);
   final l10n = AppLocalizations.of(context)!;
+  final cs = Theme.of(context).colorScheme;
 
   final ok = await showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: Text(l10n.shared_widgets_delete),
-      content: Text(l10n.shared_widgets_deleteConfirm(name)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      icon: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: cs.error.withValues(alpha: 0.12),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(Icons.delete_outline_rounded, color: cs.error, size: 26),
+      ),
+      title: Text(l10n.shared_widgets_delete, textAlign: TextAlign.center),
+      content: Text(
+        l10n.shared_widgets_deleteConfirm(name),
+        textAlign: TextAlign.center,
+      ),
+      actionsAlignment: MainAxisAlignment.center,
       actions: [
-        TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.shared_widgets_cancel)),
-        FilledButton(
-          style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(ctx).colorScheme.error),
-          onPressed: () => Navigator.pop(ctx, true),
-          child: Text(l10n.shared_widgets_delete_),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(46),
+                  side: BorderSide(
+                      color: cs.outlineVariant.withValues(alpha: 0.6)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
+                ),
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(l10n.shared_widgets_cancel),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: cs.error,
+                  foregroundColor: cs.onError,
+                  minimumSize: const Size.fromHeight(46),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
+                ),
+                onPressed: () => Navigator.pop(ctx, true),
+                child: Text(l10n.shared_widgets_delete_),
+              ),
+            ),
+          ],
         ),
       ],
     ),
@@ -965,6 +1002,138 @@ class _ExpandableFabState extends State<ExpandableFab>
                 ),
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Modern fintech-styled dropdown form field with 16px rounded corners,
+/// subtle outline border, theme-adaptive container fill, and rounded chevron.
+class AppDropdownFormField<T> extends StatelessWidget {
+  final T? value;
+  final List<DropdownMenuItem<T>> items;
+  final ValueChanged<T?>? onChanged;
+  final String? labelText;
+  final String? hintText;
+  final Widget? prefixIcon;
+  final FormFieldValidator<T>? validator;
+  final bool isExpanded;
+  final EdgeInsetsGeometry? contentPadding;
+
+  const AppDropdownFormField({
+    super.key,
+    required this.value,
+    required this.items,
+    required this.onChanged,
+    this.labelText,
+    this.hintText,
+    this.prefixIcon,
+    this.validator,
+    this.isExpanded = true,
+    this.contentPadding,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return DropdownButtonFormField<T>(
+      initialValue: value,
+      items: items,
+      onChanged: onChanged,
+      validator: validator,
+      isExpanded: isExpanded,
+      icon: Icon(
+        Icons.keyboard_arrow_down_rounded,
+        color: cs.onSurfaceVariant,
+        size: 22,
+      ),
+      borderRadius: BorderRadius.circular(16),
+      dropdownColor: isDark ? cs.surfaceContainerHigh : cs.surfaceContainerLowest,
+      elevation: 6,
+      decoration: InputDecoration(
+        labelText: labelText,
+        hintText: hintText,
+        prefixIcon: prefixIcon,
+        filled: true,
+        fillColor: cs.surfaceContainerHighest.withValues(alpha: isDark ? 0.35 : 0.45),
+        contentPadding: contentPadding ??
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(
+            color: cs.outlineVariant.withValues(alpha: isDark ? 0.35 : 0.45),
+            width: 1,
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(
+            color: cs.outlineVariant.withValues(alpha: isDark ? 0.35 : 0.45),
+            width: 1,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(
+            color: cs.primary,
+            width: 1.6,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Standalone fintech-styled rounded dropdown menu with 16px corner radius.
+class AppDropdown<T> extends StatelessWidget {
+  final T? value;
+  final List<DropdownMenuItem<T>> items;
+  final ValueChanged<T?>? onChanged;
+  final bool isExpanded;
+  final EdgeInsetsGeometry? padding;
+
+  const AppDropdown({
+    super.key,
+    required this.value,
+    required this.items,
+    required this.onChanged,
+    this.isExpanded = false,
+    this.padding,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      padding: padding ?? const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest.withValues(alpha: isDark ? 0.35 : 0.45),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: cs.outlineVariant.withValues(alpha: isDark ? 0.35 : 0.45),
+          width: 1,
+        ),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<T>(
+          value: value,
+          items: items,
+          onChanged: onChanged,
+          isExpanded: isExpanded,
+          isDense: true,
+          borderRadius: BorderRadius.circular(16),
+          dropdownColor: isDark ? cs.surfaceContainerHigh : cs.surfaceContainerLowest,
+          elevation: 6,
+          icon: Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: cs.onSurfaceVariant,
+            size: 18,
           ),
         ),
       ),

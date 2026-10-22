@@ -11,8 +11,6 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <!-- Schedule exact alarms for precise notification timing (Android 12+) -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
-    <!-- Fallback exact alarm permission for Android 13+ devices that grant it by default -->
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
     <!-- Reschedule notifications after device reboot -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
@@ -21,15 +19,6 @@
         android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="29" />
-
-    <!-- Media permissions for Android 13+ -->
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-
-    <!-- Push notification permissions -->
-    <!-- Required for Android 13+ (API 33+) -->
-    <!-- Schedule exact alarms for precise notification timing (Android 12+) -->
-    <!-- Keep device awake to deliver notifications -->
-    <!-- Receive boot completed to reschedule notifications after reboot -->
 
     <application
         android:label="Expensy"

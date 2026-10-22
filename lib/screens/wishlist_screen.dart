@@ -39,6 +39,7 @@ class WishlistScreen extends StatelessWidget {
             ),
       floatingActionButton: FintechFab(
         tooltip: l10n.wishlist_addItem,
+        color: const Color(0xFF7D5260),
         onPressed: () => _openSheet(context),
       ),
     );
@@ -481,15 +482,11 @@ void _showPurchaseDialog(
                   ),
                   const SizedBox(height: 16),
                   if (spendingAccounts.isNotEmpty) ...[
-                    DropdownButtonFormField<String>(
-                      initialValue: selectedAccountId,
-                      decoration: InputDecoration(
-                        labelText: l10n.recurring_account,
-                        prefixIcon:
-                            const Icon(Icons.account_balance_wallet_outlined),
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
+                    AppDropdownFormField<String>(
+                      value: selectedAccountId,
+                      labelText: l10n.recurring_account,
+                      prefixIcon:
+                          const Icon(Icons.account_balance_wallet_outlined),
                       items: spendingAccounts.map((a) {
                         return DropdownMenuItem(
                           value: a.id,
@@ -539,14 +536,10 @@ void _showPurchaseDialog(
                     ],
                     const SizedBox(height: 12),
                     if (expenseCategories.isNotEmpty)
-                      DropdownButtonFormField<String>(
-                        initialValue: selectedCategoryId,
-                        decoration: InputDecoration(
-                          labelText: l10n.recurring_category,
-                          prefixIcon: const Icon(Icons.category_outlined),
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                        ),
+                      AppDropdownFormField<String>(
+                        value: selectedCategoryId,
+                        labelText: l10n.recurring_category,
+                        prefixIcon: const Icon(Icons.category_outlined),
                         items: expenseCategories.map((c) {
                           return DropdownMenuItem(
                             value: c.id,

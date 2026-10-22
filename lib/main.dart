@@ -18,6 +18,8 @@ import 'services/lended_notification_service.dart';
 import 'services/quick_add_service.dart';
 import 'services/loan_reminder_service.dart';
 import 'services/credit_reminder_service.dart';
+import 'services/workmanager_service.dart';
+import 'services/auto_backup_service.dart';
 
 /// Root navigator key so the "Quick Add Transaction" home screen widget can
 /// push [AddTransactionScreen] on top of whatever's currently showing,
@@ -35,15 +37,25 @@ final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 /// already the real app — no intermediate loading screen, no double icon flash.
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await NotificationService().initialize();
-  await LendedNotificationService().initialize();
-  await BudgetNotificationService().initialize();
-  await DailyReminderService().initialize();
-  await LoanReminderService().initialize();
-  await CreditReminderService().initialize();
+  try {
+    await NotificationService().initialize();
+    await LendedNotificationService().initialize();
+    await BudgetNotificationService().initialize();
+    await DailyReminderService().initialize();
+    await LoanReminderService().initialize();
+    await CreditReminderService().initialize();
+    await WorkmanagerService.initialize();
+    AutoBackupService.scheduleNext();
+  } catch (e, stack) {
+    debugPrint('Startup service initialization warning: $e\n$stack');
+  }
 
   final provider = AppProvider();
-  await provider.load(); // DB reads finish before Flutter draws anything
+  try {
+    await provider.load(); // DB reads finish before Flutter draws anything
+  } catch (e, stack) {
+    debugPrint('Startup provider load warning: $e\n$stack');
+  }
 
   runApp(
     ChangeNotifierProvider.value(
@@ -156,39 +168,28 @@ class _ExpensyAppState extends State<ExpensyApp> {
 
     return DynamicColorBuilder(
       builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
-        return Builder(
-          builder: (context) {
-            final view = View.of(context);
-            final mediaQueryData = MediaQueryData.fromView(view)
-                .copyWith(accessibleNavigation: false);
-
-            return MediaQuery(
-              data: mediaQueryData,
-              child: MaterialApp(
-                title: 'Expensy',
-                navigatorKey: rootNavigatorKey,
-                debugShowCheckedModeBanner: false,
-                localizationsDelegates: AppLocalizations.localizationsDelegates,
-                supportedLocales: AppLocalizations.supportedLocales,
-                locale: languageCode == 'system' ? null : Locale(languageCode),
-                themeMode: resolveThemeMode(themeMode),
-                theme: buildTheme(
-                  seed: themeSeed,
-                  dark: false,
-                  appFont: appFont,
-                  dynamicScheme: usesDynamic ? lightDynamic : null,
-                ),
-                darkTheme: buildTheme(
-                  seed: themeSeed,
-                  dark: true,
-                  amoled: amoledSurfaces,
-                  appFont: appFont,
-                  dynamicScheme: usesDynamic ? darkDynamic : null,
-                ),
-                home: onboarded ? const MainShell() : const OnboardingScreen(),
-              ),
-            );
-          },
+        return MaterialApp(
+          title: 'Expensy',
+          navigatorKey: rootNavigatorKey,
+          debugShowCheckedModeBanner: false,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: languageCode == 'system' ? null : Locale(languageCode),
+          themeMode: resolveThemeMode(themeMode),
+          theme: buildTheme(
+            seed: themeSeed,
+            dark: false,
+            appFont: appFont,
+            dynamicScheme: usesDynamic ? lightDynamic : null,
+          ),
+          darkTheme: buildTheme(
+            seed: themeSeed,
+            dark: true,
+            amoled: amoledSurfaces,
+            appFont: appFont,
+            dynamicScheme: usesDynamic ? darkDynamic : null,
+          ),
+          home: onboarded ? const MainShell() : const OnboardingScreen(),
         );
       },
     );

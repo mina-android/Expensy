@@ -43,10 +43,22 @@ android {
 
     buildTypes {
         release {
-            signingConfig signingConfigs.release.storeFile != null ? signingConfigs.release : signingConfigs.debug
+            if (signingConfigs.release.storeFile != null) {
+                signingConfig signingConfigs.release
+            } else if (project.hasProperty('allow-debug-signing')) {
+                signingConfig signingConfigs.debug
+            }
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    gradle.taskGraph.whenReady { taskGraph ->
+        if (taskGraph.allTasks.any { it.name.toLowerCase().contains("release") } &&
+            signingConfigs.release.storeFile == null &&
+            !project.hasProperty('allow-debug-signing')) {
+            throw new GradleException("Release build cannot be signed: key.properties is missing or storeFile is not configured. Use -Pallow-debug-signing to override for local testing.")
         }
     }
 }

@@ -5,6 +5,7 @@ import 'package:expensy/models/models.dart';
 import 'package:expensy/providers/app_provider.dart';
 import 'package:expensy/widgets/shared_widgets.dart';
 import 'package:expensy/screens/recurring_screen.dart';
+import 'package:expensy/utils/nav_metrics.dart';
 import 'package:expensy/l10n/app_localizations.dart';
 
 void main() {
@@ -95,12 +96,9 @@ void main() {
       final scaffold = tester.widget<Scaffold>(scaffoldFinder);
       expect(scaffold.floatingActionButton, isNotNull);
 
-      // The FAB widget is wrapped with Padding positioned directly above the floating navbar
-      final fabPadding = scaffold.floatingActionButton as Padding;
-      final insets = fabPadding.padding as EdgeInsets;
-
-      expect(insets.bottom, equals(72));
-      expect(insets.right, equals(4));
+      // Verify NavAwareFabLocation and ExpandableFab are configured correctly
+      expect(scaffold.floatingActionButtonLocation, isA<NavAwareFabLocation>());
+      expect(scaffold.floatingActionButton, isA<ExpandableFab>());
     });
   });
 }

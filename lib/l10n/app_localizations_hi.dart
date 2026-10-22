@@ -1673,6 +1673,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get home_addAccount => 'खाता जोड़ें';
 
   @override
+  String get home_cards => 'कार्ड';
+
+  @override
+  String get home_addCard => 'कार्ड जोड़ें';
+
+  @override
   String get home_monthlyOverview => 'मासिक अवलोकन';
 
   @override
@@ -2675,4 +2681,127 @@ class AppLocalizationsHi extends AppLocalizations {
   String accounts_dueOnDay(int day) {
     return '$day को देय';
   }
+
+  @override
+  String get accounts_cannotDeleteAccount => 'खाता हटाया नहीं जा सकता';
+
+  @override
+  String get common_ok => 'ठीक है';
+
+  @override
+  String get certificates_title => 'मियादी जमा और प्रमाण पत्र';
+
+  @override
+  String get certificates_addCertificate => 'प्रमाण पत्र जोड़ें';
+
+  @override
+  String get certificates_editCertificate => 'प्रमाण पत्र संपादित करें';
+
+  @override
+  String get certificates_noCertificates => 'अभी कोई प्रमाण पत्र नहीं है';
+
+  @override
+  String get certificates_noCertificatesDesc =>
+      'अपने उच्च-उपज प्रमाणपत्रों, जमाओं और स्वचालित ब्याज रिटर्न को ट्रैक करें।';
+
+  @override
+  String get certificates_active => 'सक्रिय';
+
+  @override
+  String get certificates_matured => 'परिपक्व';
+
+  @override
+  String get certificates_amount => 'मूल राशि';
+
+  @override
+  String get certificates_collectionType => 'ब्याज संग्रह';
+
+  @override
+  String get certificates_collectedSoFar => 'अब तक प्राप्त';
+
+  @override
+  String get certificates_expectedTotal => 'कुल अपेक्षित रिटर्न';
+
+  @override
+  String get certificates_startDate => 'शुरुआती तारीख';
+
+  @override
+  String get certificates_endDate => 'परिपक्वता तारीख';
+
+  @override
+  String get certificates_redeem => 'प्रमाण पत्र भुनाएं';
+
+  @override
+  String certificates_redeemConfirm(String name, String amount) {
+    return 'क्या आप निश्चित रूप से \"$name\" भुनाना चाहते हैं? $amount की मूल राशि आपके बैंक खाते में वापस आ जाएगी।';
+  }
+
+  @override
+  String get certificates_redeemedSuccess =>
+      'प्रमाण पत्र सफलतापूर्वक भुनाया गया और मूल राशि वापस कर दी गई।';
+
+  @override
+  String get certificates_name => 'प्रमाण पत्र का नाम';
+
+  @override
+  String get certificates_interestRate => 'वार्षिक ब्याज दर (%)';
+
+  @override
+  String get certificates_linkedBankAccount => 'लिंक किया गया बैंक खाता';
+
+  @override
+  String get certificates_periodicYield => 'आवधिक ब्याज रिटर्न';
+
+  @override
+  String get certificates_paymentReminder => 'भुगतान अनुस्मारक अधिसूचना';
+
+  @override
+  String get certificates_reminderTime => 'अनुस्मारक समय';
+
+  @override
+  String get certificates_reminder2DaysBefore => '2 दिन पहले अनुस्मारक';
+
+  @override
+  String get certificates_deleteCertificate => 'प्रमाण पत्र हटाएं';
+
+  @override
+  String get certificates_confirmDeleteCertificate =>
+      'क्या आप निश्चित रूप से इस प्रमाण पत्र को हटाना चाहते हैं? सभी संबंधित लेन-देन हटा दिए जाएंगे और राशि आपके खाते में वापस आ जाएगी।';
+
+  @override
+  String get certificates_deleted => 'प्रमाण पत्र हटा दिया गया';
+
+  @override
+  String get onboarding_stayOnTopOfFinances => 'अपने वित्त पर नियंत्रण रखें';
+
+  @override
+  String get onboarding_stayOnTopOfFinancesDesc =>
+      'समय पर अनुस्मारक सक्षम करें ताकि आप कोई भुगतान, देय बिल या बजट सीमा न चूकें।';
+
+  @override
+  String get onboarding_featureBillTitle => 'बिल और देय तिथि अनुस्मारक';
+
+  @override
+  String get onboarding_featureBillDesc =>
+      'क्रेडिट कार्ड स्टेटमेंट और ऋण किश्तों की देय तिथि से पहले सूचना प्राप्त करें।';
+
+  @override
+  String get onboarding_featureBudgetTitle => 'बजट ट्रैकिंग अलर्ट';
+
+  @override
+  String get onboarding_featureBudgetDesc =>
+      'अपनी खर्च सीमा के 80% या 100% पर पहुंचने पर अलर्ट प्राप्त करें।';
+
+  @override
+  String get onboarding_featureRecurringTitle => 'आवर्ती सदस्यताएं';
+
+  @override
+  String get onboarding_featureRecurringDesc =>
+      'सदस्यता स्वतः नवीनीकृत होने से पहले सूचित रहें।';
+
+  @override
+  String get onboarding_allowNotifications => 'सूचनाओं की अनुमति दें';
+
+  @override
+  String get onboarding_maybeLater => 'शायद बाद में';
 }

@@ -76,28 +76,65 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
               showDialog(
                 context: context,
                 builder: (c) => AlertDialog(
-                  title: Text(l10n.loans_deleteLoan),
-                  content: Text(l10n.loans_confirmDeleteLoan),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(c),
-                      child: Text(l10n.shared_widgets_cancel),
+                  icon: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: cs.error.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
                     ),
-                    TextButton(
-                      style: TextButton.styleFrom(foregroundColor: const Color(0xFFC62828)),
-                      onPressed: () async {
-                        Navigator.pop(c); // close dialog
-                        Navigator.pop(context); // go back to loans screen
-                        final undo = await app.deleteLoanWithUndo(_loan.id);
-                        if (context.mounted) {
-                          showAppSnackbar(
-                            context,
-                            'Deleted ${_loan.name}',
-                            onUndo: undo,
-                          );
-                        }
-                      },
-                      child: Text(l10n.shared_widgets_delete_),
+                    child: Icon(Icons.delete_outline_rounded,
+                        color: cs.error, size: 26),
+                  ),
+                  title:
+                      Text(l10n.loans_deleteLoan, textAlign: TextAlign.center),
+                  content: Text(l10n.loans_confirmDeleteLoan,
+                      textAlign: TextAlign.center),
+                  actionsAlignment: MainAxisAlignment.center,
+                  actions: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size.fromHeight(46),
+                              side: BorderSide(
+                                  color: cs.outlineVariant
+                                      .withValues(alpha: 0.6)),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14)),
+                            ),
+                            onPressed: () => Navigator.pop(c),
+                            child: Text(l10n.shared_widgets_cancel),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: FilledButton(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: cs.error,
+                              foregroundColor: cs.onError,
+                              minimumSize: const Size.fromHeight(46),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14)),
+                            ),
+                            onPressed: () async {
+                              Navigator.pop(c); // close dialog
+                              Navigator.pop(context); // go back to loans screen
+                              final undo =
+                                  await app.deleteLoanWithUndo(_loan.id);
+                              if (context.mounted) {
+                                showAppSnackbar(
+                                  context,
+                                  'Deleted ${_loan.name}',
+                                  onUndo: undo,
+                                );
+                              }
+                            },
+                            child: Text(l10n.shared_widgets_delete_),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -333,14 +370,61 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
                             return await showDialog<bool>(
                               context: context,
                               builder: (c) => AlertDialog(
-                                title: Text(l10n.loans_deletePayment),
-                                content: Text(l10n.loans_confirmDeletePayment),
+                                icon: Container(
+                                  width: 48,
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    color: cs.error.withValues(alpha: 0.12),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(Icons.delete_outline_rounded,
+                                      color: cs.error, size: 26),
+                                ),
+                                title: Text(l10n.loans_deletePayment,
+                                    textAlign: TextAlign.center),
+                                content: Text(l10n.loans_confirmDeletePayment,
+                                    textAlign: TextAlign.center),
+                                actionsAlignment: MainAxisAlignment.center,
                                 actions: [
-                                  TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l10n.shared_widgets_cancel)),
-                                  TextButton(
-                                    style: TextButton.styleFrom(foregroundColor: const Color(0xFFC62828)),
-                                    onPressed: () => Navigator.pop(c, true),
-                                    child: Text(l10n.shared_widgets_delete_),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: OutlinedButton(
+                                          style: OutlinedButton.styleFrom(
+                                            minimumSize:
+                                                const Size.fromHeight(46),
+                                            side: BorderSide(
+                                                color: cs.outlineVariant
+                                                    .withValues(alpha: 0.6)),
+                                            shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(14)),
+                                          ),
+                                          onPressed: () =>
+                                              Navigator.pop(c, false),
+                                          child:
+                                              Text(l10n.shared_widgets_cancel),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: FilledButton(
+                                          style: FilledButton.styleFrom(
+                                            backgroundColor: cs.error,
+                                            foregroundColor: cs.onError,
+                                            minimumSize:
+                                                const Size.fromHeight(46),
+                                            shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(14)),
+                                          ),
+                                          onPressed: () =>
+                                              Navigator.pop(c, true),
+                                          child:
+                                              Text(l10n.shared_widgets_delete_),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),

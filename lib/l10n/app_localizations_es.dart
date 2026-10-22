@@ -1679,6 +1679,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get home_addAccount => 'Añadir cuenta';
 
   @override
+  String get home_cards => 'Tarjetas';
+
+  @override
+  String get home_addCard => 'Añadir tarjeta';
+
+  @override
   String get home_monthlyOverview => 'Resumen mensual';
 
   @override
@@ -2676,4 +2682,130 @@ class AppLocalizationsEs extends AppLocalizations {
   String accounts_dueOnDay(int day) {
     return 'Vence el $day';
   }
+
+  @override
+  String get accounts_cannotDeleteAccount => 'No se puede eliminar la cuenta';
+
+  @override
+  String get common_ok => 'Aceptar';
+
+  @override
+  String get certificates_title => 'Depósitos a Plazo y Certificados';
+
+  @override
+  String get certificates_addCertificate => 'Añadir certificado';
+
+  @override
+  String get certificates_editCertificate => 'Editar certificado';
+
+  @override
+  String get certificates_noCertificates => 'Aún no hay certificados';
+
+  @override
+  String get certificates_noCertificatesDesc =>
+      'Realiza un seguimiento de tus depósitos a plazo, rendimientos y pagos de intereses.';
+
+  @override
+  String get certificates_active => 'Activo';
+
+  @override
+  String get certificates_matured => 'Vencido';
+
+  @override
+  String get certificates_amount => 'Monto principal';
+
+  @override
+  String get certificates_collectionType => 'Cobro de intereses';
+
+  @override
+  String get certificates_collectedSoFar => 'Cobrado hasta ahora';
+
+  @override
+  String get certificates_expectedTotal => 'Retorno total esperado';
+
+  @override
+  String get certificates_startDate => 'Fecha de inicio';
+
+  @override
+  String get certificates_endDate => 'Fecha de vencimiento';
+
+  @override
+  String get certificates_redeem => 'Canjear certificado';
+
+  @override
+  String certificates_redeemConfirm(String name, String amount) {
+    return '¿Estás seguro de que deseas canjear \"$name\"? El principal de $amount se devolverá a tu cuenta bancaria.';
+  }
+
+  @override
+  String get certificates_redeemedSuccess =>
+      'Certificado canjeado y monto principal devuelto con éxito.';
+
+  @override
+  String get certificates_name => 'Nombre del certificado';
+
+  @override
+  String get certificates_interestRate => 'Tasa de interés anual (%)';
+
+  @override
+  String get certificates_linkedBankAccount => 'Cuenta bancaria vinculada';
+
+  @override
+  String get certificates_periodicYield => 'Rendimiento periódico de intereses';
+
+  @override
+  String get certificates_paymentReminder =>
+      'Recordatorio de cobro de intereses';
+
+  @override
+  String get certificates_reminderTime => 'Hora del recordatorio';
+
+  @override
+  String get certificates_reminder2DaysBefore => 'Recordatorio 2 días antes';
+
+  @override
+  String get certificates_deleteCertificate => 'Eliminar certificado';
+
+  @override
+  String get certificates_confirmDeleteCertificate =>
+      '¿Estás seguro de que deseas eliminar este certificado? Se eliminarán todas las transacciones asociadas y el dinero se devolverá a tu cuenta.';
+
+  @override
+  String get certificates_deleted => 'Certificado eliminado';
+
+  @override
+  String get onboarding_stayOnTopOfFinances =>
+      'Mantén el control de tus finanzas';
+
+  @override
+  String get onboarding_stayOnTopOfFinancesDesc =>
+      'Activa recordatorios oportunos para no perder pagos, facturas vencidas o límites de presupuesto.';
+
+  @override
+  String get onboarding_featureBillTitle =>
+      'Recordatorios de facturas y fechas de vencimiento';
+
+  @override
+  String get onboarding_featureBillDesc =>
+      'Recibe alertas antes de las fechas de corte de tarjetas de crédito y cuotas de préstamos.';
+
+  @override
+  String get onboarding_featureBudgetTitle => 'Alertas de presupuesto';
+
+  @override
+  String get onboarding_featureBudgetDesc =>
+      'Recibe alertas cuando alcances el 80% o el 100% de tu límite de gasto por categoría.';
+
+  @override
+  String get onboarding_featureRecurringTitle => 'Suscripciones recurrentes';
+
+  @override
+  String get onboarding_featureRecurringDesc =>
+      'Mantente informado antes de que se renueven automáticamente tus facturas y membresías.';
+
+  @override
+  String get onboarding_allowNotifications => 'Permitir notificaciones';
+
+  @override
+  String get onboarding_maybeLater => 'Quizás más tarde';
 }
