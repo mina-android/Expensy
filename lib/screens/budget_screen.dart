@@ -21,8 +21,6 @@ class BudgetScreen extends StatefulWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => _BudgetSheet(existing: existing),
     );
   }
@@ -386,8 +384,6 @@ class _BudgetScreenState extends State<BudgetScreen> {
             onTap: () => showModalBottomSheet(
               context: context,
               isScrollControlled: true,
-              shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
               builder: (_) => const SavingsGoalSheet(),
             ),
           ),

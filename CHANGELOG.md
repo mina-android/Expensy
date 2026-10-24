@@ -1,6 +1,76 @@
 # Changelog
 
-## [1.2.2] - 2026-10-22
+## [1.2.2-hotfix] - 2026-10-24
+
+### Transfer Origin Fix, Credit Card Available Limit, Pure AMOLED Theming & Upcoming Recurring Installments
+- **Transfer Accounts Normalization**:
+  - Removed internal account filtering from `AccountCardPicker`, ensuring it transparently displays whatever accounts are passed to it.
+  - Standardized transfer accounts in `TransferScreen` to filter strictly against cards and physical gold (`!a.isCard && !a.isGold`), making all liquid bank accounts, cash, digital wallets, and savings accounts normally selectable as both origin and destination without restrictions.
+- **Credit Card Available Limit on Home Screen**:
+  - Added an `"Available: <amount>"` limit indicator directly below card balances in the Home Screen cards carousel for credit accounts with configured credit limits.
+  - Automatically respects balance privacy obfuscation (`hideBalance`), displaying `"Available: • • •"` when hidden.
+  - Enlarged card carousel container height to `124` to prevent vertical layout overflows.
+- **Pitch-Black AMOLED Theming for Popups, Dialogs & Menus**:
+  - Centralized popup surface rendering via `popupSurfaceColor(cs)` and `popupBorderSide(cs)` in `AppTheme`.
+  - In AMOLED black mode (`brightness == dark` and `surface == black`), all dialogs, bottom sheets, date pickers, time pickers, popup menus, and dropdowns adapt to pitch black (`#000000`) with a subtle `outlineVariant` border (`alpha: 0.45`).
+  - Configured global Material 3 theme properties (`dialogTheme`, `bottomSheetTheme`, `datePickerTheme`, `timePickerTheme`, `popupMenuTheme`, `dropdownMenuTheme`, `menuTheme`) to ensure uniform theme adaptation without manual per-widget overrides.
+  - Harmonized custom sheets and dropdowns (`PresetSheet`, `CertificateSheet`, `CreditCardSettlementSheet`, `SelectiveBackupSheet`, `SelectiveRestoreSheet`, `LoanSheet`, `LogPaymentSheet`, `_AddTypeSheet`, `AppDropdownFormField`, `AppDropdown`).
+- **Recurring Installment Schedule & Upcoming Payments**:
+  - Added `upcomingPaymentDates` calculation getter to `RecurringPayment` returning chronological dates up to `endDate` constrained by `remainingPayments`.
+  - Transformed `RecurringDetailScreen` body into a cohesive scrollable view preventing overflow.
+  - Displayed an **Upcoming Payments** schedule section above **Payment History** for installment payments, featuring installment sequence numbers (`#i of N`), formatted dates, and amount.
+  - Embedded quick actions on the next due installment: **Pay** (executes immediate payment and refreshes history) and **Skip** (prompts confirmation dialog and advances next due date).
+
+### Enterprise Data Integrity, Financial Aggregations & Safety Architecture
+- **Reactive Cross-Screen Transaction & Account State Synchronization**:
+  - **Immutable Collection Publication**: Replaced in-place mutations of `transactions` and `accounts` in `AppProvider` with fresh immutable list allocations on `addTransaction`, `updateTransaction`, `deleteTransaction`, `deleteTransactionWithUndo`, `deleteAccountCascade`, `deleteCertificate`, and `_patchAccountBalance`.
+  - **Cross-Screen Deletion & Edit Reactivity**: Resolved cross-screen synchronization stale caches where transactions added or deleted in `HomeScreen` remained visible in `TransactionsScreen` until app restart (and vice-versa).
+  - **Defensive Memoization Invalidation**: Hardened `HomeScreen`, `TransactionsScreen`, and `StatisticsScreen` cache signatures with collection length and revision markers, guaranteeing instant recalculation across all tabs.
+  - **Material Splash Conformity**: Wrapped recent transaction dismissible list items in `Material(type: MaterialType.transparency)` in `HomeScreen`, resolving framework debug assertion warnings for decorated list containers.
+- **Enterprise Financial Data Integrity & Mutex System**:
+  - **Zone-Based Mutex**: Implemented a re-entrant-safe async mutation mutex in `AppProvider` (`runZoned` with `#expMutex`) replacing race-prone counter locks and serializing all financial mutations without deadlocks.
+  - **Complete Mutation Coverage**: Wrapped all financial mutations across savings goals, loans, and installments inside `_serializeMutation`.
+  - **Atomic Balance Updates**: Transitioned transaction, transfer, lent money, loan, and savings goal balance adjustments to direct SQL atomic updates (`AppDatabase.applyBalanceDelta`, `applyTransactionEdit`), eliminating read-modify-write race conditions.
+  - **Schema v28 Migration & Transfer Pairing**: Upgraded Drift database schema to version 28, adding `paid_via_account_id` and `certificate_id` to `transactions`, and `currency` to `lended_money`. Hardened legacy transfer migration to pair only transactions with matching opposite counterparts, retaining unpaired legacy records for user review.
+- **Pure Financial Aggregations Engine (`lib/providers/aggregations.dart`)**:
+  - **Centralized Cash Flow Logic**: Isolated financial aggregation calculations (`periodTotals`, `categoryTotals`, `dayTotals`, `isExcludedFromTotals`) into a standalone, pure Dart module.
+  - **Strict Cash Flow Isolation**: Enforced strict exclusion of internal transfers (`isTransfer`), certificates/investments (`isInvestment`), and excluded accounts from income/expense statistics, cash flow summaries, and budget consumption.
+  - **Global Consumer Integration**: Re-routed `AppProvider`, `HomeScreen`, `StatisticsScreen`, `TransactionsScreen`, `InsightsScreen`, and `PdfReportService` through the unified aggregation engine.
+- **Idempotent Recurring Payments & Battery-Efficient Background Processing**:
+  - **Transactional Processing**: Created `RecurringPaymentProcessor` guaranteeing transactional idempotency by recording history and updating occurrences inside atomic database transactions.
+  - **Next-Due Auto-Pay Timer**: Replaced battery-draining continuous 1-minute periodic timer with a scheduled one-shot next-due timer.
+  - **History Recovery on Undo**: Enabled full restoration of recurring payment history entries when undoing a deletion.
+  - **Payment Redirection**: Automatically redirects debit-card recurring payments to linked bank accounts.
+  - **Workmanager Background Dispatch**: Integrated `RecurringPaymentProcessor` and daily scheduled auto-backup tasks into `WorkmanagerService` (running daily at 02:00).
+- **Credit Card Liability Semantics & Field Sanitization**:
+  - **Liability Storage**: Credit card balances are consistently stored as negative liabilities, presenting owed amounts clearly to users and preventing positive balances from inflating cash totals.
+  - **Stale Field Clearing**: Ensured credit-specific fields are cleared when account types change away from credit.
+  - **Statement Refinement**: Removed hardcoded 25.0 USD minimum payment fallback and excluded transfers from statement billing cycles.
+- **Budget Alert Throttling & Net Worth Debounce**:
+  - **Throttled Budget Alerts**: Throttled budget exceeded notifications to fire once per period (monthly/weekly), eliminating repetitive alert spam on edits.
+  - **Net Worth Component Sum**: Added active certificate assets to `NetWorthSnapshot.totalAssets` ensuring sum consistency (`totalAccounts + totalAssets == netWorth`), and debounced snapshot evaluations.
+- **Pre-Restore Safety Snapshots & Validation Engine**:
+  - **Pre-Flight Validation**: Implemented `BackupValidator` generating `RestorePreview` to detect schema version mismatches, table counts, and potential orphan references before restoration.
+  - **Selective Restore Protection**: Enforced strict refusal of selective backup files in Full Restore mode to prevent unintended table truncation.
+  - **Safety Snapshots & Undo**: Automatically creates rolling local pre-restore snapshots (`expensy_prerestore_<ts>.json`, keeping the 3 most recent) allowing one-tap undo of restored backups.
+- **Strict UI/Database Decoupling & Hygiene**:
+  - Removed direct `DBHelper` and `AppDatabase` calls from all UI screens (`insights_screen.dart`, `backup_screen.dart`, `recurring_detail_screen.dart`).
+  - Achieved 0 direct DB imports in UI verified by CI guard script (`tool/ci_guard.dart --enforce`).
+  - Removed unused dependencies (`archive`, `cupertino_icons`).
+  - Zero analyzer errors, warnings, or deprecations (`dart analyze`).
+
+### Transaction Relogic, Transfer Hardening & Robust Backup/Restore Engine
+- **Transaction & Transfer Relogic (Account vs. Card Responsibilities)**:
+  - **Cards Reflect Linked Bank Balance**: In accordance with modern banking architecture where bank accounts hold the liquid balance and cards act as payment instruments, cards in `AddTransactionScreen` and `AccountCardPicker` now display their linked bank account's effective balance (`app.getEffectiveBalance(acc)`).
+  - **Transfers Show Accounts Only**: Transfers in `TransferScreen` now filter exclusively to non-card liquid accounts (`!a.isCard && !a.isGold`), preventing cards from being selected as transfer origins or destinations and ensuring transfers occur directly between bank accounts, cash, digital wallets, or savings accounts.
+  - **Spendable Account Selection**: In `AddTransactionScreen`, account selection defaults to spendable instruments (cards, cash, wallet, savings) or all accounts if no cards are registered, preventing invalid `_accountId = null` submissions.
+  - **Numeric Keypad & Soft Keyboard Conflict Fix**: Added `keyboardType: TextInputType.none` and `FocusScope.of(context).unfocus()` on amount tap across `AddTransactionScreen` and `TransferScreen` to prevent Android soft keyboards from obscuring the custom `AppNumericKeypad`.
+- **Fault-Tolerant Backup & Restore System**:
+  - **Notification Service Safe Degradation**: Wrapped notification initialization, scheduling, and cancellation in defensive `try/catch` handlers across all reminder services (`DailyReminderService`, `CertificateReminderService`, `CreditReminderService`, `LoanReminderService`, `LendedNotificationService`, `BudgetNotificationService`). This prevents platform-specific `LateInitializationError` from aborting full database restore routines.
+  - **File Parsing & UTF-8 Fallback**: Refactored `pickAndParseBackupFile` in `AppProvider` to read bytes directly from `PlatformFile.readAsBytes()` (with fallback to `File(path)`), accommodating scoped storage and paths without `.json` extensions. Added safe UTF-8 decoding fallback.
+  - **Universal Backup Structure Detection**: Expanded known backup key recognition to all 17 schema tables (`loans`, `savings_goals`, `certificate_records`, etc.) and metadata flags (`selective`, `version`), preventing valid backups from being misidentified as foreign or corrupted.
+  - **Selective Backup Sheet Routing**: Restoring a selective backup file now automatically routes directly to `_SelectiveRestoreSheet`, displaying category checkboxes and preventing accidental execution of full `importAll()` that would delete unselected tables.
+  - **Accurate Error Messaging**: Replaced generic "corrupted file" error toast with specific localized error messages showing underlying exceptions.
 
 ### Comprehensive Fintech UI/UX Polish, Core Reusability & Functional Hardening
 - **Account Carousel Ordering Persistence**:
@@ -32,6 +102,8 @@
   - Added live counts for Time Deposits & Certificates to the "What's included" section in `BackupScreen`.
 - **Default App Theme on Fresh Install**:
   - Updated `AppSettings.themeMode` default to `'system'` (Follow System) on fresh installations.
+
+## [1.2.2] - 2026-10-22
 
 ### Fintech UI Overhaul, Cards Separation & Time Deposits Restructure
 - **Onboarding Fintech Aesthetics & Localization**:

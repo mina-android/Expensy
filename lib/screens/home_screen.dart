@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../models/models.dart';
 import '../providers/app_provider.dart';
+import '../providers/aggregations.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
 import '../widgets/fintech_components.dart';
@@ -29,39 +30,38 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List<AppTransaction>? _prevTransactions;
   Map<String, double>? _prevRates;
+  int _prevTxCount = -1;
+  String? _prevFirstTxId;
   double _income = 0;
   double _expense = 0;
   List<AppTransaction> _recent = [];
 
   void _computeTransactions(AppProvider app) {
     if (identical(_prevTransactions, app.transactions) &&
-        identical(_prevRates, app.exchangeRates)) {
+        identical(_prevRates, app.exchangeRates) &&
+        _prevTxCount == app.transactions.length &&
+        _prevFirstTxId == app.transactions.firstOrNull?.id) {
       return;
     }
     _prevTransactions = app.transactions;
     _prevRates = app.exchangeRates;
+    _prevTxCount = app.transactions.length;
+    _prevFirstTxId = app.transactions.firstOrNull?.id;
     final txs = app.transactions;
     final now = DateTime.now();
     final mStart = DateTime(now.year, now.month, 1);
-    final mEnd = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
 
-    final monthTxs = txs
-        .where((t) => !t.date.isBefore(mStart) && !t.date.isAfter(mEnd))
-        .toList();
-
-    _income = 0;
-    _expense = 0;
-
-    for (final t in monthTxs) {
-      final acc = app.accountById(t.accountId);
-      final amt =
-          acc != null ? app.convertToMain(t.amount, acc.currency) : t.amount;
-      if (t.type == 'income') {
-        _income += amt;
-      } else if (t.type == 'expense') {
-        _expense += amt;
-      }
-    }
+    final totals = FinancialAggregations.periodTotals(
+      txs,
+      start: mStart,
+      end: DateTime(now.year, now.month + 1, 1),
+      convert: (amt, cur) {
+        final txCur = cur.isNotEmpty ? cur : app.settings.currency;
+        return app.convertToMain(amt, txCur);
+      },
+    );
+    _income = totals.income;
+    _expense = totals.expense;
 
     _recent = txs.take(5).toList();
   }
@@ -834,7 +834,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             SliverToBoxAdapter(
               child: SizedBox(
-                height: 116,
+                height: 124,
                 child: ReorderableListView.builder(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1027,7 +1027,20 @@ class _HomeScreenState extends State<HomeScreen> {
                                     fontWeight: FontWeight.w900,
                                   ),
                                 ),
-                                if (!hideBalance &&
+                                if (acc.isCredit && (acc.creditLimit ?? 0) > 0)
+                                  Text(
+                                    hideBalance
+                                        ? '${l10n.creditCard_availableCredit}: • • •'
+                                        : '${l10n.creditCard_availableCredit}: ${formatAmount(app.getCreditCardStatement(acc).availableCredit, acc.currency)}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: Colors.white.withValues(alpha: 0.8),
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  )
+                                else if (!hideBalance &&
                                     app.canShowConverted(acc))
                                   Text(
                                     '≈ ${formatAmount(app.convertToMain(app.getEffectiveBalance(acc), acc.currency), currency)}',
@@ -1126,7 +1139,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
                         return Column(
                           children: [
-                            Dismissible(
+                            Material(
+                              type: MaterialType.transparency,
+                              child: Dismissible(
                               key: ValueKey(t.id),
                               direction: DismissDirection.startToEnd,
                               background: Container(
@@ -1245,7 +1260,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                             ),
-                            if (!isLast)
+                          ),
+                          if (!isLast)
                               Divider(
                                 height: 1,
                                 thickness: 0.6,

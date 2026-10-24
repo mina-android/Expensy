@@ -6,6 +6,7 @@ import 'package:drift/native.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart' as sqflite show getDatabasesPath;
+import 'package:collection/collection.dart';
 import '../models/models.dart';
 import 'tables.dart';
 
@@ -51,7 +52,7 @@ class AppDatabase extends _$AppDatabase {
     _instance = db;
   }
 
-  static const int _version = 27;
+  static const int _version = 28;
   static int get currentSchemaVersion => _version;
 
   @override
@@ -80,44 +81,102 @@ class AppDatabase extends _$AppDatabase {
           await _insertDefaultCategories();
         },
         onUpgrade: (m, from, to) async {
-          try {
-            if (from < 21) {
-              await m.createTable(transactionPresets);
-              await m.createTable(transactionSplits);
-              await customStatement(
-                  'CREATE INDEX IF NOT EXISTS idx_ts_transaction_id ON transaction_splits(transaction_id);');
-              await customStatement(
-                  'CREATE INDEX IF NOT EXISTS idx_tp_order_index ON transaction_presets(order_index);');
+          if (from < 21) {
+            await m.createTable(transactionPresets);
+            await m.createTable(transactionSplits);
+            await customStatement(
+                'CREATE INDEX IF NOT EXISTS idx_ts_transaction_id ON transaction_splits(transaction_id);');
+            await customStatement(
+                'CREATE INDEX IF NOT EXISTS idx_tp_order_index ON transaction_presets(order_index);');
+          }
+          if (from < 22) {
+            await m.addColumn(budgets, budgets.allowRollover);
+          }
+          if (from < 23) {
+            await m.addColumn(wishlist, wishlist.goalId);
+            await m.addColumn(savingsGoals, savingsGoals.wishlistItemId);
+          }
+          if (from < 24) {
+            await m.addColumn(accounts, accounts.dontLinkToCard);
+          }
+          if (from < 25) {
+            await m.addColumn(recurringPayments, recurringPayments.autoPayEnabled);
+            await m.addColumn(recurringPayments, recurringPayments.autoPayTime);
+          }
+          if (from < 26) {
+            await m.createTable(certificates);
+            await m.addColumn(transactions, transactions.transferGroupId);
+            await customStatement(
+                'CREATE INDEX IF NOT EXISTS idx_tx_date ON transactions(date DESC);');
+            await customStatement(
+                'CREATE INDEX IF NOT EXISTS idx_tx_account ON transactions(account_id);');
+            await customStatement(
+                'CREATE INDEX IF NOT EXISTS idx_tx_category ON transactions(category_id);');
+          }
+          if (from < 27) {
+            await m.addColumn(certificates, certificates.reminderEarlyEnabled);
+          }
+          if (from < 28) {
+            await m.addColumn(transactions, transactions.paidViaAccountId);
+            await m.addColumn(transactions, transactions.certificateId);
+            await m.addColumn(lendedMoneyTable, lendedMoneyTable.currency);
+
+            // 1. Move stray debit card balances into parent bank account and zero the debit card
+            final debitCards = await customSelect(
+              "SELECT id, linked_account_id, balance FROM accounts WHERE type = 'debit' AND linked_account_id IS NOT NULL AND balance != 0.0",
+            ).get();
+            for (final card in debitCards) {
+              final cardId = card.data['id'] as String;
+              final parentId = card.data['linked_account_id'] as String?;
+              final bal = (card.data['balance'] as num).toDouble();
+              if (parentId != null && bal != 0) {
+                await customUpdate(
+                  "UPDATE accounts SET balance = balance + ? WHERE id = ?",
+                  variables: [Variable<double>(bal), Variable<String>(parentId)],
+                );
+                await customUpdate(
+                  "UPDATE accounts SET balance = 0.0 WHERE id = ?",
+                  variables: [Variable<String>(cardId)],
+                );
+              }
             }
-            if (from < 22) {
-              await m.addColumn(budgets, budgets.allowRollover);
-            }
-            if (from < 23) {
-              await m.addColumn(wishlist, wishlist.goalId);
-              await m.addColumn(savingsGoals, savingsGoals.wishlistItemId);
-            }
-            if (from < 24) {
-              await m.addColumn(accounts, accounts.dontLinkToCard);
-            }
-            if (from < 25) {
-              await m.addColumn(recurringPayments, recurringPayments.autoPayEnabled);
-              await m.addColumn(recurringPayments, recurringPayments.autoPayTime);
-            }
-            if (from < 26) {
-              await m.createTable(certificates);
-              await m.addColumn(transactions, transactions.transferGroupId);
-              await customStatement(
-                  'CREATE INDEX IF NOT EXISTS idx_tx_date ON transactions(date DESC);');
-              await customStatement(
-                  'CREATE INDEX IF NOT EXISTS idx_tx_account ON transactions(account_id);');
-              await customStatement(
-                  'CREATE INDEX IF NOT EXISTS idx_tx_category ON transactions(category_id);');
-            }
-            if (from < 27) {
-              await m.addColumn(certificates, certificates.reminderEarlyEnabled);
-            }
-          } catch (e, stack) {
-            debugPrint('Defensive migration warning: $e\n$stack');
+
+            // 2. Backfill legacy debit card transactions to point to parent bank account, preserving card id in paidViaAccountId
+            await customUpdate('''
+              UPDATE transactions
+              SET paid_via_account_id = account_id,
+                  account_id = (SELECT linked_account_id FROM accounts WHERE accounts.id = transactions.account_id)
+              WHERE account_id IN (SELECT id FROM accounts WHERE type = 'debit' AND linked_account_id IS NOT NULL)
+            ''');
+
+            // 3. Pair legacy "Transfer out" and "Transfer in" transactions that have an actual counterpart
+            await customUpdate('''
+              UPDATE transactions
+              SET transfer_group_id = 'tr_migrated_' || substr(date, 1, 16) || '_' || CAST(amount AS TEXT)
+              WHERE (transfer_group_id IS NULL OR transfer_group_id = '')
+                AND (
+                  (description LIKE '%Transfer out%' AND EXISTS (
+                    SELECT 1 FROM transactions in_tx
+                    WHERE in_tx.id != transactions.id
+                      AND in_tx.description LIKE '%Transfer in%'
+                      AND in_tx.amount = transactions.amount
+                      AND in_tx.account_id != transactions.account_id
+                      AND substr(in_tx.date, 1, 16) = substr(transactions.date, 1, 16)
+                  ))
+                  OR
+                  (description LIKE '%Transfer in%' AND EXISTS (
+                    SELECT 1 FROM transactions out_tx
+                    WHERE out_tx.id != transactions.id
+                      AND out_tx.description LIKE '%Transfer out%'
+                      AND out_tx.amount = transactions.amount
+                      AND out_tx.account_id != transactions.account_id
+                      AND substr(out_tx.date, 1, 16) = substr(transactions.date, 1, 16)
+                  ))
+                )
+            ''');
+
+            // 4. Ensure system categories exist
+            await _insertDefaultCategories();
           }
         },
         beforeOpen: (details) async {
@@ -126,43 +185,26 @@ class AppDatabase extends _$AppDatabase {
           } catch (e) {
             debugPrint('PRAGMA foreign_keys enable error: $e');
           }
-
-          // Defensive column verification to heal any partial or interrupted migration
-          try {
-            await customStatement('ALTER TABLE accounts ADD COLUMN dont_link_to_card INTEGER NOT NULL DEFAULT 0;');
-          } catch (_) {}
-          try {
-            await customStatement('ALTER TABLE budgets ADD COLUMN allow_rollover INTEGER NOT NULL DEFAULT 0;');
-          } catch (_) {}
-          try {
-            await customStatement('ALTER TABLE wishlist ADD COLUMN goal_id TEXT;');
-          } catch (_) {}
-          try {
-            await customStatement('ALTER TABLE savings_goals ADD COLUMN wishlist_item_id TEXT;');
-          } catch (_) {}
-          try {
-            await customStatement('ALTER TABLE recurring_payments ADD COLUMN auto_pay_enabled INTEGER NOT NULL DEFAULT 0;');
-          } catch (_) {}
-          try {
-            await customStatement("ALTER TABLE recurring_payments ADD COLUMN auto_pay_time TEXT NOT NULL DEFAULT '09:00';");
-          } catch (_) {}
-          try {
-            await customStatement(
-                'CREATE TABLE IF NOT EXISTS certificates (id TEXT PRIMARY KEY NOT NULL, name TEXT NOT NULL, amount REAL NOT NULL, currency TEXT NOT NULL DEFAULT \'EGP\', start_date TEXT NOT NULL, end_date TEXT NOT NULL, interest_rate REAL NOT NULL, collection_type TEXT NOT NULL DEFAULT \'monthly\', collection_day INTEGER NOT NULL DEFAULT 1, custom_payout_amount REAL, account_id TEXT NOT NULL, reminder_enabled INTEGER NOT NULL DEFAULT 0, reminder_time TEXT NOT NULL DEFAULT \'09:00\', reminder_early_enabled INTEGER NOT NULL DEFAULT 0, notes TEXT NOT NULL DEFAULT \'\', is_settled INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL, last_collected_date TEXT, total_collected_amount REAL NOT NULL DEFAULT 0.0);');
-          } catch (_) {}
-          try {
-            await customStatement('ALTER TABLE certificates ADD COLUMN reminder_early_enabled INTEGER NOT NULL DEFAULT 0;');
-          } catch (_) {}
-          try {
-            await customStatement('ALTER TABLE transactions ADD COLUMN transfer_group_id TEXT;');
-          } catch (_) {}
-          try {
-            await customStatement('CREATE INDEX IF NOT EXISTS idx_tx_date ON transactions(date DESC);');
-            await customStatement('CREATE INDEX IF NOT EXISTS idx_tx_account ON transactions(account_id);');
-            await customStatement('CREATE INDEX IF NOT EXISTS idx_tx_category ON transactions(category_id);');
-          } catch (_) {}
         },
       );
+
+  Future<void> _insertSystemCategories() async {
+    const sysCats = [
+      ('sys_transfer', 'Transfer', 'transfer', 0xFF4CAF50),
+      ('sys_investment', 'Investment', 'investment', 0xFF2196F3),
+    ];
+    for (final c in sysCats) {
+      await into(categories).insert(
+        CategoriesCompanion.insert(
+          id: c.$1,
+          name: c.$2,
+          type: c.$3,
+          colorValue: c.$4,
+        ),
+        mode: InsertMode.insertOrIgnore,
+      );
+    }
+  }
 
   Future<void> _insertDefaultCategories() async {
     const defaultCats = [
@@ -180,6 +222,8 @@ class AppDatabase extends _$AppDatabase {
       ('gifts', 'Gifts', 'income', 0xFFC2185B),
       ('other_inc', 'Other Income', 'income', 0xFF00695C),
       ('other_exp', 'Other Expense', 'expense', 0xFF37474F),
+      ('sys_transfer', 'Transfer', 'transfer', 0xFF4CAF50),
+      ('sys_investment', 'Investment', 'investment', 0xFF2196F3),
     ];
     for (final c in defaultCats) {
       await into(categories).insert(
@@ -196,11 +240,18 @@ class AppDatabase extends _$AppDatabase {
 
   // ── Generic Map Helpers ───────────────────────────────────────────────────
   Future<void> insertMap(String table, Map<String, dynamic> map) async {
-    final keys = map.keys.toList();
+    final tableInfo = allTables.firstWhereOrNull((t) => t.actualTableName == table);
+    final validCols = tableInfo?.$columns.map((c) => c.$name).toSet();
+    final filteredEntries = map.entries
+        .where((e) => validCols == null || validCols.contains(e.key))
+        .toList();
+    if (filteredEntries.isEmpty) return;
+
+    final keys = filteredEntries.map((e) => e.key).toList();
     final placeholders = List.filled(keys.length, '?').join(', ');
     final cols = keys.join(', ');
     final sql = 'INSERT OR REPLACE INTO $table ($cols) VALUES ($placeholders)';
-    final values = keys.map((k) => Variable<Object>(map[k])).toList();
+    final values = filteredEntries.map((e) => Variable<Object>(e.value)).toList();
     await customInsert(sql, variables: values);
   }
 
@@ -327,19 +378,49 @@ class AppDatabase extends _$AppDatabase {
     });
   }
 
+  Future<void> applyBalanceDelta(String accountId, double delta) async {
+    if (delta == 0) return;
+    await customUpdate(
+      "UPDATE accounts SET balance = balance + ? WHERE id = ? AND type != 'gold'",
+      variables: [
+        Variable<double>(delta),
+        Variable<String>(accountId),
+      ],
+      updates: {accounts},
+    );
+  }
+
+  Future<void> applyTransactionEdit({
+    required AppTransaction updated,
+    required String oldAccountId,
+    required double oldDelta,
+    required String newAccountId,
+    required double newDelta,
+  }) async {
+    await transaction(() async {
+      await updateTransaction(updated);
+      if (oldAccountId == newAccountId) {
+        final netDelta = oldDelta + newDelta;
+        if (netDelta != 0) {
+          await applyBalanceDelta(oldAccountId, netDelta);
+        }
+      } else {
+        if (oldDelta != 0) {
+          await applyBalanceDelta(oldAccountId, oldDelta);
+        }
+        if (newDelta != 0) {
+          await applyBalanceDelta(newAccountId, newDelta);
+        }
+      }
+    });
+  }
+
   Future<void> applyUpdateTransactionWithBalance(
       AppTransaction t, double balanceDelta) async {
     await transaction(() async {
       await updateTransaction(t);
       if (balanceDelta != 0) {
-        await customUpdate(
-          "UPDATE accounts SET balance = balance + ? WHERE id = ? AND type != 'gold'",
-          variables: [
-            Variable<double>(balanceDelta),
-            Variable<String>(t.accountId),
-          ],
-          updates: {accounts},
-        );
+        await applyBalanceDelta(t.accountId, balanceDelta);
       }
     });
   }
@@ -864,11 +945,17 @@ class AppDatabase extends _$AppDatabase {
         'transaction_splits',
         'certificates',
       ]) {
+        if (!data.containsKey(table)) continue;
         await customStatement('DELETE FROM $table');
         final rows = _rows(data, table);
         for (final row in rows) {
           await insertMap(table, row);
         }
+      }
+      if (_rows(data, 'categories').isEmpty) {
+        await _insertDefaultCategories();
+      } else {
+        await _insertSystemCategories();
       }
     });
   }
@@ -927,6 +1014,8 @@ class AppDatabase extends _$AppDatabase {
       row.putIfAbsent('note', () => '');
       row.putIfAbsent('currency', () => '');
       row.putIfAbsent('transfer_group_id', () => null);
+      row.putIfAbsent('paid_via_account_id', () => null);
+      row.putIfAbsent('certificate_id', () => null);
     }
 
     for (final row in _rows(data, 'certificates')) {
@@ -1028,6 +1117,10 @@ class AppDatabase extends _$AppDatabase {
       row.putIfAbsent('notes', () => '');
       row.putIfAbsent('color_value', () => 0xFF1E88E5);
       row.putIfAbsent('created_at', () => DateTime.now().toIso8601String());
+    }
+
+    for (final row in _rows(data, 'lended_money')) {
+      row.putIfAbsent('currency', () => 'EGP');
     }
 
     for (final row in _rows(data, 'assets')) {

@@ -308,8 +308,6 @@ void openRecurringSheet(BuildContext ctx,
   showModalBottomSheet(
     context: ctx,
     isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
     builder: (_) =>
         _RecurringSheet(existing: existing, defaultType: defaultType),
   );
@@ -1316,7 +1314,7 @@ class _RecurringSheetState extends State<_RecurringSheet> {
                         fontSize: 11, color: cs.onSurface.withValues(alpha: 0.5)),
                   ),
                   value: _earlyReminderEnabled,
-                  activeColor: cs.secondary,
+                  activeTrackColor: cs.secondary,
                   onChanged: (v) => setState(() => _earlyReminderEnabled = v),
                 ),
               ],

@@ -65,8 +65,6 @@ class LendedScreen extends StatelessWidget {
       return a.name.toLowerCase().compareTo(b.name.toLowerCase());
     });
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.lended_lentMoney,
@@ -125,8 +123,6 @@ class LendedScreen extends StatelessWidget {
     showModalBottomSheet(
       context: ctx,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => _PersonSheet(existing: existing),
     );
   }

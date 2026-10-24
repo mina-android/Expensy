@@ -171,8 +171,9 @@ class _CreditCardSettlementSheetState extends State<CreditCardSettlementSheet> {
 
     return Container(
       decoration: BoxDecoration(
-        color: cs.surface,
+        color: popupSurfaceColor(cs),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        border: Border.fromBorderSide(popupBorderSide(cs)),
       ),
       padding: EdgeInsets.fromLTRB(20, 16, 20, 20 + bottomInset),
       child: SingleChildScrollView(

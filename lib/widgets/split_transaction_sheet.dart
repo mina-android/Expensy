@@ -31,9 +31,6 @@ class SplitTransactionSheet extends StatelessWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
       builder: (_) => SplitTransactionSheet(
         transaction: transaction,
         splits: splits,

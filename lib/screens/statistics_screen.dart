@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import '../providers/app_provider.dart';
+import '../providers/aggregations.dart';
 import '../models/models.dart';
 import '../theme/app_theme.dart';
 import '../utils/haptics.dart';
@@ -20,6 +21,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   String? _filterAccountId; // null = all accounts
 
   List<AppTransaction>? _cachedTxs;
+  int _cachedTxCount = -1;
+  String? _cachedFirstTxId;
   DateTime? _cachedMonth;
   String? _cachedFilterAccountId;
 
@@ -33,11 +36,15 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
   void _computeData(AppProvider app, AppLocalizations l10n) {
     if (identical(_cachedTxs, app.transactions) &&
+        _cachedTxCount == app.transactions.length &&
+        _cachedFirstTxId == app.transactions.firstOrNull?.id &&
         _cachedMonth == _month &&
         _cachedFilterAccountId == _filterAccountId) {
       return;
     }
     _cachedTxs = app.transactions;
+    _cachedTxCount = app.transactions.length;
+    _cachedFirstTxId = app.transactions.firstOrNull?.id;
     _cachedMonth = _month;
     _cachedFilterAccountId = _filterAccountId;
 
@@ -52,31 +59,34 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       return true;
     }).toList();
 
-    _income = _mTxs
-        .where((t) => t.type == 'income')
-        .fold(0.0, (s, t) => s + t.amount);
-    _expense = _mTxs
-        .where((t) => t.type == 'expense')
-        .fold(0.0, (s, t) => s + t.amount);
+    final mTotals = FinancialAggregations.periodTotals(
+      _mTxs,
+      convert: (amt, cur) {
+        final txCur = cur.isNotEmpty ? cur : app.settings.currency;
+        return app.convertToMain(amt, txCur);
+      },
+    );
+    _income = mTotals.income;
+    _expense = mTotals.expense;
 
     final now = DateTime.now();
     _months = List.generate(6, (i) => DateTime(now.year, now.month - 5 + i, 1));
 
     _barGroups = _months.map((m) {
-      final mE = DateTime(m.year, m.month + 1, 0, 23, 59, 59);
-      final txs = app.transactions.where((t) {
-        if (t.date.isBefore(m) || t.date.isAfter(mE)) return false;
-        if (_filterAccountId != null && t.accountId != _filterAccountId) {
-          return false;
-        }
-        return true;
-      }).toList();
-      final inc = txs
-          .where((t) => t.type == 'income')
-          .fold(0.0, (s, t) => s + t.amount);
-      final exp = txs
-          .where((t) => t.type == 'expense')
-          .fold(0.0, (s, t) => s + t.amount);
+      final mStart = DateTime(m.year, m.month, 1);
+      final mEnd = DateTime(m.year, m.month + 1, 1);
+      final totals = FinancialAggregations.periodTotals(
+        app.transactions,
+        start: mStart,
+        end: mEnd,
+        accountId: _filterAccountId,
+        convert: (amt, cur) {
+          final txCur = cur.isNotEmpty ? cur : app.settings.currency;
+          return app.convertToMain(amt, txCur);
+        },
+      );
+      final inc = totals.income;
+      final exp = totals.expense;
       final idx = _months.indexOf(m);
       return BarChartGroupData(
           x: idx,
@@ -97,19 +107,21 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
     _expBycat = {};
     _expBycatId = {};
-    for (final t in _mTxs.where((t) => t.type == 'expense')) {
+    for (final t in _mTxs.where((t) => t.type == 'expense' && !FinancialAggregations.isExcludedFromTotals(t))) {
+      final convertedAmt = app.convertToMain(t.amount, t.currency.isNotEmpty ? t.currency : app.settings.currency);
       if (app.isTransactionSplit(t.id)) {
         final splits = app.getSplits(t.id);
         for (final s in splits) {
           final cat = app.categoryById(s.categoryId);
           final key = cat?.name ?? l10n.statistics_other;
-          _expBycat[key] = (_expBycat[key] ?? 0) + s.amount;
+          final splitConverted = app.convertToMain(s.amount, t.currency.isNotEmpty ? t.currency : app.settings.currency);
+          _expBycat[key] = (_expBycat[key] ?? 0) + splitConverted;
           if (cat != null) _expBycatId[key] = cat.id;
         }
       } else {
         final cat = app.categoryById(t.categoryId);
         final key = cat?.name ?? l10n.statistics_other;
-        _expBycat[key] = (_expBycat[key] ?? 0) + t.amount;
+        _expBycat[key] = (_expBycat[key] ?? 0) + convertedAmt;
         if (cat != null) _expBycatId[key] = cat.id;
       }
     }

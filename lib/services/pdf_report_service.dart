@@ -8,6 +8,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import '../l10n/app_localizations.dart';
 import '../providers/app_provider.dart';
+import '../providers/aggregations.dart';
 
 class PdfReportService {
   PdfReportService._();
@@ -37,6 +38,7 @@ class PdfReportService {
     final Map<String, double> categoryExpenseTotals = {};
 
     for (final t in filteredTxs) {
+      if (FinancialAggregations.isExcludedFromTotals(t)) continue;
       final acct = app.accountById(t.accountId);
       final txCur = t.currency.isNotEmpty ? t.currency : (acct?.currency ?? baseCurrency);
       final convertedAmt = app.convertToMain(t.amount, txCur);

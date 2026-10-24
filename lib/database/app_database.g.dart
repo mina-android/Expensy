@@ -1626,6 +1626,18 @@ class $TransactionsTable extends Transactions
   late final GeneratedColumn<String> transferGroupId = GeneratedColumn<String>(
       'transfer_group_id', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _paidViaAccountIdMeta =
+      const VerificationMeta('paidViaAccountId');
+  @override
+  late final GeneratedColumn<String> paidViaAccountId = GeneratedColumn<String>(
+      'paid_via_account_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _certificateIdMeta =
+      const VerificationMeta('certificateId');
+  @override
+  late final GeneratedColumn<String> certificateId = GeneratedColumn<String>(
+      'certificate_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -1637,7 +1649,9 @@ class $TransactionsTable extends Transactions
         date,
         note,
         currency,
-        transferGroupId
+        transferGroupId,
+        paidViaAccountId,
+        certificateId
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1708,6 +1722,18 @@ class $TransactionsTable extends Transactions
           transferGroupId.isAcceptableOrUnknown(
               data['transfer_group_id']!, _transferGroupIdMeta));
     }
+    if (data.containsKey('paid_via_account_id')) {
+      context.handle(
+          _paidViaAccountIdMeta,
+          paidViaAccountId.isAcceptableOrUnknown(
+              data['paid_via_account_id']!, _paidViaAccountIdMeta));
+    }
+    if (data.containsKey('certificate_id')) {
+      context.handle(
+          _certificateIdMeta,
+          certificateId.isAcceptableOrUnknown(
+              data['certificate_id']!, _certificateIdMeta));
+    }
     return context;
   }
 
@@ -1737,6 +1763,10 @@ class $TransactionsTable extends Transactions
           .read(DriftSqlType.string, data['${effectivePrefix}currency'])!,
       transferGroupId: attachedDatabase.typeMapping.read(
           DriftSqlType.string, data['${effectivePrefix}transfer_group_id']),
+      paidViaAccountId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}paid_via_account_id']),
+      certificateId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}certificate_id']),
     );
   }
 
@@ -1758,6 +1788,8 @@ class TransactionEntry extends DataClass
   final String note;
   final String currency;
   final String? transferGroupId;
+  final String? paidViaAccountId;
+  final String? certificateId;
   const TransactionEntry(
       {required this.id,
       required this.type,
@@ -1768,7 +1800,9 @@ class TransactionEntry extends DataClass
       required this.date,
       required this.note,
       required this.currency,
-      this.transferGroupId});
+      this.transferGroupId,
+      this.paidViaAccountId,
+      this.certificateId});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1783,6 +1817,12 @@ class TransactionEntry extends DataClass
     map['currency'] = Variable<String>(currency);
     if (!nullToAbsent || transferGroupId != null) {
       map['transfer_group_id'] = Variable<String>(transferGroupId);
+    }
+    if (!nullToAbsent || paidViaAccountId != null) {
+      map['paid_via_account_id'] = Variable<String>(paidViaAccountId);
+    }
+    if (!nullToAbsent || certificateId != null) {
+      map['certificate_id'] = Variable<String>(certificateId);
     }
     return map;
   }
@@ -1801,6 +1841,12 @@ class TransactionEntry extends DataClass
       transferGroupId: transferGroupId == null && nullToAbsent
           ? const Value.absent()
           : Value(transferGroupId),
+      paidViaAccountId: paidViaAccountId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(paidViaAccountId),
+      certificateId: certificateId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(certificateId),
     );
   }
 
@@ -1818,6 +1864,8 @@ class TransactionEntry extends DataClass
       note: serializer.fromJson<String>(json['note']),
       currency: serializer.fromJson<String>(json['currency']),
       transferGroupId: serializer.fromJson<String?>(json['transferGroupId']),
+      paidViaAccountId: serializer.fromJson<String?>(json['paidViaAccountId']),
+      certificateId: serializer.fromJson<String?>(json['certificateId']),
     );
   }
   @override
@@ -1834,6 +1882,8 @@ class TransactionEntry extends DataClass
       'note': serializer.toJson<String>(note),
       'currency': serializer.toJson<String>(currency),
       'transferGroupId': serializer.toJson<String?>(transferGroupId),
+      'paidViaAccountId': serializer.toJson<String?>(paidViaAccountId),
+      'certificateId': serializer.toJson<String?>(certificateId),
     };
   }
 
@@ -1847,7 +1897,9 @@ class TransactionEntry extends DataClass
           String? date,
           String? note,
           String? currency,
-          Value<String?> transferGroupId = const Value.absent()}) =>
+          Value<String?> transferGroupId = const Value.absent(),
+          Value<String?> paidViaAccountId = const Value.absent(),
+          Value<String?> certificateId = const Value.absent()}) =>
       TransactionEntry(
         id: id ?? this.id,
         type: type ?? this.type,
@@ -1861,6 +1913,11 @@ class TransactionEntry extends DataClass
         transferGroupId: transferGroupId.present
             ? transferGroupId.value
             : this.transferGroupId,
+        paidViaAccountId: paidViaAccountId.present
+            ? paidViaAccountId.value
+            : this.paidViaAccountId,
+        certificateId:
+            certificateId.present ? certificateId.value : this.certificateId,
       );
   TransactionEntry copyWithCompanion(TransactionsCompanion data) {
     return TransactionEntry(
@@ -1878,6 +1935,12 @@ class TransactionEntry extends DataClass
       transferGroupId: data.transferGroupId.present
           ? data.transferGroupId.value
           : this.transferGroupId,
+      paidViaAccountId: data.paidViaAccountId.present
+          ? data.paidViaAccountId.value
+          : this.paidViaAccountId,
+      certificateId: data.certificateId.present
+          ? data.certificateId.value
+          : this.certificateId,
     );
   }
 
@@ -1893,14 +1956,27 @@ class TransactionEntry extends DataClass
           ..write('date: $date, ')
           ..write('note: $note, ')
           ..write('currency: $currency, ')
-          ..write('transferGroupId: $transferGroupId')
+          ..write('transferGroupId: $transferGroupId, ')
+          ..write('paidViaAccountId: $paidViaAccountId, ')
+          ..write('certificateId: $certificateId')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, type, amount, description, accountId,
-      categoryId, date, note, currency, transferGroupId);
+  int get hashCode => Object.hash(
+      id,
+      type,
+      amount,
+      description,
+      accountId,
+      categoryId,
+      date,
+      note,
+      currency,
+      transferGroupId,
+      paidViaAccountId,
+      certificateId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1914,7 +1990,9 @@ class TransactionEntry extends DataClass
           other.date == this.date &&
           other.note == this.note &&
           other.currency == this.currency &&
-          other.transferGroupId == this.transferGroupId);
+          other.transferGroupId == this.transferGroupId &&
+          other.paidViaAccountId == this.paidViaAccountId &&
+          other.certificateId == this.certificateId);
 }
 
 class TransactionsCompanion extends UpdateCompanion<TransactionEntry> {
@@ -1928,6 +2006,8 @@ class TransactionsCompanion extends UpdateCompanion<TransactionEntry> {
   final Value<String> note;
   final Value<String> currency;
   final Value<String?> transferGroupId;
+  final Value<String?> paidViaAccountId;
+  final Value<String?> certificateId;
   final Value<int> rowid;
   const TransactionsCompanion({
     this.id = const Value.absent(),
@@ -1940,6 +2020,8 @@ class TransactionsCompanion extends UpdateCompanion<TransactionEntry> {
     this.note = const Value.absent(),
     this.currency = const Value.absent(),
     this.transferGroupId = const Value.absent(),
+    this.paidViaAccountId = const Value.absent(),
+    this.certificateId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   TransactionsCompanion.insert({
@@ -1953,6 +2035,8 @@ class TransactionsCompanion extends UpdateCompanion<TransactionEntry> {
     this.note = const Value.absent(),
     this.currency = const Value.absent(),
     this.transferGroupId = const Value.absent(),
+    this.paidViaAccountId = const Value.absent(),
+    this.certificateId = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         type = Value(type),
@@ -1972,6 +2056,8 @@ class TransactionsCompanion extends UpdateCompanion<TransactionEntry> {
     Expression<String>? note,
     Expression<String>? currency,
     Expression<String>? transferGroupId,
+    Expression<String>? paidViaAccountId,
+    Expression<String>? certificateId,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1985,6 +2071,8 @@ class TransactionsCompanion extends UpdateCompanion<TransactionEntry> {
       if (note != null) 'note': note,
       if (currency != null) 'currency': currency,
       if (transferGroupId != null) 'transfer_group_id': transferGroupId,
+      if (paidViaAccountId != null) 'paid_via_account_id': paidViaAccountId,
+      if (certificateId != null) 'certificate_id': certificateId,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2000,6 +2088,8 @@ class TransactionsCompanion extends UpdateCompanion<TransactionEntry> {
       Value<String>? note,
       Value<String>? currency,
       Value<String?>? transferGroupId,
+      Value<String?>? paidViaAccountId,
+      Value<String?>? certificateId,
       Value<int>? rowid}) {
     return TransactionsCompanion(
       id: id ?? this.id,
@@ -2012,6 +2102,8 @@ class TransactionsCompanion extends UpdateCompanion<TransactionEntry> {
       note: note ?? this.note,
       currency: currency ?? this.currency,
       transferGroupId: transferGroupId ?? this.transferGroupId,
+      paidViaAccountId: paidViaAccountId ?? this.paidViaAccountId,
+      certificateId: certificateId ?? this.certificateId,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2049,6 +2141,12 @@ class TransactionsCompanion extends UpdateCompanion<TransactionEntry> {
     if (transferGroupId.present) {
       map['transfer_group_id'] = Variable<String>(transferGroupId.value);
     }
+    if (paidViaAccountId.present) {
+      map['paid_via_account_id'] = Variable<String>(paidViaAccountId.value);
+    }
+    if (certificateId.present) {
+      map['certificate_id'] = Variable<String>(certificateId.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2068,6 +2166,8 @@ class TransactionsCompanion extends UpdateCompanion<TransactionEntry> {
           ..write('note: $note, ')
           ..write('currency: $currency, ')
           ..write('transferGroupId: $transferGroupId, ')
+          ..write('paidViaAccountId: $paidViaAccountId, ')
+          ..write('certificateId: $certificateId, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4474,6 +4574,14 @@ class $LendedMoneyTableTable extends LendedMoneyTable
       type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultValue: const Constant('09:00'));
+  static const VerificationMeta _currencyMeta =
+      const VerificationMeta('currency');
+  @override
+  late final GeneratedColumn<String> currency = GeneratedColumn<String>(
+      'currency', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(''));
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -4486,7 +4594,8 @@ class $LendedMoneyTableTable extends LendedMoneyTable
         dueDate,
         notes,
         reminderEnabled,
-        reminderTime
+        reminderTime,
+        currency
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -4555,6 +4664,10 @@ class $LendedMoneyTableTable extends LendedMoneyTable
           reminderTime.isAcceptableOrUnknown(
               data['reminder_time']!, _reminderTimeMeta));
     }
+    if (data.containsKey('currency')) {
+      context.handle(_currencyMeta,
+          currency.isAcceptableOrUnknown(data['currency']!, _currencyMeta));
+    }
     return context;
   }
 
@@ -4586,6 +4699,8 @@ class $LendedMoneyTableTable extends LendedMoneyTable
           .read(DriftSqlType.int, data['${effectivePrefix}reminder_enabled'])!,
       reminderTime: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}reminder_time'])!,
+      currency: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}currency'])!,
     );
   }
 
@@ -4608,6 +4723,7 @@ class LendedMoneyEntry extends DataClass
   final String notes;
   final int reminderEnabled;
   final String reminderTime;
+  final String currency;
   const LendedMoneyEntry(
       {required this.id,
       required this.personId,
@@ -4619,7 +4735,8 @@ class LendedMoneyEntry extends DataClass
       this.dueDate,
       required this.notes,
       required this.reminderEnabled,
-      required this.reminderTime});
+      required this.reminderTime,
+      required this.currency});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -4638,6 +4755,7 @@ class LendedMoneyEntry extends DataClass
     map['notes'] = Variable<String>(notes);
     map['reminder_enabled'] = Variable<int>(reminderEnabled);
     map['reminder_time'] = Variable<String>(reminderTime);
+    map['currency'] = Variable<String>(currency);
     return map;
   }
 
@@ -4658,6 +4776,7 @@ class LendedMoneyEntry extends DataClass
       notes: Value(notes),
       reminderEnabled: Value(reminderEnabled),
       reminderTime: Value(reminderTime),
+      currency: Value(currency),
     );
   }
 
@@ -4676,6 +4795,7 @@ class LendedMoneyEntry extends DataClass
       notes: serializer.fromJson<String>(json['notes']),
       reminderEnabled: serializer.fromJson<int>(json['reminderEnabled']),
       reminderTime: serializer.fromJson<String>(json['reminderTime']),
+      currency: serializer.fromJson<String>(json['currency']),
     );
   }
   @override
@@ -4693,6 +4813,7 @@ class LendedMoneyEntry extends DataClass
       'notes': serializer.toJson<String>(notes),
       'reminderEnabled': serializer.toJson<int>(reminderEnabled),
       'reminderTime': serializer.toJson<String>(reminderTime),
+      'currency': serializer.toJson<String>(currency),
     };
   }
 
@@ -4707,7 +4828,8 @@ class LendedMoneyEntry extends DataClass
           Value<String?> dueDate = const Value.absent(),
           String? notes,
           int? reminderEnabled,
-          String? reminderTime}) =>
+          String? reminderTime,
+          String? currency}) =>
       LendedMoneyEntry(
         id: id ?? this.id,
         personId: personId ?? this.personId,
@@ -4720,6 +4842,7 @@ class LendedMoneyEntry extends DataClass
         notes: notes ?? this.notes,
         reminderEnabled: reminderEnabled ?? this.reminderEnabled,
         reminderTime: reminderTime ?? this.reminderTime,
+        currency: currency ?? this.currency,
       );
   LendedMoneyEntry copyWithCompanion(LendedMoneyTableCompanion data) {
     return LendedMoneyEntry(
@@ -4738,6 +4861,7 @@ class LendedMoneyEntry extends DataClass
       reminderTime: data.reminderTime.present
           ? data.reminderTime.value
           : this.reminderTime,
+      currency: data.currency.present ? data.currency.value : this.currency,
     );
   }
 
@@ -4754,14 +4878,15 @@ class LendedMoneyEntry extends DataClass
           ..write('dueDate: $dueDate, ')
           ..write('notes: $notes, ')
           ..write('reminderEnabled: $reminderEnabled, ')
-          ..write('reminderTime: $reminderTime')
+          ..write('reminderTime: $reminderTime, ')
+          ..write('currency: $currency')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode => Object.hash(id, personId, amount, type, accountId,
-      isSettled, date, dueDate, notes, reminderEnabled, reminderTime);
+      isSettled, date, dueDate, notes, reminderEnabled, reminderTime, currency);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4776,7 +4901,8 @@ class LendedMoneyEntry extends DataClass
           other.dueDate == this.dueDate &&
           other.notes == this.notes &&
           other.reminderEnabled == this.reminderEnabled &&
-          other.reminderTime == this.reminderTime);
+          other.reminderTime == this.reminderTime &&
+          other.currency == this.currency);
 }
 
 class LendedMoneyTableCompanion extends UpdateCompanion<LendedMoneyEntry> {
@@ -4791,6 +4917,7 @@ class LendedMoneyTableCompanion extends UpdateCompanion<LendedMoneyEntry> {
   final Value<String> notes;
   final Value<int> reminderEnabled;
   final Value<String> reminderTime;
+  final Value<String> currency;
   final Value<int> rowid;
   const LendedMoneyTableCompanion({
     this.id = const Value.absent(),
@@ -4804,6 +4931,7 @@ class LendedMoneyTableCompanion extends UpdateCompanion<LendedMoneyEntry> {
     this.notes = const Value.absent(),
     this.reminderEnabled = const Value.absent(),
     this.reminderTime = const Value.absent(),
+    this.currency = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   LendedMoneyTableCompanion.insert({
@@ -4818,6 +4946,7 @@ class LendedMoneyTableCompanion extends UpdateCompanion<LendedMoneyEntry> {
     this.notes = const Value.absent(),
     this.reminderEnabled = const Value.absent(),
     this.reminderTime = const Value.absent(),
+    this.currency = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         personId = Value(personId),
@@ -4836,6 +4965,7 @@ class LendedMoneyTableCompanion extends UpdateCompanion<LendedMoneyEntry> {
     Expression<String>? notes,
     Expression<int>? reminderEnabled,
     Expression<String>? reminderTime,
+    Expression<String>? currency,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -4850,6 +4980,7 @@ class LendedMoneyTableCompanion extends UpdateCompanion<LendedMoneyEntry> {
       if (notes != null) 'notes': notes,
       if (reminderEnabled != null) 'reminder_enabled': reminderEnabled,
       if (reminderTime != null) 'reminder_time': reminderTime,
+      if (currency != null) 'currency': currency,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -4866,6 +4997,7 @@ class LendedMoneyTableCompanion extends UpdateCompanion<LendedMoneyEntry> {
       Value<String>? notes,
       Value<int>? reminderEnabled,
       Value<String>? reminderTime,
+      Value<String>? currency,
       Value<int>? rowid}) {
     return LendedMoneyTableCompanion(
       id: id ?? this.id,
@@ -4879,6 +5011,7 @@ class LendedMoneyTableCompanion extends UpdateCompanion<LendedMoneyEntry> {
       notes: notes ?? this.notes,
       reminderEnabled: reminderEnabled ?? this.reminderEnabled,
       reminderTime: reminderTime ?? this.reminderTime,
+      currency: currency ?? this.currency,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -4919,6 +5052,9 @@ class LendedMoneyTableCompanion extends UpdateCompanion<LendedMoneyEntry> {
     if (reminderTime.present) {
       map['reminder_time'] = Variable<String>(reminderTime.value);
     }
+    if (currency.present) {
+      map['currency'] = Variable<String>(currency.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -4939,6 +5075,7 @@ class LendedMoneyTableCompanion extends UpdateCompanion<LendedMoneyEntry> {
           ..write('notes: $notes, ')
           ..write('reminderEnabled: $reminderEnabled, ')
           ..write('reminderTime: $reminderTime, ')
+          ..write('currency: $currency, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -10624,6 +10761,8 @@ typedef $$TransactionsTableCreateCompanionBuilder = TransactionsCompanion
   Value<String> note,
   Value<String> currency,
   Value<String?> transferGroupId,
+  Value<String?> paidViaAccountId,
+  Value<String?> certificateId,
   Value<int> rowid,
 });
 typedef $$TransactionsTableUpdateCompanionBuilder = TransactionsCompanion
@@ -10638,6 +10777,8 @@ typedef $$TransactionsTableUpdateCompanionBuilder = TransactionsCompanion
   Value<String> note,
   Value<String> currency,
   Value<String?> transferGroupId,
+  Value<String?> paidViaAccountId,
+  Value<String?> certificateId,
   Value<int> rowid,
 });
 
@@ -10680,6 +10821,13 @@ class $$TransactionsTableFilterComposer
   ColumnFilters<String> get transferGroupId => $composableBuilder(
       column: $table.transferGroupId,
       builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get paidViaAccountId => $composableBuilder(
+      column: $table.paidViaAccountId,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get certificateId => $composableBuilder(
+      column: $table.certificateId, builder: (column) => ColumnFilters(column));
 }
 
 class $$TransactionsTableOrderingComposer
@@ -10721,6 +10869,14 @@ class $$TransactionsTableOrderingComposer
   ColumnOrderings<String> get transferGroupId => $composableBuilder(
       column: $table.transferGroupId,
       builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get paidViaAccountId => $composableBuilder(
+      column: $table.paidViaAccountId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get certificateId => $composableBuilder(
+      column: $table.certificateId,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$TransactionsTableAnnotationComposer
@@ -10761,6 +10917,12 @@ class $$TransactionsTableAnnotationComposer
 
   GeneratedColumn<String> get transferGroupId => $composableBuilder(
       column: $table.transferGroupId, builder: (column) => column);
+
+  GeneratedColumn<String> get paidViaAccountId => $composableBuilder(
+      column: $table.paidViaAccountId, builder: (column) => column);
+
+  GeneratedColumn<String> get certificateId => $composableBuilder(
+      column: $table.certificateId, builder: (column) => column);
 }
 
 class $$TransactionsTableTableManager extends RootTableManager<
@@ -10799,6 +10961,8 @@ class $$TransactionsTableTableManager extends RootTableManager<
             Value<String> note = const Value.absent(),
             Value<String> currency = const Value.absent(),
             Value<String?> transferGroupId = const Value.absent(),
+            Value<String?> paidViaAccountId = const Value.absent(),
+            Value<String?> certificateId = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               TransactionsCompanion(
@@ -10812,6 +10976,8 @@ class $$TransactionsTableTableManager extends RootTableManager<
             note: note,
             currency: currency,
             transferGroupId: transferGroupId,
+            paidViaAccountId: paidViaAccountId,
+            certificateId: certificateId,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -10825,6 +10991,8 @@ class $$TransactionsTableTableManager extends RootTableManager<
             Value<String> note = const Value.absent(),
             Value<String> currency = const Value.absent(),
             Value<String?> transferGroupId = const Value.absent(),
+            Value<String?> paidViaAccountId = const Value.absent(),
+            Value<String?> certificateId = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               TransactionsCompanion.insert(
@@ -10838,6 +11006,8 @@ class $$TransactionsTableTableManager extends RootTableManager<
             note: note,
             currency: currency,
             transferGroupId: transferGroupId,
+            paidViaAccountId: paidViaAccountId,
+            certificateId: certificateId,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -12065,6 +12235,7 @@ typedef $$LendedMoneyTableTableCreateCompanionBuilder
   Value<String> notes,
   Value<int> reminderEnabled,
   Value<String> reminderTime,
+  Value<String> currency,
   Value<int> rowid,
 });
 typedef $$LendedMoneyTableTableUpdateCompanionBuilder
@@ -12080,6 +12251,7 @@ typedef $$LendedMoneyTableTableUpdateCompanionBuilder
   Value<String> notes,
   Value<int> reminderEnabled,
   Value<String> reminderTime,
+  Value<String> currency,
   Value<int> rowid,
 });
 
@@ -12125,6 +12297,9 @@ class $$LendedMoneyTableTableFilterComposer
 
   ColumnFilters<String> get reminderTime => $composableBuilder(
       column: $table.reminderTime, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get currency => $composableBuilder(
+      column: $table.currency, builder: (column) => ColumnFilters(column));
 }
 
 class $$LendedMoneyTableTableOrderingComposer
@@ -12170,6 +12345,9 @@ class $$LendedMoneyTableTableOrderingComposer
   ColumnOrderings<String> get reminderTime => $composableBuilder(
       column: $table.reminderTime,
       builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get currency => $composableBuilder(
+      column: $table.currency, builder: (column) => ColumnOrderings(column));
 }
 
 class $$LendedMoneyTableTableAnnotationComposer
@@ -12213,6 +12391,9 @@ class $$LendedMoneyTableTableAnnotationComposer
 
   GeneratedColumn<String> get reminderTime => $composableBuilder(
       column: $table.reminderTime, builder: (column) => column);
+
+  GeneratedColumn<String> get currency =>
+      $composableBuilder(column: $table.currency, builder: (column) => column);
 }
 
 class $$LendedMoneyTableTableTableManager extends RootTableManager<
@@ -12253,6 +12434,7 @@ class $$LendedMoneyTableTableTableManager extends RootTableManager<
             Value<String> notes = const Value.absent(),
             Value<int> reminderEnabled = const Value.absent(),
             Value<String> reminderTime = const Value.absent(),
+            Value<String> currency = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               LendedMoneyTableCompanion(
@@ -12267,6 +12449,7 @@ class $$LendedMoneyTableTableTableManager extends RootTableManager<
             notes: notes,
             reminderEnabled: reminderEnabled,
             reminderTime: reminderTime,
+            currency: currency,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -12281,6 +12464,7 @@ class $$LendedMoneyTableTableTableManager extends RootTableManager<
             Value<String> notes = const Value.absent(),
             Value<int> reminderEnabled = const Value.absent(),
             Value<String> reminderTime = const Value.absent(),
+            Value<String> currency = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               LendedMoneyTableCompanion.insert(
@@ -12295,6 +12479,7 @@ class $$LendedMoneyTableTableTableManager extends RootTableManager<
             notes: notes,
             reminderEnabled: reminderEnabled,
             reminderTime: reminderTime,
+            currency: currency,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0

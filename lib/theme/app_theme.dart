@@ -172,13 +172,36 @@ ThemeData buildTheme({
   return _base(base, appFont);
 }
 
-ThemeData _base(ColorScheme cs, String appFont) {
+/// Resolves popup/sheet surface color based on theme and AMOLED state.
+Color popupSurfaceColor(ColorScheme cs) {
   final isDark = cs.brightness == Brightness.dark;
+  if (isDark && cs.surface == Colors.black) {
+    return Colors.black;
+  }
+  return isDark ? cs.surfaceContainerHigh : cs.surface;
+}
+
+/// Resolves popup/sheet border side based on theme and AMOLED state.
+BorderSide popupBorderSide(ColorScheme cs) {
+  final isDark = cs.brightness == Brightness.dark;
+  if (isDark && cs.surface == Colors.black) {
+    return BorderSide(color: cs.outlineVariant.withValues(alpha: 0.45), width: 1);
+  }
+  if (isDark) {
+    return BorderSide(color: cs.outlineVariant.withValues(alpha: 0.2), width: 1);
+  }
+  return BorderSide.none;
+}
+
+ThemeData _base(ColorScheme cs, String appFont) {
+  final popupBg = popupSurfaceColor(cs);
+  final popupBorder = popupBorderSide(cs);
   final baseTextTheme = ThemeData(brightness: cs.brightness).textTheme;
   final fontTextTheme = _applyFont(appFont, baseTextTheme);
 
   return ThemeData(
     colorScheme: cs,
+    scaffoldBackgroundColor: cs.surface,
     useMaterial3: true,
     textTheme: fontTextTheme,
     // Android 15+ predictive back gesture support with smooth transitions.
@@ -230,22 +253,31 @@ ThemeData _base(ColorScheme cs, String appFont) {
     dropdownMenuTheme: DropdownMenuThemeData(
       menuStyle: MenuStyle(
         shape: WidgetStateProperty.all(
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: popupBorder,
+          ),
         ),
         elevation: WidgetStateProperty.all(6),
-        backgroundColor: WidgetStateProperty.all(
-          isDark ? cs.surfaceContainerHigh : cs.surfaceContainerLowest,
-        ),
+        backgroundColor: WidgetStateProperty.all(popupBg),
+        surfaceTintColor: WidgetStateProperty.all(Colors.transparent),
       ),
     ),
     popupMenuTheme: PopupMenuThemeData(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: popupBorder,
+      ),
       elevation: 6,
-      color: isDark ? cs.surfaceContainerHigh : cs.surfaceContainerLowest,
+      color: popupBg,
+      surfaceTintColor: Colors.transparent,
     ),
     dialogTheme: DialogThemeData(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      backgroundColor: isDark ? cs.surfaceContainerHigh : cs.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: popupBorder,
+      ),
+      backgroundColor: popupBg,
       surfaceTintColor: Colors.transparent,
       elevation: 8,
       titleTextStyle: fontTextTheme.titleLarge?.copyWith(
@@ -258,15 +290,44 @@ ThemeData _base(ColorScheme cs, String appFont) {
         height: 1.4,
       ),
     ),
+    bottomSheetTheme: BottomSheetThemeData(
+      backgroundColor: popupBg,
+      modalBackgroundColor: popupBg,
+      surfaceTintColor: Colors.transparent,
+      elevation: 10,
+      shape: RoundedRectangleBorder(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        side: popupBorder,
+      ),
+    ),
+    datePickerTheme: DatePickerThemeData(
+      backgroundColor: popupBg,
+      surfaceTintColor: Colors.transparent,
+      elevation: 8,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: popupBorder,
+      ),
+    ),
+    timePickerTheme: TimePickerThemeData(
+      backgroundColor: popupBg,
+      elevation: 8,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: popupBorder,
+      ),
+    ),
     menuTheme: MenuThemeData(
       style: MenuStyle(
         shape: WidgetStateProperty.all(
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: popupBorder,
+          ),
         ),
         elevation: WidgetStateProperty.all(6),
-        backgroundColor: WidgetStateProperty.all(
-          isDark ? cs.surfaceContainerHigh : cs.surfaceContainerLowest,
-        ),
+        backgroundColor: WidgetStateProperty.all(popupBg),
+        surfaceTintColor: WidgetStateProperty.all(Colors.transparent),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(

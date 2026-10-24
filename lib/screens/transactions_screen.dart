@@ -4,6 +4,7 @@ import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/app_provider.dart';
+import '../providers/aggregations.dart';
 import '../models/models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
@@ -61,6 +62,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       _maxAmount,
       _advCategoryFilter,
       app.transactions,
+      app.transactions.length,
+      app.transactions.firstOrNull?.id,
       app.lended,
       app.savingsContributions,
       app.loanPayments,
@@ -374,6 +377,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         double dayTotal = 0.0;
                         for (final item in items) {
                           if (item.isTx) {
+                            if (FinancialAggregations.isExcludedFromTotals(item.tx!)) continue;
                             dayTotal += item.tx!.type == 'income' ? item.tx!.amount : -item.tx!.amount;
                           } else if (item.isLended) {
                             dayTotal += item.lended!.type == 'borrowed' ? item.lended!.amount : -item.lended!.amount;
@@ -441,13 +445,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E2128) : Colors.white,
+            color: popupSurfaceColor(cs),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.1)
-                  : Colors.black.withValues(alpha: 0.08),
-            ),
+            border: Border.fromBorderSide(popupBorderSide(cs)),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.12),
@@ -545,6 +545,34 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               transaction: item.tx!,
               splits: app.getSplits(item.tx!.id),
               app: app,
+            );
+          } else if (item.tx!.isTransfer) {
+            showDialog(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: const Text('Transfer Transaction'),
+                content: const Text(
+                    'This transaction is part of an account transfer. Individual legs cannot be modified directly to preserve balance integrity. Would you like to delete this transfer?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('Cancel'),
+                  ),
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.error,
+                    ),
+                    onPressed: () async {
+                      Navigator.pop(ctx);
+                      await app.deleteTransaction(item.tx!.id);
+                      if (context.mounted) {
+                        showAppSnackbar(context, 'Transfer deleted');
+                      }
+                    },
+                    child: const Text('Delete Transfer'),
+                  ),
+                ],
+              ),
             );
           } else {
             Navigator.push(
@@ -647,7 +675,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => Padding(
         padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 24, right: 24, top: 24),
         child: Column(
@@ -695,7 +722,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => _AdvancedFilterSheet(
         initialMinAmount: _minAmount,
         initialMaxAmount: _maxAmount,

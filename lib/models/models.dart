@@ -253,6 +253,18 @@ class AppTransaction {
   /// Currency the amount was entered in. Empty string = same as account currency.
   String currency;
   final String? transferGroupId;
+  final String? paidViaAccountId;
+  final String? certificateId;
+
+  bool get isTransfer =>
+      (transferGroupId != null && transferGroupId!.isNotEmpty) ||
+      categoryId == 'sys_transfer' ||
+      type == 'transfer';
+
+  bool get isInvestment =>
+      categoryId == 'sys_investment' ||
+      certificateId != null ||
+      note.contains('[cert:');
 
   AppTransaction({
     required this.id,
@@ -265,6 +277,8 @@ class AppTransaction {
     this.note = '',
     this.currency = '',
     this.transferGroupId,
+    this.paidViaAccountId,
+    this.certificateId,
   });
 
   Map<String, dynamic> toMap() => {
@@ -278,6 +292,8 @@ class AppTransaction {
         'note': note,
         'currency': currency,
         'transfer_group_id': transferGroupId,
+        'paid_via_account_id': paidViaAccountId,
+        'certificate_id': certificateId,
       };
 
   static AppTransaction fromMap(Map<String, dynamic> m) => AppTransaction(
@@ -293,6 +309,8 @@ class AppTransaction {
         note: (m['note'] as String?) ?? '',
         currency: (m['currency'] as String?) ?? '',
         transferGroupId: m['transfer_group_id'] as String?,
+        paidViaAccountId: m['paid_via_account_id'] as String?,
+        certificateId: m['certificate_id'] as String?,
       );
 
   AppTransaction copyWith({
@@ -306,6 +324,10 @@ class AppTransaction {
     String? note,
     String? currency,
     String? transferGroupId,
+    String? paidViaAccountId,
+    bool clearPaidViaAccountId = false,
+    String? certificateId,
+    bool clearCertificateId = false,
   }) =>
       AppTransaction(
         id: id ?? this.id,
@@ -318,6 +340,12 @@ class AppTransaction {
         note: note ?? this.note,
         currency: currency ?? this.currency,
         transferGroupId: transferGroupId ?? this.transferGroupId,
+        paidViaAccountId: clearPaidViaAccountId
+            ? null
+            : (paidViaAccountId ?? this.paidViaAccountId),
+        certificateId: clearCertificateId
+            ? null
+            : (certificateId ?? this.certificateId),
       );
 }
 
@@ -418,23 +446,40 @@ class RecurringPayment {
     }
   }
 
-  DateTime calcNextDate() {
+  DateTime advanceDateFrom(DateTime from) {
+    if (freqVal <= 0) return from.add(const Duration(days: 30));
     switch (freqUnit) {
       case 'days':
-        return nextDate.add(Duration(days: freqVal));
+        return from.add(Duration(days: freqVal));
       case 'weeks':
-        return nextDate.add(Duration(days: freqVal * 7));
+        return from.add(Duration(days: freqVal * 7));
       case 'months':
-        final m = nextDate.month + freqVal;
-        final y = nextDate.year + (m - 1) ~/ 12;
+        final m = from.month + freqVal;
+        final y = from.year + (m - 1) ~/ 12;
         final mon = ((m - 1) % 12) + 1;
-        final day = nextDate.day.clamp(1, DateTime(y, mon + 1, 0).day);
+        final day = from.day.clamp(1, DateTime(y, mon + 1, 0).day);
         return DateTime(y, mon, day);
       case 'years':
-        return DateTime(nextDate.year + freqVal, nextDate.month, nextDate.day);
+        return DateTime(from.year + freqVal, from.month, from.day);
       default:
-        return nextDate.add(Duration(days: freqVal * 30));
+        return from.add(Duration(days: freqVal * 30));
     }
+  }
+
+  DateTime calcNextDate() => advanceDateFrom(nextDate);
+
+  List<DateTime> get upcomingPaymentDates {
+    if (endDate == null) return const [];
+    final rem = remainingPayments ?? 0;
+    if (rem <= 0 || freqVal <= 0) return const [];
+    final dates = <DateTime>[];
+    DateTime current = nextDate;
+    final endDay = DateTime(endDate!.year, endDate!.month, endDate!.day, 23, 59, 59);
+    while (!current.isAfter(endDay) && dates.length < rem) {
+      dates.add(current);
+      current = advanceDateFrom(current);
+    }
+    return dates;
   }
 
   Map<String, dynamic> toMap() => {
@@ -485,6 +530,50 @@ class RecurringPayment {
         recurringType: (m['recurring_type'] as String?) ?? 'subscription',
         autoPayEnabled: (m['auto_pay_enabled'] as int? ?? 0) == 1,
         autoPayTime: (m['auto_pay_time'] as String?) ?? '09:00',
+      );
+
+  RecurringPayment copyWith({
+    String? id,
+    String? name,
+    String? accountId,
+    String? categoryId,
+    double? amount,
+    String? paymentType,
+    int? freqVal,
+    String? freqUnit,
+    DateTime? startDate,
+    DateTime? nextDate,
+    DateTime? endDate,
+    bool clearEndDate = false,
+    int? paidPayments,
+    bool? reminderEnabled,
+    String? reminderTime,
+    bool? earlyReminderEnabled,
+    String? notes,
+    String? recurringType,
+    bool? autoPayEnabled,
+    String? autoPayTime,
+  }) =>
+      RecurringPayment(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        accountId: accountId ?? this.accountId,
+        categoryId: categoryId ?? this.categoryId,
+        amount: amount ?? this.amount,
+        paymentType: paymentType ?? this.paymentType,
+        freqVal: freqVal ?? this.freqVal,
+        freqUnit: freqUnit ?? this.freqUnit,
+        startDate: startDate ?? this.startDate,
+        nextDate: nextDate ?? this.nextDate,
+        endDate: clearEndDate ? null : (endDate ?? this.endDate),
+        paidPayments: paidPayments ?? this.paidPayments,
+        reminderEnabled: reminderEnabled ?? this.reminderEnabled,
+        reminderTime: reminderTime ?? this.reminderTime,
+        earlyReminderEnabled: earlyReminderEnabled ?? this.earlyReminderEnabled,
+        notes: notes ?? this.notes,
+        recurringType: recurringType ?? this.recurringType,
+        autoPayEnabled: autoPayEnabled ?? this.autoPayEnabled,
+        autoPayTime: autoPayTime ?? this.autoPayTime,
       );
 }
 
@@ -617,6 +706,7 @@ class LendedMoney {
 
   /// Time of day for the reminder, 'HH:mm' format.
   String reminderTime;
+  String currency;
 
   LendedMoney({
     required this.id,
@@ -630,6 +720,7 @@ class LendedMoney {
     this.notes = '',
     this.reminderEnabled = false,
     this.reminderTime = '09:00',
+    this.currency = '',
   });
 
   Map<String, dynamic> toMap() => {
@@ -644,6 +735,7 @@ class LendedMoney {
         'notes': notes,
         'reminder_enabled': reminderEnabled ? 1 : 0,
         'reminder_time': reminderTime,
+        'currency': currency,
       };
 
   static LendedMoney fromMap(Map<String, dynamic> m) => LendedMoney(
@@ -662,6 +754,7 @@ class LendedMoney {
         notes: (m['notes'] as String?) ?? '',
         reminderEnabled: (m['reminder_enabled'] as int? ?? 0) == 1,
         reminderTime: (m['reminder_time'] as String?) ?? '09:00',
+        currency: (m['currency'] as String?) ?? '',
       );
 
   LendedMoney copyWith({
@@ -676,6 +769,7 @@ class LendedMoney {
     bool clearDueDate = false,
     bool? reminderEnabled,
     String? reminderTime,
+    String? currency,
   }) =>
       LendedMoney(
         id: id,
@@ -689,6 +783,7 @@ class LendedMoney {
         notes: notes ?? this.notes,
         reminderEnabled: reminderEnabled ?? this.reminderEnabled,
         reminderTime: reminderTime ?? this.reminderTime,
+        currency: currency ?? this.currency,
       );
 }
 

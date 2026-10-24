@@ -541,14 +541,16 @@ class _LogPaymentSheetState extends State<_LogPaymentSheet> {
   Widget build(BuildContext context) {
     final app = context.watch<AppProvider>();
     final l10n = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
     final viewInsets = MediaQuery.of(context).viewInsets;
 
     final accountsList = app.accounts.where((a) => !a.isGold).toList();
 
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
+        color: popupSurfaceColor(cs),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        border: Border.fromBorderSide(popupBorderSide(cs)),
       ),
       padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + viewInsets.bottom),
       child: Form(

@@ -11,8 +11,8 @@ import 'package:expensy/l10n/app_localizations.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('AccountCardPicker with unlinked bank accounts', () {
-    testWidgets('shows unlinked bank account and excludes linked bank account',
+  group('AccountCardPicker rendering', () {
+    testWidgets('shows bank accounts and cash wallets normally',
         (tester) async {
       final normalBank = Account(
         id: 'bank-linked',
@@ -57,8 +57,8 @@ void main() {
         ),
       );
 
-      // Linked bank account should NOT appear
-      expect(find.text('Linked Bank'), findsNothing);
+      // Linked bank account should appear
+      expect(find.text('Linked Bank'), findsOneWidget);
 
       // Unlinked bank account should appear
       expect(find.text('Unlinked Bank'), findsOneWidget);

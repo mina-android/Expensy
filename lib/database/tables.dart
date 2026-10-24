@@ -58,6 +58,8 @@ class Transactions extends Table {
   TextColumn get note => text().named('note').withDefault(const Constant(''))();
   TextColumn get currency => text().named('currency').withDefault(const Constant(''))();
   TextColumn get transferGroupId => text().named('transfer_group_id').nullable()();
+  TextColumn get paidViaAccountId => text().named('paid_via_account_id').nullable()();
+  TextColumn get certificateId => text().named('certificate_id').nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -159,6 +161,7 @@ class LendedMoneyTable extends Table {
   TextColumn get notes => text().named('notes').withDefault(const Constant(''))();
   IntColumn get reminderEnabled => integer().named('reminder_enabled').withDefault(const Constant(0))();
   TextColumn get reminderTime => text().named('reminder_time').withDefault(const Constant('09:00'))();
+  TextColumn get currency => text().named('currency').withDefault(const Constant(''))();
 
   @override
   Set<Column> get primaryKey => {id};

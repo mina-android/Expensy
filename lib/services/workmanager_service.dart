@@ -1,9 +1,11 @@
 // lib/services/workmanager_service.dart
+// note: Workmanager dispatcher for background tasks: periodic auto-pay and nightly auto-backup.
+
 import 'package:flutter/foundation.dart';
 import 'package:workmanager/workmanager.dart';
-import 'package:uuid/uuid.dart';
 import '../database/app_database.dart';
-import '../models/models.dart';
+import 'recurring_payment_processor.dart';
+import 'auto_backup_service.dart';
 
 const String autoPayTaskKey = 'com.ma.expensy.autoPayTask';
 
@@ -12,59 +14,16 @@ void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     try {
       if (task == autoPayTaskKey) {
-        final db = AppDatabase.instance;
-        final recurring = await db.getRecurring();
-        final now = DateTime.now();
-        final today = DateTime(now.year, now.month, now.day);
-        const uuid = Uuid();
-
-        for (final r in recurring) {
-          if (!r.autoPayEnabled) continue;
-          if (r.endDate != null && r.nextDate.isAfter(r.endDate!)) continue;
-
-          final dueDate =
-              DateTime(r.nextDate.year, r.nextDate.month, r.nextDate.day);
-          if (dueDate.isBefore(today) || dueDate.isAtSameMomentAs(today)) {
-            final t = AppTransaction(
-              id: uuid.v4(),
-              type: r.paymentType,
-              amount: r.amount,
-              description: '${r.name} (recurring)',
-              accountId: r.accountId,
-              categoryId: r.categoryId,
-              date: r.nextDate,
-            );
-            final delta = r.paymentType == 'income' ? r.amount : -r.amount;
-            await db.applyTransactionWithBalance(t, delta);
-
-            final updated = RecurringPayment(
-              id: r.id,
-              name: r.name,
-              accountId: r.accountId,
-              categoryId: r.categoryId,
-              amount: r.amount,
-              paymentType: r.paymentType,
-              freqVal: r.freqVal,
-              freqUnit: r.freqUnit,
-              startDate: r.startDate,
-              nextDate: r.calcNextDate(),
-              endDate: r.endDate,
-              paidPayments: r.paidPayments + 1,
-              reminderEnabled: r.reminderEnabled,
-              reminderTime: r.reminderTime,
-              earlyReminderEnabled: r.earlyReminderEnabled,
-              notes: r.notes,
-              recurringType: r.recurringType,
-              autoPayEnabled: r.autoPayEnabled,
-              autoPayTime: r.autoPayTime,
-            );
-            await db.updateRecurring(updated);
-          }
-        }
+        final processor = RecurringPaymentProcessor(AppDatabase.instance);
+        await processor.processDuePayments();
+        return true;
+      } else if (task == AutoBackupService.taskKey) {
+        final result = await AutoBackupService.runNow(BackupTrigger.scheduled);
+        return result.success;
       }
       return true;
     } catch (e) {
-      debugPrint('Workmanager autoPayTask error: $e');
+      debugPrint('Workmanager task execution error ($task): $e');
       return false;
     }
   });
@@ -80,6 +39,8 @@ class WorkmanagerService {
         callbackDispatcher,
         isInDebugMode: false,
       );
+
+      // 1. Periodic Auto-Pay task (every 12 hours)
       await Workmanager().registerPeriodicTask(
         'expensy_autopay_periodic',
         autoPayTaskKey,
@@ -89,6 +50,23 @@ class WorkmanagerService {
           requiresBatteryNotLow: true,
         ),
       );
+
+      // 2. Periodic Auto-Backup task (every 24 hours, starting at next 02:00)
+      final now = DateTime.now();
+      final nextRun = AutoBackupService.nextRunAt(now, hour: 2);
+      final initialDelay = nextRun.difference(now);
+
+      await Workmanager().registerPeriodicTask(
+        'expensy_auto_backup_periodic',
+        AutoBackupService.taskKey,
+        frequency: const Duration(hours: 24),
+        initialDelay: initialDelay,
+        constraints: Constraints(
+          networkType: NetworkType.not_required,
+          requiresBatteryNotLow: true,
+        ),
+      );
+
       _initialized = true;
     } catch (e) {
       debugPrint('Workmanager initialize error: $e');

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import '../models/models.dart';
 import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
@@ -91,8 +90,9 @@ class _CertificateSheetState extends State<CertificateSheet> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
+        color: popupSurfaceColor(cs),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        border: Border.fromBorderSide(popupBorderSide(cs)),
       ),
       padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + viewInsets.bottom),
       child: Form(
@@ -558,7 +558,7 @@ class _CertificateSheetState extends State<CertificateSheet> {
                             fontSize: 13.5, fontWeight: FontWeight.w600),
                       ),
                       value: _reminderEarlyEnabled,
-                      activeColor: const Color(0xFF00897B),
+                      activeTrackColor: const Color(0xFF00897B),
                       onChanged: (v) =>
                           setState(() => _reminderEarlyEnabled = v),
                     ),

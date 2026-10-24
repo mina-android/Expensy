@@ -686,7 +686,7 @@ class FintechReminderToggle extends StatelessWidget {
                     ),
                   )
                 : null,
-            activeColor: accent,
+            activeTrackColor: accent,
             value: value,
             onChanged: (v) {
               AppHaptics.tap(context, HapticStrength.light);
@@ -897,11 +897,8 @@ class FintechDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      backgroundColor: isDark ? cs.surfaceContainerHigh : cs.surface,
       surfaceTintColor: Colors.transparent,
       elevation: 10,
       icon: icon != null

@@ -426,8 +426,9 @@ class _LoanSheetState extends State<LoanSheet> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
+        color: popupSurfaceColor(cs),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        border: Border.fromBorderSide(popupBorderSide(cs)),
       ),
       padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + viewInsets.bottom),
       child: Form(

@@ -2,12 +2,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../database/db_helper.dart';
 import '../providers/app_provider.dart';
 import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../utils/snackbar.dart';
 import '../utils/haptics.dart';
+import '../theme/app_theme.dart';
 
 class BackupScreen extends StatefulWidget {
   const BackupScreen({super.key});
@@ -95,7 +95,20 @@ class _BackupScreenState extends State<BackupScreen> {
     }
 
     if (data == null || !mounted) return;
-    _showRestoreModeSheet(context, data);
+    final backupData = data;
+    if (backupData['selective'] == true) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => _SelectiveRestoreSheet(
+          data: backupData,
+          onRestored: () => _setMsg('Selected data restored successfully!'),
+        ),
+      );
+      return;
+    }
+    _showRestoreModeSheet(context, backupData);
   }
 
   void _showRestoreModeSheet(BuildContext context, Map<String, dynamic> data) {
@@ -107,8 +120,9 @@ class _BackupScreenState extends State<BackupScreen> {
       builder: (ctx) => Container(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
         decoration: BoxDecoration(
-          color: cs.surface,
+          color: popupSurfaceColor(cs),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          border: Border.fromBorderSide(popupBorderSide(cs)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -192,13 +206,13 @@ class _BackupScreenState extends State<BackupScreen> {
                   try {
                     final originalVersion = await app.restoreBackupData(data);
                     if (mounted) {
-                      final vLabel = originalVersion < DBHelper.schemaVersion
-                          ? l10n.backup_upgradedFrom(originalVersion.toString(), DBHelper.schemaVersion.toString())
+                      final vLabel = originalVersion < app.schemaVersion
+                          ? l10n.backup_upgradedFrom(originalVersion.toString(), app.schemaVersion.toString())
                           : '';
                       _setMsg(l10n.backup_dataRestoredSuccessfully(vLabel));
                     }
                   } catch (e) {
-                    if (mounted) _setMsg(l10n.backup_restoreFailedCorrupted, ok: false);
+                    if (mounted) _setMsg(l10n.backup_restoreFailed(e.toString()), ok: false);
                   } finally {
                     if (mounted) setState(() => _restoring = false);
                   }
@@ -1010,8 +1024,9 @@ class _SelectiveBackupSheetState extends State<_SelectiveBackupSheet> {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
       decoration: BoxDecoration(
-        color: cs.surface,
+        color: popupSurfaceColor(cs),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        border: Border.fromBorderSide(popupBorderSide(cs)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -1212,8 +1227,9 @@ class _SelectiveRestoreSheetState extends State<_SelectiveRestoreSheet> {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
       decoration: BoxDecoration(
-        color: cs.surface,
+        color: popupSurfaceColor(cs),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        border: Border.fromBorderSide(popupBorderSide(cs)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

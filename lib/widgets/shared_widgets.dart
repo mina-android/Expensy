@@ -242,7 +242,6 @@ Future<bool> showDeleteConfirm(BuildContext context, String name) async {
   final ok = await showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       icon: Container(
         width: 48,
         height: 48,
@@ -314,10 +313,13 @@ class AccountCardPicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final filtered = accounts.where((a) => a.type != 'bank' || a.dontLinkToCard).toList();
+    AppProvider? app;
+    try {
+      app = context.watch<AppProvider>();
+    } catch (_) {}
     final items = allowNone
-        ? [null, ...filtered.map((a) => a as Account?)]
-        : filtered.map((a) => a as Account?).toList();
+        ? [null, ...accounts.map((a) => a as Account?)]
+        : accounts.map((a) => a as Account?).toList();
 
     return SizedBox(
       height: 76,
@@ -333,6 +335,7 @@ class AccountCardPicker extends StatelessWidget {
           }
           final sel = selectedId == acc.id;
           final color = Color(acc.colorValue);
+          final balance = app != null ? app.getEffectiveBalance(acc) : acc.balance;
           return GestureDetector(
             onTap: () => onSelected(acc.id),
             child: AnimatedContainer(
@@ -362,7 +365,7 @@ class AccountCardPicker extends StatelessWidget {
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
                           color: sel ? Colors.white : color)),
-                  Text(formatAmount(acc.balance, acc.currency),
+                  Text(formatAmount(balance, acc.currency),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -632,8 +635,9 @@ class _AddTypeSheet extends StatelessWidget {
         margin: const EdgeInsets.all(12),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
+          color: popupSurfaceColor(cs),
           borderRadius: BorderRadius.circular(24),
+          border: Border.fromBorderSide(popupBorderSide(cs)),
         ),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Container(
@@ -1052,7 +1056,7 @@ class AppDropdownFormField<T> extends StatelessWidget {
         size: 22,
       ),
       borderRadius: BorderRadius.circular(16),
-      dropdownColor: isDark ? cs.surfaceContainerHigh : cs.surfaceContainerLowest,
+      dropdownColor: popupSurfaceColor(cs),
       elevation: 6,
       decoration: InputDecoration(
         labelText: labelText,
@@ -1128,7 +1132,7 @@ class AppDropdown<T> extends StatelessWidget {
           isExpanded: isExpanded,
           isDense: true,
           borderRadius: BorderRadius.circular(16),
-          dropdownColor: isDark ? cs.surfaceContainerHigh : cs.surfaceContainerLowest,
+          dropdownColor: popupSurfaceColor(cs),
           elevation: 6,
           icon: Icon(
             Icons.keyboard_arrow_down_rounded,

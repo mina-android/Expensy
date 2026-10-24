@@ -4,6 +4,7 @@ import '../l10n/app_localizations.dart';
 import '../models/models.dart';
 import '../providers/app_provider.dart';
 import '../widgets/shared_widgets.dart';
+import '../theme/app_theme.dart';
 import '../utils/haptics.dart';
 import '../utils/snackbar.dart';
 import 'app_numeric_keypad.dart';
@@ -150,15 +151,15 @@ class _PresetSheetState extends State<PresetSheet> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
-    final isAmoled = Theme.of(context).scaffoldBackgroundColor == Colors.black;
     final app = context.watch<AppProvider>();
     final cats = app.categories.where((c) => c.type == _type).toList();
     final transferable = app.nonBankAccounts.where((a) => !a.isGold).toList();
 
     return Container(
       decoration: BoxDecoration(
-        color: isAmoled ? Colors.black : cs.surface,
+        color: popupSurfaceColor(cs),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        border: Border.fromBorderSide(popupBorderSide(cs)),
       ),
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom + 20,

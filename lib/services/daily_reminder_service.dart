@@ -51,6 +51,7 @@ class DailyReminderService {
   }
 
   Future<void> scheduleDailyReminder(String timeString) async {
+    if (!_initialized) return;
     if (!(await hasPermission())) return;
 
     // Parse timeString (e.g. '22:00')
@@ -86,6 +87,9 @@ class DailyReminderService {
   }
 
   Future<void> cancelDailyReminder() async {
-    await _plugin.cancel(id: dailyReminderId);
+    if (!_initialized) return;
+    try {
+      await _plugin.cancel(id: dailyReminderId);
+    } catch (_) {}
   }
 }

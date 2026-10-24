@@ -9,7 +9,7 @@ import '../models/models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
 import 'package:flutter/foundation.dart';
-import '../database/db_helper.dart';
+import '../providers/aggregations.dart';
 import '../services/exchange_rate_service.dart';
 import 'net_worth_screen.dart';
 import 'wrapped_screen.dart';
@@ -76,11 +76,11 @@ _InsightsData _computeInsights(_ComputePayload p) {
   }
 
   double sum(List<AppTransaction> ts, String type) =>
-      ts.where((t) => t.type == type).fold(0.0, (s, t) => s + converted(t));
+      ts.where((t) => t.type == type && !FinancialAggregations.isExcludedFromTotals(t)).fold(0.0, (s, t) => s + converted(t));
 
   Map<String, double> byCategory(List<AppTransaction> ts, String type, String otherLabel) {
     final map = <String, double>{};
-    for (final t in ts.where((x) => x.type == type)) {
+    for (final t in ts.where((x) => x.type == type && !FinancialAggregations.isExcludedFromTotals(x))) {
       final cat = p.categoryNames[t.categoryId] ?? otherLabel;
       map[cat] = (map[cat] ?? 0) + converted(t);
     }
@@ -104,7 +104,7 @@ _InsightsData _computeInsights(_ComputePayload p) {
   
   AppTransaction? biggestTx;
   double biggestAmt = 0;
-  for (final t in thisMonth.where((t) => t.type == 'expense')) {
+  for (final t in thisMonth.where((t) => t.type == 'expense' && !FinancialAggregations.isExcludedFromTotals(t))) {
     final a = converted(t);
     if (a > biggestAmt) { biggestAmt = a; biggestTx = t; }
   }
@@ -144,7 +144,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
     setState(() => _isLoading = true);
     final app = context.read<AppProvider>();
     
-    final allTxs = await DBHelper.getTransactions(limit: null); 
+    final allTxs = app.transactions; 
 
     final payload = _ComputePayload(
       txs: allTxs,

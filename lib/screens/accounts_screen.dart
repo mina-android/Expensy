@@ -21,8 +21,6 @@ class AccountsScreen extends StatefulWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => isCard
           ? _CardSheet(existing: existing, isCard: true)
           : _AccountSheet(existing: existing, isCard: false),
@@ -35,25 +33,33 @@ class AccountsScreen extends StatefulWidget {
 
 class _AccountsScreenState extends State<AccountsScreen> {
   int _tabIndex = 0;
+  AppProvider? _app;
 
   @override
   void initState() {
     super.initState();
     final app = context.read<AppProvider>();
     _tabIndex = app.accountsTabNotifier.value;
-    app.accountsTabNotifier.addListener(_onTabNotified);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _app = context.read<AppProvider>();
+    _app?.accountsTabNotifier.removeListener(_onTabNotified);
+    _app?.accountsTabNotifier.addListener(_onTabNotified);
   }
 
   void _onTabNotified() {
-    final newTab = context.read<AppProvider>().accountsTabNotifier.value;
-    if (mounted && _tabIndex != newTab) {
+    final newTab = _app?.accountsTabNotifier.value;
+    if (mounted && newTab != null && _tabIndex != newTab) {
       setState(() => _tabIndex = newTab);
     }
   }
 
   @override
   void dispose() {
-    context.read<AppProvider>().accountsTabNotifier.removeListener(_onTabNotified);
+    _app?.accountsTabNotifier.removeListener(_onTabNotified);
     super.dispose();
   }
 
@@ -765,7 +771,9 @@ class _AccountSheetState extends State<_AccountSheet> {
         _goldKarat = e.goldKarat ?? 24;
         _gramsCtrl.text = e.goldGrams?.toStringAsFixed(2) ?? '';
       } else {
-        _balCtrl.text = e.balance.toStringAsFixed(2);
+        _balCtrl.text = (e.type == 'credit' && e.balance < 0)
+            ? (-e.balance).toStringAsFixed(2)
+            : e.balance.toStringAsFixed(2);
       }
       _cardHolderNameCtrl.text = e.cardHolderName ?? '';
       _cardNumberLast4Ctrl.text = e.cardNumberLast4 ?? '';
@@ -826,16 +834,6 @@ class _AccountSheetState extends State<_AccountSheet> {
     final picked = await showTimePicker(
       context: context,
       initialTime: _creditReminderTime,
-      builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(
-          timePickerTheme: TimePickerThemeData(
-            backgroundColor: Theme.of(context).colorScheme.surface,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          ),
-        ),
-        child: child!,
-      ),
     );
     if (picked != null) setState(() => _creditReminderTime = picked);
   }
@@ -890,8 +888,16 @@ class _AccountSheetState extends State<_AccountSheet> {
       }
     } else {
       // Regular account or Card
-      final balance = double.tryParse(_balCtrl.text) ??
-          (isEdit ? widget.existing!.balance : 0);
+      final rawAmount = double.tryParse(_balCtrl.text);
+      final double balance;
+      if (isDebit) {
+        balance = isEdit ? widget.existing!.balance : 0.0;
+      } else if (isCredit) {
+        final owed = rawAmount?.abs() ?? (isEdit ? (widget.existing!.balance < 0 ? -widget.existing!.balance : 0.0) : 0.0);
+        balance = owed > 0 ? -owed : 0.0;
+      } else {
+        balance = rawAmount ?? (isEdit ? widget.existing!.balance : 0.0);
+      }
       double? creditLimit;
       int? dueDay;
       int? statementDay;
@@ -934,13 +940,13 @@ class _AccountSheetState extends State<_AccountSheet> {
           statementDay: statementDay,
           dueDay: dueDay,
           minPaymentAmount: minPaymentAmount,
-          creditReminderEnabled: _creditReminderEnabled,
-          creditEarlyReminderEnabled: _creditEarlyReminderEnabled,
+          creditReminderEnabled: isCredit ? _creditReminderEnabled : false,
+          creditEarlyReminderEnabled: isCredit ? _creditEarlyReminderEnabled : false,
           creditReminderTime: reminderTimeStr,
           linkedAccountId: linkedAccountId,
           clearLinkedAccount: _linkedAccountId == null,
           clearGold: true,
-          clearCredit: !isCredit && !isCard,
+          clearCredit: !isCredit,
         ));
       } else {
         await app.addAccount(Account(
@@ -1212,9 +1218,12 @@ class _AccountSheetState extends State<_AccountSheet> {
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
               decoration: InputDecoration(
-                  labelText: isEdit
-                      ? l10n.accounts_balance
-                      : l10n.accounts_initialBalance,
+                  labelText: isCredit
+                      ? (isEdit ? 'Amount Currently Owed' : 'Initial Amount Owed')
+                      : (isEdit ? l10n.accounts_balance : l10n.accounts_initialBalance),
+                  helperText: isCredit
+                      ? 'Enter amount currently owed on this card (saved as debt)'
+                      : null,
                   prefixText: '${currencyInfo(_currency).symbol} '),
             ),
           ],
@@ -1549,7 +1558,9 @@ class _CardSheetState extends State<_CardSheet> {
         _goldKarat = e.goldKarat ?? 24;
         _gramsCtrl.text = e.goldGrams?.toStringAsFixed(2) ?? '';
       } else {
-        _balCtrl.text = e.balance.toStringAsFixed(2);
+        _balCtrl.text = (e.type == 'credit' && e.balance < 0)
+            ? (-e.balance).toStringAsFixed(2)
+            : e.balance.toStringAsFixed(2);
       }
       _cardHolderNameCtrl.text = e.cardHolderName ?? '';
       _cardNumberLast4Ctrl.text = e.cardNumberLast4 ?? '';
@@ -1610,16 +1621,6 @@ class _CardSheetState extends State<_CardSheet> {
     final picked = await showTimePicker(
       context: context,
       initialTime: _creditReminderTime,
-      builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(
-          timePickerTheme: TimePickerThemeData(
-            backgroundColor: Theme.of(context).colorScheme.surface,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          ),
-        ),
-        child: child!,
-      ),
     );
     if (picked != null) setState(() => _creditReminderTime = picked);
   }
@@ -1680,9 +1681,16 @@ class _CardSheetState extends State<_CardSheet> {
         }
       }
 
-      final balance = isDebit
-          ? (isEdit ? widget.existing!.balance : 0.0)
-          : (double.tryParse(_balCtrl.text) ?? (isEdit ? widget.existing!.balance : 0.0));
+      final rawAmount = double.tryParse(_balCtrl.text);
+      final double balance;
+      if (isDebit) {
+        balance = isEdit ? widget.existing!.balance : 0.0;
+      } else if (isCredit) {
+        final owed = rawAmount?.abs() ?? (isEdit ? (widget.existing!.balance < 0 ? -widget.existing!.balance : 0.0) : 0.0);
+        balance = owed > 0 ? -owed : 0.0;
+      } else {
+        balance = rawAmount ?? (isEdit ? widget.existing!.balance : 0.0);
+      }
       double? creditLimit;
       int? dueDay;
       int? statementDay;
@@ -2019,8 +2027,11 @@ class _CardSheetState extends State<_CardSheet> {
                   const TextInputType.numberWithOptions(decimal: true),
               decoration: InputDecoration(
                   labelText: isCredit
-                      ? (isEdit ? 'Current Debt / Balance' : 'Initial Debt / Balance')
+                      ? (isEdit ? 'Amount Currently Owed' : 'Initial Amount Owed')
                       : (isEdit ? l10n.accounts_balance : l10n.accounts_initialBalance),
+                  helperText: isCredit
+                      ? 'Enter amount currently owed on this card (saved as debt)'
+                      : null,
                   prefixText: '${currencyInfo(_currency).symbol} '),
             ),
           ],

@@ -19,7 +19,6 @@ class AssetsScreen extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
     final cs = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final total = app.totalAssetsValue;
 
     return Scaffold(
@@ -78,8 +77,6 @@ class AssetsScreen extends StatelessWidget {
     showModalBottomSheet(
       context: ctx,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => _AssetSheet(existing: existing),
     );
   }

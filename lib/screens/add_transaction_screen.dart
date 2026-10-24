@@ -68,14 +68,22 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   bool get isEdit => widget.existing != null;
 
+  List<Account> _getSpendableAccounts(AppProvider app) {
+    // Pay with cards, cash, and wallets
+    final primary = app.accounts
+        .where((a) => (a.isCard || a.type == 'cash' || a.type == 'wallet') && !a.isGold)
+        .toList();
+    if (primary.isNotEmpty) return primary;
+    // Fallback if no cards/cash exist yet so user can still transact
+    return app.accounts.where((a) => !a.isGold).toList();
+  }
+
   @override
   void initState() {
     super.initState();
     _amtFocusNode = FocusNode();
     final app = context.read<AppProvider>();
-    // Gold accounts update automatically — exclude them from manual transactions.
-    final transactableAccounts =
-        app.nonBankAccounts.where((a) => !a.isGold).toList();
+    final transactableAccounts = _getSpendableAccounts(app);
     if (transactableAccounts.isNotEmpty) {
       _accountId = transactableAccounts.first.id;
       _currency = transactableAccounts.first.currency;
@@ -272,9 +280,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     AppHaptics.tap(context, HapticStrength.light);
     final picked = await showModalBottomSheet<String>(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
       builder: (ctx) {
         final l10n = AppLocalizations.of(ctx)!;
         return Padding(
@@ -398,11 +403,17 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     setState(() => _submitted = true);
     final evalAmount = ExpressionEvaluator.evaluate(_amtCtrl.text);
     final amount = evalAmount ?? double.tryParse(_amtCtrl.text);
-    if (amount == null || amount <= 0) return;
-    if (_accountId == null) return;
+    final l10n = AppLocalizations.of(context)!;
+    if (amount == null || amount <= 0) {
+      showAppSnackbar(context, l10n.error_required);
+      return;
+    }
+    if (_accountId == null) {
+      showAppSnackbar(context, 'Please select an account or card.');
+      return;
+    }
 
     final app = context.read<AppProvider>();
-    final l10n = AppLocalizations.of(context)!;
 
     if (_isSplit) {
       if (_splits.length < 2) {
@@ -598,9 +609,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   child: TextField(
                     controller: _amtCtrl,
                     focusNode: _amtFocusNode,
+                    keyboardType: TextInputType.none,
                     readOnly: true,
                     showCursor: true,
                     onTap: () {
+                      FocusScope.of(context).unfocus();
                       AppHaptics.tap(context, HapticStrength.light);
                       setState(() => _activeAmountController = _amtCtrl);
                       _amtFocusNode.requestFocus();
@@ -725,7 +738,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       ?.copyWith(letterSpacing: 1)),
               const SizedBox(height: 8),
               AccountCardPicker(
-                accounts: app.nonBankAccounts.where((a) => !a.isGold).toList(),
+                accounts: _getSpendableAccounts(app),
                 selectedId: _accountId,
                 onSelected: _onAccountSelected,
               ),

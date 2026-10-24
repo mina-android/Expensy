@@ -19,6 +19,7 @@ flowchart TD
 
     subgraph State ["Business Logic & State Layer"]
         AppProv["AppProvider (ChangeNotifier)"]
+        Aggregations["Pure Aggregations Engine (aggregations.dart)"]
         Settings["AppSettings (SharedPreferences)"]
         Cache["In-Memory Caches: _splitsByTxId, _historyCache, Rates"]
     end
@@ -26,20 +27,22 @@ flowchart TD
     subgraph Database ["Persistence Layer (Drift / SQLite Isolate)"]
         AppDB["AppDatabase (Drift NativeDatabase via Dart FFI)"]
         Facade["DBHelper (Static Backward-Compatible Facade)"]
-        Tables["18 Drift Relational Tables (Schema v27 with certificates & card balance inheritance)"]
+        Tables["18 Drift Relational Tables (Schema v28 with paid_via_account_id, certificate_id, lended_money.currency)"]
     end
 
     subgraph Background ["Native & Asynchronous Services"]
         Notif["NotificationBootstrap & Reminder Services"]
-        WM["WorkmanagerService (Periodic Background Auto-Pay)"]
+        WM["WorkmanagerService (Periodic Background Auto-Pay & Scheduled Auto-Backup)"]
         ERService["ExchangeRateService (HTTP to open.er-api & Fawaz Gold)"]
         Widgets["HomeWidget (Accounts & Budget Glanceables)"]
         QuickAdd["QuickAddService (MethodChannel / EventChannel)"]
+        Validator["BackupValidator & Safety Snapshots"]
     end
 
     UI -->|Reads / Watches| AppProv
     UI -->|User Interactions / Actions| AppProv
-    AppProv -->|CRUD / Aggregations| Facade
+    AppProv -->|Pure Math / Exclusions| Aggregations
+    AppProv -->|CRUD / Atomic Deltas| Facade
     Facade -->|Delegates directly| AppDB
     AppDB --> Tables
     AppProv -->|Saves settings| Settings
@@ -53,7 +56,7 @@ flowchart TD
 
 ## 2. Database Entity-Relationship Diagram (ERD)
 
-The database runs on SQLite through Drift (`AppDatabase`, Schema Version 27). Operations are executed asynchronously in a background isolate via Dart FFI.
+The database runs on SQLite through Drift (`AppDatabase`, Schema Version 28). Operations are executed asynchronously in a background isolate via Dart FFI.
 
 ```mermaid
 erDiagram
@@ -500,6 +503,19 @@ Accounts and cards are presented cleanly across dedicated views:
 - **Accounts Tab - Accounts & Cards Views:** `AccountsScreen` hosts two synchronized sub-tabs:
   1. **Accounts Tab (`_tabIndex = 0`):** Full dashboard of all asset-holding liquid accounts.
   2. **Cards Tab (`_tabIndex = 1`):** Complete management of Debit, Credit, and Prepaid cards with inline type badges placed beside card names.
+
+### 5.6 Transaction Relogic & Transfer Flow
+Modern banking separates store-of-value accounts from payment instruments:
+- **Card Balance Display in Transactions:** In `AddTransactionScreen` and `AccountCardPicker`, debit cards dynamically display their linked bank account's live balance (`app.getEffectiveBalance(acc)`). When an expense is paid using a card, the transaction records `accountId = card.id`, and `applyAddTransactionWithBalance` redirects the deduction to the linked bank account (`linkedAccountId`).
+- **Transfer Isolation:** `TransferScreen` strictly filters transferable accounts to `!a.isCard && !a.isGold`. Cards and physical commodities are excluded from both source and destination pickers, enforcing transfers to take place solely between liquid accounts (Bank, Cash, Digital Wallet, Savings).
+- **Soft Keyboard Collision Prevention:** Transaction and transfer amount fields enforce `keyboardType: TextInputType.none` and trigger `FocusScope.of(context).unfocus()` on tap, ensuring the custom `AppNumericKeypad` is always visible without keyboard popups.
+
+### 5.7 Fault-Tolerant Backup & Restore Architecture
+Backup files (`.json`) can be full snapshots or selective backups exported by domain:
+- **Direct Byte Stream Parsing:** `AppProvider.pickAndParseBackupFile` parses bytes directly from `PlatformFile.readAsBytes()` (with fallback to `File(path)`), ensuring compatibility across Android scoped storage and files lacking extensions. Safe UTF-8 decoding fallbacks prevent encoding crashes.
+- **Universal Table Recognition:** The file validation checks against all 17 schema tables and metadata markers (`selective`, `version`), preventing legitimate backups from being rejected.
+- **Selective Routing Guard:** When a backup is identified as selective (`backupData['selective'] == true`), the UI automatically routes to `_SelectiveRestoreSheet`, displaying category toggles and preventing accidental destructive full-database wipes.
+- **Notification Service Safe Degradation:** All notification services (`DailyReminderService`, `CertificateReminderService`, `CreditReminderService`, `LoanReminderService`, `LendedNotificationService`, `BudgetNotificationService`) wrap platform calls in defensive `try/catch` handlers. Platform-specific `LateInitializationError` cannot crash database restore routines.
 
 ---
 

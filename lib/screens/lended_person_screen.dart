@@ -169,8 +169,6 @@ class LendedPersonScreen extends StatelessWidget {
     showModalBottomSheet(
       context: ctx,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => _EditPersonInlineSheet(person: p),
     );
   }
@@ -188,8 +186,6 @@ class LendedPersonScreen extends StatelessWidget {
     showModalBottomSheet(
       context: ctx,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => _EntrySheet(person: person, existing: existing),
     );
   }

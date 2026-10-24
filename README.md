@@ -19,7 +19,7 @@ It works completely offline, with no sign-ups or ads, and your financial data ne
 
 ## ✨ What you can do
 
-- **💳 Accounts & Cards with dynamic balance inheritance**: Manage bank accounts, cash, digital wallets, debit cards, credit cards, and gold holdings. The Home screen features dedicated carousels for Accounts and Cards with quick "+ Add" action tiles. Debit cards mirror linked bank balances, credit cards manage revolving debts and statements, and a dedicated Cards tab organizes all cards with adjacent badge indicators.
+- **💳 Accounts & Cards with dynamic balance inheritance**: Manage bank accounts, cash, digital wallets, debit cards, credit cards, and gold holdings. The Home screen features dedicated carousels for Accounts and Cards with quick "+ Add" action tiles. Debit cards mirror linked bank balances in transaction entry, transfers route strictly between liquid bank accounts without card clutter, and cards handle payments seamlessly.
 - **🏦 Time Deposits & Certificates of Deposit**: Track fixed-term certificates and time deposits with flexible daily, monthly, or yearly yield collection deposited straight into your bank account. Features rich loan-style detail pages, early redemption, 2-day-early reminder notifications, and full transaction balance restoral upon deposit deletion.
 - **⚡ 1-Tap quick presets & built-in calculator**: Pin your frequent daily expenses right on your home screen for one-tap logging, and calculate taxes or split totals instantly with the tactile in-app keypad.
 - **🎯 Rollover budgets & safe-to-spend pacer**: Set category spending targets where unused funds roll over into next month, and see at a glance how much you can comfortably spend each day.
@@ -27,7 +27,7 @@ It works completely offline, with no sign-ups or ads, and your financial data ne
 - **📈 Wealth management & net worth**: Get a clear picture of what you own versus what you owe, with automatic daily net worth snapshots, asset tracking, and interactive growth charts.
 - **🔔 Gentle reminders**: Get a nudge when a recurring bill is due, an installment is approaching, a deposit interest payout is scheduled, or when someone's repayment date arrives so nothing slips through the cracks.
 - **📤 Share your data**: Turn what you've logged into a clean, multi-page vector PDF statement or a spreadsheet in a couple of taps, rendered 100% offline.
-- **💾 Selective & Encrypted backups**: Export or restore the entire database or choose specific financial domains (accounts, recurring rules, loans, certificates, budgets). Supports plaintext or password-protected AES-GCM encrypted backups.
+- **💾 Fault-Tolerant Selective & Encrypted backups**: Export or restore the entire database or choose specific financial domains (accounts, transactions, recurring rules, loans, certificates, budgets). Supports fault-tolerant plaintext or password-protected AES-GCM encrypted backups with platform-isolated error handling and direct byte stream parsing.
 - **🎨 Easy on the eyes & elevated Fintech aesthetics**: Built with modern Material You dynamic theming, 29 vibrant accent colors, a true AMOLED pure-black mode, edge-to-edge status bar styling, fintech onboarding flows, modernized 24px dialogs, and responsive floating navigation.
 
 ---

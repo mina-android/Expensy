@@ -49,8 +49,6 @@ class WishlistScreen extends StatelessWidget {
     final result = await showModalBottomSheet<(String, VoidCallback)?>(
       context: ctx,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => _WishSheet(existing: existing),
     );
     if (result != null && ctx.mounted) {
@@ -368,9 +366,6 @@ class _WishCard extends StatelessWidget {
                         showModalBottomSheet(
                           context: context,
                           isScrollControlled: true,
-                          shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(
-                                  top: Radius.circular(24))),
                           builder: (_) => SavingsGoalSheet(
                             initialName: item.name,
                             initialTargetAmount: item.targetPrice,

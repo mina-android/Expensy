@@ -14,6 +14,7 @@
 // hint about this to the user).
 
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz_data;
@@ -44,30 +45,29 @@ class LendedNotificationService {
   Future<void> initialize() async {
     if (_initialized) return;
 
-    // Timezone definitions — safe to call multiple times if the recurring
-    // service already called it; tz_data tracks its own init state.
-    tz_data.initializeTimeZones();
+    try {
+      tz_data.initializeTimeZones();
 
-    const androidSettings =
-        AndroidInitializationSettings('ic_notification');
-    await _plugin
-        .initialize(settings: const InitializationSettings(android: androidSettings));
-    _initialized = true;
+      const androidSettings =
+          AndroidInitializationSettings('ic_notification');
+      await _plugin
+          .initialize(settings: const InitializationSettings(android: androidSettings));
+      _initialized = true;
 
-    // Eagerly create the Android notification channel so it appears in
-    // Settings → Apps → Expensy → Notifications from the very first launch,
-    // not just after the first reminder is scheduled.
-    final android = _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
-    if (android != null) {
-      await android.createNotificationChannel(const AndroidNotificationChannel(
-        _channelId,
-        _channelName,
-        description: _channelDesc,
-        importance: Importance.high,
-        playSound: true,
-        enableVibration: true,
-      ));
+      final android = _plugin.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
+      if (android != null) {
+        await android.createNotificationChannel(const AndroidNotificationChannel(
+          _channelId,
+          _channelName,
+          description: _channelDesc,
+          importance: Importance.high,
+          playSound: true,
+          enableVibration: true,
+        ));
+      }
+    } catch (e) {
+      debugPrint('LendedNotificationService initialize warning: $e');
     }
   }
 

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz_data;
@@ -17,21 +18,25 @@ class LoanReminderService {
 
   Future<void> initialize() async {
     if (_initialized) return;
-    tz_data.initializeTimeZones();
-    const androidSettings =
-        AndroidInitializationSettings('ic_notification');
-    await _plugin
-        .initialize(settings: const InitializationSettings(android: androidSettings));
-    _initialized = true;
+    try {
+      tz_data.initializeTimeZones();
+      const androidSettings =
+          AndroidInitializationSettings('ic_notification');
+      await _plugin
+          .initialize(settings: const InitializationSettings(android: androidSettings));
+      _initialized = true;
 
-    final android = _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
-    await android?.createNotificationChannel(const AndroidNotificationChannel(
-      _channelId,
-      _channelName,
-      description: _channelDesc,
-      importance: Importance.high,
-    ));
+      final android = _plugin.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
+      await android?.createNotificationChannel(const AndroidNotificationChannel(
+        _channelId,
+        _channelName,
+        description: _channelDesc,
+        importance: Importance.high,
+      ));
+    } catch (e) {
+      debugPrint('LoanReminderService initialize warning: $e');
+    }
   }
 
   Future<void> _ensureInit() async {

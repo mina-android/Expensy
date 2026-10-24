@@ -274,6 +274,24 @@ class DBHelper {
           AppTransaction t, double balanceDelta) =>
       AppDatabase.instance.applyTransactionWithBalance(t, balanceDelta);
 
+  static Future<void> applyBalanceDelta(String accountId, double delta) =>
+      AppDatabase.instance.applyBalanceDelta(accountId, delta);
+
+  static Future<void> applyTransactionEdit({
+    required AppTransaction updated,
+    required String oldAccountId,
+    required double oldDelta,
+    required String newAccountId,
+    required double newDelta,
+  }) =>
+      AppDatabase.instance.applyTransactionEdit(
+        updated: updated,
+        oldAccountId: oldAccountId,
+        oldDelta: oldDelta,
+        newAccountId: newAccountId,
+        newDelta: newDelta,
+      );
+
   static Future<void> applyUpdateTransactionWithBalance(
           AppTransaction t, double balanceDelta) =>
       AppDatabase.instance.applyUpdateTransactionWithBalance(t, balanceDelta);

@@ -3,7 +3,6 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../models/models.dart';
 import '../providers/app_provider.dart';
-import '../database/db_helper.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/shared_widgets.dart';
 import '../utils/snackbar.dart';
@@ -30,7 +29,7 @@ class _RecurringDetailScreenState extends State<RecurringDetailScreen> {
   }
 
   Future<void> _loadHistory() async {
-    final h = await DBHelper.getRecurringHistory(widget.recurring.id);
+    final h = await context.read<AppProvider>().getHistoryFor(widget.recurring.id);
     if (mounted) setState(() => _history = h);
   }
 
@@ -56,6 +55,7 @@ class _RecurringDetailScreenState extends State<RecurringDetailScreen> {
     final overdue = days < 0;
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final upcoming = r.upcomingPaymentDates;
 
     return Scaffold(
       appBar: AppBar(
@@ -140,7 +140,8 @@ class _RecurringDetailScreenState extends State<RecurringDetailScreen> {
           ),
         ],
       ),
-      body: Column(
+      body: ListView(
+        padding: const EdgeInsets.only(bottom: 32),
         children: [
           // Header Summary Card
           Padding(
@@ -328,9 +329,157 @@ class _RecurringDetailScreenState extends State<RecurringDetailScreen> {
             ),
           ),
 
+          // Upcoming Payments Section (Installment Schedule)
+          if (r.endDate != null) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 16, 18, 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Upcoming Payments',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: cs.onSurface.withValues(alpha: 0.6),
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  if (upcoming.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: cs.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${upcoming.length} remaining',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: cs.primary,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            if (upcoming.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: cs.surfaceContainer.withValues(alpha: isDark ? 0.35 : 0.5),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04),
+                    ),
+                  ),
+                  child: Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.check_circle_outline_rounded,
+                            size: 18, color: Color(0xFF2E7D32)),
+                        const SizedBox(width: 8),
+                        Text(
+                          'All installments completed',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: cs.onSurface.withValues(alpha: 0.6),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: Column(
+                  children: [
+                    for (int i = 0; i < upcoming.length; i++)
+                      _UpcomingRow(
+                        index: i,
+                        dueDate: upcoming[i],
+                        recurring: r,
+                        fmt: widget.fmt,
+                        isFirst: i == 0,
+                        onPay: () async {
+                          await app.markRecurringPaid(r);
+                          await _loadHistory();
+                        },
+                        onSkip: () async {
+                          final ok = await showDialog<bool>(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              icon: Container(
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF785900).withValues(alpha: 0.12),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.skip_next_rounded,
+                                    color: Color(0xFF785900), size: 26),
+                              ),
+                              title: Text(l10n.recurring_skipNextPayment, textAlign: TextAlign.center),
+                              content: Text(
+                                l10n.recurring_nextDate(DateFormat('d MMM yyyy').format(r.calcNextDate())),
+                                textAlign: TextAlign.center,
+                              ),
+                              actionsAlignment: MainAxisAlignment.center,
+                              actions: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: OutlinedButton(
+                                        style: OutlinedButton.styleFrom(
+                                          minimumSize: const Size.fromHeight(46),
+                                          side: BorderSide(
+                                              color: cs.outlineVariant.withValues(alpha: 0.6)),
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(14)),
+                                        ),
+                                        onPressed: () => Navigator.pop(ctx, false),
+                                        child: Text(l10n.recurring_cancel),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: FilledButton(
+                                        style: FilledButton.styleFrom(
+                                          backgroundColor: const Color(0xFF785900),
+                                          minimumSize: const Size.fromHeight(46),
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(14)),
+                                        ),
+                                        onPressed: () => Navigator.pop(ctx, true),
+                                        child: Text(l10n.recurring_skip),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          );
+                          if (ok == true && mounted) {
+                            await app.skipNextRecurring(r);
+                            await _loadHistory();
+                          }
+                        },
+                      ),
+                  ],
+                ),
+              ),
+          ],
+
           // Payment History Header
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+            padding: const EdgeInsets.fromLTRB(18, 16, 18, 8),
             child: Row(
               children: [
                 Text(
@@ -346,29 +495,246 @@ class _RecurringDetailScreenState extends State<RecurringDetailScreen> {
             ),
           ),
 
-          Expanded(
-            child: _history == null
-                ? const Center(child: CircularProgressIndicator())
-                : _history!.isEmpty
-                    ? Center(
-                        child: Text(
-                          l10n.recurring_noHistoryYet,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: cs.onSurface.withValues(alpha: 0.5),
-                          ),
-                        ),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                        itemCount: _history!.length,
-                        itemBuilder: (context, index) {
-                          final h = _history![index];
-                          return _HistoryRow(entry: h, fmt: widget.fmt);
-                        },
-                      ),
-          ),
+          if (_history == null)
+            const Padding(
+              padding: EdgeInsets.all(32),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (_history!.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(32),
+              child: Center(
+                child: Text(
+                  l10n.recurring_noHistoryYet,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: cs.onSurface.withValues(alpha: 0.5),
+                  ),
+                ),
+              ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: Column(
+                children: [
+                  for (final h in _history!)
+                    _HistoryRow(entry: h, fmt: widget.fmt),
+                ],
+              ),
+            ),
         ],
+      ),
+    );
+  }
+}
+
+class _UpcomingRow extends StatelessWidget {
+  final int index;
+  final DateTime dueDate;
+  final RecurringPayment recurring;
+  final String Function(double) fmt;
+  final bool isFirst;
+  final VoidCallback onPay;
+  final VoidCallback onSkip;
+
+  const _UpcomingRow({
+    required this.index,
+    required this.dueDate,
+    required this.recurring,
+    required this.fmt,
+    required this.isFirst,
+    required this.onPay,
+    required this.onSkip,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
+
+    final installmentNum = recurring.paidPayments + index + 1;
+    final total = recurring.totalPayments;
+    final installmentLabel = total != null && total > 0
+        ? '#$installmentNum of $total'
+        : '#$installmentNum';
+
+    final days = dueDate.difference(DateTime.now()).inDays;
+    final overdue = days < 0;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: isFirst
+            ? (overdue
+                ? const Color(0xFFC62828).withValues(alpha: isDark ? 0.08 : 0.04)
+                : cs.primary.withValues(alpha: isDark ? 0.08 : 0.04))
+            : cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isFirst
+              ? (overdue
+                  ? const Color(0xFFC62828).withValues(alpha: 0.35)
+                  : cs.primary.withValues(alpha: 0.35))
+              : (isDark
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : Colors.black.withValues(alpha: 0.05)),
+          width: isFirst ? 1.5 : 1,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: isFirst
+                        ? (overdue
+                            ? const Color(0xFFC62828).withValues(alpha: 0.15)
+                            : cs.primary.withValues(alpha: 0.15))
+                        : cs.surfaceContainerHighest.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '#$installmentNum',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: isFirst
+                            ? (overdue ? const Color(0xFFC62828) : cs.primary)
+                            : cs.onSurface.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            DateFormat('MMM dd, yyyy').format(dueDate),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                            ),
+                          ),
+                          if (isFirst) ...[
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: overdue
+                                    ? const Color(0xFFC62828).withValues(alpha: 0.12)
+                                    : const Color(0xFF2E7D32).withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                overdue
+                                    ? l10n.recurring_overdue
+                                    : (days == 0
+                                        ? l10n.recurring_dueToday
+                                        : l10n.recurring_dueInDays(days.toString())),
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w800,
+                                  color: overdue
+                                      ? const Color(0xFFC62828)
+                                      : const Color(0xFF2E7D32),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        installmentLabel,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: cs.onSurface.withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  fmt(recurring.amount),
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: cs.onSurface,
+                  ),
+                ),
+              ],
+            ),
+            if (isFirst) ...[
+              const SizedBox(height: 10),
+              Divider(
+                height: 1,
+                thickness: 0.5,
+                color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.06),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      minimumSize: const Size(0, 34),
+                      side: BorderSide(
+                        color: const Color(0xFF785900).withValues(alpha: 0.5),
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    icon: const Icon(Icons.skip_next_rounded, size: 16, color: Color(0xFF785900)),
+                    label: Text(
+                      l10n.recurring_skip,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF785900),
+                      ),
+                    ),
+                    onPressed: onSkip,
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      minimumSize: const Size(0, 34),
+                      backgroundColor: cs.primary,
+                      foregroundColor: cs.onPrimary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    icon: const Icon(Icons.check_circle_outline_rounded, size: 16),
+                    label: Text(
+                      l10n.recurring_pay,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    onPressed: onPay,
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

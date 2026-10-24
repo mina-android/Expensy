@@ -14,11 +14,13 @@ class BudgetNotificationService {
 
   Future<void> initialize() async {
     if (_initialized) return;
-    const androidInit =
-        AndroidInitializationSettings('ic_notification');
-    const initSettings = InitializationSettings(android: androidInit);
-    await _plugin.initialize(settings: initSettings);
-    _initialized = true;
+    try {
+      const androidInit =
+          AndroidInitializationSettings('ic_notification');
+      const initSettings = InitializationSettings(android: androidInit);
+      await _plugin.initialize(settings: initSettings);
+      _initialized = true;
+    } catch (_) {}
   }
 
   Future<void> requestPermissions() async {

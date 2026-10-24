@@ -25,8 +25,8 @@ class _TransferScreenState extends State<TransferScreen> {
   void initState() {
     super.initState();
     final app = context.read<AppProvider>();
-    // Gold accounts have synthetic balances — exclude from manual transfers.
-    final transferable = app.nonBankAccounts.where((a) => !a.isGold).toList();
+    // Accounts only (not cards, and exclude gold accounts with synthetic balances)
+    final transferable = app.accounts.where((a) => !a.isCard && !a.isGold).toList();
     if (transferable.length >= 2) {
       _fromId = transferable[0].id;
       _toId = transferable[1].id;
@@ -62,8 +62,8 @@ class _TransferScreenState extends State<TransferScreen> {
     final app = context.watch<AppProvider>();
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
-    // Gold accounts update automatically — exclude from manual transfers.
-    final transferable = app.nonBankAccounts.where((a) => !a.isGold).toList();
+    // Accounts only (not cards, and exclude gold accounts with synthetic balances)
+    final transferable = app.accounts.where((a) => !a.isCard && !a.isGold).toList();
     final from = app.accountById(_fromId ?? '');
     final to = app.accountById(_toId ?? '');
 
@@ -276,8 +276,13 @@ class _TransferScreenState extends State<TransferScreen> {
               // ── Amount field ──────────────────────────────────────────────
               TextField(
                 controller: _amtCtrl,
+                keyboardType: TextInputType.none,
                 readOnly: true,
                 showCursor: true,
+                onTap: () {
+                  FocusScope.of(context).unfocus();
+                  AppHaptics.tap(context, HapticStrength.light);
+                },
                 decoration: InputDecoration(
                   labelText: l10n.transfer_amount,
                   prefixText: '$sym ',

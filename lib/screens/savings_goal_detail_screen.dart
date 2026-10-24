@@ -44,9 +44,6 @@ class SavingsGoalDetailScreen extends StatelessWidget {
               showModalBottomSheet(
                 context: context,
                 isScrollControlled: true,
-                shape: const RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(24))),
                 builder: (_) => SavingsGoalSheet(existing: currentGoal),
               );
             },
@@ -290,8 +287,6 @@ class SavingsGoalDetailScreen extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => _ContributionSheet(
           goal: goal, isContribution: isContribution, app: app),
     );
