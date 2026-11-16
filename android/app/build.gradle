@@ -48,8 +48,9 @@ android {
 
     buildTypes {
         release {
-            if (signingConfigs.release.storeFile != null) {
-                signingConfig signingConfigs.release
+            def relSigning = signingConfigs.findByName('release')
+            if (relSigning?.storeFile != null) {
+                signingConfig relSigning
             } else if (project.hasProperty('allow-debug-signing')) {
                 signingConfig signingConfigs.debug
             }
@@ -60,8 +61,9 @@ android {
     }
 
     gradle.taskGraph.whenReady { taskGraph ->
+        def relSigning = signingConfigs.findByName('release')
         if (taskGraph.allTasks.any { it.name.toLowerCase().contains("release") } &&
-            signingConfigs.release.storeFile == null &&
+            relSigning?.storeFile == null &&
             project.hasProperty('require-release-signing')) {
             throw new GradleException("Release build cannot be signed: key.properties is missing or storeFile is not configured.")
         }
