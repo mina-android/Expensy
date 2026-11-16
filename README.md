@@ -4,7 +4,7 @@
 
 # Expensy
 
-[![Platform](https://img.shields.io/badge/Platform-Android-grey.svg?style=flat-square)](https://android.com) [![Release](https://img.shields.io/badge/Release-v1.2.2-blue.svg?style=flat-square)](https://github.com/mina-android/Expensy/releases) [![License](https://img.shields.io/badge/License-GPL--3.0-black.svg?style=flat-square)](LICENSE) [![Build](https://img.shields.io/badge/Build-Passing-brightgreen.svg?style=flat-square)](https://github.com/mina-android/Expensy/actions)
+[![Platform](https://img.shields.io/badge/Platform-Android-grey.svg?style=flat-square)](https://android.com) [![Release](https://img.shields.io/badge/Release-v1.2.3-blue.svg?style=flat-square)](https://github.com/mina-android/Expensy/releases) [![License](https://img.shields.io/badge/License-GPL--3.0-black.svg?style=flat-square)](LICENSE) [![Build](https://img.shields.io/badge/Build-Passing-brightgreen.svg?style=flat-square)](https://github.com/mina-android/Expensy/actions)
 
 <p align="center">
   A local-first personal finance tracker and budget manager for Android that keeps all financial records, accounts, and transaction history strictly on your physical device.
@@ -24,12 +24,15 @@
 
 ### Core Capabilities
 
-- **Account & Card Balance Management**: Manage liquid bank accounts, cash wallets, debit cards, credit cards, and asset holdings. Debit cards inherit balances directly from linked bank accounts to prevent ledger duplication.
+- **Account & Card Balance Management**: Manage liquid bank accounts, cash wallets, debit cards, credit cards, digital wallets, investments, and physical gold holdings. Debit cards inherit balances directly from linked bank accounts to prevent ledger duplication.
+- **Categories & Subcategories**: Organize expenses and income with a clean `Parent › Subcategory` hierarchy, a two-tier progressive category picker, and automatic parent roll-up across budgets and reports.
 - **Term Deposits & Certificates of Deposit**: Record fixed-term deposits with customizable yield collection frequencies (daily, monthly, yearly) crediting linked accounts automatically, complete with early redemption calculations.
-- **Budgeting with Roll-Over Tracking**: Establish category budgets where unused allocations carry forward into subsequent billing cycles, complemented by a daily expenditure allowance pacer.
-- **Fast Transaction Logging**: Register routine transactions using configurable one-tap presets and an integrated numerical calculator supporting split amounts and tax computation.
-- **Debt & Loan Tracking**: Track incoming receivables and outgoing debt obligations with settlement schedules, partial repayments, and balance deduction workflows.
-- **Data Export & Reporting**: Export structured account balances and transactional histories into standard Excel (.xlsx) workbooks and standalone JSON backups.
+- **Budgeting with Roll-Over Tracking**: Establish category or subcategory budgets where unused allocations carry forward into subsequent billing cycles, complemented by a Safe-to-Spend daily allowance pacer.
+- **Fast Transaction Logging**: Register routine transactions using configurable one-tap presets, split transactions across multiple categories/subcategories, a dedicated `Transfer` category for internal transfers, and an integrated expression-evaluating numeric keypad.
+- **Recurring Bills, Installments, Debt & Goals**: Track recurring subscriptions and installments (with background auto-pay and skip/pay progress tracking), incoming/outgoing loans, lent/borrowed contacts, wishlists, and savings goals.
+- **Insights, Statistics & Expensy Wrapped**: Explore monthly spending trends, category-matched pie charts with subcategory drill-down, a financial calendar, and a story-style Expensy Wrapped summary.
+- **Data Export, Encrypted Backups & Migration**: Export Excel (`.xlsx`) workbooks (with `Category` and `Subcategory` columns) and formatted PDF financial statements, create encrypted (`.enc`) or JSON backups with selective restore and scheduled SAF auto-backup, or migrate directly from **TrackWallet (`.csv`)** and **GreenStash (`.json`)**.
+- **Multi-Language & Material You**: Supports Material You dynamic colors, pitch-black AMOLED mode, and 12 languages including English, Arabic, Bangla (`বাংলা`), French, German, Hindi, Spanish, Portuguese, Chinese, Japanese, Russian, and Italian.
 
 ### Architecture & Data Handling
 
@@ -85,10 +88,10 @@ Official release packages are published under the [GitHub Releases](https://gith
 
 | Platform | Architecture | Package Type | Download Link | Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| **Android** | arm64-v8a | `.apk` | [Download (v1.2.2)](https://github.com/mina-android/Expensy/releases/latest) | Modern 64-bit devices (recommended) |
-| **Android** | armeabi-v7a | `.apk` | [Download (v1.2.2)](https://github.com/mina-android/Expensy/releases/latest) | Legacy 32-bit devices |
-| **Android** | x86_64 | `.apk` | [Download (v1.2.2)](https://github.com/mina-android/Expensy/releases/latest) | Android emulators and Intel-based tablets |
-| **Android** | Universal | `.apk` | [Download (v1.2.2)](https://github.com/mina-android/Expensy/releases/latest) | Combined installer supporting all architectures |
+| **Android** | arm64-v8a | `.apk` | [Download (v1.2.3)](https://github.com/mina-android/Expensy/releases/latest) | Modern 64-bit devices (recommended) |
+| **Android** | armeabi-v7a | `.apk` | [Download (v1.2.3)](https://github.com/mina-android/Expensy/releases/latest) | Legacy 32-bit devices |
+| **Android** | x86_64 | `.apk` | [Download (v1.2.3)](https://github.com/mina-android/Expensy/releases/latest) | Android emulators and Intel-based tablets |
+| **Android** | Universal | `.apk` | [Download (v1.2.3)](https://github.com/mina-android/Expensy/releases/latest) | Combined installer supporting all architectures |
 
 ---
 
@@ -148,10 +151,10 @@ flutter run --release
 ## Frequently Asked Questions
 
 #### Where is my financial data stored?
-All data is stored locally in an SQLite database file inside the application private directory on your device storage (`/data/user/0/com.mina.expensy/databases/`). It is never synced to any remote server.
+All data is stored locally in an SQLite database file inside the application private directory on your device storage (`/data/user/0/com.ma.expensy/`). It is never synced to any remote server.
 
-#### How do I transfer my records to a new phone?
-Navigate to Settings > Backup & Restore within Expensy. Generate a JSON or SQLite database backup, save the file to your secure external storage or device transfer folder, and import it on your new phone.
+#### How do I transfer my records to a new phone or migrate from another app?
+Navigate to **Settings → Backup & Restore** within Expensy. Generate an encrypted (`.enc`) or JSON backup, save the file to your external storage or transfer folder, and import it on your new phone (during Onboarding or from Backup & Restore). You can also import existing history from **TrackWallet (`.csv`)** or **GreenStash (`.json`)**.
 
 #### How does balance inheritance work between Bank Accounts and Debit Cards?
 When you link a Debit Card to a specific Bank Account, transactions recorded against the debit card deduct directly from the parent bank account balance. This accurately reflects real-world banking where debit cards do not maintain an independent balance ledger.
