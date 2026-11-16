@@ -36,6 +36,7 @@ class PdfReportService {
     double totalInflow = 0.0;
     double totalOutflow = 0.0;
     final Map<String, double> categoryExpenseTotals = {};
+    final Map<String, Map<String, double>> subcategoryExpenseTotals = {};
 
     for (final t in filteredTxs) {
       if (FinancialAggregations.isExcludedFromTotals(t)) continue;
@@ -47,10 +48,29 @@ class PdfReportService {
         totalInflow += convertedAmt;
       } else if (t.type == 'expense') {
         totalOutflow += convertedAmt;
-        final catId = t.categoryId;
-        if (catId.isNotEmpty) {
-          categoryExpenseTotals[catId] =
-              (categoryExpenseTotals[catId] ?? 0.0) + convertedAmt;
+        if (app.isTransactionSplit(t.id)) {
+          for (final s in app.getSplits(t.id)) {
+            if (s.categoryId.isEmpty) continue;
+            final sAmt = app.convertToMain(s.amount, txCur);
+            final rootId = app.rootCategoryIdOf(s.categoryId);
+            categoryExpenseTotals[rootId] =
+                (categoryExpenseTotals[rootId] ?? 0.0) + sAmt;
+            if (rootId != s.categoryId) {
+              final inner = subcategoryExpenseTotals.putIfAbsent(rootId, () => {});
+              inner[s.categoryId] = (inner[s.categoryId] ?? 0.0) + sAmt;
+            }
+          }
+        } else {
+          final catId = t.categoryId;
+          if (catId.isNotEmpty) {
+            final rootId = app.rootCategoryIdOf(catId);
+            categoryExpenseTotals[rootId] =
+                (categoryExpenseTotals[rootId] ?? 0.0) + convertedAmt;
+            if (rootId != catId) {
+              final inner = subcategoryExpenseTotals.putIfAbsent(rootId, () => {});
+              inner[catId] = (inner[catId] ?? 0.0) + convertedAmt;
+            }
+          }
         }
       }
     }
@@ -259,19 +279,41 @@ class PdfReportService {
                     _tableCell('% of Total Expenses', isHeader: true),
                   ],
                 ),
-                ...sortedCategories.map((entry) {
+                ...sortedCategories.expand((entry) {
                   final cat = app.categoryById(entry.key);
                   final catName = cat?.name ?? 'Other';
                   final pct = totalOutflow > 0
                       ? (entry.value / totalOutflow * 100).clamp(0.0, 100.0)
                       : 0.0;
-                  return pw.TableRow(
-                    children: [
-                      _tableCell(catName),
-                      _tableCell(entry.value.toStringAsFixed(2)),
-                      _tableCell('${pct.toStringAsFixed(1)}%'),
-                    ],
-                  );
+                  final subEntries =
+                      (subcategoryExpenseTotals[entry.key]?.entries.toList() ??
+                          [])
+                        ..sort((a, b) => b.value.compareTo(a.value));
+                  return [
+                    pw.TableRow(
+                      children: [
+                        _tableCell(catName),
+                        _tableCell(entry.value.toStringAsFixed(2)),
+                        _tableCell('${pct.toStringAsFixed(1)}%'),
+                      ],
+                    ),
+                    ...subEntries.map((sub) {
+                      final subCat = app.categoryById(sub.key);
+                      final subPct = totalOutflow > 0
+                          ? (sub.value / totalOutflow * 100).clamp(0.0, 100.0)
+                          : 0.0;
+                      return pw.TableRow(
+                        children: [
+                          _tableCell('   > ${subCat?.name ?? 'Other'}',
+                              fontSize: 8.5),
+                          _tableCell(sub.value.toStringAsFixed(2),
+                              fontSize: 8.5),
+                          _tableCell('${subPct.toStringAsFixed(1)}%',
+                              fontSize: 8.5),
+                        ],
+                      );
+                    }),
+                  ];
                 }),
               ],
             ),
@@ -305,11 +347,17 @@ class PdfReportService {
                 ),
                 ...filteredTxs.map((t) {
                   final acct = app.accountById(t.accountId);
-                  final cat = app.categoryById(t.categoryId);
                   final isIncome = t.type == 'income';
                   final displayCur = t.currency.isNotEmpty
                       ? t.currency
                       : (acct?.currency ?? baseCurrency);
+                  final catLabel = app.isTransactionSplit(t.id)
+                      ? app
+                          .getSplits(t.id)
+                          .map((s) => app.categoryDisplayName(s.categoryId))
+                          .where((s) => s.isNotEmpty)
+                          .join(', ')
+                      : app.categoryDisplayName(t.categoryId, fallback: '-');
 
                   return pw.TableRow(
                     children: [
@@ -322,7 +370,7 @@ class PdfReportService {
                         fontSize: 8.5,
                       ),
                       _tableCell(
-                        cat?.name ?? '-',
+                        catLabel.isNotEmpty ? catLabel : '-',
                         fontSize: 8.5,
                       ),
                       _tableCell(

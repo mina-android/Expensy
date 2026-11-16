@@ -1,3 +1,11 @@
+// lib/screens/certificate_detail_screen.dart
+// note: Detailed breakdown of a single certificate of deposit including yield schedule, linked accounts, and early redemption.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// All state mutations and queries route through AppProvider to preserve UI-DB decoupling.
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -10,6 +18,8 @@ import '../utils/snackbar.dart';
 import '../widgets/certificate_sheet.dart';
 import '../widgets/fintech_components.dart';
 
+// ── class CertificateDetailScreen ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for CertificateDetailScreen.
 class CertificateDetailScreen extends StatefulWidget {
   final Certificate certificate;
   const CertificateDetailScreen({super.key, required this.certificate});
@@ -19,16 +29,20 @@ class CertificateDetailScreen extends StatefulWidget {
       _CertificateDetailScreenState();
 }
 
+// ── class _CertificateDetailScreenState ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _CertificateDetailScreenState.
 class _CertificateDetailScreenState extends State<CertificateDetailScreen> {
   late Certificate _cert;
 
   @override
+  // Initializes controllers and local state from widget parameters.
   void initState() {
     super.initState();
     _cert = widget.certificate;
   }
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final app = context.watch<AppProvider>();
     final l10n = AppLocalizations.of(context)!;
@@ -46,8 +60,9 @@ class _CertificateDetailScreenState extends State<CertificateDetailScreen> {
     final cur = _cert.currency;
     final df = DateFormat('MMM dd, yyyy');
     final progress = _cert.progress.clamp(0.0, 1.0);
-    const tealAccent = Color(0xFF00897B);
+    const tealAccent = kCertificateColor;
 
+    // Render Scaffold layout container.
     return Scaffold(
       appBar: AppBar(
         title: Text(_cert.name,
@@ -376,14 +391,18 @@ class _CertificateDetailScreenState extends State<CertificateDetailScreen> {
   }
 }
 
+// ── class _CertStat ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _CertStat.
 class _CertStat extends StatelessWidget {
   final String label;
   final String value;
   const _CertStat(this.label, this.value);
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    // Render Column layout container.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

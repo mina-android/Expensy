@@ -34,6 +34,17 @@ import 'package:path/path.dart' as p;
 import 'package:expensy_saf/expensy_saf.dart';
 import '../theme/app_theme.dart';
 
+// Thrown when a cross-currency transaction or transfer is attempted before
+// live or cached exchange rates have loaded.
+class RatesUnavailableException implements Exception {
+  final String message;
+  const RatesUnavailableException([
+    this.message = 'Exchange rates are still loading — try again in a moment',
+  ]);
+  @override
+  String toString() => 'RatesUnavailableException: $message';
+}
+
 class AppSettings {
   String currency;
   String themeSeed;
@@ -175,7 +186,7 @@ class AppProvider extends ChangeNotifier {
   /// (e.g. the Backup screen's "what's included" list) without needing to
   /// load every history row for every recurring payment into memory.
   int recurringHistoryCount = 0;
-  int get schemaVersion => 28;
+  int get schemaVersion => AppDatabase.currentSchemaVersion;
 
   // ── Exchange rates ────────────────────────────────────────────────────
   Map<String, double> exchangeRates = {};
@@ -359,11 +370,11 @@ class AppProvider extends ChangeNotifier {
       await HomeWidget.saveWidgetData('accounts_widget_data', accountsJson);
       await HomeWidget.updateWidget(name: 'AccountsWidgetProvider');
 
-      final budgetData = budgets.map((b) {
+      final budgetData = nonOverlappingBudgets.map((b) {
         final spent = budgetSpent(b);
         final allowance = budgetEffectiveAllowance(b);
         return {
-          'category': categoryById(b.categoryId)?.name ?? 'Budget',
+          'category': categoryDisplayName(b.categoryId, fallback: 'Budget'),
           'spent': spent,
           'amount': allowance,
           'progress': budgetProgress(b),
@@ -381,29 +392,34 @@ class AppProvider extends ChangeNotifier {
   Timer? _netWorthDebounceTimer;
 
   Future<void> _executeRecordNetWorthSnapshot() async {
-    try {
-      final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
-      final existing = await DBHelper.getNetWorthSnapshotForDate(today);
-      final snap = NetWorthSnapshot(
-        id: existing?.id ?? const Uuid().v4(),
-        date: today,
-        totalAccounts: totalLiquidAccountsValue + totalGoldValue,
-        totalAssets: totalAssetsValue + totalLentMoneyValue + totalCertificatesValue,
-        netWorth: liveNetWorth,
-        currency: settings.currency,
-      );
-      await DBHelper.insertNetWorthSnapshot(snap);
-      final idx = netWorthSnapshots.indexWhere((s) => s.date == today);
-      if (idx != -1) {
-        netWorthSnapshots[idx] = snap;
-      } else {
-        netWorthSnapshots.add(snap);
-        netWorthSnapshots.sort((a, b) => a.date.compareTo(b.date));
+    await _serializeMutation(() async {
+      try {
+        final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+        final existing = await DBHelper.getNetWorthSnapshotForDate(today);
+        final snap = NetWorthSnapshot(
+          id: existing?.id ?? const Uuid().v4(),
+          date: today,
+          totalAccounts: totalLiquidAccountsValue + totalGoldValue,
+          totalAssets:
+              totalAssetsValue + totalLentMoneyValue + totalCertificatesValue,
+          netWorth: liveNetWorth,
+          currency: settings.currency,
+        );
+        await DBHelper.insertNetWorthSnapshot(snap);
+        final idx = netWorthSnapshots.indexWhere((s) => s.date == today);
+        final nextSnaps = List<NetWorthSnapshot>.from(netWorthSnapshots);
+        if (idx != -1) {
+          nextSnaps[idx] = snap;
+        } else {
+          nextSnaps.add(snap);
+          nextSnaps.sort((a, b) => a.date.compareTo(b.date));
+        }
+        netWorthSnapshots = nextSnaps;
+        notifyListeners();
+      } catch (e) {
+        debugPrint('Error recording net worth snapshot: $e');
       }
-      notifyListeners();
-    } catch (e) {
-      debugPrint('Error recording net worth snapshot: $e');
-    }
+    });
   }
 
   Future<void> recordNetWorthSnapshot() async {
@@ -711,8 +727,112 @@ class AppProvider extends ChangeNotifier {
 
   Account?     accountById(String id)  =>
       accounts.where((a) => a.id == id).firstOrNull;
-  AppCategory? categoryById(String id) =>
-      categories.where((c) => c.id == id).firstOrNull;
+
+  AppCategory get transferCategory =>
+      categories.where((c) => c.id == 'sys_transfer').firstOrNull ??
+      AppCategory(
+        id: 'sys_transfer',
+        name: 'Transfer',
+        type: 'transfer',
+        colorValue: 0xFF4CAF50,
+      );
+
+  AppCategory? categoryById(String id) {
+    if (id == 'sys_transfer') return transferCategory;
+    return categories.where((c) => c.id == id).firstOrNull;
+  }
+
+  /// User-editable categories (excludes hidden system categories like sys_transfer).
+  List<AppCategory> get userCategories =>
+      categories.where((c) => !c.isSystem).toList();
+
+  /// Top-level categories for [type] ('expense' | 'income').
+  List<AppCategory> rootCategoriesForType(String type) =>
+      categories.where((c) => !c.isSystem && c.type == type && !c.isSubcategory).toList();
+
+  /// Child subcategories belonging to [parentId].
+  List<AppCategory> subcategoriesOf(String parentId) =>
+      categories.where((c) => !c.isSystem && c.parentId == parentId).toList();
+
+  /// Resolves [categoryId] to its root parent category ID (or itself if root).
+  String rootCategoryIdOf(String categoryId) {
+    final cat = categoryById(categoryId);
+    if (cat == null) return categoryId;
+    return (cat.parentId != null && cat.parentId!.isNotEmpty)
+        ? cat.parentId!
+        : cat.id;
+  }
+
+  /// Resolves [categoryId] to its root parent [AppCategory].
+  AppCategory? rootCategoryOf(String categoryId) =>
+      categoryById(rootCategoryIdOf(categoryId));
+
+  /// Returns [categoryId] plus all of its child subcategory IDs.
+  Set<String> categoryFamilyIds(String categoryId) {
+    final ids = <String>{categoryId};
+    for (final c in categories) {
+      if (c.parentId == categoryId) ids.add(c.id);
+    }
+    return ids;
+  }
+
+  /// Returns "Parent › Subcategory" for subcategories, or "Category" for roots.
+  String categoryDisplayName(String categoryId, {String fallback = ''}) {
+    final cat = categoryById(categoryId);
+    if (cat == null) return fallback;
+    if (cat.isSubcategory) {
+      final parent = categoryById(cat.parentId!);
+      if (parent != null) return '${parent.name} › ${cat.name}';
+    }
+    return cat.name;
+  }
+
+  /// Seeds curated default subcategories under matching default parent categories.
+  /// Returns the number of newly created subcategories.
+  Future<int> seedDefaultSubcategories() async {
+    return await _serializeMutation(() async {
+      const defaults = <String, List<String>>{
+        'food_exp': ['Groceries', 'Restaurants', 'Delivery', 'Coffee & Tea'],
+        'transport': ['Fuel', 'Public Transit', 'Taxi & Ride', 'Maintenance', 'Parking & Tolls'],
+        'shopping': ['Clothing', 'Electronics', 'Home & Furniture', 'Gifts'],
+        'bills': ['Electricity', 'Internet', 'Water', 'Phone'],
+        'health': ['Medicine', 'Doctor'],
+        'entertainment': ['Movies', 'Games', 'Subscriptions'],
+      };
+
+      int added = 0;
+      int nextOrder = categories.length;
+      for (final entry in defaults.entries) {
+        final parent = categories.where((c) => c.id == entry.key).firstOrNull;
+        if (parent == null) continue;
+        final existingNames = categories
+            .where((c) => c.parentId == parent.id)
+            .map((c) => c.name.toLowerCase())
+            .toSet();
+        for (final subName in entry.value) {
+          if (existingNames.contains(subName.toLowerCase())) continue;
+          final slug = subName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '_');
+          final sub = AppCategory(
+            id: 'sub_${parent.id}_$slug',
+            name: subName,
+            type: parent.type,
+            colorValue: parent.colorValue,
+            iconCodePoint: 0,
+            orderIndex: nextOrder++,
+            parentId: parent.id,
+          );
+          await DBHelper.insertCategory(sub);
+          added++;
+        }
+      }
+      if (added > 0) {
+        categories = await DBHelper.getCategories();
+        notifyListeners();
+      }
+      return added;
+    });
+  }
+
   LendedPerson? personById(String id) =>
       lendedPeople.where((p) => p.id == id).firstOrNull;
 
@@ -730,37 +850,47 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> addAccount(Account a) async {
-    await DBHelper.insertAccount(a);
-    accounts = await DBHelper.getAccounts();
-    if (a.type == 'credit' && a.creditReminderEnabled) {
-      await CreditReminderService().scheduleReminder(a);
-    }
-    notifyListeners();
-    updateHomeWidgets();
-    recordNetWorthSnapshot();
+    await _serializeMutation(() async {
+      await DBHelper.insertAccount(a);
+      accounts = await DBHelper.getAccounts();
+      if (a.type == 'credit' && a.creditReminderEnabled) {
+        await CreditReminderService().scheduleReminder(a);
+      }
+      notifyListeners();
+      updateHomeWidgets();
+      recordNetWorthSnapshot();
+    });
   }
 
   Future<void> updateAccount(Account a) async {
-    await DBHelper.updateAccount(a);
-    accounts = await DBHelper.getAccounts();
-    if (a.dontLinkToCard) {
-      final linkedCards = accounts.where((acc) => acc.linkedAccountId == a.id).toList();
-      for (final card in linkedCards) {
-        await DBHelper.updateAccount(card.copyWith(clearLinkedAccount: true));
+    await _serializeMutation(() async {
+      final old = accountById(a.id);
+      final balanceDelta = old != null ? (a.balance - old.balance) : null;
+      await DBHelper.updateAccount(a, balanceDelta: balanceDelta);
+      accounts = await DBHelper.getAccounts();
+      if (a.dontLinkToCard) {
+        final linkedCards =
+            accounts.where((acc) => acc.linkedAccountId == a.id).toList();
+        for (final card in linkedCards) {
+          await DBHelper.updateAccount(
+            card.copyWith(clearLinkedAccount: true),
+            balanceDelta: 0.0,
+          );
+        }
+        if (linkedCards.isNotEmpty) {
+          accounts = await DBHelper.getAccounts();
+        }
       }
-      if (linkedCards.isNotEmpty) {
-        accounts = await DBHelper.getAccounts();
+      if (a.type == 'credit') {
+        await CreditReminderService().cancelReminder(a.id);
+        if (a.creditReminderEnabled) {
+          await CreditReminderService().scheduleReminder(a);
+        }
       }
-    }
-    if (a.type == 'credit') {
-      await CreditReminderService().cancelReminder(a.id);
-      if (a.creditReminderEnabled) {
-        await CreditReminderService().scheduleReminder(a);
-      }
-    }
-    notifyListeners();
-    updateHomeWidgets();
-    recordNetWorthSnapshot();
+      notifyListeners();
+      updateHomeWidgets();
+      recordNetWorthSnapshot();
+    });
   }
 
   /// Resolves the balance-holding account id for mutations.
@@ -817,42 +947,47 @@ class AppProvider extends ChangeNotifier {
     await deleteAccount(id);
 
     return () async {
-      await DBHelper.restoreAccountSnapshot(
-        a,
-        txs,
-        attachedSplits,
-      );
-      accounts = [...accounts, a];
-      final nextTxs = [...transactions, ...txs]..sort((x, y) => y.date.compareTo(x.date));
-      transactions = nextTxs;
-      splits.addAll(attachedSplits);
-      _rebuildSplitsCache();
-      notifyListeners();
-      updateHomeWidgets();
-      recordNetWorthSnapshot();
+      await _serializeMutation(() async {
+        await DBHelper.restoreAccountSnapshot(
+          a,
+          txs,
+          attachedSplits,
+        );
+        accounts = [...accounts, a];
+        final nextTxs = [...transactions, ...txs]
+          ..sort((x, y) => y.date.compareTo(x.date));
+        transactions = nextTxs;
+        splits = [...splits, ...attachedSplits];
+        _rebuildSplitsCache();
+        notifyListeners();
+        updateHomeWidgets();
+        recordNetWorthSnapshot();
+      });
     };
   }
 
   Future<void> deleteAccount(String id) async {
-    await CreditReminderService().cancelReminder(id);
-    await DBHelper.deleteAccountCascade(id);
-    accounts = accounts.where((a) => a.id != id).toList();
-    final txIds = transactions
-        .where((t) => t.accountId == id)
-        .map((t) => t.id)
-        .toSet();
-    transactions = transactions.where((t) => t.accountId != id).toList();
-    splits.removeWhere((s) => txIds.contains(s.transactionId));
-    _rebuildSplitsCache();
+    await _serializeMutation(() async {
+      await CreditReminderService().cancelReminder(id);
+      await DBHelper.deleteAccountCascade(id);
+      accounts = accounts.where((a) => a.id != id).toList();
+      final txIds = transactions
+          .where((t) => t.accountId == id)
+          .map((t) => t.id)
+          .toSet();
+      transactions = transactions.where((t) => t.accountId != id).toList();
+      splits = splits.where((s) => !txIds.contains(s.transactionId)).toList();
+      _rebuildSplitsCache();
 
-    if (settings.pinnedWidgetAccountIds.contains(id)) {
-      settings.pinnedWidgetAccountIds.remove(id);
-      _saveSettings();
-    }
+      if (settings.pinnedWidgetAccountIds.contains(id)) {
+        settings.pinnedWidgetAccountIds.remove(id);
+        _saveSettings();
+      }
 
-    notifyListeners();
-    updateHomeWidgets();
-    recordNetWorthSnapshot();
+      notifyListeners();
+      updateHomeWidgets();
+      recordNetWorthSnapshot();
+    });
   }
 
   Future<void> _updateAccountBalance(String id, double delta) async {
@@ -940,12 +1075,12 @@ class AppProvider extends ChangeNotifier {
       isDueSoon = daysUntilDue >= 0 && daysUntilDue <= 5 && debt > 0.0;
     }
 
-    // Isolate statement window vs unbilled charges
-    double cycleNetExpenses = 0.0;
+    // Isolate statement window vs unbilled post-statement charges (B11)
+    double unbilledNetExpenses = 0.0;
 
     final cardTxs = transactions.where((t) => t.accountId == acc.id);
     final stmtEnd = DateTime(statementDate.year, statementDate.month,
-        statementDate.day, 23, 59, 59);
+        statementDate.day, 23, 59, 59, 999);
 
     for (final t in cardTxs) {
       if (t.isTransfer || t.isInvestment) continue;
@@ -955,8 +1090,8 @@ class AppProvider extends ChangeNotifier {
           t.amount;
       final delta = amt * sign;
 
-      if (!t.date.isAfter(stmtEnd) && t.date.isAfter(prevStatementDate)) {
-        cycleNetExpenses += delta;
+      if (t.date.isAfter(stmtEnd)) {
+        unbilledNetExpenses += delta;
       }
     }
 
@@ -967,13 +1102,10 @@ class AppProvider extends ChangeNotifier {
       statementBalance = 0.0;
       unbilledBalance = 0.0;
     } else {
-      if (cycleNetExpenses > 0.0) {
-        statementBalance = math.min(cycleNetExpenses, debt);
-        unbilledBalance = (debt - statementBalance).clamp(0.0, double.infinity);
-      } else {
-        statementBalance = debt;
-        unbilledBalance = 0.0;
-      }
+      unbilledBalance = unbilledNetExpenses.clamp(0.0, debt);
+      // Statement balance includes both current-cycle net flow and any unpaid
+      // remainder carried over from previous statements.
+      statementBalance = (debt - unbilledBalance).clamp(0.0, debt);
     }
 
     double minPayment = 0.0;
@@ -982,9 +1114,12 @@ class AppProvider extends ChangeNotifier {
         minPayment = math.min(acc.minPaymentAmount!, debt);
       } else if (acc.minPaymentPercent != null &&
           acc.minPaymentPercent! > 0) {
-        minPayment = math.min(debt * (acc.minPaymentPercent! / 100.0), debt);
+        minPayment = math.min(
+          math.max(debt * (acc.minPaymentPercent! / 100.0), 25.0),
+          debt,
+        );
       } else {
-        minPayment = math.min(debt * 0.05, debt);
+        minPayment = math.min(math.max(debt * 0.05, 25.0), debt);
       }
     }
 
@@ -1052,15 +1187,41 @@ class AppProvider extends ChangeNotifier {
 
   // ── Transactions ──────────────────────────────────────────────────────
 
-  double _txDelta(AppTransaction t, {bool reverse = false}) {
-    final acc = accountById(t.accountId);
-    final accCurrency = acc?.currency ?? settings.currency;
-    final txCurrency = t.currency.isEmpty ? accCurrency : t.currency;
+  // Resolves the effective currency of transaction [t]: explicit [t.currency],
+  // else the source/balance account's currency, else the global app currency.
+  String txCurrency(AppTransaction t) {
+    if (t.currency.isNotEmpty) return t.currency;
+    final srcAcc = accountById(t.paidViaAccountId ?? t.accountId) ??
+        accountById(balanceAccountIdFor(t.accountId));
+    return srcAcc?.currency ?? settings.currency;
+  }
+
+  // Computes the signed balance delta in the balance-holding account's currency.
+  // When [requireRates] is true, throws [RatesUnavailableException] if a
+  // cross-currency conversion is required while [exchangeRates] is unavailable.
+  double _txDelta(
+    AppTransaction t, {
+    bool reverse = false,
+    bool requireRates = false,
+  }) {
+    final balAccId = balanceAccountIdFor(t.accountId);
+    final balAcc = accountById(balAccId);
+    final accCurrency = balAcc?.currency ?? settings.currency;
+    final effTxCurrency = txCurrency(t);
 
     double amount = t.amount;
-    if (txCurrency != accCurrency && exchangeRates.isNotEmpty) {
-      amount = _erService.convert(amount, txCurrency, accCurrency, exchangeRates)
-          ?? amount;
+    if (effTxCurrency != accCurrency) {
+      if (exchangeRates.isEmpty) {
+        if (requireRates) throw const RatesUnavailableException();
+      } else {
+        final converted =
+            _erService.convert(amount, effTxCurrency, accCurrency, exchangeRates);
+        if (converted == null) {
+          if (requireRates) throw const RatesUnavailableException();
+        } else {
+          amount = converted;
+        }
+      }
     }
     final sign = t.type == 'income' ? 1.0 : -1.0;
     return (reverse ? -sign : sign) * amount;
@@ -1096,18 +1257,28 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> addTransaction(AppTransaction t) async {
+  Future<void> addTransaction(
+    AppTransaction t, {
+    List<TransactionSplit>? splits,
+  }) async {
     await _serializeMutation(() async {
-      final delta = _txDelta(t);
+      final delta = _txDelta(t, requireRates: true);
       final balanceAccountId = balanceAccountIdFor(t.accountId);
+      final normalizedCurrency = txCurrency(t);
       final txToSave = balanceAccountId != t.accountId
           ? t.copyWith(
               accountId: balanceAccountId,
-              paidViaAccountId: t.accountId,
+              paidViaAccountId: t.paidViaAccountId ?? t.accountId,
+              currency: normalizedCurrency,
             )
-          : t;
+          : (t.currency.isEmpty ? t.copyWith(currency: normalizedCurrency) : t);
 
       await DBHelper.applyTransactionWithBalance(txToSave, delta);
+      if (splits != null) {
+        await DBHelper.saveTransactionSplits(txToSave.id, splits);
+        this.splits = await DBHelper.getAllSplits();
+        _rebuildSplitsCache();
+      }
 
       _patchAccountBalance(balanceAccountId, delta);
       _insertTransactionInMemory(txToSave);
@@ -1120,20 +1291,37 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> updateTransaction(
-      AppTransaction updated, AppTransaction original) async {
+    AppTransaction updated,
+    AppTransaction original, {
+    List<TransactionSplit>? splits,
+  }) async {
     await _serializeMutation(() async {
       final oldDelta = _txDelta(original, reverse: true);
-      final newDelta = _txDelta(updated);
+      final newDelta = _txDelta(updated, requireRates: true);
 
       final oldBalanceAccId = balanceAccountIdFor(original.accountId);
       final newBalanceAccId = balanceAccountIdFor(updated.accountId);
+      final normalizedCurrency = txCurrency(updated);
 
-      final txToSave = newBalanceAccId != updated.accountId
+      // Enforce 'sys_transfer' and preserve transferGroupId on transfer legs.
+      final isTransferTx = original.isTransfer || updated.isTransfer;
+      final enforcedUpdated = isTransferTx
           ? updated.copyWith(
-              accountId: newBalanceAccId,
-              paidViaAccountId: updated.accountId,
+              categoryId: 'sys_transfer',
+              transferGroupId: original.transferGroupId ?? updated.transferGroupId,
             )
           : updated;
+
+      final txToSave = newBalanceAccId != enforcedUpdated.accountId
+          ? enforcedUpdated.copyWith(
+              accountId: newBalanceAccId,
+              paidViaAccountId:
+                  enforcedUpdated.paidViaAccountId ?? enforcedUpdated.accountId,
+              currency: normalizedCurrency,
+            )
+          : (enforcedUpdated.currency.isEmpty
+              ? enforcedUpdated.copyWith(currency: normalizedCurrency)
+              : enforcedUpdated);
 
       await DBHelper.applyTransactionEdit(
         updated: txToSave,
@@ -1142,6 +1330,11 @@ class AppProvider extends ChangeNotifier {
         newAccountId: newBalanceAccId,
         newDelta: newDelta,
       );
+      if (splits != null) {
+        await DBHelper.saveTransactionSplits(txToSave.id, splits);
+        this.splits = await DBHelper.getAllSplits();
+        _rebuildSplitsCache();
+      }
 
       if (oldBalanceAccId == newBalanceAccId) {
         _patchAccountBalance(oldBalanceAccId, oldDelta + newDelta);
@@ -1160,48 +1353,47 @@ class AppProvider extends ChangeNotifier {
 
   final Set<String> _alertedBudgetPeriods = {};
 
-  String _budgetPeriodKey(Budget b) {
-    final now = DateTime.now();
-    if (b.period == 'weekly') {
-      final weekNum = (now.day - 1) ~/ 7;
-      return '${b.id}_${now.year}_${now.month}_W$weekNum';
-    }
-    return '${b.id}_${now.year}_${now.month}';
+  // Keys budget alert deduplication off the exact period start date (C7).
+  String _budgetPeriodKey(Budget b, [DateTime? referenceDate]) {
+    final start = getCurrentPeriodStart(b, referenceDate);
+    return '${b.id}_${start.year}_${start.month}_${start.day}';
   }
 
   Future<void> _checkBudgetAlert(AppTransaction t) async {
     if (!settings.budgetAlertsEnabled) return;
     if (t.type != 'expense' || t.isTransfer || t.isInvestment) return;
+
+    final candidateCatIds = <String>{};
     if (isTransactionSplit(t.id)) {
-      final txSplits = getSplits(t.id);
-      for (final s in txSplits) {
-        final b = budgetForCategory(s.categoryId);
-        if (b != null && budgetExceeded(b)) {
-          final pKey = _budgetPeriodKey(b);
-          if (!_alertedBudgetPeriods.contains(pKey)) {
-            final cat = categoryById(s.categoryId);
-            if (cat != null) {
-              _alertedBudgetPeriods.add(pKey);
-              await _budgetNotif.showBudgetExceeded(
-                  b, cat, budgetSpent(b), budgetEffectiveAllowance(b));
-            }
-          }
+      for (final s in getSplits(t.id)) {
+        candidateCatIds.add(s.categoryId);
+        final parentId = categoryById(s.categoryId)?.parentId;
+        if (parentId != null && parentId.isNotEmpty) {
+          candidateCatIds.add(parentId);
         }
       }
     } else {
-      final b = budgetForCategory(t.categoryId);
-      if (b == null) return;
-      if (budgetExceeded(b)) {
-        final pKey = _budgetPeriodKey(b);
-        if (!_alertedBudgetPeriods.contains(pKey)) {
-          final cat = categoryById(t.categoryId);
-          if (cat != null) {
-            _alertedBudgetPeriods.add(pKey);
-            await _budgetNotif.showBudgetExceeded(
-                b, cat, budgetSpent(b), budgetEffectiveAllowance(b));
-          }
-        }
+      candidateCatIds.add(t.categoryId);
+      final parentId = categoryById(t.categoryId)?.parentId;
+      if (parentId != null && parentId.isNotEmpty) {
+        candidateCatIds.add(parentId);
       }
+    }
+
+    for (final catId in candidateCatIds) {
+      final b = budgetForCategory(catId);
+      if (b == null || !budgetExceeded(b)) continue;
+      final pKey = _budgetPeriodKey(b);
+      if (_alertedBudgetPeriods.contains(pKey)) continue;
+      final cat = categoryById(catId);
+      if (cat == null) continue;
+      _alertedBudgetPeriods.add(pKey);
+      await _budgetNotif.showBudgetExceeded(
+        b,
+        cat.copyWith(name: categoryDisplayName(cat.id)),
+        budgetSpent(b),
+        budgetEffectiveAllowance(b),
+      );
     }
   }
 
@@ -1273,8 +1465,14 @@ class AppProvider extends ChangeNotifier {
       } else if (fromCurrency == toCurrency) {
         creditAmount = fromAmount;
       } else {
-        creditAmount = convertBetween(fromAmount, fromCurrency, toCurrency)
-            ?? fromAmount;
+        if (exchangeRates.isEmpty) {
+          throw const RatesUnavailableException();
+        }
+        final converted = convertBetween(fromAmount, fromCurrency, toCurrency);
+        if (converted == null) {
+          throw const RatesUnavailableException();
+        }
+        creditAmount = converted;
       }
 
       final now = DateTime.now();
@@ -1389,10 +1587,12 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> saveTransactionSplits(
       String transactionId, List<TransactionSplit> newSplits) async {
-    await DBHelper.saveTransactionSplits(transactionId, newSplits);
-    splits = await DBHelper.getAllSplits();
-    _rebuildSplitsCache();
-    notifyListeners();
+    await _serializeMutation(() async {
+      await DBHelper.saveTransactionSplits(transactionId, newSplits);
+      splits = await DBHelper.getAllSplits();
+      _rebuildSplitsCache();
+      notifyListeners();
+    });
   }
 
   // ── Recurring ─────────────────────────────────────────────────────────
@@ -1433,7 +1633,14 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> markRecurringPaid(RecurringPayment r, {DateTime? occurrenceDate}) async {
     await _serializeMutation(() async {
-      final effectiveDate = occurrenceDate ?? DateTime.now();
+      final effectiveDate = occurrenceDate ?? r.nextDate;
+      // Idempotency guard (B10): skip if this cycle date was already paid (e.g. by auto-pay)
+      final processor = RecurringPaymentProcessor(AppDatabase.instance);
+      if (await processor.hasHistoryForDate(r.id, effectiveDate, action: 'paid')) {
+        return;
+      }
+
+      final txDate = occurrenceDate ?? DateTime.now();
       final t = AppTransaction(
         id: newId(),
         type: r.paymentType,
@@ -1441,7 +1648,7 @@ class AppProvider extends ChangeNotifier {
         description: '${r.name} (recurring)',
         accountId: r.accountId,
         categoryId: r.categoryId,
-        date: effectiveDate,
+        date: txDate,
       );
       await addTransaction(t);
       await _recordHistory(r, 'paid', date: effectiveDate);
@@ -1453,7 +1660,9 @@ class AppProvider extends ChangeNotifier {
       await DBHelper.updateRecurring(updated);
       final idx = recurring.indexWhere((item) => item.id == r.id);
       if (idx != -1) {
-        recurring[idx] = updated;
+        final nextRec = List<RecurringPayment>.from(recurring);
+        nextRec[idx] = updated;
+        recurring = nextRec;
       }
       notifyListeners();
       await _notif.cancelReminder(r.id);
@@ -1463,15 +1672,22 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> skipNextRecurring(RecurringPayment r) async {
     await _serializeMutation(() async {
-      await _recordHistory(r, 'skipped');
+      final processor = RecurringPaymentProcessor(AppDatabase.instance);
+      if (await processor.hasHistoryForDate(r.id, r.nextDate)) {
+        return;
+      }
+      await _recordHistory(r, 'skipped', date: r.nextDate);
 
       final updated = r.copyWith(
         nextDate: r.calcNextDate(),
+        paidPayments: r.paidPayments + 1,
       );
       await DBHelper.updateRecurring(updated);
       final idx = recurring.indexWhere((item) => item.id == r.id);
       if (idx != -1) {
-        recurring[idx] = updated;
+        final nextRec = List<RecurringPayment>.from(recurring);
+        nextRec[idx] = updated;
+        recurring = nextRec;
       }
       notifyListeners();
       await _notif.cancelReminder(r.id);
@@ -1891,6 +2107,20 @@ class AppProvider extends ChangeNotifier {
   Budget? budgetForCategory(String categoryId) =>
       budgets.where((b) => b.categoryId == categoryId).firstOrNull;
 
+  /// Returns budgets excluding child subcategory budgets whose parent category
+  /// also has an active budget of the same period, preventing double-counting
+  /// in aggregate budget totals and pacing.
+  List<Budget> get nonOverlappingBudgets {
+    final activeKeys = {
+      for (final b in budgets) '${b.categoryId}:${b.period}',
+    };
+    return budgets.where((b) {
+      final cat = categoryById(b.categoryId);
+      if (cat == null || !cat.isSubcategory) return true;
+      return !activeKeys.contains('${cat.parentId}:${b.period}');
+    }).toList();
+  }
+
   DateTime getCurrentPeriodStart(Budget budget, [DateTime? referenceDate]) {
     final now = referenceDate ?? DateTime.now();
     if (budget.period == 'weekly') {
@@ -1912,8 +2142,10 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
-  /// Calculates spending for a budget's category within the half-open date interval [start, end).
+  /// Calculates spending for a budget's category (including any child
+  /// subcategories) within the half-open date interval [start, end).
   double budgetSpentInPeriod(Budget budget, DateTime start, DateTime end) {
+    final familyIds = categoryFamilyIds(budget.categoryId);
     return transactions
         .where((t) =>
             t.type == 'expense' &&
@@ -1927,12 +2159,12 @@ class AppProvider extends ChangeNotifier {
           : (acct?.currency ?? settings.currency);
       if (isTransactionSplit(t.id)) {
         final txSplits =
-            getSplits(t.id).where((s) => s.categoryId == budget.categoryId);
+            getSplits(t.id).where((s) => familyIds.contains(s.categoryId));
         if (txSplits.isEmpty) return sum;
         final splitSum = txSplits.fold(0.0, (s, item) => s + item.amount);
         return sum + convertToMain(splitSum, txCur);
       } else {
-        if (t.categoryId != budget.categoryId) return sum;
+        if (!familyIds.contains(t.categoryId)) return sum;
         return sum + convertToMain(t.amount, txCur);
       }
     });
@@ -1960,9 +2192,9 @@ class AppProvider extends ChangeNotifier {
 
     final prevSpent = budgetSpentInPeriod(budget, prevStart, currentStart);
 
-    // If the budget was created in the current period and there was no spending
-    // in the previous period, don't generate an unearned rollover surplus.
-    if (!budget.createdAt.isBefore(currentStart) && prevSpent == 0.0) {
+    // Brand-new budgets created in the current period must not inherit a
+    // synthetic surplus or deficit from pre-budget transactions (C6).
+    if (!budget.createdAt.isBefore(currentStart)) {
       return 0.0;
     }
 
@@ -2071,7 +2303,7 @@ class AppProvider extends ChangeNotifier {
   /// Returns null if no monthly budgets are configured.
   BudgetPacingInfo? overallMonthlyBudgetPacing([DateTime? referenceDate]) {
     final monthlyBudgets =
-        budgets.where((b) => b.period == 'monthly').toList();
+        nonOverlappingBudgets.where((b) => b.period == 'monthly').toList();
     if (monthlyBudgets.isEmpty) return null;
 
     final now = referenceDate ?? DateTime.now();
@@ -2230,10 +2462,8 @@ class AppProvider extends ChangeNotifier {
       transactions,
       start: start,
       end: end,
-      convert: (amount, cur) {
-        final txCur = cur.isNotEmpty ? cur : settings.currency;
-        return convertToMain(amount, txCur);
-      },
+      resolveCurrency: txCurrency,
+      convert: convertToMain,
     ).expense;
   }
 
@@ -2245,10 +2475,8 @@ class AppProvider extends ChangeNotifier {
       transactions,
       start: start,
       end: end,
-      convert: (amount, cur) {
-        final txCur = cur.isNotEmpty ? cur : settings.currency;
-        return convertToMain(amount, txCur);
-      },
+      resolveCurrency: txCurrency,
+      convert: convertToMain,
     ).income;
   }
 
@@ -2272,16 +2500,24 @@ class AppProvider extends ChangeNotifier {
             t.date.isBefore(end))
         .toList();
 
-    // Top spending category
+    // Top spending category (rolled up to root parent category, including splits)
     final Map<String, double> catTotals = {};
     for (final t in monthExpenses) {
-      if (t.categoryId.isNotEmpty) {
-        final acct = accountById(t.accountId);
-        final txCur = t.currency.isNotEmpty
-            ? t.currency
-            : (acct?.currency ?? settings.currency);
+      final acct = accountById(t.accountId);
+      final txCur = t.currency.isNotEmpty
+          ? t.currency
+          : (acct?.currency ?? settings.currency);
+      if (isTransactionSplit(t.id)) {
+        for (final s in getSplits(t.id)) {
+          if (s.categoryId.isEmpty) continue;
+          final rootId = rootCategoryIdOf(s.categoryId);
+          final amt = convertToMain(s.amount, txCur);
+          catTotals[rootId] = (catTotals[rootId] ?? 0.0) + amt;
+        }
+      } else if (t.categoryId.isNotEmpty) {
+        final rootId = rootCategoryIdOf(t.categoryId);
         final amt = convertToMain(t.amount, txCur);
-        catTotals[t.categoryId] = (catTotals[t.categoryId] ?? 0.0) + amt;
+        catTotals[rootId] = (catTotals[rootId] ?? 0.0) + amt;
       }
     }
 
@@ -2566,8 +2802,8 @@ class AppProvider extends ChangeNotifier {
       }
       loanPayments = await DBHelper.getAllLoanPayments();
 
-      // Auto-settle when the loan is fully paid off
-      final totalPaid = loanTotalPaid(l) + payAmount;
+      // Auto-settle when the loan is fully paid off (loanTotalPaid already includes the inserted payment)
+      final totalPaid = loanTotalPaid(l);
       if (totalPaid >= l.totalPayable && !l.isSettled) {
         final settled = l.copyWith(isSettled: true);
         await DBHelper.updateLoan(settled);
@@ -2604,6 +2840,20 @@ class AppProvider extends ChangeNotifier {
       }
       await DBHelper.deleteLoanPayment(id);
       loanPayments = await DBHelper.getAllLoanPayments();
+
+      // Re-evaluate settlement if total paid fell below totalPayable (A2b)
+      final loan = loans.where((l) => l.id == p.loanId).firstOrNull;
+      if (loan != null &&
+          loan.isSettled &&
+          loanTotalPaid(loan) < loan.totalPayable) {
+        final unsettled = loan.copyWith(isSettled: false);
+        await DBHelper.updateLoan(unsettled);
+        loans = await DBHelper.getLoans();
+        if (unsettled.reminderEnabled) {
+          await _loanNotif.scheduleReminder(unsettled);
+        }
+      }
+
       notifyListeners();
       recordNetWorthSnapshot();
     });
@@ -2619,6 +2869,17 @@ class AppProvider extends ChangeNotifier {
           await _updateAccountBalance(p.accountId!, -p.amount);
         }
         loanPayments = await DBHelper.getAllLoanPayments();
+
+        final loan = loans.where((l) => l.id == p.loanId).firstOrNull;
+        if (loan != null &&
+            !loan.isSettled &&
+            loanTotalPaid(loan) >= loan.totalPayable) {
+          final settled = loan.copyWith(isSettled: true);
+          await DBHelper.updateLoan(settled);
+          loans = await DBHelper.getLoans();
+          await _loanNotif.cancelReminder(loan.id);
+        }
+
         notifyListeners();
         recordNetWorthSnapshot();
       });
@@ -2637,6 +2898,17 @@ class AppProvider extends ChangeNotifier {
 
   double loanProgress(Loan l) =>
       l.totalPayable <= 0 ? 0.0 : (loanTotalPaid(l) / l.totalPayable).clamp(0.0, 1.0);
+
+  /// Total loan installment payments recorded within [start, end), converted to main currency (C11).
+  double periodLoanPaymentsTotal(DateTime start, DateTime end) {
+    return loanPayments
+        .where((p) =>
+            p.amount > 0 && !p.date.isBefore(start) && p.date.isBefore(end))
+        .fold(0.0, (sum, p) {
+      final cur = p.currency.isNotEmpty ? p.currency : settings.currency;
+      return sum + convertToMain(p.amount, cur);
+    });
+  }
 
   double get totalMonthlyLoanObligation => loans
       .where((l) => !l.isSettled)
@@ -2663,7 +2935,17 @@ class AppProvider extends ChangeNotifier {
     final sheet = excel['Transactions'];
     try { excel.delete('Sheet1'); } catch (_) {}
 
-    const headers = ['Date','Description','Type','Amount','Currency','Account','Category','Note'];
+    const headers = [
+      'Date',
+      'Description',
+      'Type',
+      'Amount',
+      'Currency',
+      'Account',
+      'Category',
+      'Subcategory',
+      'Note'
+    ];
     for (int col = 0; col < headers.length; col++) {
       final cell = sheet.cell(
           CellIndex.indexByColumnRow(columnIndex: col, rowIndex: 0));
@@ -2674,13 +2956,36 @@ class AppProvider extends ChangeNotifier {
       final t = filtered[i];
       final accCurrency = accountById(t.accountId)?.currency ?? '';
       final displayCurrency = t.currency.isEmpty ? accCurrency : t.currency;
+      final cat = categoryById(t.categoryId);
+      final String parentCatName;
+      final String subCatName;
+      if (isTransactionSplit(t.id)) {
+        final txSplits = getSplits(t.id);
+        parentCatName = txSplits
+            .map((s) => rootCategoryOf(s.categoryId)?.name ?? '')
+            .where((n) => n.isNotEmpty)
+            .toSet()
+            .join(', ');
+        subCatName = txSplits
+            .map((s) => categoryDisplayName(s.categoryId))
+            .where((n) => n.isNotEmpty)
+            .join(', ');
+      } else if (cat != null && cat.isSubcategory) {
+        parentCatName = categoryById(cat.parentId!)?.name ?? cat.name;
+        subCatName = cat.name;
+      } else {
+        parentCatName = cat?.name ?? '';
+        subCatName = '';
+      }
       final vals = [
         '${t.date.day}/${t.date.month}/${t.date.year}',
-        t.description, t.type,
+        t.description,
+        t.type,
         t.amount.toStringAsFixed(2),
         displayCurrency,
-        accountById(t.accountId)?.name   ?? '',
-        categoryById(t.categoryId)?.name ?? '',
+        accountById(t.accountId)?.name ?? '',
+        parentCatName,
+        subCatName,
         t.note,
       ];
       for (int col = 0; col < vals.length; col++) {
@@ -2858,16 +3163,16 @@ class AppProvider extends ChangeNotifier {
       await CertificateReminderService().cancelReminder(id);
       final cert = certificates.firstWhereOrNull((c) => c.id == id);
       if (cert != null) {
-        // Find all transactions associated with this certificate via ID or legacy note tag
+        // Find all transactions associated with this certificate via ID, tag, or exact legacy prefix (B12)
         final relatedTxs = transactions.where((t) {
           final hasCertId = t.certificateId == id;
           final hasCertTag = t.note.contains('[cert:$id]');
-          final matchesCert = t.accountId == cert.accountId &&
-              (t.description.contains(cert.name) || t.note.contains(cert.name)) &&
-              (t.description.startsWith('Certificate Principal:') ||
-                  t.description.startsWith('Certificate Yield:') ||
-                  t.description.startsWith('Certificate Redemption:'));
-          return hasCertId || hasCertTag || matchesCert;
+          final matchesLegacyExact = t.certificateId == null &&
+              t.accountId == cert.accountId &&
+              (t.description == 'Certificate Principal: ${cert.name}' ||
+                  t.description == 'Certificate Yield: ${cert.name}' ||
+                  t.description == 'Certificate Redemption: ${cert.name}');
+          return hasCertId || hasCertTag || matchesLegacyExact;
         }).toList();
 
         // Delete each transaction, automatically reverting its balance delta
@@ -2931,16 +3236,29 @@ class AppProvider extends ChangeNotifier {
   Future<void> checkAndProcessCertificates() async {
     await _serializeMutation(() async {
       final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final endOfToday =
+          DateTime(now.year, now.month, now.day, 23, 59, 59, 999);
       for (var c in List<Certificate>.from(certificates)) {
         if (c.isSettled) continue;
 
-        // Catch-up due payouts up to maturity date
+        final endOfCert = DateTime(
+          c.endDate.year,
+          c.endDate.month,
+          c.endDate.day,
+          23,
+          59,
+          59,
+          999,
+        );
+
+        // Catch-up due payouts up to maturity date (bounded to 24 cycles)
         int iterations = 0;
         while (iterations < 24) {
-          final nextDate = c.nextCollectionDate;
+          final nextDate = c.nextUncollectedPeriodDate;
           if (nextDate != null &&
-              (now.isAfter(nextDate) || now.isAtSameMomentAs(nextDate)) &&
-              (c.endDate.isAfter(nextDate) || c.endDate.isAtSameMomentAs(nextDate))) {
+              !nextDate.isAfter(endOfToday) &&
+              !nextDate.isAfter(endOfCert)) {
             final payout = c.periodicPayout;
             if (payout > 0) {
               final tx = AppTransaction(
@@ -2964,7 +3282,9 @@ class AppProvider extends ChangeNotifier {
               await DBHelper.updateCertificate(c);
               final idx = certificates.indexWhere((item) => item.id == c.id);
               if (idx != -1) {
-                certificates[idx] = c;
+                final nextCerts = List<Certificate>.from(certificates);
+                nextCerts[idx] = c;
+                certificates = nextCerts;
               }
               iterations++;
             } else {
@@ -2976,7 +3296,8 @@ class AppProvider extends ChangeNotifier {
         }
 
         // Only redeem after due yield has been collected up to endDate
-        if (now.isAfter(c.endDate)) {
+        final endDay = DateTime(c.endDate.year, c.endDate.month, c.endDate.day);
+        if (today.isAfter(endDay)) {
           await redeemCertificate(c.id, returnPrincipal: true);
         }
       }
@@ -3000,7 +3321,80 @@ class AppProvider extends ChangeNotifier {
     return saveUri?.toString();
   }
 
-  Future<Map<String, dynamic>?> pickAndParseBackupFile({String? password}) async {
+  /// Parses and optionally decrypts raw backup [bytes].
+  /// Throws `FormatException('NEEDS_PASSWORD')` if the payload is encrypted and
+  /// [password] is null or empty.
+  Future<Map<String, dynamic>> parseBackupBytes(
+    List<int> bytes, {
+    String? password,
+    String? extension,
+  }) async {
+    final ext = extension?.toLowerCase();
+    String jsonStr;
+    if (BackupEncryptionService.isEncrypted(bytes) || ext == 'enc') {
+      if (password == null || password.isEmpty) {
+        throw const FormatException('NEEDS_PASSWORD');
+      }
+      jsonStr = await BackupEncryptionService.decrypt(
+        bytes: bytes,
+        password: password,
+      );
+    } else {
+      try {
+        jsonStr = utf8.decode(bytes);
+      } catch (_) {
+        throw const FormatException(
+          'Please select a valid .json or .enc Expensy backup file.',
+        );
+      }
+    }
+
+    final dynamic decoded = jsonDecode(jsonStr);
+    if (decoded is! Map) {
+      throw const FormatException(
+        'Invalid backup file: top-level value is not a JSON object.',
+      );
+    }
+    final data = Map<String, dynamic>.from(decoded);
+
+    const knownKeys = {
+      'accounts',
+      'categories',
+      'transactions',
+      'recurring_payments',
+      'wishlist',
+      'lended_people',
+      'lended_money',
+      'assets',
+      'budgets',
+      'recurring_history',
+      'certificates',
+      'net_worth_snapshots',
+      'version',
+      'settings',
+      'savings_goals',
+      'savings_contributions',
+      'loans',
+      'loan_payments',
+      'transaction_presets',
+      'transaction_splits',
+      'selective',
+    };
+    if (!data.keys.any(knownKeys.contains)) {
+      throw const FormatException(
+        'Invalid backup file: no recognisable Expensy data found.',
+      );
+    }
+    return data;
+  }
+
+  /// Picks a backup file from the device and parses it.
+  /// If [onPasswordRequired] is supplied and the file is encrypted, invokes it
+  /// to prompt the user for the decryption password without re-opening the file picker.
+  Future<Map<String, dynamic>?> pickAndParseBackupFile({
+    String? password,
+    Future<String?> Function()? onPasswordRequired,
+  }) async {
     final pickedFiles = await FilePickerPlatform.instance.pickFiles();
     if (pickedFiles.isEmpty) return null;
     final picked = pickedFiles.first;
@@ -3018,59 +3412,66 @@ class AppProvider extends ChangeNotifier {
       }
     }
 
-    String jsonStr;
-    if (BackupEncryptionService.isEncrypted(bytes) || ext == 'enc') {
-      if (password == null || password.isEmpty) {
-        throw const FormatException('NEEDS_PASSWORD');
-      }
-      jsonStr = await BackupEncryptionService.decrypt(bytes: bytes, password: password);
-    } else {
-      try {
-        jsonStr = utf8.decode(bytes);
-      } catch (_) {
-        throw const FormatException('Please select a valid .json or .enc Expensy backup file.');
+    String? effectivePassword = password;
+    if ((BackupEncryptionService.isEncrypted(bytes) || ext == 'enc') &&
+        (effectivePassword == null || effectivePassword.isEmpty) &&
+        onPasswordRequired != null) {
+      effectivePassword = await onPasswordRequired();
+      if (effectivePassword == null || effectivePassword.isEmpty) {
+        return null; // User cancelled password dialog
       }
     }
 
-    final dynamic decoded = jsonDecode(jsonStr);
-    if (decoded is! Map) {
-      throw const FormatException(
-          'Invalid backup file: top-level value is not a JSON object.');
-    }
-    final data = Map<String, dynamic>.from(decoded);
-
-    const knownKeys = {
-      'accounts', 'categories', 'transactions', 'recurring_payments',
-      'wishlist', 'lended_people', 'lended_money', 'assets', 'budgets',
-      'recurring_history', 'certificates', 'version', 'settings',
-      'savings_goals', 'savings_contributions', 'loans', 'loan_payments',
-      'transaction_presets', 'transaction_splits', 'selective',
-    };
-    if (!data.keys.any(knownKeys.contains)) {
-      throw const FormatException(
-          'Invalid backup file: no recognisable Expensy data found.');
-    }
-    return data;
+    return parseBackupBytes(
+      bytes,
+      password: effectivePassword,
+      extension: ext,
+    );
   }
 
   String? lastPreRestoreSnapshotPath;
 
   Future<void> _createSafetySnapshot() async {
+    final snapshot = await DBHelper.exportAll();
+    final jsonStr = jsonEncode(snapshot);
+    final ts = DateTime.now()
+        .toIso8601String()
+        .replaceAll(':', '-')
+        .replaceAll('.', '-');
+    final fileName = 'expensy_prerestore_$ts.json';
+
+    Directory? targetDir;
     try {
-      final snapshot = await DBHelper.exportAll();
-      final jsonStr = jsonEncode(snapshot);
       final dbFolder = await sqflite.getDatabasesPath();
-      final backupDir = Directory(p.join(dbFolder, 'safety_snapshots'));
-      if (!backupDir.existsSync()) {
-        backupDir.createSync(recursive: true);
+      final primaryDir = Directory(p.join(dbFolder, 'safety_snapshots'));
+      if (!primaryDir.existsSync()) {
+        primaryDir.createSync(recursive: true);
       }
-      final ts = DateTime.now().toIso8601String().replaceAll(':', '-').replaceAll('.', '-');
-      final file = File(p.join(backupDir.path, 'expensy_prerestore_$ts.json'));
+      final file = File(p.join(primaryDir.path, fileName));
       await file.writeAsString(jsonStr);
       lastPreRestoreSnapshotPath = file.path;
+      targetDir = primaryDir;
+    } catch (primaryErr) {
+      try {
+        final fallbackDir =
+            Directory(p.join(Directory.systemTemp.path, 'expensy_safety_snapshots'));
+        if (!fallbackDir.existsSync()) {
+          fallbackDir.createSync(recursive: true);
+        }
+        final file = File(p.join(fallbackDir.path, fileName));
+        await file.writeAsString(jsonStr);
+        lastPreRestoreSnapshotPath = file.path;
+        targetDir = fallbackDir;
+      } catch (fallbackErr) {
+        throw StateError(
+          'Pre-restore safety snapshot failed ($primaryErr / $fallbackErr). Restore aborted to protect existing data.',
+        );
+      }
+    }
 
-      // Retain only last 3 snapshots
-      final files = backupDir.listSync().whereType<File>().toList()
+    // Retain only last 3 snapshots in targetDir
+    try {
+      final files = targetDir.listSync().whereType<File>().toList()
         ..sort((a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
       if (files.length > 3) {
         for (int i = 3; i < files.length; i++) {
@@ -3079,58 +3480,85 @@ class AppProvider extends ChangeNotifier {
           } catch (_) {}
         }
       }
-    } catch (e) {
-      debugPrint('Pre-restore safety snapshot notice: $e');
-    }
+    } catch (_) {}
   }
 
   Future<bool> undoLastRestore() async {
-    final path = lastPreRestoreSnapshotPath;
-    if (path == null) return false;
-    final file = File(path);
-    if (!file.existsSync()) return false;
-    final jsonStr = await file.readAsString();
-    final data = jsonDecode(jsonStr) as Map<String, dynamic>;
-    await DBHelper.importAll(data);
-    await load();
-    return true;
+    return _serializeMutation(() async {
+      final path = lastPreRestoreSnapshotPath;
+      if (path == null) return false;
+      final file = File(path);
+      if (!file.existsSync()) return false;
+      final jsonStr = await file.readAsString();
+      final data = jsonDecode(jsonStr) as Map<String, dynamic>;
+      await DBHelper.importAll(data);
+      await load();
+      return true;
+    });
   }
 
   Future<int> restoreBackupData(Map<String, dynamic> data) async {
-    if (data['selective'] == true) {
-      throw const FormatException(
-          'Cannot perform Full Restore on a selective backup. Please use Selective Restore instead.');
-    }
-    final preview = BackupValidator.validate(data);
-    if (!preview.isValid) {
-      throw FormatException(
-          preview.errorMessage ?? 'Invalid backup file: schema incompatible.');
-    }
-    await _createSafetySnapshot();
-    await DBHelper.importAll(data);
+    return _serializeMutation(() async {
+      if (data['selective'] == true) {
+        throw const FormatException(
+          'Cannot perform Full Restore on a selective backup. Please use Selective Restore instead.',
+        );
+      }
+      final preview = BackupValidator.validate(data);
+      if (!preview.isValid) {
+        throw FormatException(
+          preview.errorMessage ?? 'Invalid backup file: schema incompatible.',
+        );
+      }
 
-    if (data['settings'] is Map) {
-      settings = AppSettings.fromJson(
-          Map<String, dynamic>.from(data['settings'] as Map));
-      await _saveSettings();
-    }
+      // Parse & validate settings before wiping the database (B9)
+      AppSettings? parsedSettings;
+      if (data['settings'] is Map) {
+        parsedSettings = AppSettings.fromJson(
+          Map<String, dynamic>.from(data['settings'] as Map),
+        );
+      }
 
-    _historyCache.clear();
-    await load();
-    try {
-      await _notif.rescheduleAll(recurring, settings.currency);
-      await _lendedNotif.rescheduleAllLended(lended, settings.currency,
-          personNameOf: (id) => personById(id)?.name ?? '');
-      await _loanNotif.rescheduleAllLoans(loans, settings.currency);
-      await CreditReminderService().rescheduleAll(accounts);
-      await CertificateReminderService().rescheduleAllCertificates(certificates);
-    } catch (_) {}
+      await _createSafetySnapshot();
+      await DBHelper.importAll(data);
 
-    return (data['_originalVersion'] as int?) ?? (data['version'] as int?) ?? 1;
+      if (parsedSettings != null) {
+        settings = parsedSettings;
+        await _saveSettings();
+      }
+
+      _historyCache.clear();
+      await load();
+      if (netWorthSnapshots.isEmpty) {
+        await _executeRecordNetWorthSnapshot();
+      }
+      try {
+        await _notif.rescheduleAll(recurring, settings.currency);
+        await _lendedNotif.rescheduleAllLended(
+          lended,
+          settings.currency,
+          personNameOf: (id) => personById(id)?.name ?? '',
+        );
+        await _loanNotif.rescheduleAllLoans(loans, settings.currency);
+        await CreditReminderService().rescheduleAll(accounts);
+        await CertificateReminderService()
+            .rescheduleAllCertificates(certificates);
+      } catch (_) {}
+
+      return (data['_originalVersion'] as int?) ??
+          (data['version'] as int?) ??
+          1;
+    });
   }
 
-  Future<int> restoreBackup({String? password}) async {
-    final data = await pickAndParseBackupFile(password: password);
+  Future<int> restoreBackup({
+    String? password,
+    Future<String?> Function()? onPasswordRequired,
+  }) async {
+    final data = await pickAndParseBackupFile(
+      password: password,
+      onPasswordRequired: onPasswordRequired,
+    );
     if (data == null) return 0;
     return restoreBackupData(data);
   }
@@ -3178,51 +3606,68 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> restoreSelective(
       Map<String, dynamic> data, Set<String> selectedGroups) async {
-    await _createSafetySnapshot();
-    final tables = <String>{};
-    for (final group in selectedGroups) {
-      final tList = entityGroupTables[group];
-      if (tList != null) tables.addAll(tList);
-    }
-
-    await DBHelper.importSelective(data, tables);
-    _historyCache.clear();
-    await load();
-
-    try {
-      if (selectedGroups.contains('recurring')) {
-        await _notif.rescheduleAll(recurring, settings.currency);
-      }
-      if (selectedGroups.contains('lent_money')) {
-        await _lendedNotif.rescheduleAllLended(
-          lended,
-          settings.currency,
-          personNameOf: (id) => personById(id)?.name ?? '',
+    await _serializeMutation(() async {
+      final preview = BackupValidator.validate(data);
+      if (!preview.isValid) {
+        throw FormatException(
+          preview.errorMessage ?? 'Invalid backup file: schema incompatible.',
         );
       }
-      if (selectedGroups.contains('loans')) {
-        await _loanNotif.rescheduleAllLoans(loans, settings.currency);
+
+      await _createSafetySnapshot();
+      final tables = <String>{};
+      for (final group in selectedGroups) {
+        final tList = entityGroupTables[group];
+        if (tList != null) tables.addAll(tList);
       }
-      if (selectedGroups.contains('accounts')) {
-        await CreditReminderService().rescheduleAll(accounts);
-      }
-      if (selectedGroups.contains('certificates')) {
-        await CertificateReminderService().rescheduleAllCertificates(certificates);
-      }
-    } catch (_) {}
+
+      await DBHelper.importSelective(data, tables);
+      _historyCache.clear();
+      await load();
+
+      try {
+        if (selectedGroups.contains('recurring')) {
+          await _notif.rescheduleAll(recurring, settings.currency);
+        }
+        if (selectedGroups.contains('lent_money')) {
+          await _lendedNotif.rescheduleAllLended(
+            lended,
+            settings.currency,
+            personNameOf: (id) => personById(id)?.name ?? '',
+          );
+        }
+        if (selectedGroups.contains('loans')) {
+          await _loanNotif.rescheduleAllLoans(loans, settings.currency);
+        }
+        if (selectedGroups.contains('accounts')) {
+          await CreditReminderService().rescheduleAll(accounts);
+        }
+        if (selectedGroups.contains('certificates')) {
+          await CertificateReminderService()
+              .rescheduleAllCertificates(certificates);
+        }
+      } catch (_) {}
+    });
   }
 
   // ── External Backups ──────────────────────────────────────────────────
+  int lastExternalImportCount = 0;
+
   Future<bool> restoreExternalBackup(String source) async {
+    final isJson = source == 'greenstash';
+    final isCsv = source == 'trackwallet';
     final pickedFiles = await FilePickerPlatform.instance.pickFiles(
-      type: source == 'greenstash' ? FileType.custom : FileType.any,
-      allowedExtensions: source == 'greenstash' ? ['json'] : null,
+      type: (isJson || isCsv) ? FileType.custom : FileType.any,
+      allowedExtensions: isJson ? ['json'] : (isCsv ? ['csv'] : null),
     );
     if (pickedFiles.isEmpty) return false;
 
     final ext = pickedFiles.first.extension?.toLowerCase();
-    if (source == 'greenstash' && ext != 'json') {
+    if (isJson && ext != 'json') {
       throw const FormatException('Please select a .json file.');
+    }
+    if (isCsv && ext != 'csv') {
+      throw const FormatException('Please select a .csv file.');
     }
 
     final picked = pickedFiles.first;
@@ -3237,168 +3682,503 @@ class AppProvider extends ChangeNotifier {
 
     if (source == 'greenstash') {
       await _restoreGreenStash(contentStr);
+    } else if (source == 'trackwallet') {
+      lastExternalImportCount = await restoreTrackWallet(contentStr);
     }
     return true;
   }
 
+  /// Imports transactions, accounts, parent categories, subcategories, and
+  /// paired/single-leg transfers from a TrackWallet CSV export.
+  /// Returns the number of imported transactions.
+  Future<int> restoreTrackWallet(String csvContent) async {
+    return await _serializeMutation(() async {
+      // Strip optional UTF-8 BOM.
+      final cleaned = csvContent.startsWith('\uFEFF')
+          ? csvContent.substring(1)
+          : csvContent;
+      final lines = cleaned.split(RegExp(r'\r?\n'));
 
-  Future<void> _restoreGreenStash(String jsonStr) async {
-    final decoded = jsonDecode(jsonStr);
-    if (decoded is! Map || decoded['data'] is! List) {
-      throw const FormatException('Invalid GreenStash format.');
-    }
-
-    for (var item in decoded['data']) {
-      final goal = item['goal'];
-      if (goal == null) continue;
-
-      final sg = SavingsGoal(
-        id: newId(),
-        name: goal['title'] ?? 'GreenStash Goal',
-        targetAmount: (goal['targetAmount'] ?? 0).toDouble(),
-        currency: settings.currency,
-        colorValue: 0xFF386A1F, // Greenish
-        targetDate: goal['deadline'] != null && goal['deadline'] > 0
-            ? DateTime.fromMillisecondsSinceEpoch(goal['deadline'])
-            : null,
-      );
-      await addSavingsGoal(sg);
-
-      double currentAmount = 0.0;
-      if (item['transactions'] is List) {
-        for (var tx in item['transactions']) {
-          bool isDeposit = true;
-          if (tx['type'] == 1 || tx['type'] == 'withdrawal' || tx['type'] == 'Withdraw' || tx['isDeposit'] == false) {
-             isDeposit = false;
-          }
-          double amt = (tx['amount'] ?? 0).toDouble().abs();
-          
-          await DBHelper.insertSavingsContribution(SavingsContribution(
-            id: newId(),
-            goalId: sg.id,
-            amount: amt,
-            accountId: '', 
-            type: isDeposit ? 'contribution' : 'withdrawal',
-            date: DateTime.fromMillisecondsSinceEpoch(tx['timeStamp'] ?? DateTime.now().millisecondsSinceEpoch),
-            note: tx['notes'] ?? '',
-          ));
-          if (isDeposit) {
-            currentAmount += amt;
-          } else {
-            currentAmount -= amt;
-          }
+      int startIndex = -1;
+      for (int i = 0; i < lines.length; i++) {
+        final lower = lines[i].trim().toLowerCase();
+        if (lower.startsWith('date,transaction,account,currency,amount')) {
+          startIndex = i + 1;
+          break;
         }
       }
-      sg.currentAmount = currentAmount;
-      await DBHelper.updateSavingsGoal(sg);
+      if (startIndex == -1) {
+        throw const FormatException(
+          'Invalid TrackWallet CSV format: Header row not found.',
+        );
+      }
+
+      if (transactions.isNotEmpty || accounts.isNotEmpty) {
+        await _createSafetySnapshot();
+      }
+
+      const palette = <int>[
+        0xFF1565C0,
+        0xFFE65100,
+        0xFF2E7D32,
+        0xFF880E4F,
+        0xFF00838F,
+        0xFF6A1B9A,
+        0xFFF9A825,
+        0xFFAD1457,
+        0xFF00695C,
+        0xFFD84315,
+        0xFF283593,
+        0xFF558B2F,
+      ];
+
+      // Smart parent category aliases (TrackWallet -> Expensy default names).
+      const parentAliases = <String, List<String>>{
+        'food': ['food & dining', 'food'],
+        'bills': ['bills & utilities', 'bills'],
+        'transport': ['transport', 'transportation'],
+        'shopping': ['shopping'],
+        'health': ['health', 'medical'],
+        'leisure': ['entertainment', 'leisure'],
+        'personal care': ['personal care'],
+        'misc': ['other expense', 'misc', 'miscellaneous'],
+        'miscellaneous': ['other expense', 'miscellaneous', 'misc'],
+        'salary': ['salary'],
+        'investments': ['investments'],
+        'gifts': ['gifts'],
+        'education': ['education'],
+      };
+
+      final parsedRows = <({
+        DateTime date,
+        String txType,
+        String accountName,
+        String currency,
+        double signedAmount,
+        String categoryName,
+        String subcategoryName,
+        String note,
+      })>[];
+
+      final currencyCounts = <String, int>{};
+
+      for (int i = startIndex; i < lines.length; i++) {
+        final line = lines[i].trim();
+        if (line.isEmpty) continue;
+        final row = _parseCsvRow(line);
+        if (row.length < 7) continue;
+
+        final date = DateTime.tryParse(row[0].trim());
+        if (date == null) continue;
+        final txType = row[1].trim();
+        final accountName = row[2].trim();
+        final currency = row[3].trim().isNotEmpty
+            ? row[3].trim().toUpperCase()
+            : settings.currency;
+        final signedAmount = double.tryParse(row[4].trim());
+        if (signedAmount == null || signedAmount == 0) continue;
+
+        final categoryName = row[6].trim();
+        final subcategoryName = row.length > 7 ? row[7].trim() : '';
+        final note = row.length > 8 ? row[8].trim() : '';
+
+        currencyCounts[currency] = (currencyCounts[currency] ?? 0) + 1;
+        parsedRows.add((
+          date: date,
+          txType: txType,
+          accountName: accountName.isEmpty ? 'Imported Account' : accountName,
+          currency: currency,
+          signedAmount: signedAmount,
+          categoryName: categoryName,
+          subcategoryName: subcategoryName,
+          note: note,
+        ));
+      }
+
+      if (parsedRows.isEmpty) {
+        throw const FormatException(
+          'No valid transactions found in TrackWallet CSV.',
+        );
+      }
+
+      // Adopt CSV primary currency during initial onboarding.
+      if (!settings.onboarded && currencyCounts.isNotEmpty) {
+        final primaryCur = (currencyCounts.entries.toList()
+              ..sort((a, b) => b.value.compareTo(a.value)))
+            .first
+            .key;
+        if (primaryCur.isNotEmpty) {
+          updateSetting('currency', primaryCur);
+        }
+      }
+
+      final workingAccounts = List<Account>.from(accounts);
+      final newAccounts = <Account>[];
+      final accountDeltas = <String, double>{};
+
+      Account resolveAccount(String name, String currency) {
+        final existing = workingAccounts.firstWhereOrNull(
+          (a) => a.name.toLowerCase() == name.toLowerCase(),
+        );
+        if (existing != null) return existing;
+        final acc = Account(
+          id: newId(),
+          name: name,
+          type: 'bank',
+          currency: currency,
+          balance: 0,
+          colorValue: palette[workingAccounts.length % palette.length],
+          orderIndex: workingAccounts.length,
+        );
+        workingAccounts.add(acc);
+        newAccounts.add(acc);
+        return acc;
+      }
+
+      final workingCategories = List<AppCategory>.from(categories);
+      final newCategories = <AppCategory>[];
+
+      AppCategory resolveParentCategory(String rawName, String catType) {
+        final cleanName = rawName.isEmpty
+            ? (catType == 'income' ? 'Other Income' : 'Other Expense')
+            : rawName;
+        final lower = cleanName.toLowerCase();
+        final aliases = parentAliases[lower] ?? [lower];
+
+        final existing = workingCategories.firstWhereOrNull(
+          (c) =>
+              !c.isSystem &&
+              !c.isSubcategory &&
+              c.type == catType &&
+              aliases.contains(c.name.toLowerCase()),
+        );
+        if (existing != null) return existing;
+
+        final cat = AppCategory(
+          id: newId(),
+          name: cleanName,
+          type: catType,
+          colorValue: palette[workingCategories.length % palette.length],
+          iconCodePoint: 0,
+          orderIndex: workingCategories.length,
+        );
+        workingCategories.add(cat);
+        newCategories.add(cat);
+        return cat;
+      }
+
+      AppCategory resolveSubcategory(AppCategory parent, String subName) {
+        final lower = subName.toLowerCase();
+        final existing = workingCategories.firstWhereOrNull(
+          (c) =>
+              !c.isSystem &&
+              c.parentId == parent.id &&
+              c.name.toLowerCase() == lower,
+        );
+        if (existing != null) return existing;
+
+        final sub = AppCategory(
+          id: newId(),
+          name: subName,
+          type: parent.type,
+          colorValue: parent.colorValue,
+          iconCodePoint: 0,
+          orderIndex: workingCategories.length,
+          parentId: parent.id,
+        );
+        workingCategories.add(sub);
+        newCategories.add(sub);
+        return sub;
+      }
+
+      // Pair matching opposite-sign Transfer rows (same timestamp to second & amount).
+      final transferGroupByIndex = <int, String>{};
+      for (int i = 0; i < parsedRows.length; i++) {
+        final r = parsedRows[i];
+        if (r.txType.toLowerCase() != 'transfer' ||
+            transferGroupByIndex.containsKey(i)) {
+          continue;
+        }
+        final absAmt = r.signedAmount.abs();
+        int? matchIdx;
+        for (int j = i + 1; j < parsedRows.length; j++) {
+          if (transferGroupByIndex.containsKey(j)) continue;
+          final cand = parsedRows[j];
+          if (cand.txType.toLowerCase() != 'transfer') continue;
+          if ((cand.signedAmount.abs() - absAmt).abs() < 0.001 &&
+              cand.signedAmount * r.signedAmount < 0 &&
+              cand.accountName.toLowerCase() != r.accountName.toLowerCase() &&
+              cand.date.difference(r.date).inSeconds.abs() <= 5) {
+            matchIdx = j;
+            break;
+          }
+        }
+        final groupId = matchIdx != null
+            ? newId()
+            : 'tr_tw_single_${newId()}';
+        transferGroupByIndex[i] = groupId;
+        if (matchIdx != null) {
+          transferGroupByIndex[matchIdx] = groupId;
+        }
+      }
+
+      final newTransactions = <AppTransaction>[];
+      for (int i = 0; i < parsedRows.length; i++) {
+        final r = parsedRows[i];
+        final acc = resolveAccount(r.accountName, r.currency);
+        final absAmt = r.signedAmount.abs();
+        final lowerType = r.txType.toLowerCase();
+
+        if (lowerType == 'transfer') {
+          final isIncoming = r.signedAmount > 0;
+          final tx = AppTransaction(
+            id: newId(),
+            type: isIncoming ? 'income' : 'expense',
+            amount: absAmt,
+            description: isIncoming ? 'Transfer in' : 'Transfer out',
+            accountId: acc.id,
+            categoryId: 'sys_transfer',
+            date: r.date,
+            note: r.note,
+            currency: r.currency == acc.currency ? '' : r.currency,
+            transferGroupId: transferGroupByIndex[i],
+          );
+          newTransactions.add(tx);
+          accountDeltas[acc.id] =
+              (accountDeltas[acc.id] ?? 0.0) + (isIncoming ? absAmt : -absAmt);
+        } else {
+          final isIncome = lowerType == 'income' ||
+              (lowerType != 'expense' && r.signedAmount > 0);
+          final catType = isIncome ? 'income' : 'expense';
+          final parentCat = resolveParentCategory(r.categoryName, catType);
+          final targetCat = r.subcategoryName.isNotEmpty
+              ? resolveSubcategory(parentCat, r.subcategoryName)
+              : parentCat;
+
+          final desc = r.note.isNotEmpty
+              ? r.note
+              : (r.subcategoryName.isNotEmpty
+                  ? r.subcategoryName
+                  : parentCat.name);
+
+          final tx = AppTransaction(
+            id: newId(),
+            type: catType,
+            amount: absAmt,
+            description: desc,
+            accountId: acc.id,
+            categoryId: targetCat.id,
+            date: r.date,
+            note: r.note,
+            currency: r.currency == acc.currency ? '' : r.currency,
+          );
+          newTransactions.add(tx);
+          accountDeltas[acc.id] =
+              (accountDeltas[acc.id] ?? 0.0) + (isIncome ? absAmt : -absAmt);
+        }
+      }
+
+      await DBHelper.batchImportExternal(
+        newAccounts: newAccounts,
+        newCategories: newCategories,
+        newTransactions: newTransactions,
+        accountBalanceDeltas: accountDeltas,
+      );
+      await load();
+      return newTransactions.length;
+    });
+  }
+
+
+  Future<void> _restoreGreenStash(String jsonStr) async {
+    await _serializeMutation(() async {
+      final decoded = jsonDecode(jsonStr);
+      if (decoded is! Map || decoded['data'] is! List) {
+        throw const FormatException('Invalid GreenStash format.');
+      }
+
+      for (var item in decoded['data']) {
+        final goal = item['goal'];
+        if (goal == null) continue;
+
+        final sg = SavingsGoal(
+          id: newId(),
+          name: goal['title'] ?? 'GreenStash Goal',
+          targetAmount: (goal['targetAmount'] ?? 0).toDouble(),
+          currency: settings.currency,
+          colorValue: 0xFF386A1F,
+          targetDate: goal['deadline'] != null && goal['deadline'] > 0
+              ? DateTime.fromMillisecondsSinceEpoch(goal['deadline'])
+              : null,
+        );
+        await addSavingsGoal(sg);
+
+        double currentAmount = 0.0;
+        if (item['transactions'] is List) {
+          for (var tx in item['transactions']) {
+            bool isDeposit = true;
+            if (tx['type'] == 1 ||
+                tx['type'] == 'withdrawal' ||
+                tx['type'] == 'Withdraw' ||
+                tx['isDeposit'] == false) {
+              isDeposit = false;
+            }
+            double amt = (tx['amount'] ?? 0).toDouble().abs();
+
+            await DBHelper.insertSavingsContribution(SavingsContribution(
+              id: newId(),
+              goalId: sg.id,
+              amount: amt,
+              accountId: '',
+              type: isDeposit ? 'contribution' : 'withdrawal',
+              date: DateTime.fromMillisecondsSinceEpoch(
+                  tx['timeStamp'] ?? DateTime.now().millisecondsSinceEpoch),
+              note: tx['notes'] ?? '',
+            ));
+            if (isDeposit) {
+              currentAmount += amt;
+            } else {
+              currentAmount -= amt;
+            }
+          }
+        }
+        sg.currentAmount = currentAmount;
+        await DBHelper.updateSavingsGoal(sg);
+      }
+      await load();
+    });
+  }
+
+  // Parses a single CSV line according to RFC-4180 rules (quoted fields and "" escapes).
+  static List<String> _parseCsvRow(String line) {
+    final fields = <String>[];
+    final buf = StringBuffer();
+    bool inQuotes = false;
+
+    for (int i = 0; i < line.length; i++) {
+      final ch = line[i];
+      if (inQuotes) {
+        if (ch == '"') {
+          if (i + 1 < line.length && line[i + 1] == '"') {
+            buf.write('"');
+            i++;
+          } else {
+            inQuotes = false;
+          }
+        } else {
+          buf.write(ch);
+        }
+      } else {
+        if (ch == '"') {
+          inQuotes = true;
+        } else if (ch == ',') {
+          fields.add(buf.toString());
+          buf.clear();
+        } else {
+          buf.write(ch);
+        }
+      }
     }
-    await load();
+    fields.add(buf.toString());
+    return fields;
   }
 
   Future<void> restoreSay(String csvContent) async {
-    final lines = csvContent.split('\n');
-    // Say CSVs typically have a summary in the first ~9 lines, followed by empty line, then headers at line 10.
-    // We'll just look for the header row 'Date,Description,Amount,Currency,Account,Category,Type,Hint'
-    // or just assume data rows start after a certain point.
-    // A safer way is to find the header row, then parse the following rows.
-    int startIndex = -1;
-    for (int i = 0; i < lines.length; i++) {
-      if (lines[i].toLowerCase().startsWith('date,description,amount')) {
-        startIndex = i + 1;
-        break;
-      }
-    }
-    if (startIndex == -1) {
-      throw const FormatException('Invalid Say CSV format: Header row not found.');
-    }
-
-    for (int i = startIndex; i < lines.length; i++) {
-      final line = lines[i].trim();
-      if (line.isEmpty) continue;
-
-      try {
-        // Simple CSV splitting (Say doesn't typically escape commas in its basic export, but this might break if descriptions have commas)
-        // A more robust regex to handle quoted commas could be used, but for now simple split by comma.
-        // Actually, we can just use a simple regex for CSV parsing if needed, but a basic split is often sufficient if fields are simple.
-        // Let's use a regex that handles basic quoted fields just in case.
-        List<String> row = [];
-        final regex = RegExp(r',(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)');
-        final parts = line.split(regex);
-        for (var p in parts) {
-          if (p.startsWith('"') && p.endsWith('"') && p.length >= 2) {
-            row.add(p.substring(1, p.length - 1).replaceAll('""', '"'));
-          } else {
-            row.add(p);
-          }
+    await _serializeMutation(() async {
+      final lines = csvContent.split(RegExp(r'\r?\n'));
+      int startIndex = -1;
+      for (int i = 0; i < lines.length; i++) {
+        if (lines[i].toLowerCase().startsWith('date,description,amount')) {
+          startIndex = i + 1;
+          break;
         }
-
-        if (row.length < 7) continue;
-
-        final dateStr = row[0];
-        final desc = row[1];
-        final amountStr = row[2];
-        final currencyStr = row[3];
-        final accountName = row[4];
-        final categoryName = row[5];
-        final typeStr = row[6]; // Expense, Income, Adjustment
-        final hint = row.length > 7 ? row[7] : '';
-
-        final date = DateTime.tryParse(dateStr) ?? DateTime.now();
-        final amount = double.tryParse(amountStr) ?? 0.0;
-        
-        if (amount == 0 && typeStr != 'Adjustment') continue;
-
-        // Find or create account
-        var acc = accounts.firstWhere(
-          (a) => a.name.toLowerCase() == accountName.toLowerCase(),
-          orElse: () {
-            final newAcc = Account(
-              id: newId(), name: accountName, type: 'bank',
-              currency: currencyStr, balance: 0, colorValue: 0xFF6750A4,
-            );
-            DBHelper.insertAccount(newAcc);
-            accounts.add(newAcc);
-            return newAcc;
-          }
-        );
-
-        // Find or create category
-        final isIncome = typeStr == 'Income' || typeStr == 'Adjustment';
-        final catType = isIncome ? 'income' : 'expense';
-        final catNameToUse = typeStr == 'Adjustment' && categoryName.isEmpty ? 'Balance Adjustment' : categoryName;
-        var cat = categories.firstWhere(
-          (c) => c.name.toLowerCase() == catNameToUse.toLowerCase() && c.type == catType,
-          orElse: () {
-            final newCat = AppCategory(
-              id: newId(), name: catNameToUse, type: catType, colorValue: 0xFF9C27B0,
-            );
-            DBHelper.insertCategory(newCat);
-            categories.add(newCat);
-            return newCat;
-          }
-        );
-
-        // Create transaction
-        final tx = AppTransaction(
-          id: newId(),
-          type: catType,
-          amount: amount,
-          description: typeStr == 'Adjustment' && desc.isEmpty ? 'Initial Balance' : desc,
-          accountId: acc.id,
-          categoryId: cat.id,
-          date: date,
-          note: hint,
-          currency: currencyStr,
-        );
-
-        await addTransaction(tx);
-
-      } catch (e) {
-        // Skip malformed rows
-        continue;
       }
-    }
-    await load();
+      if (startIndex == -1) {
+        throw const FormatException(
+            'Invalid Say CSV format: Header row not found.');
+      }
+
+      for (int i = startIndex; i < lines.length; i++) {
+        final line = lines[i].trim();
+        if (line.isEmpty) continue;
+
+        try {
+          final row = _parseCsvRow(line);
+          if (row.length < 7) continue;
+
+          final dateStr = row[0];
+          final desc = row[1];
+          final amountStr = row[2];
+          final currencyStr = row[3];
+          final accountName = row[4];
+          final categoryName = row[5];
+          final typeStr = row[6]; // Expense, Income, Adjustment
+          final hint = row.length > 7 ? row[7] : '';
+
+          final date = DateTime.tryParse(dateStr) ?? DateTime.now();
+          final amount = double.tryParse(amountStr) ?? 0.0;
+
+          if (amount == 0 && typeStr != 'Adjustment') continue;
+
+          var acc = accounts.firstWhereOrNull(
+            (a) => a.name.toLowerCase() == accountName.toLowerCase(),
+          );
+          if (acc == null) {
+            acc = Account(
+              id: newId(),
+              name: accountName,
+              type: 'bank',
+              currency: currencyStr,
+              balance: 0,
+              colorValue: 0xFF6750A4,
+            );
+            await DBHelper.insertAccount(acc);
+            accounts = [...accounts, acc];
+          }
+
+          final isIncome = typeStr == 'Income' || typeStr == 'Adjustment';
+          final catType = isIncome ? 'income' : 'expense';
+          final catNameToUse =
+              typeStr == 'Adjustment' && categoryName.isEmpty
+                  ? 'Balance Adjustment'
+                  : categoryName;
+          var cat = categories.firstWhereOrNull(
+            (c) =>
+                c.name.toLowerCase() == catNameToUse.toLowerCase() &&
+                c.type == catType,
+          );
+          if (cat == null) {
+            cat = AppCategory(
+              id: newId(),
+              name: catNameToUse,
+              type: catType,
+              colorValue: 0xFF9C27B0,
+            );
+            await DBHelper.insertCategory(cat);
+            categories = [...categories, cat];
+          }
+
+          final tx = AppTransaction(
+            id: newId(),
+            type: catType,
+            amount: amount,
+            description: typeStr == 'Adjustment' && desc.isEmpty
+                ? 'Initial Balance'
+                : desc,
+            accountId: acc.id,
+            categoryId: cat.id,
+            date: date,
+            note: hint,
+            currency: currencyStr,
+          );
+
+          await addTransaction(tx);
+        } catch (_) {
+          continue;
+        }
+      }
+      await load();
+    });
   }
   
   bool isTransactionSelectionMode = false;
@@ -3414,43 +4194,85 @@ class AppProvider extends ChangeNotifier {
   List<Account> get nonBankAccounts =>
       accounts.where((a) => a.type != 'bank' || a.dontLinkToCard).toList();
 
-  void reorderCategories(int oldIndex, int newIndex, String type) {
+  void reorderCategories(int oldIndex, int newIndex, String type,
+      {String? parentId}) {
     if (oldIndex < newIndex) newIndex -= 1;
-    
-    final typedCats = categories.where((c) => c.type == type).toList();
-    if (oldIndex < 0 || oldIndex >= typedCats.length || newIndex < 0 || newIndex >= typedCats.length) return;
-    
-    final item = typedCats[oldIndex];
-    
-    categories.remove(item);
-    
+
+    final scoped = categories
+        .where((c) =>
+            !c.isSystem &&
+            c.type == type &&
+            (parentId == null ? !c.isSubcategory : c.parentId == parentId))
+        .toList();
+    if (oldIndex < 0 ||
+        oldIndex >= scoped.length ||
+        newIndex < 0 ||
+        newIndex >= scoped.length) {
+      return;
+    }
+
+    final item = scoped[oldIndex];
+    final next = List<AppCategory>.from(categories)..remove(item);
+
     int insertionIndex = 0;
-    int currentTypedIndex = 0;
-    for (int i = 0; i < categories.length; i++) {
-      if (categories[i].type == type) {
-        if (currentTypedIndex == newIndex) {
+    int currentScopedIndex = 0;
+    for (int i = 0; i < next.length; i++) {
+      final c = next[i];
+      final inScope = !c.isSystem &&
+          c.type == type &&
+          (parentId == null ? !c.isSubcategory : c.parentId == parentId);
+      if (inScope) {
+        if (currentScopedIndex == newIndex) {
           insertionIndex = i;
           break;
         }
-        currentTypedIndex++;
+        currentScopedIndex++;
       }
       insertionIndex = i + 1;
     }
-    
-    categories.insert(insertionIndex, item);
+
+    next.insert(insertionIndex, item);
+    for (int i = 0; i < next.length; i++) {
+      next[i] = next[i].copyWith(orderIndex: i);
+    }
+    categories = next;
     notifyListeners();
+    final ids = next.map((c) => c.id).toList();
+    _serializeMutation(() async {
+      await DBHelper.updateCategoryOrder(ids);
+    });
   }
 
   Future<VoidCallback> deleteCategoryWithUndo(String id) async {
     final cat = categories.firstWhere((c) => c.id == id);
     final idx = categories.indexOf(cat);
-    categories.removeAt(idx);
+    final childSnapshots = categories
+        .where((c) => c.parentId == id)
+        .map((c) => c)
+        .toList();
+    categories = categories
+        .where((c) => c.id != id)
+        .map((c) => c.parentId == id ? c.copyWith(clearParentId: true) : c)
+        .toList();
     await DBHelper.deleteCategory(id);
     notifyListeners();
-    return () async {
-      categories.insert(idx, cat);
-      await DBHelper.insertCategory(cat);
+    return () {
+      final next = List<AppCategory>.from(categories);
+      final restoreIdx = idx.clamp(0, next.length);
+      next.insert(restoreIdx, cat);
+      for (int i = 0; i < next.length; i++) {
+        if (childSnapshots.any((cs) => cs.id == next[i].id)) {
+          next[i] = next[i].copyWith(parentId: id);
+        }
+      }
+      categories = next;
       notifyListeners();
+      _serializeMutation(() async {
+        await DBHelper.insertCategory(cat);
+        for (final child in childSnapshots) {
+          await DBHelper.updateCategory(child);
+        }
+      });
     };
   }
 
@@ -3473,13 +4295,41 @@ class AppProvider extends ChangeNotifier {
 
   Future<VoidCallback> deleteTransactionWithUndo(String id) async {
     final tx = transactions.firstWhere((t) => t.id == id);
+    if (tx.transferGroupId != null && tx.transferGroupId!.isNotEmpty) {
+      final groupMembers = transactions
+          .where((t) => t.transferGroupId == tx.transferGroupId)
+          .toList();
+      final groupSplits = <String, List<TransactionSplit>>{
+        for (final m in groupMembers)
+          m.id: List<TransactionSplit>.from(getSplits(m.id)),
+      };
+      await deleteTransaction(id);
+      return () async {
+        await _serializeMutation(() async {
+          for (final member in groupMembers) {
+            final delta = _txDelta(member);
+            final balAccId = balanceAccountIdFor(member.accountId);
+            await DBHelper.applyTransactionWithBalance(member, delta);
+            _patchAccountBalance(balAccId, delta);
+            _insertTransactionInMemory(member);
+            final mSplits = groupSplits[member.id] ?? const [];
+            if (mSplits.isNotEmpty) {
+              await DBHelper.saveTransactionSplits(member.id, mSplits);
+            }
+          }
+          splits = await DBHelper.getAllSplits();
+          _rebuildSplitsCache();
+          notifyListeners();
+          updateHomeWidgets();
+          recordNetWorthSnapshot();
+        });
+      };
+    }
+
     final txSplits = List<TransactionSplit>.from(getSplits(id));
     await deleteTransaction(id);
     return () async {
-      await addTransaction(tx);
-      if (txSplits.isNotEmpty) {
-        await saveTransactionSplits(tx.id, txSplits);
-      }
+      await addTransaction(tx, splits: txSplits.isNotEmpty ? txSplits : null);
     };
   }
 
@@ -3520,7 +4370,9 @@ class AppProvider extends ChangeNotifier {
   }
 
   List<AppTransaction> getAccountTransactions(String id) {
-    return transactions.where((t) => t.accountId == id).toList();
+    return transactions
+        .where((t) => t.accountId == id || t.paidViaAccountId == id)
+        .toList();
   }
 
   double getAccountIncome(String id) {
@@ -3536,11 +4388,14 @@ class AppProvider extends ChangeNotifier {
   }
 
   List<AppTransaction> findPossibleDuplicates(AppTransaction tx, {String? excludeId}) {
-    return transactions.where((t) => 
+    if (tx.isTransfer || tx.isInvestment) return const [];
+    return transactions.where((t) =>
       t.id != excludeId &&
-      t.accountId == tx.accountId && 
-      t.amount == tx.amount && 
-      t.type == tx.type && 
+      !t.isTransfer &&
+      !t.isInvestment &&
+      t.accountId == tx.accountId &&
+      t.amount == tx.amount &&
+      t.type == tx.type &&
       t.date.difference(tx.date).inDays.abs() <= 2
     ).toList();
   }

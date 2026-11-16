@@ -1163,5 +1163,35 @@
   "onboarding_featureRecurringTitle": "Recurring Subscriptions",
   "onboarding_featureRecurringDesc": "Stay informed before recurring bills and memberships auto-renew.",
   "onboarding_allowNotifications": "Allow Notifications",
-  "onboarding_maybeLater": "Maybe Later"
+  "onboarding_maybeLater": "Maybe Later",
+  "categories_subcategories": "Subcategories",
+  "categories_addSubcategory": "Add Subcategory",
+  "categories_parentCategory": "Parent Category",
+  "categories_noneRoot": "None (Top-Level Category)",
+  "categories_loadDefaults": "Load Default Subcategories",
+  "categories_defaultsLoaded": "Loaded {count} default subcategories",
+  "@categories_defaultsLoaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "categories_defaultsAlreadyLoaded": "Default subcategories are already loaded",
+  "statistics_byCategory": "By Category",
+  "statistics_bySubcategory": "By Subcategory",
+  "backup_importFromTrackWallet": "Import from TrackWallet (.csv)",
+  "backup_importedTransactions": "Imported {count} transactions successfully!",
+  "@backup_importedTransactions": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "onboarding_restoreTrackWallet": "Import from TrackWallet (.csv)",
+  "transfer_categoryLocked": "Transfer (Default & Only Category)",
+  "loans_noLoans": "No loans tracked yet",
+  "loans_noLoansSub": "Tap + to track mortgages, personal loans, or installments",
+  "certificates_noCertificatesSub": "Tap + to track bank certificates and fixed deposits"
 }

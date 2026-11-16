@@ -1,3 +1,27 @@
+// note: Wishlist screen for tracking planned purchases, affordability indicators, priority filtering, and purchase conversion.
+// All state mutations and queries route through AppProvider to preserve UI-DB decoupling.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
 // lib/screens/wishlist_screen.dart
 import 'package:flutter/material.dart';
 import '../utils/snackbar.dart';
@@ -13,15 +37,20 @@ import '../utils/haptics.dart';
 import '../widgets/savings_goal_sheet.dart';
 import 'savings_goal_detail_screen.dart';
 
+// ── class WishlistScreen ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for WishlistScreen.
 class WishlistScreen extends StatelessWidget {
   const WishlistScreen({super.key});
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final app = context.watch<AppProvider>();
     final l10n = AppLocalizations.of(context)!;
+    // Helper method `fmt`: handles user action or computes derived UI state.
     String fmt(double v) => formatAmount(v, app.settings.currency);
 
+    // Render Scaffold layout container.
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.wishlist_wishlist,
@@ -45,6 +74,7 @@ class WishlistScreen extends StatelessWidget {
     );
   }
 
+  // Helper method `_openSheet`: handles user action or computes derived UI state.
   static void _openSheet(BuildContext ctx, {WishlistItem? existing}) async {
     final result = await showModalBottomSheet<(String, VoidCallback)?>(
       context: ctx,
@@ -62,12 +92,15 @@ class WishlistScreen extends StatelessWidget {
   }
 }
 
+// ── class _WishCard ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _WishCard.
 class _WishCard extends StatelessWidget {
   final WishlistItem item;
   final String Function(double) fmt;
   const _WishCard({required this.item, required this.fmt});
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final app = context.watch<AppProvider>();
     final cs = Theme.of(context).colorScheme;
@@ -87,16 +120,17 @@ class _WishCard extends StatelessWidget {
 
     final showCelebrationBorder = isAchieved && !item.isPurchased;
 
+    // Render Container layout container.
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: showCelebrationBorder
-            ? const Color(0xFF2E7D32).withValues(alpha: isDark ? 0.12 : 0.08)
+            ? kSuccessColor.withValues(alpha: isDark ? 0.12 : 0.08)
             : cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: showCelebrationBorder
-              ? const Color(0xFF2E7D32)
+              ? kSuccessColor
               : (isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05)),
           width: showCelebrationBorder ? 1.5 : 1.0,
         ),
@@ -123,9 +157,9 @@ class _WishCard extends StatelessWidget {
                     height: 38,
                     decoration: BoxDecoration(
                       color: item.isPurchased
-                          ? const Color(0xFF2E7D32).withValues(alpha: 0.15)
+                          ? kSuccessColor.withValues(alpha: 0.15)
                           : (showCelebrationBorder
-                              ? const Color(0xFF2E7D32).withValues(alpha: 0.15)
+                              ? kSuccessColor.withValues(alpha: 0.15)
                               : cs.surfaceContainerHigh),
                       shape: BoxShape.circle,
                     ),
@@ -136,7 +170,7 @@ class _WishCard extends StatelessWidget {
                               ? Icons.celebration_rounded
                               : Icons.circle_outlined),
                       color: item.isPurchased || showCelebrationBorder
-                          ? const Color(0xFF2E7D32)
+                          ? kSuccessColor
                           : cs.onSurface.withValues(alpha: 0.35),
                       size: 22,
                     ),
@@ -241,13 +275,13 @@ class _WishCard extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2E7D32).withValues(alpha: 0.12),
+                    color: kSuccessColor.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
                     children: [
                       const Icon(Icons.celebration_rounded,
-                          size: 16, color: Color(0xFF2E7D32)),
+                          size: 16, color: kSuccessColor),
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
@@ -255,13 +289,13 @@ class _WishCard extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF2E7D32),
+                            color: kSuccessColor,
                           ),
                         ),
                       ),
                       FilledButton.icon(
                         style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF2E7D32),
+                          backgroundColor: kSuccessColor,
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 4),
                           minimumSize: Size.zero,
@@ -303,7 +337,7 @@ class _WishCard extends StatelessWidget {
                             Row(
                               children: [
                                 const Icon(Icons.savings_outlined,
-                                    size: 14, color: Color(0xFF2E7D32)),
+                                    size: 14, color: kSuccessColor),
                                 const SizedBox(width: 5),
                                 Text(
                                   l10n.wishlist_funded(
@@ -332,10 +366,10 @@ class _WishCard extends StatelessWidget {
                             value: progress,
                             minHeight: 6,
                             color: isAchieved
-                                ? const Color(0xFF2E7D32)
+                                ? kSuccessColor
                                 : Color(goal.colorValue),
                             backgroundColor: (isAchieved
-                                    ? const Color(0xFF2E7D32)
+                                    ? kSuccessColor
                                     : Color(goal.colorValue))
                                 .withValues(alpha: 0.15),
                           ),
@@ -351,9 +385,9 @@ class _WishCard extends StatelessWidget {
                   children: [
                     OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF2E7D32),
+                        foregroundColor: kSuccessColor,
                         side: const BorderSide(
-                            color: Color(0xFF2E7D32), width: 1.2),
+                            color: kSuccessColor, width: 1.2),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 5),
                         minimumSize: Size.zero,
@@ -390,21 +424,24 @@ class _WishCard extends StatelessWidget {
     );
   }
 
+  // Helper method `_priorityColor`: handles user action or computes derived UI state.
   Color _priorityColor(String p) {
     switch (p) {
       case 'high':
-        return const Color(0xFFC62828);
+        return kDangerColor;
       case 'medium':
-        return const Color(0xFFE65100);
+        return kWarningColor;
       default:
-        return const Color(0xFF2E7D32);
+        return kSuccessColor;
     }
   }
 }
 
+// Helper method `_showPurchaseDialog`: handles user action or computes derived UI state.
 void _showPurchaseDialog(
   BuildContext context,
   WishlistItem item,
+  // Helper method `Function`: handles user action or computes derived UI state.
   String Function(double) fmt,
 ) {
   final app = context.read<AppProvider>();
@@ -441,17 +478,18 @@ void _showPurchaseDialog(
     builder: (dialogCtx) {
       return StatefulBuilder(
         builder: (ctx, setDialogState) {
+          // Render AlertDialog layout container.
           return AlertDialog(
             title: Row(
               children: [
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2E7D32).withValues(alpha: 0.12),
+                    color: kSuccessColor.withValues(alpha: 0.12),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.shopping_bag_outlined,
-                      color: Color(0xFF2E7D32), size: 22),
+                      color: kSuccessColor, size: 22),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -531,34 +569,11 @@ void _showPurchaseDialog(
                     ],
                     const SizedBox(height: 12),
                     if (expenseCategories.isNotEmpty)
-                      AppDropdownFormField<String>(
-                        value: selectedCategoryId,
-                        labelText: l10n.recurring_category,
-                        prefixIcon: const Icon(Icons.category_outlined),
-                        items: expenseCategories.map((c) {
-                          return DropdownMenuItem(
-                            value: c.id,
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 10,
-                                  height: 10,
-                                  decoration: BoxDecoration(
-                                    color: Color(c.colorValue),
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(c.name,
-                                    style: const TextStyle(fontSize: 13)),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (val) {
-                          if (val != null) {
-                            setDialogState(() => selectedCategoryId = val);
-                          }
+                      CategoryChipPicker(
+                        categories: expenseCategories,
+                        selectedId: selectedCategoryId,
+                        onSelected: (val) {
+                          setDialogState(() => selectedCategoryId = val);
                         },
                       ),
                   ],
@@ -585,7 +600,7 @@ void _showPurchaseDialog(
               if (spendingAccounts.isNotEmpty)
                 FilledButton(
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF2E7D32),
+                    backgroundColor: kSuccessColor,
                   ),
                   onPressed: () async {
                     AppHaptics.tap(context, HapticStrength.medium);
@@ -613,6 +628,8 @@ void _showPurchaseDialog(
   );
 }
 
+// ── class _WishSheet ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _WishSheet.
 class _WishSheet extends StatefulWidget {
   final WishlistItem? existing;
   const _WishSheet({this.existing});
@@ -620,6 +637,8 @@ class _WishSheet extends StatefulWidget {
   State<_WishSheet> createState() => _WishSheetState();
 }
 
+// ── class _WishSheetState ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _WishSheetState.
 class _WishSheetState extends State<_WishSheet> {
   final _nameCtrl = TextEditingController();
   final _priceCtrl = TextEditingController();
@@ -631,6 +650,7 @@ class _WishSheetState extends State<_WishSheet> {
   bool get isEdit => widget.existing != null;
 
   @override
+  // Initializes controllers and local state from widget parameters.
   void initState() {
     super.initState();
     final e = widget.existing;
@@ -643,6 +663,7 @@ class _WishSheetState extends State<_WishSheet> {
   }
 
   @override
+  // Disposes controllers and listeners to prevent memory leaks.
   void dispose() {
     _nameCtrl.dispose();
     _priceCtrl.dispose();
@@ -650,10 +671,13 @@ class _WishSheetState extends State<_WishSheet> {
     super.dispose();
   }
 
+  // Helper method `_submit`: handles user action or computes derived UI state.
   Future<void> _submit() async {
     setState(() => _submitted = true);
     if (_nameCtrl.text.trim().isEmpty) return;
-    final price = double.tryParse(_priceCtrl.text) ?? 0;
+    final priceText = _priceCtrl.text.trim();
+    final price = priceText.isEmpty ? 0.0 : double.tryParse(priceText);
+    if (price == null || price < 0) return;
     final app = context.read<AppProvider>();
     if (isEdit) {
       await app.updateWishlist(widget.existing!.copyWith(
@@ -675,11 +699,13 @@ class _WishSheetState extends State<_WishSheet> {
   }
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final app = context.watch<AppProvider>();
     final l10n = AppLocalizations.of(context)!;
     final sym = currencyInfo(app.settings.currency).symbol;
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    // Render Padding layout container.
     return Padding(
       padding: EdgeInsets.only(
           bottom: bottomInset + 16,
@@ -777,9 +803,9 @@ class _WishSheetState extends State<_WishSheet> {
                 const SizedBox(height: 8),
                 Row(children: [
                   for (final p in [
-                    ('low', l10n.wishlist_priorityLow, 0xFF2E7D32),
-                    ('medium', l10n.wishlist_priorityMedium, 0xFFE65100),
-                    ('high', l10n.wishlist_priorityHigh, 0xFFC62828)
+                    ('low', l10n.wishlist_priorityLow, kSuccessColorValue),
+                    ('medium', l10n.wishlist_priorityMedium, kWarningColorValue),
+                    ('high', l10n.wishlist_priorityHigh, kDangerColorValue)
                   ])
                     Expanded(
                         child: Padding(

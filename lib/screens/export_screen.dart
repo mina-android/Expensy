@@ -1,19 +1,28 @@
+// note: Data export screen generating filtered CSV, Excel (.xlsx), and formatted PDF financial statements.
+// All state mutations and queries route through AppProvider to preserve UI-DB decoupling.
 // lib/screens/export_screen.dart
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../providers/app_provider.dart';
 import '../services/pdf_report_service.dart';
 import '../utils/haptics.dart';
 
+// ── enum ExportFormat ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for ExportFormat.
 enum ExportFormat { excel, pdf }
 
+// ── class ExportScreen ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for ExportScreen.
 class ExportScreen extends StatefulWidget {
   const ExportScreen({super.key});
   @override
   State<ExportScreen> createState() => _ExportScreenState();
 }
 
+// ── class _ExportScreenState ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _ExportScreenState.
 class _ExportScreenState extends State<ExportScreen> {
   DateTime _from = DateTime.now().subtract(const Duration(days: 30));
   DateTime _to = DateTime.now();
@@ -22,6 +31,7 @@ class _ExportScreenState extends State<ExportScreen> {
   String? _ok;
   String? _err;
 
+  // Helper method `_pickFrom`: handles user action or computes derived UI state.
   Future<void> _pickFrom() async {
     final p = await showDatePicker(
       context: context,
@@ -32,6 +42,7 @@ class _ExportScreenState extends State<ExportScreen> {
     if (p != null) setState(() => _from = p);
   }
 
+  // Helper method `_pickTo`: handles user action or computes derived UI state.
   Future<void> _pickTo() async {
     final p = await showDatePicker(
       context: context,
@@ -42,6 +53,7 @@ class _ExportScreenState extends State<ExportScreen> {
     if (p != null) setState(() => _to = p);
   }
 
+  // Helper method `_exportExcel`: handles user action or computes derived UI state.
   Future<void> _exportExcel(AppLocalizations l10n) async {
     setState(() {
       _busy = true;
@@ -69,6 +81,7 @@ class _ExportScreenState extends State<ExportScreen> {
     }
   }
 
+  // Helper method `_exportPdf`: handles user action or computes derived UI state.
   Future<void> _exportPdf(AppLocalizations l10n) async {
     setState(() {
       _busy = true;
@@ -97,6 +110,7 @@ class _ExportScreenState extends State<ExportScreen> {
     }
   }
 
+  // Helper method `_printPdf`: handles user action or computes derived UI state.
   Future<void> _printPdf(AppLocalizations l10n) async {
     try {
       AppHaptics.tap(context, HapticStrength.light);
@@ -113,6 +127,7 @@ class _ExportScreenState extends State<ExportScreen> {
     }
   }
 
+  // Helper method `_sharePdf`: handles user action or computes derived UI state.
   Future<void> _sharePdf(AppLocalizations l10n) async {
     try {
       AppHaptics.tap(context, HapticStrength.light);
@@ -130,6 +145,7 @@ class _ExportScreenState extends State<ExportScreen> {
   }
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
@@ -143,6 +159,7 @@ class _ExportScreenState extends State<ExportScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isPdf = _selectedFormat == ExportFormat.pdf;
 
+    // Render Scaffold layout container.
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -348,6 +365,8 @@ class _ExportScreenState extends State<ExportScreen> {
   }
 }
 
+// ── class _DateCard ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _DateCard.
 class _DateCard extends StatelessWidget {
   final String label;
   final DateTime date;
@@ -359,6 +378,7 @@ class _DateCard extends StatelessWidget {
   });
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -396,15 +416,19 @@ class _DateCard extends StatelessWidget {
   }
 }
 
+// ── class _Banner ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _Banner.
 class _Banner extends StatelessWidget {
   final bool ok;
   final String msg;
   const _Banner({required this.ok, required this.msg});
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final color = ok ? const Color(0xFF2E7D32) : const Color(0xFFC62828);
+    final color = ok ? kSuccessColor : kDangerColor;
+    // Render Container layout container.
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),

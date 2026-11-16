@@ -6,7 +6,6 @@ import '../theme/app_theme.dart';
 import '../utils/haptics.dart';
 import '../screens/add_transaction_screen.dart';
 import 'package:provider/provider.dart';
-import 'package:shimmer/shimmer.dart';
 import '../providers/app_provider.dart';
 
 // ── Empty state ───────────────────────────────────────────────────────────────
@@ -36,76 +35,6 @@ class EmptyState extends StatelessWidget {
                 fontSize: 13, color: cs.onSurface.withValues(alpha: 0.35))),
       ],
     ]));
-  }
-}
-
-// ── Skeleton state ────────────────────────────────────────────────────────────
-class TransactionSkeleton extends StatelessWidget {
-  const TransactionSkeleton({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final isDark = cs.brightness == Brightness.dark;
-    final baseColor = isDark ? Colors.grey[800]! : Colors.grey[300]!;
-    final highlightColor = isDark ? Colors.grey[700]! : Colors.grey[100]!;
-
-    return Shimmer.fromColors(
-      baseColor: baseColor,
-      highlightColor: highlightColor,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-        child: Row(
-          children: [
-            // Icon placeholder
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: baseColor,
-                shape: BoxShape.circle,
-              ),
-            ),
-            const SizedBox(width: 16),
-            // Text placeholders
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: double.infinity,
-                    height: 16,
-                    decoration: BoxDecoration(
-                      color: baseColor,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    width: 100,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: baseColor,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 16),
-            // Amount placeholder
-            Container(
-              width: 60,
-              height: 20,
-              decoration: BoxDecoration(
-                color: baseColor,
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }
 
@@ -162,18 +91,55 @@ class CategoryDot extends StatelessWidget {
 
   IconData _catIcon(String name) {
     final n = name.toLowerCase();
-    if (n.contains('food') || n.contains('dining')) {
+    if (n.contains('transfer')) return Icons.swap_horiz_rounded;
+    if (n.contains('grocer')) return Icons.local_grocery_store_outlined;
+    if (n.contains('coffee') || n.contains('tea') || n.contains('cafe')) {
+      return Icons.local_cafe_outlined;
+    }
+    if (n.contains('delivery') || n.contains('snack') || n.contains('fast')) {
+      return Icons.fastfood_outlined;
+    }
+    if (n.contains('food') || n.contains('dining') || n.contains('restaur')) {
       return Icons.restaurant_outlined;
     }
-    if (n.contains('transport') || n.contains('car')) {
+    if (n.contains('fuel') || n.contains('petrol') || n.contains('gas')) {
+      return Icons.local_gas_station_outlined;
+    }
+    if (n.contains('parking')) return Icons.local_parking_outlined;
+    if (n.contains('maint') || n.contains('repair')) return Icons.build_outlined;
+    if (n.contains('taxi') || n.contains('ride')) return Icons.local_taxi_outlined;
+    if (n.contains('public') || n.contains('bus') || n.contains('train')) {
+      return Icons.directions_bus_outlined;
+    }
+    if (n.contains('transport') || n.contains('car') || n.contains('vehicle')) {
       return Icons.directions_car_outlined;
     }
+    if (n.contains('cloth')) return Icons.checkroom_outlined;
+    if (n.contains('electron') || n.contains('tech')) return Icons.devices_outlined;
+    if (n.contains('home') || n.contains('rent') || n.contains('furnit') || n.contains('housing')) {
+      return Icons.home_outlined;
+    }
     if (n.contains('shop')) return Icons.shopping_bag_outlined;
-    if (n.contains('bill') || n.contains('util')) return Icons.receipt_outlined;
-    if (n.contains('health') || n.contains('med')) {
+    if (n.contains('internet') || n.contains('wifi')) return Icons.wifi_outlined;
+    if (n.contains('elec')) return Icons.electrical_services_outlined;
+    if (n.contains('water')) return Icons.water_drop_outlined;
+    if (n.contains('phone') || n.contains('mobile')) return Icons.phone_android_outlined;
+    if (n.contains('bill') || n.contains('util') || n.contains('emi')) {
+      return Icons.receipt_outlined;
+    }
+    if (n.contains('health') || n.contains('med') || n.contains('doctor') || n.contains('docter')) {
       return Icons.favorite_outline;
     }
-    if (n.contains('entertain')) return Icons.movie_outlined;
+    if (n.contains('game')) return Icons.sports_esports_outlined;
+    if (n.contains('sport')) return Icons.sports_soccer_outlined;
+    if (n.contains('entertain') || n.contains('movie') || n.contains('leisure')) {
+      return Icons.movie_outlined;
+    }
+    if (n.contains('baby') || n.contains('child')) return Icons.child_care_outlined;
+    if (n.contains('salon') || n.contains('cosmetic') || n.contains('personal')) {
+      return Icons.spa_outlined;
+    }
+    if (n.contains('subscrip')) return Icons.subscriptions_outlined;
     if (n.contains('edu')) return Icons.school_outlined;
     if (n.contains('salary') || n.contains('wage')) return Icons.work_outline;
     if (n.contains('freelance')) return Icons.laptop_outlined;
@@ -313,10 +279,7 @@ class AccountCardPicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    AppProvider? app;
-    try {
-      app = context.watch<AppProvider>();
-    } catch (_) {}
+    final app = Provider.of<AppProvider?>(context);
     final items = allowNone
         ? [null, ...accounts.map((a) => a as Account?)]
         : accounts.map((a) => a as Account?).toList();
@@ -335,7 +298,8 @@ class AccountCardPicker extends StatelessWidget {
           }
           final sel = selectedId == acc.id;
           final color = Color(acc.colorValue);
-          final balance = app != null ? app.getEffectiveBalance(acc) : acc.balance;
+          final balance =
+              app != null ? app.getEffectiveBalance(acc) : acc.balance;
           return GestureDetector(
             onTap: () => onSelected(acc.id),
             child: AnimatedContainer(
@@ -428,51 +392,107 @@ class CategoryChipPicker extends StatelessWidget {
   final List<AppCategory> categories;
   final String? selectedId;
   final void Function(String) onSelected;
+  final bool showSubcategories;
 
   const CategoryChipPicker({
     super.key,
     required this.categories,
     required this.selectedId,
     required this.onSelected,
+    this.showSubcategories = true,
   });
 
-  @override
-  Widget build(BuildContext context) => Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: categories.map((cat) {
-          final sel = selectedId == cat.id;
-          final color = Color(cat.colorValue);
-          return GestureDetector(
-            onTap: () => onSelected(cat.id),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 100),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+  Widget _buildChip(AppCategory cat, bool sel, {String? labelOverride}) {
+    final color = Color(cat.colorValue);
+    return GestureDetector(
+      onTap: () => onSelected(cat.id),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 100),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: sel ? color : color.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+              color: sel ? color : color.withValues(alpha: 0.4),
+              width: sel ? 2 : 1),
+        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Container(
+              width: 8,
+              height: 8,
               decoration: BoxDecoration(
-                color: sel ? color : color.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                    color: sel ? color : color.withValues(alpha: 0.4),
-                    width: sel ? 2 : 1),
+                  color: sel ? Colors.white : color,
+                  shape: BoxShape.circle)),
+          const SizedBox(width: 6),
+          Text(labelOverride ?? cat.name,
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: sel ? Colors.white : color)),
+        ]),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final visible = categories.where((c) => !c.isSystem).toList();
+    final roots = visible.where((c) => !c.isSubcategory).toList();
+    final selectedCat = visible.where((c) => c.id == selectedId).firstOrNull;
+    final activeRootId = selectedCat == null
+        ? null
+        : (selectedCat.isSubcategory ? selectedCat.parentId : selectedCat.id);
+    final activeRoot =
+        roots.where((c) => c.id == activeRootId).firstOrNull;
+    final subs = (showSubcategories && activeRoot != null)
+        ? visible.where((c) => c.parentId == activeRoot.id).toList()
+        : const <AppCategory>[];
+
+    // If a category list only contains flat/orphan items, fall back to rendering visible.
+    final topList = roots.isNotEmpty ? roots : visible;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: topList
+              .map((cat) => _buildChip(cat, cat.id == activeRootId))
+              .toList(),
+        ),
+        if (subs.isNotEmpty && activeRoot != null) ...[
+          const SizedBox(height: 10),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+            decoration: BoxDecoration(
+              color: Color(activeRoot.colorValue).withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(14),
+              border: Border(
+                left: BorderSide(
+                  color: Color(activeRoot.colorValue).withValues(alpha: 0.55),
+                  width: 3,
+                ),
               ),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                        color: sel ? Colors.white : color,
-                        shape: BoxShape.circle)),
-                const SizedBox(width: 6),
-                Text(cat.name,
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: sel ? Colors.white : color)),
-              ]),
             ),
-          );
-        }).toList(),
-      );
+            child: Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                _buildChip(
+                  activeRoot,
+                  selectedId == activeRoot.id,
+                  labelOverride: 'All ${activeRoot.name}',
+                ),
+                ...subs.map((sub) => _buildChip(sub, selectedId == sub.id)),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
 }
 
 // ── Category icon catalogue ───────────────────────────────────────────────────
@@ -652,7 +672,7 @@ class _AddTypeSheet extends StatelessWidget {
                 child: _TypeOptionCard(
               icon: Icons.arrow_downward_rounded,
               label: l10n.add_transaction_income,
-              color: const Color(0xFF2E7D32),
+              color: kSuccessColor,
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -667,7 +687,7 @@ class _AddTypeSheet extends StatelessWidget {
                 child: _TypeOptionCard(
               icon: Icons.arrow_upward_rounded,
               label: l10n.add_transaction_expense,
-              color: const Color(0xFFC62828),
+              color: kDangerColor,
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -844,7 +864,7 @@ class _ExpandableFabState extends State<ExpandableFab>
       ExpandableFabItem(
         label: l10n.add_transaction_income,
         icon: Icons.arrow_downward_rounded,
-        color: const Color(0xFF2E7D32),
+        color: kSuccessColor,
         onTap: widget.onIncome ?? () {},
       ),
     ];
@@ -1141,6 +1161,225 @@ class AppDropdown<T> extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ── Reusable Modal Sheet Shell (D5.1) ─────────────────────────────────────────
+/// Standardized bottom-sheet wrapper with keyboard-inset padding, optional drag
+/// handle, and optional title header.
+class SheetShell extends StatelessWidget {
+  final String? title;
+  final String? subtitle;
+  final bool showHandle;
+  final double maxHeightFactor;
+  final List<Widget> children;
+
+  const SheetShell({
+    super.key,
+    this.title,
+    this.subtitle,
+    this.showHandle = false,
+    this.maxHeightFactor = 0.88,
+    required this.children,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: bottomInset + 16,
+        left: 20,
+        right: 20,
+        top: showHandle ? 12 : 20,
+      ),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * maxHeightFactor,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (showHandle) ...[
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: cs.outlineVariant,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+              if (title != null)
+                Text(
+                  title!,
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleLarge
+                      ?.copyWith(fontWeight: FontWeight.w800),
+                ),
+              if (subtitle != null)
+                Text(
+                  subtitle!,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: cs.onSurface.withValues(alpha: 0.55),
+                  ),
+                ),
+              if (title != null || subtitle != null) const SizedBox(height: 12),
+              ...children,
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Reusable Status Badge Pill (D5.2) ─────────────────────────────────────────
+/// Compact colored pill badge used for status indicators (e.g. Settled, Active,
+/// Overdue) that adapts cleanly in both light and dark/AMOLED themes.
+class StatusBadge extends StatelessWidget {
+  final String label;
+  final Color color;
+  final IconData? icon;
+
+  const StatusBadge({
+    super.key,
+    required this.label,
+    required this.color,
+    this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 12, color: color),
+            const SizedBox(width: 4),
+          ],
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Reusable Binary Type Toggle Chips (D5.3) ──────────────────────────────────
+/// Animated two-option toggle row (e.g. Expense/Income or Lent/Borrowed) with
+/// dark/AMOLED-safe unselected tinting.
+class TypeToggleChips extends StatelessWidget {
+  final String selectedValue;
+  final String firstValue;
+  final String firstLabel;
+  final Color firstColor;
+  final Color? firstLightTint;
+  final String secondValue;
+  final String secondLabel;
+  final Color secondColor;
+  final Color? secondLightTint;
+  final ValueChanged<String> onChanged;
+  final double verticalPadding;
+
+  const TypeToggleChips({
+    super.key,
+    required this.selectedValue,
+    required this.firstValue,
+    required this.firstLabel,
+    this.firstColor = kDangerColor,
+    this.firstLightTint,
+    required this.secondValue,
+    required this.secondLabel,
+    this.secondColor = kSuccessColor,
+    this.secondLightTint,
+    required this.onChanged,
+    this.verticalPadding = 10,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final firstSel = selectedValue == firstValue;
+    final secondSel = selectedValue == secondValue;
+
+    final firstUnselectedBg = isDark
+        ? firstColor.withValues(alpha: 0.15)
+        : (firstLightTint ?? firstColor.withValues(alpha: 0.12));
+    final secondUnselectedBg = isDark
+        ? secondColor.withValues(alpha: 0.15)
+        : (secondLightTint ?? secondColor.withValues(alpha: 0.12));
+
+    return Row(
+      children: [
+        Expanded(
+          child: GestureDetector(
+            onTap: () => onChanged(firstValue),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 120),
+              padding: EdgeInsets.symmetric(vertical: verticalPadding),
+              decoration: BoxDecoration(
+                color: firstSel ? firstColor : firstUnselectedBg,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(
+                child: Text(
+                  firstLabel,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: firstSel ? Colors.white : firstColor,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: GestureDetector(
+            onTap: () => onChanged(secondValue),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 120),
+              padding: EdgeInsets.symmetric(vertical: verticalPadding),
+              decoration: BoxDecoration(
+                color: secondSel ? secondColor : secondUnselectedBg,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(
+                child: Text(
+                  secondLabel,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: secondSel ? Colors.white : secondColor,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -176,7 +176,7 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF2E7D32).withValues(alpha: 0.15),
+                              color: kSuccessColor.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
@@ -184,7 +184,7 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
                               style: const TextStyle(
                                 fontSize: 9,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF2E7D32),
+                                color: kSuccessColor,
                               ),
                             ),
                           ),
@@ -196,7 +196,7 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
                       style: TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.w900,
-                        color: remaining > 0 ? cs.primary : const Color(0xFF2E7D32),
+                        color: remaining > 0 ? cs.primary : kSuccessColor,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -216,7 +216,7 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
                     const SizedBox(height: 6),
                     LinearProgressCard(
                       value: progress,
-                      color: _loan.isSettled ? const Color(0xFF2E7D32) : cs.primary,
+                      color: _loan.isSettled ? kSuccessColor : cs.primary,
                     ),
                   ],
                 ),
@@ -361,7 +361,7 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
                             alignment: Alignment.centerRight,
                             padding: const EdgeInsets.only(right: 20),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFC62828),
+                              color: kDangerColor,
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: const Icon(Icons.delete, color: Colors.white),

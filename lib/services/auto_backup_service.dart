@@ -11,12 +11,14 @@ enum BackupTrigger { scheduled, catchUp, manual }
 
 class AutoBackupResult {
   final bool success;
+  final bool skipped;
   final String? fileName;
   final int? size;
   final String? error;
 
   const AutoBackupResult({
     required this.success,
+    this.skipped = false,
     this.fileName,
     this.size,
     this.error,
@@ -133,14 +135,14 @@ class AutoBackupService {
 
     final enabled = prefs.getBool('ab_enabled') ?? false;
     if (!enabled && trigger != BackupTrigger.manual) {
-      return const AutoBackupResult(success: false, error: 'disabled');
+      return const AutoBackupResult(success: false, skipped: true, error: 'disabled');
     }
 
     // Acquire lock (stale after 10 min)
     final nowMs = DateTime.now().millisecondsSinceEpoch;
     final runningSince = prefs.getInt('ab_running_since_ms') ?? 0;
     if (runningSince > 0 && (nowMs - runningSince) < 600000) {
-      return const AutoBackupResult(success: false, error: 'already_running');
+      return const AutoBackupResult(success: false, skipped: true, error: 'already_running');
     }
     await prefs.setInt('ab_running_since_ms', nowMs);
     await prefs.setInt('ab_last_attempt_ms', nowMs);
@@ -152,7 +154,8 @@ class AutoBackupService {
           lastSuccessMs > 0 &&
           (nowMs - lastSuccessMs) < 72000000) {
         await prefs.remove('ab_running_since_ms');
-        return const AutoBackupResult(success: true, error: 'recently_completed');
+        return const AutoBackupResult(
+            success: true, skipped: true, error: 'recently_completed');
       }
 
       final treeUri = prefs.getString('ab_tree_uri') ?? '';

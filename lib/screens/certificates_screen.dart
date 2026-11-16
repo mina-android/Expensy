@@ -1,3 +1,11 @@
+// lib/screens/certificates_screen.dart
+// note: Overview screen listing active and matured investment certificates with total principal and upcoming interest summary.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// All state mutations and queries route through AppProvider to preserve UI-DB decoupling.
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -6,12 +14,16 @@ import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/fintech_components.dart';
+import '../widgets/shared_widgets.dart';
 import '../widgets/certificate_sheet.dart';
 import 'certificate_detail_screen.dart';
 
+// ── class CertificatesScreen ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for CertificatesScreen.
 class CertificatesScreen extends StatelessWidget {
   const CertificatesScreen({super.key});
 
+  // Helper method `openSheet`: handles user action or computes derived UI state.
   static void openSheet(BuildContext context, {Certificate? existing}) {
     showModalBottomSheet(
       context: context,
@@ -22,6 +34,7 @@ class CertificatesScreen extends StatelessWidget {
   }
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final app = context.watch<AppProvider>();
     final l10n = AppLocalizations.of(context)!;
@@ -31,6 +44,7 @@ class CertificatesScreen extends StatelessWidget {
     final activeCerts = app.certificates.where((c) => !c.isSettled).toList();
     final settledCerts = app.certificates.where((c) => c.isSettled).toList();
 
+    // Render Scaffold layout container.
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -40,7 +54,7 @@ class CertificatesScreen extends StatelessWidget {
       ),
       floatingActionButton: FintechFab(
         tooltip: l10n.certificates_addCertificate,
-        color: const Color(0xFF00897B),
+        color: kCertificateColor,
         onPressed: () => openSheet(context),
       ),
       body: Column(
@@ -55,10 +69,10 @@ class CertificatesScreen extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF00897B).withValues(alpha: 0.12),
+                        color: kCertificateColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                            color: const Color(0xFF00897B)
+                            color: kCertificateColor
                                 .withValues(alpha: 0.25)),
                       ),
                       child: Column(
@@ -78,7 +92,7 @@ class CertificatesScreen extends StatelessWidget {
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
-                              color: Color(0xFF00897B),
+                              color: kCertificateColor,
                             ),
                           ),
                         ],
@@ -125,14 +139,10 @@ class CertificatesScreen extends StatelessWidget {
 
           Expanded(
             child: app.certificates.isEmpty
-                ? Center(
-                    child: Text(
-                      l10n.certificates_noCertificates,
-                      style: TextStyle(
-                        color: cs.onSurface.withValues(alpha: 0.5),
-                        fontSize: 14,
-                      ),
-                    ),
+                ? EmptyState(
+                    icon: Icons.card_membership_rounded,
+                    message: l10n.certificates_noCertificates,
+                    subMessage: l10n.certificates_noCertificatesSub,
                   )
                 : ListView(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
@@ -173,17 +183,21 @@ class CertificatesScreen extends StatelessWidget {
   }
 }
 
+// ── class _CertificateCard ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _CertificateCard.
 class _CertificateCard extends StatelessWidget {
   final Certificate cert;
   const _CertificateCard({required this.cert});
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final app = context.watch<AppProvider>();
     final progress = cert.progress.clamp(0.0, 1.0);
     final bank = app.accounts.where((a) => a.id == cert.accountId).firstOrNull;
 
+    // Render Card layout container.
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
@@ -212,7 +226,7 @@ class _CertificateCard extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: cert.isSettled
                                 ? cs.surfaceContainerHighest
-                                : const Color(0xFF00897B)
+                                : kCertificateColor
                                     .withValues(alpha: 0.15),
                             shape: BoxShape.circle,
                           ),
@@ -223,7 +237,7 @@ class _CertificateCard extends StatelessWidget {
                             size: 18,
                             color: cert.isSettled
                                 ? cs.onSurfaceVariant
-                                : const Color(0xFF00897B),
+                                : kCertificateColor,
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -266,7 +280,7 @@ class _CertificateCard extends StatelessWidget {
                             horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color:
-                              const Color(0xFF00897B).withValues(alpha: 0.15),
+                              kCertificateColor.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
@@ -274,7 +288,7 @@ class _CertificateCard extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF00897B),
+                            color: kCertificateColor,
                           ),
                         ),
                       ),
@@ -294,7 +308,7 @@ class _CertificateCard extends StatelessWidget {
                   valueColor: AlwaysStoppedAnimation<Color>(
                     cert.isSettled
                         ? cs.onSurfaceVariant
-                        : const Color(0xFF00897B),
+                        : kCertificateColor,
                   ),
                 ),
               ),

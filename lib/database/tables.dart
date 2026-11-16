@@ -41,6 +41,7 @@ class Categories extends Table {
   IntColumn get colorValue => integer().named('color_value')();
   IntColumn get iconCodePoint => integer().named('icon_code_point').withDefault(const Constant(0))();
   IntColumn get orderIndex => integer().named('order_index').withDefault(const Constant(0))();
+  TextColumn get parentId => text().named('parent_id').nullable()();
 
   @override
   Set<Column> get primaryKey => {id};

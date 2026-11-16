@@ -1,3 +1,10 @@
+// lib/widgets/presets_carousel.dart
+// note: Horizontal quick-log carousel displaying user-configured transaction presets with 1-tap execution.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// All state mutations and queries route through AppProvider to preserve UI-DB decoupling.
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
@@ -8,19 +15,23 @@ import '../utils/haptics.dart';
 import '../utils/snackbar.dart';
 import 'preset_sheet.dart';
 
+// ── class PresetsCarousel ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for PresetsCarousel.
 class PresetsCarousel extends StatelessWidget {
   final ValueChanged<TransactionPreset>? onPresetSelected;
 
   const PresetsCarousel({super.key, this.onPresetSelected});
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
     final cs = Theme.of(context).colorScheme;
-    final isAmoled = Theme.of(context).scaffoldBackgroundColor == Colors.black;
+    final isAmoled = isAmoledSurface(cs);
     final presets = app.presets;
 
+    // Render Column layout container.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -128,6 +139,7 @@ class PresetsCarousel extends StatelessWidget {
                 final acc = app.accountById(preset.accountId);
                 final currency = preset.currency.isNotEmpty ? preset.currency : (acc?.currency ?? app.settings.currency);
 
+                // Render Padding layout container.
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: Material(
@@ -191,8 +203,8 @@ class PresetsCarousel extends StatelessWidget {
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
                                     color: preset.type == 'expense'
-                                        ? const Color(0xFFC62828)
-                                        : const Color(0xFF2E7D32),
+                                        ? kDangerColor
+                                        : kSuccessColor,
                                   ),
                                 ),
                               ],

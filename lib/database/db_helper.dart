@@ -14,8 +14,8 @@ class DBHelper {
   static Future<void> insertAccount(Account a) =>
       AppDatabase.instance.insertAccount(a);
 
-  static Future<void> updateAccount(Account a) =>
-      AppDatabase.instance.updateAccount(a);
+  static Future<void> updateAccount(Account a, {double? balanceDelta}) =>
+      AppDatabase.instance.updateAccount(a, balanceDelta: balanceDelta);
 
   static Future<void> updateAccountOrder(List<String> accountIds) =>
       AppDatabase.instance.updateAccountOrder(accountIds);
@@ -35,6 +35,22 @@ class DBHelper {
 
   static Future<void> deleteCategory(String id) =>
       AppDatabase.instance.deleteCategory(id);
+
+  static Future<void> updateCategoryOrder(List<String> orderedIds) =>
+      AppDatabase.instance.updateCategoryOrder(orderedIds);
+
+  static Future<void> batchImportExternal({
+    required List<Account> newAccounts,
+    required List<AppCategory> newCategories,
+    required List<AppTransaction> newTransactions,
+    required Map<String, double> accountBalanceDeltas,
+  }) =>
+      AppDatabase.instance.batchImportExternal(
+        newAccounts: newAccounts,
+        newCategories: newCategories,
+        newTransactions: newTransactions,
+        accountBalanceDeltas: accountBalanceDeltas,
+      );
 
   // ── Transactions ─────────────────────────────────────────────────────
   static Future<List<AppTransaction>> getTransactions(
@@ -209,23 +225,6 @@ class DBHelper {
 
   static Future<void> deleteLoanPaymentsFor(String loanId) =>
       AppDatabase.instance.deleteLoanPaymentsFor(loanId);
-
-  // ── Aggregations ──────────────────────────────────────────────────────
-  static Future<double> getMonthlySpentForCategory(
-          String categoryId, DateTime month) =>
-      AppDatabase.instance.getMonthlySpentForCategory(categoryId, month);
-
-  static Future<Map<String, double>> getTotalIncomeAndExpenseForMonth(
-          DateTime month) =>
-      AppDatabase.instance.getTotalIncomeAndExpenseForMonth(month);
-
-  static Future<double> getTotalBudgetSpent(
-          String categoryId, DateTime start, DateTime end) =>
-      AppDatabase.instance.getTotalBudgetSpent(categoryId, start, end);
-
-  static Future<List<Map<String, dynamic>>> getCategoryExpensesForMonth(
-          DateTime month) =>
-      AppDatabase.instance.getCategoryExpensesForMonth(month);
 
   // ── Transaction Presets ───────────────────────────────────────────────
   static Future<List<TransactionPreset>> getPresets() =>

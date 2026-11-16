@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import '../utils/haptics.dart';
 
 /// Helper to safely evaluate simple arithmetic expressions (+, -, *, /)
@@ -338,7 +339,7 @@ class AppNumericKeypad extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final isAmoled = Theme.of(context).scaffoldBackgroundColor == Colors.black;
+    final isAmoled = isAmoledSurface(cs);
     final double vSpacing = compact ? 3.0 : 6.0;
 
     return Container(

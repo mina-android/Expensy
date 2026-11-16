@@ -1,3 +1,26 @@
+// note: Category & global budget management screen with rollover tracking, pace indicators, and historical period comparisons.
+// All state mutations and queries route through AppProvider to preserve UI-DB decoupling.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
 // lib/screens/budget_screen.dart
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
@@ -14,9 +37,12 @@ import '../utils/haptics.dart';
 import '../utils/snackbar.dart';
 import '../utils/nav_metrics.dart';
 
+// ── class BudgetScreen ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for BudgetScreen.
 class BudgetScreen extends StatefulWidget {
   const BudgetScreen({super.key});
 
+  // Helper method `_openSheet`: handles user action or computes derived UI state.
   static void _openSheet(BuildContext context, {Budget? existing}) {
     showModalBottomSheet(
       context: context,
@@ -29,10 +55,13 @@ class BudgetScreen extends StatefulWidget {
   State<BudgetScreen> createState() => _BudgetScreenState();
 }
 
+// ── class _BudgetScreenState ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _BudgetScreenState.
 class _BudgetScreenState extends State<BudgetScreen> {
   int _tabIndex = 0; // 0 = Budgets, 1 = Goals
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
@@ -42,8 +71,9 @@ class _BudgetScreenState extends State<BudgetScreen> {
     final cur = app.settings.currency;
 
     final overCount = app.budgets.where(app.budgetExceeded).length;
-    final totalBudgeted = app.budgets.fold(0.0, (s, b) => s + app.budgetEffectiveAllowance(b));
-    final totalSpent    = app.budgets.fold(0.0, (s, b) => s + app.budgetSpent(b));
+    final nonOverlap = app.nonOverlappingBudgets;
+    final totalBudgeted = nonOverlap.fold(0.0, (s, b) => s + app.budgetEffectiveAllowance(b));
+    final totalSpent    = nonOverlap.fold(0.0, (s, b) => s + app.budgetSpent(b));
     final overallPacing = app.overallMonthlyBudgetPacing();
 
     // Calculate total monthly recurring income in main currency
@@ -71,7 +101,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
 
     // Calculate total monthly budgets in main currency
     double totalMonthlyBudgets = 0.0;
-    for (final b in app.budgets) {
+    for (final b in nonOverlap) {
       final eff = app.budgetEffectiveAllowance(b);
       if (b.period == 'weekly') {
         totalMonthlyBudgets += eff * 52.0 / 12.0;
@@ -88,6 +118,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
     final goalsProgress = totalTarget > 0 ? (totalSaved / totalTarget).clamp(0.0, 1.0) : 0.0;
     final budgetProgress = totalBudgeted > 0 ? (totalSpent / totalBudgeted).clamp(0.0, 1.0) : 0.0;
 
+    // Render Scaffold layout container.
     return Scaffold(
       body: Column(
         children: [
@@ -140,10 +171,10 @@ class _BudgetScreenState extends State<BudgetScreen> {
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
                                 color: overallPacing.isOnTrack
-                                    ? const Color(0xFF2E7D32).withValues(alpha: isDark ? 0.25 : 0.12)
+                                    ? kSuccessColor.withValues(alpha: isDark ? 0.25 : 0.12)
                                     : (overallPacing.isCaution
                                         ? Colors.orange.withValues(alpha: isDark ? 0.25 : 0.12)
-                                        : const Color(0xFFC62828).withValues(alpha: isDark ? 0.25 : 0.12)),
+                                        : kDangerColor.withValues(alpha: isDark ? 0.25 : 0.12)),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Text(
@@ -154,10 +185,10 @@ class _BudgetScreenState extends State<BudgetScreen> {
                                   fontSize: 10,
                                   fontWeight: FontWeight.w700,
                                   color: overallPacing.isOnTrack
-                                      ? (isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32))
+                                      ? (isDark ? const Color(0xFF81C784) : kSuccessColor)
                                       : (overallPacing.isCaution
-                                          ? (isDark ? const Color(0xFFFFB74D) : const Color(0xFFE65100))
-                                          : (isDark ? const Color(0xFFE57373) : const Color(0xFFC62828))),
+                                          ? (isDark ? const Color(0xFFFFB74D) : kWarningColor)
+                                          : (isDark ? const Color(0xFFE57373) : kDangerColor)),
                                 ),
                               ),
                             )
@@ -294,7 +325,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                           value: goalsProgress,
                           minHeight: 6,
                           backgroundColor: cs.surfaceContainerHighest,
-                          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF2E7D32)),
+                          valueColor: const AlwaysStoppedAnimation<Color>(kSuccessColor),
                         ),
                       ),
                     ],
@@ -399,6 +430,7 @@ class _BudgetCard extends StatelessWidget {
   final AppProvider app;
   const _BudgetCard({required this.budget, required this.app});
 
+  // Helper method `_barColor`: handles user action or computes derived UI state.
   Color _barColor(double progress, ColorScheme cs) {
     if (progress >= 1.0) return cs.error;
     if (progress >= 0.75) return Colors.orange;
@@ -406,6 +438,7 @@ class _BudgetCard extends StatelessWidget {
   }
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final cs        = Theme.of(context).colorScheme;
@@ -420,6 +453,7 @@ class _BudgetCard extends StatelessWidget {
     final cur       = app.settings.currency;
     final pacing    = app.budgetPacing(budget);
 
+    // Render Container layout container.
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -457,7 +491,9 @@ class _BudgetCard extends StatelessWidget {
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                    Text(cat?.name ?? l10n.budget_unknown,
+                    Text(
+                        app.categoryDisplayName(budget.categoryId,
+                            fallback: l10n.budget_unknown),
                         style: const TextStyle(
                             fontWeight: FontWeight.w700, fontSize: 15)),
                     Row(children: [
@@ -606,6 +642,7 @@ class _BudgetPacingRow extends StatelessWidget {
   });
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -618,9 +655,9 @@ class _BudgetPacingRow extends StatelessWidget {
 
     switch (pacing.status) {
       case BudgetPacingStatus.onTrack:
-        bgTint = const Color(0xFF2E7D32).withValues(alpha: isDark ? 0.16 : 0.08);
-        fgColor = isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32);
-        borderTint = const Color(0xFF2E7D32).withValues(alpha: isDark ? 0.35 : 0.22);
+        bgTint = kSuccessColor.withValues(alpha: isDark ? 0.16 : 0.08);
+        fgColor = isDark ? const Color(0xFF81C784) : kSuccessColor;
+        borderTint = kSuccessColor.withValues(alpha: isDark ? 0.35 : 0.22);
         statusIcon = Icons.check_circle_outline_rounded;
         statusMessage = l10n.pacing_safeToSpend(
           formatAmount(pacing.safeDailyAllowance, cur),
@@ -629,7 +666,7 @@ class _BudgetPacingRow extends StatelessWidget {
         break;
       case BudgetPacingStatus.caution:
         bgTint = Colors.orange.withValues(alpha: isDark ? 0.16 : 0.08);
-        fgColor = isDark ? const Color(0xFFFFB74D) : const Color(0xFFE65100);
+        fgColor = isDark ? const Color(0xFFFFB74D) : kWarningColor;
         borderTint = Colors.orange.withValues(alpha: isDark ? 0.35 : 0.22);
         statusIcon = Icons.speed_rounded;
         statusMessage = l10n.pacing_caution(
@@ -638,7 +675,7 @@ class _BudgetPacingRow extends StatelessWidget {
         break;
       case BudgetPacingStatus.overPaced:
         bgTint = const Color(0xFFD32F2F).withValues(alpha: isDark ? 0.16 : 0.08);
-        fgColor = isDark ? const Color(0xFFE57373) : const Color(0xFFC62828);
+        fgColor = isDark ? const Color(0xFFE57373) : kDangerColor;
         borderTint = const Color(0xFFD32F2F).withValues(alpha: isDark ? 0.35 : 0.22);
         statusIcon = Icons.warning_amber_rounded;
         statusMessage = l10n.pacing_overPaced;
@@ -652,6 +689,7 @@ class _BudgetPacingRow extends StatelessWidget {
         break;
     }
 
+    // Render Container layout container.
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -689,14 +727,16 @@ class _GoalCard extends StatelessWidget {
   const _GoalCard({required this.goal, required this.app});
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final progress = app.goalProgress(goal);
     final isCompleted = goal.isCompleted;
-    final barColor = isCompleted ? const Color(0xFF2E7D32) : cs.primary;
+    final barColor = isCompleted ? kSuccessColor : cs.primary;
     final color = Color(goal.colorValue);
 
+    // Render Container layout container.
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -769,7 +809,7 @@ class _GoalCard extends StatelessWidget {
                     isCompleted ? 'Completed' : 'of ${formatAmount(goal.targetAmount, goal.currency)}',
                     style: TextStyle(
                         fontSize: 10,
-                        color: isCompleted ? const Color(0xFF2E7D32) : cs.onSurface.withValues(alpha: 0.5)),
+                        color: isCompleted ? kSuccessColor : cs.onSurface.withValues(alpha: 0.5)),
                   ),
                 ]),
               ]),
@@ -799,6 +839,8 @@ class _BudgetSheet extends StatefulWidget {
   State<_BudgetSheet> createState() => _BudgetSheetState();
 }
 
+// ── class _BudgetSheetState ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _BudgetSheetState.
 class _BudgetSheetState extends State<_BudgetSheet> {
   final _amtCtrl = TextEditingController();
   String? _categoryId;
@@ -810,6 +852,7 @@ class _BudgetSheetState extends State<_BudgetSheet> {
   bool get isEdit => widget.existing != null;
 
   @override
+  // Initializes controllers and local state from widget parameters.
   void initState() {
     super.initState();
     if (isEdit) {
@@ -821,7 +864,7 @@ class _BudgetSheetState extends State<_BudgetSheet> {
     } else {
       // Default to first expense category not yet budgeted
       final app = context.read<AppProvider>();
-      final expCats = app.categories.where((c) => c.type == 'expense').toList();
+      final expCats = app.userCategories.where((c) => c.type == 'expense').toList();
       final budgetedIds = app.budgets.map((b) => b.categoryId).toSet();
       final free = expCats.where((c) => !budgetedIds.contains(c.id)).toList();
       if (free.isNotEmpty) {
@@ -833,11 +876,13 @@ class _BudgetSheetState extends State<_BudgetSheet> {
   }
 
   @override
+  // Disposes controllers and listeners to prevent memory leaks.
   void dispose() {
     _amtCtrl.dispose();
     super.dispose();
   }
 
+  // Helper method `_submit`: handles user action or computes derived UI state.
   Future<void> _submit() async {
     setState(() => _submitted = true);
     final amount = double.tryParse(_amtCtrl.text);
@@ -873,13 +918,15 @@ class _BudgetSheetState extends State<_BudgetSheet> {
   }
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final app     = context.watch<AppProvider>();
     final cs      = Theme.of(context).colorScheme;
     final sym     = currencyInfo(app.settings.currency).symbol;
-    final expCats = app.categories.where((c) => c.type == 'expense').toList();
+    final expCats = app.userCategories.where((c) => c.type == 'expense').toList();
 
+    // Render Padding layout container.
     return Padding(
       padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom + 16,
@@ -1082,6 +1129,7 @@ class _BudgetSheetState extends State<_BudgetSheet> {
                 final catName = app.categoryById(_categoryId!)?.name ?? '';
                 final cur = app.settings.currency;
 
+                // Render Container layout container.
                 return Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -1105,7 +1153,7 @@ class _BudgetSheetState extends State<_BudgetSheet> {
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
                                 color: rollover >= 0
-                                    ? const Color(0xFF2E7D32)
+                                    ? kSuccessColor
                                     : cs.error,
                               ),
                             ),

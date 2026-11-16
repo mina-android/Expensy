@@ -27,7 +27,7 @@ flowchart TD
     subgraph Database ["Persistence Layer (Drift / SQLite Isolate)"]
         AppDB["AppDatabase (Drift NativeDatabase via Dart FFI)"]
         Facade["DBHelper (Static Backward-Compatible Facade)"]
-        Tables["18 Drift Relational Tables (Schema v28 with paid_via_account_id, certificate_id, lended_money.currency)"]
+        Tables["18 Drift Relational Tables (Schema v30 with categories.parent_id, paid_via_account_id, certificate_id, lended_money.currency)"]
     end
 
     subgraph Background ["Native & Asynchronous Services"]

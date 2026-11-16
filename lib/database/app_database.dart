@@ -52,11 +52,10 @@ class AppDatabase extends _$AppDatabase {
     _instance = db;
   }
 
-  static const int _version = 28;
-  static int get currentSchemaVersion => _version;
+  static const int currentSchemaVersion = 30;
 
   @override
-  int get schemaVersion => _version;
+  int get schemaVersion => currentSchemaVersion;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -78,6 +77,8 @@ class AppDatabase extends _$AppDatabase {
               'CREATE INDEX IF NOT EXISTS idx_tx_account ON transactions(account_id);');
           await customStatement(
               'CREATE INDEX IF NOT EXISTS idx_tx_category ON transactions(category_id);');
+          await customStatement(
+              'CREATE INDEX IF NOT EXISTS idx_cat_parent ON categories(parent_id);');
           await _insertDefaultCategories();
         },
         onUpgrade: (m, from, to) async {
@@ -120,63 +121,18 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(transactions, transactions.paidViaAccountId);
             await m.addColumn(transactions, transactions.certificateId);
             await m.addColumn(lendedMoneyTable, lendedMoneyTable.currency);
-
-            // 1. Move stray debit card balances into parent bank account and zero the debit card
-            final debitCards = await customSelect(
-              "SELECT id, linked_account_id, balance FROM accounts WHERE type = 'debit' AND linked_account_id IS NOT NULL AND balance != 0.0",
-            ).get();
-            for (final card in debitCards) {
-              final cardId = card.data['id'] as String;
-              final parentId = card.data['linked_account_id'] as String?;
-              final bal = (card.data['balance'] as num).toDouble();
-              if (parentId != null && bal != 0) {
-                await customUpdate(
-                  "UPDATE accounts SET balance = balance + ? WHERE id = ?",
-                  variables: [Variable<double>(bal), Variable<String>(parentId)],
-                );
-                await customUpdate(
-                  "UPDATE accounts SET balance = 0.0 WHERE id = ?",
-                  variables: [Variable<String>(cardId)],
-                );
-              }
-            }
-
-            // 2. Backfill legacy debit card transactions to point to parent bank account, preserving card id in paidViaAccountId
-            await customUpdate('''
-              UPDATE transactions
-              SET paid_via_account_id = account_id,
-                  account_id = (SELECT linked_account_id FROM accounts WHERE accounts.id = transactions.account_id)
-              WHERE account_id IN (SELECT id FROM accounts WHERE type = 'debit' AND linked_account_id IS NOT NULL)
-            ''');
-
-            // 3. Pair legacy "Transfer out" and "Transfer in" transactions that have an actual counterpart
-            await customUpdate('''
-              UPDATE transactions
-              SET transfer_group_id = 'tr_migrated_' || substr(date, 1, 16) || '_' || CAST(amount AS TEXT)
-              WHERE (transfer_group_id IS NULL OR transfer_group_id = '')
-                AND (
-                  (description LIKE '%Transfer out%' AND EXISTS (
-                    SELECT 1 FROM transactions in_tx
-                    WHERE in_tx.id != transactions.id
-                      AND in_tx.description LIKE '%Transfer in%'
-                      AND in_tx.amount = transactions.amount
-                      AND in_tx.account_id != transactions.account_id
-                      AND substr(in_tx.date, 1, 16) = substr(transactions.date, 1, 16)
-                  ))
-                  OR
-                  (description LIKE '%Transfer in%' AND EXISTS (
-                    SELECT 1 FROM transactions out_tx
-                    WHERE out_tx.id != transactions.id
-                      AND out_tx.description LIKE '%Transfer out%'
-                      AND out_tx.amount = transactions.amount
-                      AND out_tx.account_id != transactions.account_id
-                      AND substr(out_tx.date, 1, 16) = substr(transactions.date, 1, 16)
-                  ))
-                )
-            ''');
-
-            // 4. Ensure system categories exist
-            await _insertDefaultCategories();
+            await runDataMigrationDataFixes();
+          }
+          if (from < 29) {
+            await m.addColumn(categories, categories.parentId);
+            await customStatement(
+                'CREATE INDEX IF NOT EXISTS idx_cat_parent ON categories(parent_id);');
+            await _insertSystemCategories();
+            await _repairTransferCategories();
+            await _repairOrphanSubcategories();
+          }
+          if (from < 30) {
+            await _syncRecurringProgressFromHistory();
           }
         },
         beforeOpen: (details) async {
@@ -281,8 +237,19 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> insertAccount(Account a) async => insertMap('accounts', a.toMap());
 
-  Future<void> updateAccount(Account a) async =>
-      updateMap('accounts', a.toMap(), 'id', a.id);
+  Future<void> updateAccount(Account a, {double? balanceDelta}) async {
+    if (balanceDelta == null) {
+      await updateMap('accounts', a.toMap(), 'id', a.id);
+      return;
+    }
+    await transaction(() async {
+      final metaMap = Map<String, dynamic>.from(a.toMap())..remove('balance');
+      await updateMap('accounts', metaMap, 'id', a.id);
+      if (balanceDelta != 0) {
+        await applyBalanceDelta(a.id, balanceDelta);
+      }
+    });
+  }
 
   Future<void> updateAccountOrder(List<String> accountIds) async {
     await transaction(() async {
@@ -317,8 +284,47 @@ class AppDatabase extends _$AppDatabase {
   Future<void> updateCategory(AppCategory c) async =>
       updateMap('categories', c.toMap(), 'id', c.id);
 
-  Future<void> deleteCategory(String id) async =>
-      deleteRow('categories', 'id', id);
+  Future<void> deleteCategory(String id) => transaction(() async {
+        // Promote any child subcategories to root before deleting parent.
+        await customUpdate(
+          'UPDATE categories SET parent_id = NULL WHERE parent_id = ?',
+          variables: [Variable<String>(id)],
+        );
+        await deleteRow('categories', 'id', id);
+      });
+
+  Future<void> updateCategoryOrder(List<String> orderedIds) =>
+      transaction(() async {
+        for (int i = 0; i < orderedIds.length; i++) {
+          await customUpdate(
+            'UPDATE categories SET order_index = ? WHERE id = ?',
+            variables: [Variable<int>(i), Variable<String>(orderedIds[i])],
+          );
+        }
+      });
+
+  Future<void> batchImportExternal({
+    required List<Account> newAccounts,
+    required List<AppCategory> newCategories,
+    required List<AppTransaction> newTransactions,
+    required Map<String, double> accountBalanceDeltas,
+  }) =>
+      transaction(() async {
+        for (final acc in newAccounts) {
+          await insertMap('accounts', acc.toMap());
+        }
+        for (final cat in newCategories) {
+          await insertMap('categories', cat.toMap());
+        }
+        for (final tx in newTransactions) {
+          await insertMap('transactions', tx.toMap());
+        }
+        for (final entry in accountBalanceDeltas.entries) {
+          if (entry.value != 0) {
+            await applyBalanceDelta(entry.key, entry.value);
+          }
+        }
+      });
 
   // ── Transactions ─────────────────────────────────────────────────────────
   Future<List<AppTransaction>> getTransactions({int? limit, int offset = 0}) async {
@@ -821,93 +827,192 @@ class AppDatabase extends _$AppDatabase {
   Future<void> insertNetWorthSnapshot(NetWorthSnapshot snap) async =>
       insertMap('net_worth_snapshots', snap.toMap());
 
-  // ── Aggregations ─────────────────────────────────────────────────────────
-  Future<double> getMonthlySpentForCategory(
-      String categoryId, DateTime month) async {
-    final start = DateTime(month.year, month.month, 1).toIso8601String();
-    final end =
-        DateTime(month.year, month.month + 1, 0, 23, 59, 59).toIso8601String();
-    final result = await customSelect(
-        "SELECT SUM(amount) as total FROM transactions WHERE category_id = ? AND type = 'expense' AND date >= ? AND date <= ?",
-        variables: [
-          Variable<String>(categoryId),
-          Variable<String>(start),
-          Variable<String>(end)
-        ]).get();
-    return (result.first.data['total'] as num?)?.toDouble() ?? 0.0;
-  }
-
-  Future<Map<String, double>> getTotalIncomeAndExpenseForMonth(
-      DateTime month) async {
-    final start = DateTime(month.year, month.month, 1).toIso8601String();
-    final end =
-        DateTime(month.year, month.month + 1, 0, 23, 59, 59).toIso8601String();
-    final result = await customSelect(
-        "SELECT type, SUM(amount) as total FROM transactions WHERE date >= ? AND date <= ? GROUP BY type",
-        variables: [Variable<String>(start), Variable<String>(end)]).get();
-
-    double income = 0;
-    double expense = 0;
-    for (final row in result) {
-      if (row.data['type'] == 'income') {
-        income = (row.data['total'] as num?)?.toDouble() ?? 0.0;
-      } else if (row.data['type'] == 'expense') {
-        expense = (row.data['total'] as num?)?.toDouble() ?? 0.0;
-      }
-    }
-    return {'income': income, 'expense': expense};
-  }
-
-  Future<double> getTotalBudgetSpent(
-      String categoryId, DateTime start, DateTime end) async {
-    final result = await customSelect(
-        "SELECT SUM(amount) as total FROM transactions WHERE category_id = ? AND type = 'expense' AND date >= ? AND date <= ?",
-        variables: [
-          Variable<String>(categoryId),
-          Variable<String>(start.toIso8601String()),
-          Variable<String>(end.toIso8601String())
-        ]).get();
-    return (result.first.data['total'] as num?)?.toDouble() ?? 0.0;
-  }
-
-  Future<List<Map<String, dynamic>>> getCategoryExpensesForMonth(
-      DateTime month) async {
-    final start = DateTime(month.year, month.month, 1).toIso8601String();
-    final end =
-        DateTime(month.year, month.month + 1, 0, 23, 59, 59).toIso8601String();
-    final rows = await customSelect(
-        "SELECT category_id, SUM(amount) as total FROM transactions WHERE type = 'expense' AND date >= ? AND date <= ? GROUP BY category_id",
-        variables: [Variable<String>(start), Variable<String>(end)]).get();
-    return rows.map((r) => r.data).toList();
-  }
-
   // ── Backup / Export / Import ──────────────────────────────────────────────
+  static const List<String> backupTables = [
+    'accounts',
+    'categories',
+    'transactions',
+    'recurring_payments',
+    'wishlist',
+    'lended_people',
+    'lended_money',
+    'assets',
+    'budgets',
+    'recurring_history',
+    'savings_goals',
+    'savings_contributions',
+    'loans',
+    'loan_payments',
+    'transaction_presets',
+    'transaction_splits',
+    'certificates',
+    'net_worth_snapshots',
+  ];
+
+  /// Executes idempotent v28 data-integrity repairs (D1, D2, D3, D5, and system categories).
+  /// Invoked both during schema migration (< 28 -> 28) and after restoring pre-v28 backups.
+  Future<void> runDataMigrationDataFixes() async {
+    // 1. D5: Move stray debit card balances into parent bank account and zero the debit card
+    final debitCards = await customSelect(
+      "SELECT id, linked_account_id, balance FROM accounts WHERE type = 'debit' AND balance != 0.0",
+    ).get();
+    for (final card in debitCards) {
+      final cardId = card.data['id'] as String;
+      final parentId = card.data['linked_account_id'] as String?;
+      final bal = (card.data['balance'] as num).toDouble();
+      if (parentId != null && parentId.isNotEmpty && bal != 0) {
+        await customUpdate(
+          "UPDATE accounts SET balance = balance + ? WHERE id = ?",
+          variables: [Variable<double>(bal), Variable<String>(parentId)],
+        );
+      }
+      await customUpdate(
+        "UPDATE accounts SET balance = 0.0 WHERE id = ?",
+        variables: [Variable<String>(cardId)],
+      );
+    }
+
+    // 2. D5: Redirect legacy debit card transactions to parent bank account, preserving card id in paid_via_account_id
+    await customUpdate('''
+      UPDATE transactions
+      SET paid_via_account_id = account_id,
+          account_id = (SELECT linked_account_id FROM accounts WHERE accounts.id = transactions.account_id)
+      WHERE account_id IN (SELECT id FROM accounts WHERE type = 'debit' AND linked_account_id IS NOT NULL AND linked_account_id != '')
+    ''');
+
+    // 3. D1: Pair legacy "Transfer out" and "Transfer in" transactions that have an actual counterpart
+    await customUpdate('''
+      UPDATE transactions
+      SET transfer_group_id = 'tr_migrated_' || substr(date, 1, 16) || '_' || CAST(amount AS TEXT),
+          category_id = 'sys_transfer'
+      WHERE (transfer_group_id IS NULL OR transfer_group_id = '')
+        AND (
+          (description LIKE '%Transfer out%' AND EXISTS (
+            SELECT 1 FROM transactions in_tx
+            WHERE in_tx.id != transactions.id
+              AND in_tx.description LIKE '%Transfer in%'
+              AND in_tx.amount = transactions.amount
+              AND in_tx.account_id != transactions.account_id
+              AND substr(in_tx.date, 1, 16) = substr(transactions.date, 1, 16)
+          ))
+          OR
+          (description LIKE '%Transfer in%' AND EXISTS (
+            SELECT 1 FROM transactions out_tx
+            WHERE out_tx.id != transactions.id
+              AND out_tx.description LIKE '%Transfer out%'
+              AND out_tx.amount = transactions.amount
+              AND out_tx.account_id != transactions.account_id
+              AND substr(out_tx.date, 1, 16) = substr(transactions.date, 1, 16)
+          ))
+        )
+    ''');
+
+    // Also tag any remaining single-leg legacy transfer rows so they are excluded from expense/income stats
+    await customUpdate('''
+      UPDATE transactions
+      SET transfer_group_id = 'tr_migrated_single_' || id,
+          category_id = 'sys_transfer'
+      WHERE (transfer_group_id IS NULL OR transfer_group_id = '')
+        AND (description LIKE '%Transfer out%' OR description LIKE '%Transfer in%')
+    ''');
+
+    // 4. D2: Remove orphan recurring_history rows whose parent recurring_payment was deleted
+    await customUpdate('''
+      DELETE FROM recurring_history
+      WHERE recurring_id NOT IN (SELECT id FROM recurring_payments)
+    ''');
+
+    // 5. D3: Flip positive credit card balances to negative debt representation
+    await customUpdate('''
+      UPDATE accounts
+      SET balance = -balance
+      WHERE type = 'credit' AND balance > 0.0
+    ''');
+
+    // 6. Ensure system categories exist
+    await _insertSystemCategories();
+
+    // 7. Repair any transfer rows whose category_id was overwritten
+    await _repairTransferCategories();
+
+    // 8. Promote any orphan subcategories whose parent category is missing
+    await _repairOrphanSubcategories();
+
+    // 9. Sync recurring paid_payments from paid + skipped payment history
+    await _syncRecurringProgressFromHistory();
+  }
+
+  /// Syncs each recurring payment's [paid_payments] counter from its recorded
+  /// 'paid' and 'skipped' entries in [recurring_history].
+  Future<void> _syncRecurringProgressFromHistory() async {
+    await customUpdate('''
+      UPDATE recurring_payments
+      SET paid_payments = (
+        SELECT COUNT(*)
+        FROM recurring_history rh
+        WHERE rh.recurring_id = recurring_payments.id
+          AND rh.action IN ('paid', 'skipped')
+      )
+      WHERE EXISTS (
+        SELECT 1
+        FROM recurring_history rh
+        WHERE rh.recurring_id = recurring_payments.id
+          AND rh.action IN ('paid', 'skipped')
+      )
+    ''');
+  }
+
+  /// Repairs any transfer transaction (identified by transfer_group_id, type,
+  /// or transfer/credit-settlement description) so its category_id is always
+  /// 'sys_transfer' and it has a non-empty transfer_group_id.
+  Future<void> _repairTransferCategories() async {
+    await customUpdate('''
+      UPDATE transactions
+      SET category_id = 'sys_transfer'
+      WHERE (
+        (transfer_group_id IS NOT NULL AND transfer_group_id != '')
+        OR type = 'transfer'
+        OR description = 'Transfer out'
+        OR description = 'Transfer in'
+        OR description LIKE 'Credit card bill payment%'
+      )
+      AND category_id != 'sys_transfer'
+    ''');
+    await customUpdate('''
+      UPDATE transactions
+      SET transfer_group_id = 'tr_repaired_' || id
+      WHERE (transfer_group_id IS NULL OR transfer_group_id = '')
+        AND (
+          category_id = 'sys_transfer'
+          OR type = 'transfer'
+          OR description = 'Transfer out'
+          OR description = 'Transfer in'
+          OR description LIKE 'Credit card bill payment%'
+        )
+    ''');
+  }
+
+  /// Promotes any subcategory whose parent_id points to a missing or non-root
+  /// category so it remains visible and usable after selective restores.
+  Future<void> _repairOrphanSubcategories() async {
+    await customUpdate('''
+      UPDATE categories
+      SET parent_id = NULL
+      WHERE parent_id IS NOT NULL
+        AND parent_id != ''
+        AND parent_id NOT IN (
+          SELECT id FROM categories WHERE parent_id IS NULL OR parent_id = ''
+        )
+    ''');
+  }
+
   Future<Map<String, dynamic>> exportAll() => transaction(() async {
-    const tables = [
-      'accounts',
-      'categories',
-      'transactions',
-      'recurring_payments',
-      'wishlist',
-      'lended_people',
-      'lended_money',
-      'assets',
-      'budgets',
-      'recurring_history',
-      'savings_goals',
-      'savings_contributions',
-      'loans',
-      'loan_payments',
-      'transaction_presets',
-      'transaction_splits',
-      'certificates',
-    ];
     final out = <String, dynamic>{};
-    for (final t in tables) {
+    for (final t in backupTables) {
       final rows = await customSelect('SELECT * FROM $t').get();
       out[t] = rows.map((r) => r.data).toList();
     }
-    out['version'] = _version;
+    out['version'] = currentSchemaVersion;
     return out;
   });
 
@@ -918,33 +1023,20 @@ class AppDatabase extends _$AppDatabase {
           final rows = await customSelect('SELECT * FROM $t').get();
           out[t] = rows.map((r) => r.data).toList();
         }
-        out['version'] = _version;
+        out['version'] = currentSchemaVersion;
         out['selective'] = true;
         return out;
       });
 
   Future<void> importAll(Map<String, dynamic> rawData) async {
+    final backupVersion = (rawData['version'] as num?)?.toInt() ?? 1;
     final data = _normaliseBackup(rawData);
     await transaction(() async {
-      for (final table in [
-        'accounts',
-        'categories',
-        'transactions',
-        'recurring_payments',
-        'wishlist',
-        'lended_people',
-        'lended_money',
-        'assets',
-        'budgets',
-        'recurring_history',
-        'savings_goals',
-        'savings_contributions',
-        'loans',
-        'loan_payments',
-        'transaction_presets',
-        'transaction_splits',
-        'certificates',
-      ]) {
+      // Clear net_worth_snapshots unconditionally on full restore so legacy
+      // backups without snapshots do not mix with pre-restore timeline data (B8).
+      await customStatement('DELETE FROM net_worth_snapshots');
+
+      for (final table in backupTables) {
         if (!data.containsKey(table)) continue;
         await customStatement('DELETE FROM $table');
         final rows = _rows(data, table);
@@ -956,12 +1048,17 @@ class AppDatabase extends _$AppDatabase {
         await _insertDefaultCategories();
       } else {
         await _insertSystemCategories();
+        await _repairOrphanSubcategories();
+      }
+      if (backupVersion < currentSchemaVersion) {
+        await runDataMigrationDataFixes();
       }
     });
   }
 
   Future<void> importSelective(
       Map<String, dynamic> rawData, Set<String> tables) async {
+    final backupVersion = (rawData['version'] as num?)?.toInt() ?? 1;
     final data = _normaliseBackup(rawData);
     await transaction(() async {
       for (final table in tables) {
@@ -971,6 +1068,18 @@ class AppDatabase extends _$AppDatabase {
         for (final row in rows) {
           await insertMap(table, row);
         }
+      }
+      // Always guarantee system categories survive selective category restores (B7)
+      if (tables.contains('categories')) {
+        if (_rows(data, 'categories').isEmpty) {
+          await _insertDefaultCategories();
+        } else {
+          await _insertSystemCategories();
+          await _repairOrphanSubcategories();
+        }
+      }
+      if (backupVersion < currentSchemaVersion) {
+        await runDataMigrationDataFixes();
       }
     });
   }
@@ -986,6 +1095,12 @@ class AppDatabase extends _$AppDatabase {
         data[entry.key] = entry.value;
       }
     }
+    for (final row in _rows(data, 'categories')) {
+      row.putIfAbsent('icon_code_point', () => 0);
+      row.putIfAbsent('order_index', () => 0);
+      row.putIfAbsent('parent_id', () => null);
+    }
+
     for (final row in _rows(data, 'transaction_presets')) {
       row.putIfAbsent('currency', () => '');
       row.putIfAbsent('note', () => '');

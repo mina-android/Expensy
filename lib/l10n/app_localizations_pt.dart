@@ -2801,4 +2801,59 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get onboarding_maybeLater => 'Talvez mais tarde';
+
+  @override
+  String get categories_subcategories => 'Subcategories';
+
+  @override
+  String get categories_addSubcategory => 'Add Subcategory';
+
+  @override
+  String get categories_parentCategory => 'Parent Category';
+
+  @override
+  String get categories_noneRoot => 'None (Top-Level Category)';
+
+  @override
+  String get categories_loadDefaults => 'Load Default Subcategories';
+
+  @override
+  String categories_defaultsLoaded(int count) {
+    return 'Loaded $count default subcategories';
+  }
+
+  @override
+  String get categories_defaultsAlreadyLoaded =>
+      'Default subcategories are already loaded';
+
+  @override
+  String get statistics_byCategory => 'By Category';
+
+  @override
+  String get statistics_bySubcategory => 'By Subcategory';
+
+  @override
+  String get backup_importFromTrackWallet => 'Import from TrackWallet (.csv)';
+
+  @override
+  String backup_importedTransactions(int count) {
+    return 'Imported $count transactions successfully!';
+  }
+
+  @override
+  String get onboarding_restoreTrackWallet => 'Import from TrackWallet (.csv)';
+
+  @override
+  String get transfer_categoryLocked => 'Transfer (Default & Only Category)';
+
+  @override
+  String get loans_noLoans => 'No loans tracked yet';
+
+  @override
+  String get loans_noLoansSub =>
+      'Tap + to track mortgages, personal loans, or installments';
+
+  @override
+  String get certificates_noCertificatesSub =>
+      'Tap + to track bank certificates and fixed deposits';
 }

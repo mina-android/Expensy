@@ -59,7 +59,7 @@ class _PresetSheetState extends State<PresetSheet> {
       if (accounts.isNotEmpty) {
         _accountId = accounts.first.id;
       }
-      final cats = app.categories.where((c) => c.type == _type).toList();
+      final cats = app.userCategories.where((c) => c.type == _type).toList();
       if (cats.isNotEmpty) {
         _categoryId = cats.first.id;
         _colorValue = cats.first.colorValue;
@@ -152,7 +152,7 @@ class _PresetSheetState extends State<PresetSheet> {
     final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     final app = context.watch<AppProvider>();
-    final cats = app.categories.where((c) => c.type == _type).toList();
+    final cats = app.userCategories.where((c) => c.type == _type).toList();
     final transferable = app.nonBankAccounts.where((a) => !a.isGold).toList();
 
     return Container(
@@ -208,7 +208,7 @@ class _PresetSheetState extends State<PresetSheet> {
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       decoration: BoxDecoration(
                         color: _type == 'expense'
-                            ? const Color(0xFFC62828)
+                            ? kDangerColor
                             : cs.surfaceContainerHigh,
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -233,7 +233,7 @@ class _PresetSheetState extends State<PresetSheet> {
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       decoration: BoxDecoration(
                         color: _type == 'income'
-                            ? const Color(0xFF2E7D32)
+                            ? kSuccessColor
                             : cs.surfaceContainerHigh,
                         borderRadius: BorderRadius.circular(10),
                       ),

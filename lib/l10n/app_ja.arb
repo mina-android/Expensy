@@ -824,5 +824,21 @@
   "onboarding_featureRecurringTitle": "定期サブスクリプション",
   "onboarding_featureRecurringDesc": "サブスクリプションが自動更新される前にお知らせします。",
   "onboarding_allowNotifications": "通知を許可する",
-  "onboarding_maybeLater": "あとで設定"
+  "onboarding_maybeLater": "あとで設定",
+  "categories_subcategories": "Subcategories",
+  "categories_addSubcategory": "Add Subcategory",
+  "categories_parentCategory": "Parent Category",
+  "categories_noneRoot": "None (Top-Level Category)",
+  "categories_loadDefaults": "Load Default Subcategories",
+  "categories_defaultsLoaded": "Loaded {count} default subcategories",
+  "categories_defaultsAlreadyLoaded": "Default subcategories are already loaded",
+  "statistics_byCategory": "By Category",
+  "statistics_bySubcategory": "By Subcategory",
+  "backup_importFromTrackWallet": "Import from TrackWallet (.csv)",
+  "backup_importedTransactions": "Imported {count} transactions successfully!",
+  "onboarding_restoreTrackWallet": "Import from TrackWallet (.csv)",
+  "transfer_categoryLocked": "Transfer (Default & Only Category)",
+  "loans_noLoans": "No loans tracked yet",
+  "loans_noLoansSub": "Tap + to track mortgages, personal loans, or installments",
+  "certificates_noCertificatesSub": "Tap + to track bank certificates and fixed deposits"
 }

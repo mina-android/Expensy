@@ -2791,4 +2791,59 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get onboarding_maybeLater => 'ربما لاحقاً';
+
+  @override
+  String get categories_subcategories => 'الفئات الفرعية';
+
+  @override
+  String get categories_addSubcategory => 'إضافة فئة فرعية';
+
+  @override
+  String get categories_parentCategory => 'الفئة الرئيسية';
+
+  @override
+  String get categories_noneRoot => 'بدون (فئة رئيسية)';
+
+  @override
+  String get categories_loadDefaults => 'تحميل الفئات الفرعية الافتراضية';
+
+  @override
+  String categories_defaultsLoaded(int count) {
+    return 'تم تحميل $count فئة فرعية افتراضية';
+  }
+
+  @override
+  String get categories_defaultsAlreadyLoaded =>
+      'الفئات الفرعية الافتراضية محملة بالفعل';
+
+  @override
+  String get statistics_byCategory => 'حسب الفئة';
+
+  @override
+  String get statistics_bySubcategory => 'حسب الفئة الفرعية';
+
+  @override
+  String get backup_importFromTrackWallet => 'الاستيراد من TrackWallet (.csv)';
+
+  @override
+  String backup_importedTransactions(int count) {
+    return 'تم استيراد $count معاملة بنجاح!';
+  }
+
+  @override
+  String get onboarding_restoreTrackWallet => 'الاستيراد من TrackWallet (.csv)';
+
+  @override
+  String get transfer_categoryLocked => 'تحويل (الفئة الافتراضية والوحيدة)';
+
+  @override
+  String get loans_noLoans => 'لا توجد قروض مسجلة بعد';
+
+  @override
+  String get loans_noLoansSub =>
+      'اضغط على + لتتبع القروض العقارية أو الشخصية أو الأقساط';
+
+  @override
+  String get certificates_noCertificatesSub =>
+      'اضغط على + لتتبع الشهادات البنكية والودائع الثابتة';
 }

@@ -104,10 +104,12 @@ void main() {
     // Restore ONLY categories
     await DBHelper.importSelective(payload, {'categories'});
 
-    // 1. Categories should now only have the imported category
+    // 1. User categories should now only have the imported category (plus system categories re-seeded per B7)
     final cats = await db.getCategories();
-    expect(cats.length, 1);
-    expect(cats.first.name, 'Dining Out');
+    final userCats = cats.where((c) => !c.id.startsWith('sys_')).toList();
+    expect(userCats.length, 1);
+    expect(userCats.first.name, 'Dining Out');
+    expect(cats.any((c) => c.id == 'sys_transfer'), isTrue);
 
     // 2. Accounts should still have the original account untouched
     final accs = await db.getAccounts();

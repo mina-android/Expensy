@@ -15,10 +15,10 @@ import '../utils/haptics.dart';
 /// here too so newly-created people can pick from the same set.
 const List<int> kLendedPersonColors = [
   0xFF6750A4,
-  0xFF1565C0,
-  0xFF2E7D32,
-  0xFFC62828,
-  0xFFE65100,
+  kAssetsColorValue,
+  kSuccessColorValue,
+  kDangerColorValue,
+  kWarningColorValue,
   0xFF00838F,
   0xFF6A1B9A,
   0xFF37474F,
@@ -78,19 +78,19 @@ class LendedScreen extends StatelessWidget {
               FintechSummaryChip(
                 label: l10n.lended_theyOweMe,
                 value: fmt(theyOwe),
-                color: const Color(0xFF2E7D32),
+                color: kSuccessColor,
               ),
               const SizedBox(width: 8),
               FintechSummaryChip(
                 label: l10n.lended_iOweThem,
                 value: fmt(iOwe),
-                color: const Color(0xFFC62828),
+                color: kDangerColor,
               ),
               const SizedBox(width: 8),
               FintechSummaryChip(
                 label: l10n.lended_net,
                 value: fmt(theyOwe - iOwe),
-                color: (theyOwe - iOwe) >= 0 ? cs.primary : const Color(0xFFC62828),
+                color: (theyOwe - iOwe) >= 0 ? cs.primary : kDangerColor,
               ),
             ]),
           ),
@@ -147,9 +147,9 @@ class _PersonCard extends StatelessWidget {
     final overdue = app.personHasOverdue(person.id);
 
     final balColor = balance > 0
-        ? const Color(0xFF2E7D32)
+        ? kSuccessColor
         : balance < 0
-            ? const Color(0xFFC62828)
+            ? kDangerColor
             : cs.onSurface.withValues(alpha: 0.5);
     final balLabel = balance > 0
         ? l10n.lended_owesYou

@@ -1251,9 +1251,15 @@ class $CategoriesTable extends Categories
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(0));
+  static const VerificationMeta _parentIdMeta =
+      const VerificationMeta('parentId');
+  @override
+  late final GeneratedColumn<String> parentId = GeneratedColumn<String>(
+      'parent_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns =>
-      [id, name, type, colorValue, iconCodePoint, orderIndex];
+      [id, name, type, colorValue, iconCodePoint, orderIndex, parentId];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -1301,6 +1307,10 @@ class $CategoriesTable extends Categories
           orderIndex.isAcceptableOrUnknown(
               data['order_index']!, _orderIndexMeta));
     }
+    if (data.containsKey('parent_id')) {
+      context.handle(_parentIdMeta,
+          parentId.isAcceptableOrUnknown(data['parent_id']!, _parentIdMeta));
+    }
     return context;
   }
 
@@ -1322,6 +1332,8 @@ class $CategoriesTable extends Categories
           .read(DriftSqlType.int, data['${effectivePrefix}icon_code_point'])!,
       orderIndex: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}order_index'])!,
+      parentId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}parent_id']),
     );
   }
 
@@ -1338,13 +1350,15 @@ class CategoryEntry extends DataClass implements Insertable<CategoryEntry> {
   final int colorValue;
   final int iconCodePoint;
   final int orderIndex;
+  final String? parentId;
   const CategoryEntry(
       {required this.id,
       required this.name,
       required this.type,
       required this.colorValue,
       required this.iconCodePoint,
-      required this.orderIndex});
+      required this.orderIndex,
+      this.parentId});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1354,6 +1368,9 @@ class CategoryEntry extends DataClass implements Insertable<CategoryEntry> {
     map['color_value'] = Variable<int>(colorValue);
     map['icon_code_point'] = Variable<int>(iconCodePoint);
     map['order_index'] = Variable<int>(orderIndex);
+    if (!nullToAbsent || parentId != null) {
+      map['parent_id'] = Variable<String>(parentId);
+    }
     return map;
   }
 
@@ -1365,6 +1382,9 @@ class CategoryEntry extends DataClass implements Insertable<CategoryEntry> {
       colorValue: Value(colorValue),
       iconCodePoint: Value(iconCodePoint),
       orderIndex: Value(orderIndex),
+      parentId: parentId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(parentId),
     );
   }
 
@@ -1378,6 +1398,7 @@ class CategoryEntry extends DataClass implements Insertable<CategoryEntry> {
       colorValue: serializer.fromJson<int>(json['colorValue']),
       iconCodePoint: serializer.fromJson<int>(json['iconCodePoint']),
       orderIndex: serializer.fromJson<int>(json['orderIndex']),
+      parentId: serializer.fromJson<String?>(json['parentId']),
     );
   }
   @override
@@ -1390,6 +1411,7 @@ class CategoryEntry extends DataClass implements Insertable<CategoryEntry> {
       'colorValue': serializer.toJson<int>(colorValue),
       'iconCodePoint': serializer.toJson<int>(iconCodePoint),
       'orderIndex': serializer.toJson<int>(orderIndex),
+      'parentId': serializer.toJson<String?>(parentId),
     };
   }
 
@@ -1399,7 +1421,8 @@ class CategoryEntry extends DataClass implements Insertable<CategoryEntry> {
           String? type,
           int? colorValue,
           int? iconCodePoint,
-          int? orderIndex}) =>
+          int? orderIndex,
+          Value<String?> parentId = const Value.absent()}) =>
       CategoryEntry(
         id: id ?? this.id,
         name: name ?? this.name,
@@ -1407,6 +1430,7 @@ class CategoryEntry extends DataClass implements Insertable<CategoryEntry> {
         colorValue: colorValue ?? this.colorValue,
         iconCodePoint: iconCodePoint ?? this.iconCodePoint,
         orderIndex: orderIndex ?? this.orderIndex,
+        parentId: parentId.present ? parentId.value : this.parentId,
       );
   CategoryEntry copyWithCompanion(CategoriesCompanion data) {
     return CategoryEntry(
@@ -1420,6 +1444,7 @@ class CategoryEntry extends DataClass implements Insertable<CategoryEntry> {
           : this.iconCodePoint,
       orderIndex:
           data.orderIndex.present ? data.orderIndex.value : this.orderIndex,
+      parentId: data.parentId.present ? data.parentId.value : this.parentId,
     );
   }
 
@@ -1431,14 +1456,15 @@ class CategoryEntry extends DataClass implements Insertable<CategoryEntry> {
           ..write('type: $type, ')
           ..write('colorValue: $colorValue, ')
           ..write('iconCodePoint: $iconCodePoint, ')
-          ..write('orderIndex: $orderIndex')
+          ..write('orderIndex: $orderIndex, ')
+          ..write('parentId: $parentId')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, type, colorValue, iconCodePoint, orderIndex);
+  int get hashCode => Object.hash(
+      id, name, type, colorValue, iconCodePoint, orderIndex, parentId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1448,7 +1474,8 @@ class CategoryEntry extends DataClass implements Insertable<CategoryEntry> {
           other.type == this.type &&
           other.colorValue == this.colorValue &&
           other.iconCodePoint == this.iconCodePoint &&
-          other.orderIndex == this.orderIndex);
+          other.orderIndex == this.orderIndex &&
+          other.parentId == this.parentId);
 }
 
 class CategoriesCompanion extends UpdateCompanion<CategoryEntry> {
@@ -1458,6 +1485,7 @@ class CategoriesCompanion extends UpdateCompanion<CategoryEntry> {
   final Value<int> colorValue;
   final Value<int> iconCodePoint;
   final Value<int> orderIndex;
+  final Value<String?> parentId;
   final Value<int> rowid;
   const CategoriesCompanion({
     this.id = const Value.absent(),
@@ -1466,6 +1494,7 @@ class CategoriesCompanion extends UpdateCompanion<CategoryEntry> {
     this.colorValue = const Value.absent(),
     this.iconCodePoint = const Value.absent(),
     this.orderIndex = const Value.absent(),
+    this.parentId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   CategoriesCompanion.insert({
@@ -1475,6 +1504,7 @@ class CategoriesCompanion extends UpdateCompanion<CategoryEntry> {
     required int colorValue,
     this.iconCodePoint = const Value.absent(),
     this.orderIndex = const Value.absent(),
+    this.parentId = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         name = Value(name),
@@ -1487,6 +1517,7 @@ class CategoriesCompanion extends UpdateCompanion<CategoryEntry> {
     Expression<int>? colorValue,
     Expression<int>? iconCodePoint,
     Expression<int>? orderIndex,
+    Expression<String>? parentId,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1496,6 +1527,7 @@ class CategoriesCompanion extends UpdateCompanion<CategoryEntry> {
       if (colorValue != null) 'color_value': colorValue,
       if (iconCodePoint != null) 'icon_code_point': iconCodePoint,
       if (orderIndex != null) 'order_index': orderIndex,
+      if (parentId != null) 'parent_id': parentId,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1507,6 +1539,7 @@ class CategoriesCompanion extends UpdateCompanion<CategoryEntry> {
       Value<int>? colorValue,
       Value<int>? iconCodePoint,
       Value<int>? orderIndex,
+      Value<String?>? parentId,
       Value<int>? rowid}) {
     return CategoriesCompanion(
       id: id ?? this.id,
@@ -1515,6 +1548,7 @@ class CategoriesCompanion extends UpdateCompanion<CategoryEntry> {
       colorValue: colorValue ?? this.colorValue,
       iconCodePoint: iconCodePoint ?? this.iconCodePoint,
       orderIndex: orderIndex ?? this.orderIndex,
+      parentId: parentId ?? this.parentId,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1540,6 +1574,9 @@ class CategoriesCompanion extends UpdateCompanion<CategoryEntry> {
     if (orderIndex.present) {
       map['order_index'] = Variable<int>(orderIndex.value);
     }
+    if (parentId.present) {
+      map['parent_id'] = Variable<String>(parentId.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1555,6 +1592,7 @@ class CategoriesCompanion extends UpdateCompanion<CategoryEntry> {
           ..write('colorValue: $colorValue, ')
           ..write('iconCodePoint: $iconCodePoint, ')
           ..write('orderIndex: $orderIndex, ')
+          ..write('parentId: $parentId, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -10565,6 +10603,7 @@ typedef $$CategoriesTableCreateCompanionBuilder = CategoriesCompanion Function({
   required int colorValue,
   Value<int> iconCodePoint,
   Value<int> orderIndex,
+  Value<String?> parentId,
   Value<int> rowid,
 });
 typedef $$CategoriesTableUpdateCompanionBuilder = CategoriesCompanion Function({
@@ -10574,6 +10613,7 @@ typedef $$CategoriesTableUpdateCompanionBuilder = CategoriesCompanion Function({
   Value<int> colorValue,
   Value<int> iconCodePoint,
   Value<int> orderIndex,
+  Value<String?> parentId,
   Value<int> rowid,
 });
 
@@ -10603,6 +10643,9 @@ class $$CategoriesTableFilterComposer
 
   ColumnFilters<int> get orderIndex => $composableBuilder(
       column: $table.orderIndex, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get parentId => $composableBuilder(
+      column: $table.parentId, builder: (column) => ColumnFilters(column));
 }
 
 class $$CategoriesTableOrderingComposer
@@ -10632,6 +10675,9 @@ class $$CategoriesTableOrderingComposer
 
   ColumnOrderings<int> get orderIndex => $composableBuilder(
       column: $table.orderIndex, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get parentId => $composableBuilder(
+      column: $table.parentId, builder: (column) => ColumnOrderings(column));
 }
 
 class $$CategoriesTableAnnotationComposer
@@ -10660,6 +10706,9 @@ class $$CategoriesTableAnnotationComposer
 
   GeneratedColumn<int> get orderIndex => $composableBuilder(
       column: $table.orderIndex, builder: (column) => column);
+
+  GeneratedColumn<String> get parentId =>
+      $composableBuilder(column: $table.parentId, builder: (column) => column);
 }
 
 class $$CategoriesTableTableManager extends RootTableManager<
@@ -10694,6 +10743,7 @@ class $$CategoriesTableTableManager extends RootTableManager<
             Value<int> colorValue = const Value.absent(),
             Value<int> iconCodePoint = const Value.absent(),
             Value<int> orderIndex = const Value.absent(),
+            Value<String?> parentId = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               CategoriesCompanion(
@@ -10703,6 +10753,7 @@ class $$CategoriesTableTableManager extends RootTableManager<
             colorValue: colorValue,
             iconCodePoint: iconCodePoint,
             orderIndex: orderIndex,
+            parentId: parentId,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -10712,6 +10763,7 @@ class $$CategoriesTableTableManager extends RootTableManager<
             required int colorValue,
             Value<int> iconCodePoint = const Value.absent(),
             Value<int> orderIndex = const Value.absent(),
+            Value<String?> parentId = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               CategoriesCompanion.insert(
@@ -10721,6 +10773,7 @@ class $$CategoriesTableTableManager extends RootTableManager<
             colorValue: colorValue,
             iconCodePoint: iconCodePoint,
             orderIndex: orderIndex,
+            parentId: parentId,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0

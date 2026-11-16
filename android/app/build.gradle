@@ -22,6 +22,11 @@ android {
     }
 
 
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
+
     defaultConfig {
         applicationId = "com.ma.expensy"
         minSdk = flutter.minSdkVersion
@@ -57,8 +62,8 @@ android {
     gradle.taskGraph.whenReady { taskGraph ->
         if (taskGraph.allTasks.any { it.name.toLowerCase().contains("release") } &&
             signingConfigs.release.storeFile == null &&
-            !project.hasProperty('allow-debug-signing')) {
-            throw new GradleException("Release build cannot be signed: key.properties is missing or storeFile is not configured. Use -Pallow-debug-signing to override for local testing.")
+            project.hasProperty('require-release-signing')) {
+            throw new GradleException("Release build cannot be signed: key.properties is missing or storeFile is not configured.")
         }
     }
 }

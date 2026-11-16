@@ -1,0 +1,10 @@
+Expensy is a privacy-focused, fully offline personal finance and expense manager built with Material You design.
+
+Features:
+- Multi-account management (Cash, Bank, Credit & Debit Cards, Savings, Investments, Digital Wallets, Physical Gold)
+- Categories & Subcategories with two-tier quick selection, parent budget roll-up, and drill-down reports
+- Split transactions, recurring payments & installments with background auto-pay
+- Time deposits & certificates, loans, lending/borrowing tracker, wishlist & savings goals
+- Insights, statistics, financial calendar, Expensy Wrapped, Excel & PDF reports
+- Encrypted (.enc) and JSON backups, selective restore, scheduled auto-backup, and TrackWallet CSV / GreenStash migration
+- Material You dynamic colors, pitch-black AMOLED mode, and 12+ languages

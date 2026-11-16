@@ -19,6 +19,8 @@ class StatisticsScreen extends StatefulWidget {
 class _StatisticsScreenState extends State<StatisticsScreen> {
   DateTime _month = DateTime(DateTime.now().year, DateTime.now().month);
   String? _filterAccountId; // null = all accounts
+  bool _bySubcategory = false;
+  bool? _cachedBySubcategory;
 
   List<AppTransaction>? _cachedTxs;
   int _cachedTxCount = -1;
@@ -39,7 +41,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         _cachedTxCount == app.transactions.length &&
         _cachedFirstTxId == app.transactions.firstOrNull?.id &&
         _cachedMonth == _month &&
-        _cachedFilterAccountId == _filterAccountId) {
+        _cachedFilterAccountId == _filterAccountId &&
+        _cachedBySubcategory == _bySubcategory) {
       return;
     }
     _cachedTxs = app.transactions;
@@ -47,13 +50,16 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     _cachedFirstTxId = app.transactions.firstOrNull?.id;
     _cachedMonth = _month;
     _cachedFilterAccountId = _filterAccountId;
+    _cachedBySubcategory = _bySubcategory;
 
     final mStart = DateTime(_month.year, _month.month, 1);
     final mEnd = DateTime(_month.year, _month.month + 1, 0, 23, 59, 59);
 
     _mTxs = app.transactions.where((t) {
       if (t.date.isBefore(mStart) || t.date.isAfter(mEnd)) return false;
-      if (_filterAccountId != null && t.accountId != _filterAccountId) {
+      if (_filterAccountId != null &&
+          t.accountId != _filterAccountId &&
+          t.paidViaAccountId != _filterAccountId) {
         return false;
       }
       return true;
@@ -61,10 +67,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
     final mTotals = FinancialAggregations.periodTotals(
       _mTxs,
-      convert: (amt, cur) {
-        final txCur = cur.isNotEmpty ? cur : app.settings.currency;
-        return app.convertToMain(amt, txCur);
-      },
+      resolveCurrency: app.txCurrency,
+      convert: app.convertToMain,
     );
     _income = mTotals.income;
     _expense = mTotals.expense;
@@ -80,10 +84,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         start: mStart,
         end: mEnd,
         accountId: _filterAccountId,
-        convert: (amt, cur) {
-          final txCur = cur.isNotEmpty ? cur : app.settings.currency;
-          return app.convertToMain(amt, txCur);
-        },
+        resolveCurrency: app.txCurrency,
+        convert: app.convertToMain,
       );
       final inc = totals.income;
       final exp = totals.expense;
@@ -93,12 +95,12 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           barRods: [
             BarChartRodData(
                 toY: inc,
-                color: const Color(0xFF2E7D32),
+                color: kSuccessColor,
                 width: 9,
                 borderRadius: BorderRadius.circular(4)),
             BarChartRodData(
                 toY: exp,
-                color: const Color(0xFFC62828),
+                color: kDangerColor,
                 width: 9,
                 borderRadius: BorderRadius.circular(4)),
           ],
@@ -107,23 +109,24 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
     _expBycat = {};
     _expBycatId = {};
-    for (final t in _mTxs.where((t) => t.type == 'expense' && !FinancialAggregations.isExcludedFromTotals(t))) {
-      final convertedAmt = app.convertToMain(t.amount, t.currency.isNotEmpty ? t.currency : app.settings.currency);
-      if (app.isTransactionSplit(t.id)) {
-        final splits = app.getSplits(t.id);
-        for (final s in splits) {
-          final cat = app.categoryById(s.categoryId);
-          final key = cat?.name ?? l10n.statistics_other;
-          final splitConverted = app.convertToMain(s.amount, t.currency.isNotEmpty ? t.currency : app.settings.currency);
-          _expBycat[key] = (_expBycat[key] ?? 0) + splitConverted;
-          if (cat != null) _expBycatId[key] = cat.id;
-        }
-      } else {
-        final cat = app.categoryById(t.categoryId);
-        final key = cat?.name ?? l10n.statistics_other;
-        _expBycat[key] = (_expBycat[key] ?? 0) + convertedAmt;
-        if (cat != null) _expBycatId[key] = cat.id;
-      }
+    final totalsByCatId = FinancialAggregations.categoryTotals(
+      _mTxs,
+      type: 'expense',
+      resolveCurrency: app.txCurrency,
+      convert: app.convertToMain,
+      resolveCategoryBucket: _bySubcategory ? null : app.rootCategoryIdOf,
+      getSplits: (txId) => app.isTransactionSplit(txId)
+          ? app.getSplits(txId)
+          : const <TransactionSplit>[],
+    );
+    final sorted = totalsByCatId.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    for (final entry in sorted) {
+      final label = _bySubcategory
+          ? app.categoryDisplayName(entry.key, fallback: l10n.statistics_other)
+          : (app.categoryById(entry.key)?.name ?? l10n.statistics_other);
+      _expBycat[label] = (_expBycat[label] ?? 0) + entry.value;
+      _expBycatId[label] = entry.key;
     }
   }
 
@@ -227,14 +230,14 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 child: _StatCard(
                     label: l10n.statistics_income,
                     value: fmt(_income),
-                    color: const Color(0xFF2E7D32),
+                    color: kSuccessColor,
                     isDark: isDark)),
             const SizedBox(width: 8),
             Expanded(
                 child: _StatCard(
                     label: l10n.statistics_expenses,
                     value: fmt(_expense),
-                    color: const Color(0xFFC62828),
+                    color: kDangerColor,
                     isDark: isDark)),
             const SizedBox(width: 8),
             Expanded(
@@ -242,7 +245,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     label: l10n.statistics_net,
                     value: fmt(_income - _expense),
                     color: _income >= _expense
-                        ? (isDark ? const Color(0xFF64B5F6) : const Color(0xFF1565C0))
+                        ? (isDark ? const Color(0xFF64B5F6) : kAssetsColor)
                         : (isDark ? const Color(0xFFFFB74D) : const Color(0xFF785900)),
                     isDark: isDark)),
           ]),
@@ -271,11 +274,11 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               const SizedBox(height: 4),
               Row(children: [
                 _Legend(
-                    color: const Color(0xFF2E7D32),
+                    color: kSuccessColor,
                     label: l10n.statistics_income),
                 const SizedBox(width: 12),
                 _Legend(
-                    color: const Color(0xFFC62828),
+                    color: kDangerColor,
                     label: l10n.statistics_expense),
               ]),
               const SizedBox(height: 12),
@@ -317,121 +320,148 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
           // ── Expense pie ───────────────────────────────────────────────
           if (_expBycat.isNotEmpty)
-            Container(
-              decoration: BoxDecoration(
-                color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+            Builder(builder: (context) {
+              final entries = _expBycat.entries.toList();
+              final chartColors = resolveCategoryChartColors(
+                entries
+                    .map((e) =>
+                        app.categoryById(_expBycatId[e.key] ?? '')?.colorValue)
+                    .toList(),
+                cs,
+              );
+              return Container(
+                decoration: BoxDecoration(
+                  color: cs.surfaceContainer
+                      .withValues(alpha: isDark ? 0.45 : 0.65),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : Colors.black.withValues(alpha: 0.05),
+                  ),
                 ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(l10n.statistics_expensesByCategory,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w700, fontSize: 14)),
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        height: 200,
-                        child: PieChart(PieChartData(
-                          sections:
-                              _expBycat.entries.toList().asMap().entries.map((e) {
-                            final colors = [
-                              const Color(0xFF1565C0),
-                              const Color(0xFFC62828),
-                              const Color(0xFF2E7D32),
-                              const Color(0xFF785900),
-                              const Color(0xFF4527A0),
-                              const Color(0xFF00838F),
-                              const Color(0xFF880E4F),
-                              const Color(0xFF37474F),
-                            ];
-                            final color = colors[e.key % colors.length];
-                            final pct = _expense > 0
-                                ? (e.value.value / _expense * 100)
-                                : 0.0;
-                            return PieChartSectionData(
-                              value: e.value.value,
-                              color: color,
-                              radius: 60,
-                              title: '${pct.toStringAsFixed(0)}%',
-                              titleStyle: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white),
-                            );
-                          }).toList(),
-                          sectionsSpace: 2,
-                          centerSpaceRadius: 32,
-                        )),
-                      ),
-                      const SizedBox(height: 10),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(l10n.statistics_expensesByCategory,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 14)),
+                            ),
+                            SegmentedButton<bool>(
+                              showSelectedIcon: false,
+                              style: const ButtonStyle(
+                                visualDensity: VisualDensity.compact,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              segments: [
+                                ButtonSegment<bool>(
+                                  value: false,
+                                  label: Text(l10n.statistics_byCategory,
+                                      style: const TextStyle(fontSize: 10)),
+                                ),
+                                ButtonSegment<bool>(
+                                  value: true,
+                                  label: Text(l10n.statistics_bySubcategory,
+                                      style: const TextStyle(fontSize: 10)),
+                                ),
+                              ],
+                              selected: {_bySubcategory},
+                              onSelectionChanged: (s) {
+                                AppHaptics.tap(
+                                    context, HapticStrength.selection);
+                                setState(() => _bySubcategory = s.first);
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          height: 200,
+                          child: PieChart(PieChartData(
+                            sections: entries.asMap().entries.map((e) {
+                              final color = chartColors[e.key];
+                              final pct = _expense > 0
+                                  ? (e.value.value / _expense * 100)
+                                  : 0.0;
+                              return PieChartSectionData(
+                                value: e.value.value,
+                                color: color,
+                                radius: 60,
+                                title: '${pct.toStringAsFixed(0)}%',
+                                titleStyle: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white),
+                              );
+                            }).toList(),
+                            sectionsSpace: 2,
+                            centerSpaceRadius: 32,
+                          )),
+                        ),
+                        const SizedBox(height: 10),
 
-                      // Legend with optional budget bar
-                      ..._expBycat.entries.toList().asMap().entries.map((e) {
-                        final colors = [
-                          const Color(0xFF1565C0),
-                          const Color(0xFFC62828),
-                          const Color(0xFF2E7D32),
-                          const Color(0xFF785900),
-                          const Color(0xFF4527A0),
-                          const Color(0xFF00838F),
-                          const Color(0xFF880E4F),
-                          const Color(0xFF37474F),
-                        ];
-                        final pct =
-                            _expense > 0 ? (e.value.value / _expense * 100) : 0.0;
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 6),
-                          child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(children: [
-                                  Container(
-                                      width: 10,
-                                      height: 10,
-                                      decoration: BoxDecoration(
-                                          color: colors[e.key % colors.length],
-                                          shape: BoxShape.circle)),
-                                  const SizedBox(width: 4),
-                                  Expanded(
-                                    child: Text(e.value.key,
-                                        style: const TextStyle(fontSize: 11)),
-                                  ),
-                                  Text(
-                                    '${pct.toStringAsFixed(0)}%',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                      color: colors[e.key % colors.length],
+                        // Legend with category-matched color bars
+                        ...entries.asMap().entries.map((e) {
+                          final color = chartColors[e.key];
+                          final pct = _expense > 0
+                              ? (e.value.value / _expense * 100)
+                              : 0.0;
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 6),
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(children: [
+                                    Container(
+                                        width: 10,
+                                        height: 10,
+                                        decoration: BoxDecoration(
+                                            color: color,
+                                            shape: BoxShape.circle)),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(e.value.key,
+                                          style: const TextStyle(fontSize: 11)),
+                                    ),
+                                    Text(
+                                      '${fmt(e.value.value)} · ${pct.toStringAsFixed(0)}%',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                        color: color,
+                                      ),
+                                    ),
+                                  ]),
+                                  const SizedBox(height: 3),
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 16),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(3),
+                                      child: LinearProgressIndicator(
+                                        value: (pct / 100).clamp(0.0, 1.0),
+                                        minHeight: 3,
+                                        backgroundColor:
+                                            color.withValues(alpha: 0.14),
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                                color),
+                                      ),
                                     ),
                                   ),
                                 ]),
-                                const SizedBox(height: 3),
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 14),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(3),
-                                    child: LinearProgressIndicator(
-                                      value: pct / 100,
-                                      minHeight: 3,
-                                      backgroundColor:
-                                          colors[e.key % colors.length]
-                                              .withValues(alpha: 0.1),
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                          colors[e.key % colors.length]),
-                                    ),
-                                  ),
-                                ),
-                              ]),
-                        );
-                      }),
-                    ]),
-              ),
-            ),
+                          );
+                        }),
+                      ]),
+                ),
+              );
+            }),
           const SizedBox(height: 40),
         ]),
       ),

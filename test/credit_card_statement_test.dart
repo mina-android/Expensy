@@ -140,6 +140,14 @@ void main() {
       expect(calculatedStmt.totalOutstandingDebt, 1000.0);
       expect(calculatedStmt.statementBalance, 650.0);
       expect(calculatedStmt.unbilledBalance, 350.0);
+
+      // Carry-over test (B11): if total debt is 1200 (200 unpaid from prior statement + 650 in-cycle + 350 unbilled),
+      // statementBalance must include the 200 carry-over (850.0) while unbilledBalance remains 350.0.
+      final cardWithCarryOver = card.copyWith(balance: -1200.0);
+      final carryStmt = app.getCreditCardStatement(cardWithCarryOver);
+      expect(carryStmt.totalOutstandingDebt, 1200.0);
+      expect(carryStmt.statementBalance, 850.0);
+      expect(carryStmt.unbilledBalance, 350.0);
     });
 
     test('Calculates minimum payments accurately', () {
@@ -179,6 +187,17 @@ void main() {
         currency: 'USD',
       );
       expect(app.getCreditCardStatement(cardDefMin).minPaymentAmount, 50.0);
+
+      // Small debt where 5% (< 25) triggers the 25.0 minimum floor (B11)
+      final cardFloorMin = Account(
+        id: 'c_min4',
+        name: 'Floor Min Card',
+        type: 'credit',
+        balance: -200.0, // 5% is 10, floored to 25.0
+        colorValue: 0xFF000000,
+        currency: 'USD',
+      );
+      expect(app.getCreditCardStatement(cardFloorMin).minPaymentAmount, 25.0);
     });
 
     test('Due date computation handles same month and next month', () {

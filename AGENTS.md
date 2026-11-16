@@ -31,3 +31,10 @@ This document outlines project-specific rules, requirements, and conventions for
 
 7. **Theme Adaptation & AMOLED Popups**:
    - Popup surfaces (dialogs, bottom sheets, dropdowns, pickers) must use `popupSurfaceColor(cs)` and `popupBorderSide(cs)` from `lib/theme/app_theme.dart` (or inherit `ThemeData` defaults) to consistently adapt to `#000000` pitch black with a subtle border in black AMOLED mode, and container surfaces in dark/light modes. Avoid hardcoding custom modal sheet backgrounds or raw shape overrides.
+   - Always use semantic color constants from `lib/theme/app_theme.dart` (`kSuccessColor`, `kDangerColor`, `kCertificateColor`, `kWarningColor`, `kAssetsColor`, `kGoldColor`, `paceTierColor`, `hairlineBorderColor`, `isAmoledSurface`) rather than hardcoding hex literals in `lib/screens/` or `lib/widgets/`.
+   - Use shared widgets (`SheetShell`, `StatusBadge`, `TypeToggleChips`) in `lib/widgets/shared_widgets.dart` for modal sheets, status pills, and binary type toggles.
+
+8. **Subcategories & Transfer Category Enforcement**:
+   - Subcategories use a single-level `parent_id` on `AppCategory` (Schema v29). Always use `AppProvider.userCategories` in user-facing category pickers so hidden system categories (`sys_transfer`, `sys_investment`) are never selectable as expense/income categories.
+   - Parent budgets and top-level category aggregations (`FinancialAggregations.categoryTotals`, `InsightsScreen`, `WrappedScreen`, `PdfReportService`) roll up child subcategories and split transactions, using `AppProvider.nonOverlappingBudgets` for aggregate budget totals.
+   - Transfers must always use `'sys_transfer'` (`Transfer`) and preserve `transferGroupId`; never allow editing or bulk-recategorizing a transfer leg to a user category.

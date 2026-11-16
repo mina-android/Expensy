@@ -48,7 +48,10 @@ class RecurringPaymentProcessor {
   /// Processes all due recurring payments with auto-pay enabled.
   /// Runs inside a database transaction per payment for idempotency and atomicity.
   /// Handles debit-card balance redirection to parent bank account.
-  Future<List<String>> processDuePayments({DateTime? nowOverride}) async {
+  Future<List<String>> processDuePayments({
+    DateTime? nowOverride,
+    String defaultCurrency = 'EGP',
+  }) async {
     final now = nowOverride ?? DateTime.now();
     final recurringList = await db.getRecurring();
     final accountsList = await db.getAccounts();
@@ -70,10 +73,17 @@ class RecurringPaymentProcessor {
 
         // Determine balance-holding account (Debit Card redirect)
         final acc = accountMap[r.accountId];
-        final balanceAccountId = (acc != null && acc.isDebit && acc.linkedAccountId != null && acc.linkedAccountId!.isNotEmpty)
+        final balanceAccountId = (acc != null &&
+                acc.isDebit &&
+                acc.linkedAccountId != null &&
+                acc.linkedAccountId!.isNotEmpty)
             ? acc.linkedAccountId!
             : r.accountId;
-        final paidViaAccountId = (acc != null && acc.isDebit) ? r.accountId : null;
+        final paidViaAccountId =
+            (acc != null && acc.isDebit) ? r.accountId : null;
+        final balAcc = accountMap[balanceAccountId] ?? acc;
+        final resolvedCurrency =
+            balAcc?.currency ?? acc?.currency ?? defaultCurrency;
 
         final txId = _uuid.v4();
         final tx = AppTransaction(
@@ -85,7 +95,7 @@ class RecurringPaymentProcessor {
           paidViaAccountId: paidViaAccountId,
           categoryId: r.categoryId,
           date: occurrence,
-          currency: acc?.currency ?? 'EGP',
+          currency: resolvedCurrency,
         );
 
         final balanceDelta = r.paymentType == 'income' ? r.amount : -r.amount;
@@ -101,12 +111,16 @@ class RecurringPaymentProcessor {
           action: 'paid',
           date: occurrence,
           amount: r.amount,
-          currency: acc?.currency ?? 'EGP',
+          currency: resolvedCurrency,
         );
 
         // Execute idempotency check and payment atomically inside a DB transaction
         final didPay = await db.transaction(() async {
-          final alreadyPaid = await _isAlreadyPaid(r.id, occurrence);
+          final alreadyPaid = await hasHistoryForDate(
+            r.id,
+            occurrence,
+            action: 'paid',
+          );
           if (alreadyPaid) {
             return false;
           }
@@ -133,13 +147,21 @@ class RecurringPaymentProcessor {
     return processedIds;
   }
 
-  Future<bool> _isAlreadyPaid(String recurringId, DateTime occurrence) async {
-    final startOfDay = DateTime(occurrence.year, occurrence.month, occurrence.day);
-    final endOfDay = DateTime(occurrence.year, occurrence.month, occurrence.day, 23, 59, 59);
+  /// Checks whether a recurring history entry already exists on the calendar day
+  /// of [occurrence]. If [action] is specified, matches only that action ('paid'|'skipped').
+  Future<bool> hasHistoryForDate(
+    String recurringId,
+    DateTime occurrence, {
+    String? action,
+  }) async {
+    final startOfDay =
+        DateTime(occurrence.year, occurrence.month, occurrence.day);
+    final endOfDay = DateTime(
+        occurrence.year, occurrence.month, occurrence.day, 23, 59, 59, 999);
 
     final history = await db.getRecurringHistory(recurringId);
     return history.any((h) =>
-        h.action == 'paid' &&
+        (action == null || h.action == action) &&
         !h.date.isBefore(startOfDay) &&
         !h.date.isAfter(endOfDay));
   }

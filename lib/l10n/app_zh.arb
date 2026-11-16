@@ -824,5 +824,21 @@
   "onboarding_featureRecurringTitle": "周期性订阅",
   "onboarding_featureRecurringDesc": "在定期账单和会员服务自动续费前提前知晓。",
   "onboarding_allowNotifications": "允许通知",
-  "onboarding_maybeLater": "稍后再说"
+  "onboarding_maybeLater": "稍后再说",
+  "categories_subcategories": "Subcategories",
+  "categories_addSubcategory": "Add Subcategory",
+  "categories_parentCategory": "Parent Category",
+  "categories_noneRoot": "None (Top-Level Category)",
+  "categories_loadDefaults": "Load Default Subcategories",
+  "categories_defaultsLoaded": "Loaded {count} default subcategories",
+  "categories_defaultsAlreadyLoaded": "Default subcategories are already loaded",
+  "statistics_byCategory": "By Category",
+  "statistics_bySubcategory": "By Subcategory",
+  "backup_importFromTrackWallet": "Import from TrackWallet (.csv)",
+  "backup_importedTransactions": "Imported {count} transactions successfully!",
+  "onboarding_restoreTrackWallet": "Import from TrackWallet (.csv)",
+  "transfer_categoryLocked": "Transfer (Default & Only Category)",
+  "loans_noLoans": "No loans tracked yet",
+  "loans_noLoansSub": "Tap + to track mortgages, personal loans, or installments",
+  "certificates_noCertificatesSub": "Tap + to track bank certificates and fixed deposits"
 }

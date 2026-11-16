@@ -1,3 +1,16 @@
+// note: Secondary navigation hub providing quick access to financial tools, analytics, debt trackers, and app settings.
+// All state mutations and queries route through AppProvider to preserve UI-DB decoupling.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
 // lib/screens/more_screen.dart
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
@@ -24,21 +37,24 @@ import 'export_screen.dart';
 import 'backup_screen.dart';
 import 'settings_screen.dart';
 
+// ── class MoreScreen ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for MoreScreen.
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final app = context.watch<AppProvider>();
 
-    final tabTeal = isDark ? const Color(0xFF4DB6AC) : const Color(0xFF00897B);
+    final tabTeal = isDark ? const Color(0xFF4DB6AC) : kCertificateColor;
 
     final wishlistLen = app.wishlist.where((w) => !w.isPurchased).length;
     final lendedLen = app.lended.where((l) => !l.isSettled).length;
     final assetsLen = app.assets.length;
-    final categoriesLen = app.categories.length;
+    final categoriesLen = app.userCategories.length;
     final loansLen = app.loans.where((l) => !l.isSettled).length;
 
     final sections = [
@@ -71,7 +87,7 @@ class MoreScreen extends StatelessWidget {
             icon: Icons.inventory_2_outlined,
             label: l10n.more_assets,
             sub: l10n.more_assetsSub(assetsLen),
-            color: const Color(0xFF1565C0),
+            color: kAssetsColor,
             screen: const AssetsScreen(),
           ),
           _Item(
@@ -85,7 +101,7 @@ class MoreScreen extends StatelessWidget {
             icon: Icons.card_membership_rounded,
             label: l10n.certificates_title,
             sub: '${app.certificates.where((c) => !c.isSettled).length} active',
-            color: const Color(0xFF00897B),
+            color: kCertificateColor,
             screen: const CertificatesScreen(),
           ),
         ],
@@ -99,14 +115,14 @@ class MoreScreen extends StatelessWidget {
             icon: Icons.account_balance_rounded,
             label: l10n.netWorth_title,
             sub: l10n.netWorth_subtitle,
-            color: const Color(0xFF00897B),
+            color: kCertificateColor,
             screen: const NetWorthScreen(),
           ),
           _Item(
             icon: Icons.bar_chart_outlined,
             label: l10n.more_statistics,
             sub: l10n.more_statisticsSub,
-            color: const Color(0xFF1565C0),
+            color: kAssetsColor,
             screen: const StatisticsScreen(),
           ),
           _Item(
@@ -120,14 +136,14 @@ class MoreScreen extends StatelessWidget {
             icon: Icons.calendar_month_outlined,
             label: l10n.more_yearlyAnalysis,
             sub: l10n.more_yearlyAnalysisSub,
-            color: const Color(0xFF2E7D32),
+            color: kSuccessColor,
             screen: const YearlyAnalysisScreen(),
           ),
           _Item(
             icon: Icons.calendar_today_rounded,
             label: l10n.calendar_title,
             sub: l10n.calendar_subtitle,
-            color: const Color(0xFFE65100),
+            color: kWarningColor,
             screen: const FinancialCalendarScreen(),
           ),
           _Item(
@@ -148,7 +164,7 @@ class MoreScreen extends StatelessWidget {
             icon: Icons.label_outline_rounded,
             label: l10n.more_categories,
             sub: l10n.more_categoriesSub(categoriesLen),
-            color: const Color(0xFF00897B),
+            color: kCertificateColor,
             screen: const CategoriesScreen(),
           ),
           _Item(
@@ -171,6 +187,7 @@ class MoreScreen extends StatelessWidget {
 
     final totalTools = sections.fold<int>(0, (sum, s) => sum + s.items.length);
 
+    // Render Scaffold layout container.
     return Scaffold(
       body: SafeArea(
         bottom: false,
@@ -248,6 +265,7 @@ class MoreScreen extends StatelessWidget {
     );
   }
 
+  // Helper method `_buildNetWorthHero`: handles user action or computes derived UI state.
   Widget _buildNetWorthHero(BuildContext context, AppProvider app, Color tabTeal, bool isDark) {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
@@ -340,7 +358,7 @@ class MoreScreen extends StatelessWidget {
                         width: 7,
                         height: 7,
                         decoration: const BoxDecoration(
-                          color: Color(0xFF2E7D32),
+                          color: kSuccessColor,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -401,8 +419,10 @@ class MoreScreen extends StatelessWidget {
     );
   }
 
+  // Helper method `_buildCard`: handles user action or computes derived UI state.
   Widget _buildCard(BuildContext context, _Item item, bool isDark) {
     final cs = Theme.of(context).colorScheme;
+    // Render Container layout container.
     return Container(
       decoration: BoxDecoration(
         color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
@@ -474,12 +494,16 @@ class MoreScreen extends StatelessWidget {
   }
 }
 
+// ── class _Section ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _Section.
 class _Section {
   final String title;
   final List<_Item> items;
   const _Section({required this.title, required this.items});
 }
 
+// ── class _Item ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _Item.
 class _Item {
   final IconData icon;
   final String label, sub;

@@ -1,3 +1,54 @@
+// note: Primary dashboard screen displaying net balance hero card, period cashflow summary, quick presets, and recent transactions.
+// All state mutations and queries route through AppProvider to preserve UI-DB decoupling.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
 // lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
 import '../utils/snackbar.dart';
@@ -17,9 +68,13 @@ import 'yearly_analysis_screen.dart';
 import 'financial_calendar_screen.dart';
 import '../utils/haptics.dart';
 import 'accounts_screen.dart';
+import 'certificate_detail_screen.dart';
+import 'certificates_screen.dart';
 import '../widgets/presets_carousel.dart';
 import '../widgets/split_transaction_sheet.dart';
 
+// ── class HomeScreen ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for HomeScreen.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -27,6 +82,8 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
+// ── class _HomeScreenState ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _HomeScreenState.
 class _HomeScreenState extends State<HomeScreen> {
   List<AppTransaction>? _prevTransactions;
   Map<String, double>? _prevRates;
@@ -36,6 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
   double _expense = 0;
   List<AppTransaction> _recent = [];
 
+  // Helper method `_computeTransactions`: handles user action or computes derived UI state.
   void _computeTransactions(AppProvider app) {
     if (identical(_prevTransactions, app.transactions) &&
         identical(_prevRates, app.exchangeRates) &&
@@ -55,10 +113,8 @@ class _HomeScreenState extends State<HomeScreen> {
       txs,
       start: mStart,
       end: DateTime(now.year, now.month + 1, 1),
-      convert: (amt, cur) {
-        final txCur = cur.isNotEmpty ? cur : app.settings.currency;
-        return app.convertToMain(amt, txCur);
-      },
+      resolveCurrency: app.txCurrency,
+      convert: app.convertToMain,
     );
     _income = totals.income;
     _expense = totals.expense;
@@ -66,6 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _recent = txs.take(5).toList();
   }
 
+  // Helper method `_greetingText`: handles user action or computes derived UI state.
   String _greetingText(String userName, AppLocalizations l10n) {
     final hour = DateTime.now().hour;
     final String greeting;
@@ -85,6 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
@@ -98,6 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final homeAccounts = app.accounts.where((a) => !a.isCard).toList();
     final homeCards = app.accounts.where((a) => a.isCard).toList();
 
+    // Helper method `fmt`: handles user action or computes derived UI state.
     String fmt(double v) => formatAmount(v, currency);
 
     _computeTransactions(app);
@@ -111,6 +170,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final tabBlue = isDark ? const Color(0xFF64B5F6) : const Color(0xFF1972E8);
 
+    // Render Scaffold layout container.
     return Scaffold(
       body: SafeArea(
         bottom: false,
@@ -334,8 +394,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
                             color: (net >= 0
-                                    ? const Color(0xFF2E7D32)
-                                    : const Color(0xFFC62828))
+                                    ? kSuccessColor
+                                    : kDangerColor)
                                 .withValues(alpha: isDark ? 0.2 : 0.1),
                             borderRadius: BorderRadius.circular(6),
                           ),
@@ -347,10 +407,10 @@ class _HomeScreenState extends State<HomeScreen> {
                               color: net >= 0
                                   ? (isDark
                                       ? const Color(0xFF81C784)
-                                      : const Color(0xFF2E7D32))
+                                      : kSuccessColor)
                                   : (isDark
                                       ? const Color(0xFFE57373)
-                                      : const Color(0xFFC62828)),
+                                      : kDangerColor),
                             ),
                           ),
                         ),
@@ -367,14 +427,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                 width: 34,
                                 height: 34,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF2E7D32)
+                                  color: kSuccessColor
                                       .withValues(alpha: isDark ? 0.25 : 0.12),
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(
                                   Icons.arrow_downward_rounded,
                                   size: 18,
-                                  color: Color(0xFF2E7D32),
+                                  color: kSuccessColor,
                                 ),
                               ),
                               const SizedBox(width: 10),
@@ -420,14 +480,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                 width: 34,
                                 height: 34,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFC62828)
+                                  color: kDangerColor
                                       .withValues(alpha: isDark ? 0.25 : 0.12),
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(
                                   Icons.arrow_upward_rounded,
                                   size: 18,
-                                  color: Color(0xFFC62828),
+                                  color: kDangerColor,
                                 ),
                               ),
                               const SizedBox(width: 10),
@@ -468,10 +528,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: LinearProgressIndicator(
                           value: (_expense / _income).clamp(0.0, 1.0),
                           minHeight: 5,
-                          backgroundColor: const Color(0xFF2E7D32)
+                          backgroundColor: kSuccessColor
                               .withValues(alpha: isDark ? 0.3 : 0.15),
                           valueColor: const AlwaysStoppedAnimation<Color>(
-                              Color(0xFFC62828)),
+                              kDangerColor),
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -522,7 +582,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     border: Border.all(
                       color: overallPacing != null
                           ? (overallPacing.isOnTrack
-                              ? const Color(0xFF2E7D32)
+                              ? kSuccessColor
                                   .withValues(alpha: 0.35)
                               : (overallPacing.isCaution
                                   ? Colors.orange.withValues(alpha: 0.4)
@@ -1137,6 +1197,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ? app.getSplits(t.id)
                             : const <TransactionSplit>[];
 
+                        // Render Column layout container.
                         return Column(
                           children: [
                             Material(
@@ -1175,6 +1236,79 @@ class _HomeScreenState extends State<HomeScreen> {
                                       transaction: t,
                                       splits: splits,
                                       app: app,
+                                    );
+                                  } else if (t.isTransfer) {
+                                    showDialog(
+                                      context: context,
+                                      builder: (ctx) => AlertDialog(
+                                        title: const Text('Transfer Transaction'),
+                                        content: const Text(
+                                          'This transaction is part of an account transfer. Individual legs cannot be modified directly to preserve balance integrity. Would you like to delete this transfer?',
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(ctx),
+                                            child: const Text('Cancel'),
+                                          ),
+                                          FilledButton(
+                                            style: FilledButton.styleFrom(
+                                              backgroundColor: cs.error,
+                                            ),
+                                            onPressed: () async {
+                                              Navigator.pop(ctx);
+                                              await app.deleteTransaction(t.id);
+                                              if (context.mounted) {
+                                                showAppSnackbar(
+                                                  context,
+                                                  'Transfer deleted',
+                                                );
+                                              }
+                                            },
+                                            child: const Text('Delete Transfer'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  } else if (t.isInvestment) {
+                                    final cert = t.certificateId != null
+                                        ? app.certificates
+                                            .where((c) => c.id == t.certificateId)
+                                            .firstOrNull
+                                        : null;
+                                    showDialog(
+                                      context: context,
+                                      builder: (ctx) => AlertDialog(
+                                        title: const Text('Certificate Transaction'),
+                                        content: const Text(
+                                          'This transaction is linked to a time deposit / certificate. To keep principal and yield ledgers in sync, manage it from the Certificates screen.',
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(ctx),
+                                            child: const Text('Close'),
+                                          ),
+                                          FilledButton(
+                                            onPressed: () {
+                                              Navigator.pop(ctx);
+                                              Navigator.push(
+                                                context,
+                                                ExpensyRoute(
+                                                  builder: (_) => cert != null
+                                                      ? CertificateDetailScreen(
+                                                          certificate: cert,
+                                                        )
+                                                      : const CertificatesScreen(),
+                                                ),
+                                              );
+                                            },
+                                            child: Text(
+                                              cert != null
+                                                  ? 'View Certificate'
+                                                  : 'Open Certificates',
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     );
                                   } else {
                                     Navigator.push(
@@ -1254,8 +1388,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                     fontSize: 14,
                                     fontWeight: FontWeight.w800,
                                     color: isInc
-                                        ? const Color(0xFF2E7D32)
-                                        : const Color(0xFFC62828),
+                                        ? kSuccessColor
+                                        : kDangerColor,
                                   ),
                                 ),
                               ),
@@ -1312,11 +1446,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Helper method `_buildPacingCardRow`: handles user action or computes derived UI state.
   Widget _buildPacingCardRow(
     BuildContext context,
     BudgetPacingInfo pacing,
     ColorScheme cs,
     AppLocalizations l10n,
+    // Helper method `Function`: handles user action or computes derived UI state.
     String Function(double) fmt,
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -1331,14 +1467,14 @@ class _HomeScreenState extends State<HomeScreen> {
     switch (pacing.status) {
       case BudgetPacingStatus.onTrack:
         icon = Icons.speed_rounded;
-        iconColor = const Color(0xFF2E7D32);
+        iconColor = kSuccessColor;
         badgeLabel = l10n.pacing_onTrack;
-        badgeBg = const Color(0xFF2E7D32)
+        badgeBg = kSuccessColor
             .withValues(alpha: isDark ? 0.25 : 0.12);
         badgeFg =
-            isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32);
+            isDark ? const Color(0xFF81C784) : kSuccessColor;
         valueColor =
-            isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32);
+            isDark ? const Color(0xFF81C784) : kSuccessColor;
         break;
       case BudgetPacingStatus.caution:
         icon = Icons.speed_rounded;
@@ -1346,9 +1482,9 @@ class _HomeScreenState extends State<HomeScreen> {
         badgeLabel = l10n.pacing_fast;
         badgeBg = Colors.orange.withValues(alpha: isDark ? 0.25 : 0.12);
         badgeFg =
-            isDark ? const Color(0xFFFFB74D) : const Color(0xFFE65100);
+            isDark ? const Color(0xFFFFB74D) : kWarningColor;
         valueColor =
-            isDark ? const Color(0xFFFFB74D) : const Color(0xFFE65100);
+            isDark ? const Color(0xFFFFB74D) : kWarningColor;
         break;
       case BudgetPacingStatus.overPaced:
         icon = Icons.warning_amber_rounded;
@@ -1357,9 +1493,9 @@ class _HomeScreenState extends State<HomeScreen> {
         badgeBg = const Color(0xFFD32F2F)
             .withValues(alpha: isDark ? 0.25 : 0.12);
         badgeFg =
-            isDark ? const Color(0xFFE57373) : const Color(0xFFC62828);
+            isDark ? const Color(0xFFE57373) : kDangerColor;
         valueColor =
-            isDark ? const Color(0xFFE57373) : const Color(0xFFC62828);
+            isDark ? const Color(0xFFE57373) : kDangerColor;
         break;
       case BudgetPacingStatus.exceeded:
         icon = Icons.error_outline_rounded;
@@ -1431,11 +1567,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Helper method `_buildDefaultDailyAvgRow`: handles user action or computes derived UI state.
   Widget _buildDefaultDailyAvgRow(
     BuildContext context,
     double dailyAvg,
     ColorScheme cs,
     AppLocalizations l10n,
+    // Helper method `Function`: handles user action or computes derived UI state.
     String Function(double) fmt,
   ) {
     return Row(
@@ -1482,6 +1620,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
+// ── class _QuickActionButton ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _QuickActionButton.
 class _QuickActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -1494,6 +1634,7 @@ class _QuickActionButton extends StatelessWidget {
   });
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 

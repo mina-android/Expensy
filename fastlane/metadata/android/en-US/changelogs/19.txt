@@ -1,0 +1,6 @@
+- Added Subcategories (parent-child hierarchy, two-tier picker, budget & report roll-up, and one-tap default subcategories)
+- Fixed Transfer category enforcement ('Transfer' is always used and excluded from expense totals)
+- Harmonized chart color palettes in Insights & Statistics to match category colors
+- Added TrackWallet (.csv) migration in Onboarding and Backup & Restore
+- Added Bangla (বাংলা) localization
+- Added F-Droid / IzzyOnDroid reproducible build metadata

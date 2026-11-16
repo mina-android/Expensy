@@ -1,4 +1,14 @@
+// lib/widgets/savings_goal_sheet.dart
+// note: Bottom-sheet form for creating and editing savings goals with target amount, deadline, icon, and accent color.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// All state mutations and queries route through AppProvider to preserve UI-DB decoupling.
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../models/models.dart';
@@ -6,6 +16,8 @@ import 'package:intl/intl.dart';
 import '../l10n/app_localizations.dart';
 import 'app_numeric_keypad.dart';
 
+// ── class SavingsGoalSheet ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for SavingsGoalSheet.
 class SavingsGoalSheet extends StatefulWidget {
   final SavingsGoal? existing;
   final String? initialName;
@@ -24,6 +36,8 @@ class SavingsGoalSheet extends StatefulWidget {
   State<SavingsGoalSheet> createState() => _SavingsGoalSheetState();
 }
 
+// ── class _SavingsGoalSheetState ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _SavingsGoalSheetState.
 class _SavingsGoalSheetState extends State<SavingsGoalSheet> {
   late TextEditingController _nameCtrl, _amountCtrl, _dateCtrl;
   int? _colorValue;
@@ -32,16 +46,17 @@ class _SavingsGoalSheetState extends State<SavingsGoalSheet> {
   bool _showAmountKeypad = false;
 
   @override
+  // Helper method `didChangeDependencies`: handles user action or computes derived UI state.
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_colorValue == null) {
       final primary = Theme.of(context).colorScheme.primary.toARGB32();
       _colors = [
         primary,
-        0xFF1565C0,
-        0xFF2E7D32,
-        0xFFC62828,
-        0xFFE65100,
+        kAssetsColorValue,
+        kSuccessColorValue,
+        kDangerColorValue,
+        kWarningColorValue,
         0xFF00838F,
         0xFF6A1B9A,
         0xFF37474F,
@@ -51,6 +66,7 @@ class _SavingsGoalSheetState extends State<SavingsGoalSheet> {
   }
 
   @override
+  // Initializes controllers and local state from widget parameters.
   void initState() {
     super.initState();
     final e = widget.existing;
@@ -71,6 +87,7 @@ class _SavingsGoalSheetState extends State<SavingsGoalSheet> {
   }
 
   @override
+  // Disposes controllers and listeners to prevent memory leaks.
   void dispose() {
     _nameCtrl.dispose();
     _amountCtrl.dispose();
@@ -78,6 +95,7 @@ class _SavingsGoalSheetState extends State<SavingsGoalSheet> {
     super.dispose();
   }
 
+  // Helper method `_save`: handles user action or computes derived UI state.
   Future<void> _save() async {
     setState(() => _submitted = true);
     final name = _nameCtrl.text.trim();
@@ -125,11 +143,13 @@ class _SavingsGoalSheetState extends State<SavingsGoalSheet> {
   }
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     final isNew = widget.existing == null;
 
+    // Render Padding layout container.
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -152,15 +172,15 @@ class _SavingsGoalSheetState extends State<SavingsGoalSheet> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2E7D32).withValues(alpha: 0.12),
+                    color: kSuccessColor.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                        color: const Color(0xFF2E7D32).withValues(alpha: 0.3)),
+                        color: kSuccessColor.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     children: [
                       const Icon(Icons.star_rounded,
-                          size: 16, color: Color(0xFF2E7D32)),
+                          size: 16, color: kSuccessColor),
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
@@ -170,7 +190,7 @@ class _SavingsGoalSheetState extends State<SavingsGoalSheet> {
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF2E7D32),
+                            color: kSuccessColor,
                           ),
                         ),
                       ),

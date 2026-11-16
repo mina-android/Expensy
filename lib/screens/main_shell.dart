@@ -1,5 +1,8 @@
+// note: Root scaffold shell managing bottom navigation tabs, global quick-add FAB, and Android predictive back handling.
+// All state mutations and queries route through AppProvider to preserve UI-DB decoupling.
 // lib/screens/main_shell.dart
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
@@ -15,12 +18,16 @@ import '../utils/haptics.dart';
 import '../widgets/rounded_square_border.dart';
 import '../utils/nav_metrics.dart';
 
+// ── class MainShell ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for MainShell.
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
   @override
   State<MainShell> createState() => _MainShellState();
 }
 
+// ── class _MainShellState ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _MainShellState.
 class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   int _index = 0;
 
@@ -34,18 +41,21 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   ];
 
   @override
+  // Initializes controllers and local state from widget parameters.
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
   }
 
   @override
+  // Disposes controllers and listeners to prevent memory leaks.
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   @override
+  // Helper method `didChangeAppLifecycleState`: handles user action or computes derived UI state.
   void didChangeAppLifecycleState(AppLifecycleState state) {
     final app = context.read<AppProvider>();
     if (state == AppLifecycleState.resumed) {
@@ -58,6 +68,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   }
 
   @override
+  // Helper method `didChangeDependencies`: handles user action or computes derived UI state.
   void didChangeDependencies() {
     super.didChangeDependencies();
     final app = context.read<AppProvider>();
@@ -68,6 +79,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     }
   }
 
+  // Helper method `_onTabChange`: handles user action or computes derived UI state.
   void _onTabChange() {
     final app = context.read<AppProvider>();
     if (_index != app.tabIndexNotifier.value && mounted) {
@@ -77,12 +89,13 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     }
   }
 
+  // Helper method `_getTabColor`: handles user action or computes derived UI state.
   static Color _getTabColor(int index, bool isDark) {
     switch (index) {
       case 0: // Home
         return isDark ? const Color(0xFF64B5F6) : const Color(0xFF1972E8);
       case 1: // Transactions
-        return isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32);
+        return isDark ? const Color(0xFF81C784) : kSuccessColor;
       case 2: // Recurring
         return isDark ? const Color(0xFFBA68C8) : const Color(0xFF8E24AA);
       case 3: // Accounts
@@ -90,13 +103,14 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
       case 4: // Budgets
         return isDark ? const Color(0xFFF06292) : const Color(0xFFD81B60);
       case 5: // More
-        return isDark ? const Color(0xFF4DB6AC) : const Color(0xFF00897B);
+        return isDark ? const Color(0xFF4DB6AC) : kCertificateColor;
       default:
         return isDark ? const Color(0xFF64B5F6) : const Color(0xFF1972E8);
     }
   }
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -263,6 +277,8 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   }
 }
 
+// ── class FadeIndexedStack ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for FadeIndexedStack.
 class FadeIndexedStack extends StatefulWidget {
   final int index;
   final List<Widget> children;
@@ -279,11 +295,14 @@ class FadeIndexedStack extends StatefulWidget {
   State<FadeIndexedStack> createState() => _FadeIndexedStackState();
 }
 
+// ── class _FadeIndexedStackState ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _FadeIndexedStackState.
 class _FadeIndexedStackState extends State<FadeIndexedStack>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
 
   @override
+  // Initializes controllers and local state from widget parameters.
   void initState() {
     super.initState();
     _controller = AnimationController(vsync: this, duration: widget.duration);
@@ -291,6 +310,7 @@ class _FadeIndexedStackState extends State<FadeIndexedStack>
   }
 
   @override
+  // Helper method `didUpdateWidget`: handles user action or computes derived UI state.
   void didUpdateWidget(FadeIndexedStack oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.index != oldWidget.index) {
@@ -299,12 +319,14 @@ class _FadeIndexedStackState extends State<FadeIndexedStack>
   }
 
   @override
+  // Disposes controllers and listeners to prevent memory leaks.
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     return FadeTransition(
       opacity: _controller,

@@ -824,5 +824,21 @@
   "onboarding_featureRecurringTitle": "الاشتراكات المتكررة",
   "onboarding_featureRecurringDesc": "ابقَ على علم قبل تجديد الفواتير والاشتراكات المتكررة تلقائياً.",
   "onboarding_allowNotifications": "السماح بالإشعارات",
-  "onboarding_maybeLater": "ربما لاحقاً"
+  "onboarding_maybeLater": "ربما لاحقاً",
+  "categories_subcategories": "الفئات الفرعية",
+  "categories_addSubcategory": "إضافة فئة فرعية",
+  "categories_parentCategory": "الفئة الرئيسية",
+  "categories_noneRoot": "بدون (فئة رئيسية)",
+  "categories_loadDefaults": "تحميل الفئات الفرعية الافتراضية",
+  "categories_defaultsLoaded": "تم تحميل {count} فئة فرعية افتراضية",
+  "categories_defaultsAlreadyLoaded": "الفئات الفرعية الافتراضية محملة بالفعل",
+  "statistics_byCategory": "حسب الفئة",
+  "statistics_bySubcategory": "حسب الفئة الفرعية",
+  "backup_importFromTrackWallet": "الاستيراد من TrackWallet (.csv)",
+  "backup_importedTransactions": "تم استيراد {count} معاملة بنجاح!",
+  "onboarding_restoreTrackWallet": "الاستيراد من TrackWallet (.csv)",
+  "transfer_categoryLocked": "تحويل (الفئة الافتراضية والوحيدة)",
+  "loans_noLoans": "لا توجد قروض مسجلة بعد",
+  "loans_noLoansSub": "اضغط على + لتتبع القروض العقارية أو الشخصية أو الأقساط",
+  "certificates_noCertificatesSub": "اضغط على + لتتبع الشهادات البنكية والودائع الثابتة"
 }

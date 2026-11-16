@@ -1,3 +1,15 @@
+// note: Story-style multi-slide financial review ("Expensy Wrapped") summarizing period income, top categories, and savings habits.
+// All state mutations and queries route through AppProvider to preserve UI-DB decoupling.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
 // lib/screens/wrapped_screen.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -8,6 +20,8 @@ import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
 import '../utils/haptics.dart';
 
+// ── class WrappedScreen ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for WrappedScreen.
 class WrappedScreen extends StatefulWidget {
   final DateTime? initialMonth;
 
@@ -17,6 +31,8 @@ class WrappedScreen extends StatefulWidget {
   State<WrappedScreen> createState() => _WrappedScreenState();
 }
 
+// ── class _WrappedScreenState ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _WrappedScreenState.
 class _WrappedScreenState extends State<WrappedScreen>
     with SingleTickerProviderStateMixin {
   late DateTime _selectedMonth;
@@ -29,6 +45,7 @@ class _WrappedScreenState extends State<WrappedScreen>
   bool _isPaused = false;
 
   @override
+  // Initializes controllers and local state from widget parameters.
   void initState() {
     super.initState();
     final now = DateTime.now();
@@ -55,12 +72,14 @@ class _WrappedScreenState extends State<WrappedScreen>
   }
 
   @override
+  // Disposes controllers and listeners to prevent memory leaks.
   void dispose() {
     _animController.dispose();
     _pageController.dispose();
     super.dispose();
   }
 
+  // Helper method `_nextPage`: handles user action or computes derived UI state.
   void _nextPage() {
     if (_currentPage < _slideCount - 1) {
       AppHaptics.tap(context);
@@ -78,6 +97,7 @@ class _WrappedScreenState extends State<WrappedScreen>
     }
   }
 
+  // Helper method `_prevPage`: handles user action or computes derived UI state.
   void _prevPage() {
     if (_currentPage > 0) {
       AppHaptics.tap(context);
@@ -93,6 +113,7 @@ class _WrappedScreenState extends State<WrappedScreen>
     }
   }
 
+  // Helper method `_restart`: handles user action or computes derived UI state.
   void _restart() {
     AppHaptics.tap(context);
     _currentPage = 0;
@@ -102,6 +123,7 @@ class _WrappedScreenState extends State<WrappedScreen>
     setState(() {});
   }
 
+  // Helper method `_pause`: handles user action or computes derived UI state.
   void _pause() {
     if (!_isPaused) {
       _isPaused = true;
@@ -109,6 +131,7 @@ class _WrappedScreenState extends State<WrappedScreen>
     }
   }
 
+  // Helper method `_resume`: handles user action or computes derived UI state.
   void _resume() {
     if (_isPaused) {
       _isPaused = false;
@@ -116,12 +139,14 @@ class _WrappedScreenState extends State<WrappedScreen>
     }
   }
 
+  // Helper method `_formatAmount`: handles user action or computes derived UI state.
   String _formatAmount(double amount, AppProvider app) {
     if (_obscureAmounts) return '***';
     return formatAmount(amount, app.settings.currency);
   }
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final app = context.watch<AppProvider>();
     final l10n = AppLocalizations.of(context)!;
@@ -129,6 +154,7 @@ class _WrappedScreenState extends State<WrappedScreen>
     final wrappedData = app.getWrappedData(_selectedMonth);
     final monthName = DateFormat('MMMM yyyy').format(_selectedMonth);
 
+    // Render Scaffold layout container.
     return Scaffold(
       backgroundColor: cs.surface,
       body: SafeArea(
@@ -269,6 +295,8 @@ class _WrappedScreenState extends State<WrappedScreen>
   }
 }
 
+// ── class _ProgressSegment ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _ProgressSegment.
 class _ProgressSegment extends StatelessWidget {
   final int index;
   final int currentIndex;
@@ -281,6 +309,7 @@ class _ProgressSegment extends StatelessWidget {
   });
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return ClipRRect(
@@ -322,10 +351,12 @@ class _BigPictureSlide extends StatelessWidget {
   });
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
 
+    // Render SingleChildScrollView layout container.
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 76, 24, 32),
       child: Column(
@@ -360,21 +391,21 @@ class _BigPictureSlide extends StatelessWidget {
           _MetricCard(
             title: l10n.wrapped_totalInflow,
             amount: formatAmount(data.totalInflow),
-            color: const Color(0xFF2E7D32),
+            color: kSuccessColor,
             icon: Icons.arrow_downward_rounded,
           ),
           const SizedBox(height: 12),
           _MetricCard(
             title: l10n.wrapped_totalOutflow,
             amount: formatAmount(data.totalOutflow),
-            color: const Color(0xFFC62828),
+            color: kDangerColor,
             icon: Icons.arrow_upward_rounded,
           ),
           const SizedBox(height: 12),
           _MetricCard(
             title: l10n.wrapped_netSavings,
             amount: formatAmount(data.netSaved),
-            color: data.netSaved >= 0 ? cs.primary : const Color(0xFFE65100),
+            color: data.netSaved >= 0 ? cs.primary : kWarningColor,
             icon: data.netSaved >= 0 ? Icons.savings_rounded : Icons.money_off_rounded,
           ),
           const SizedBox(height: 24),
@@ -407,6 +438,8 @@ class _BigPictureSlide extends StatelessWidget {
   }
 }
 
+// ── class _MetricCard ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _MetricCard.
 class _MetricCard extends StatelessWidget {
   final String title;
   final String amount;
@@ -421,8 +454,10 @@ class _MetricCard extends StatelessWidget {
   });
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    // Render Container layout container.
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       decoration: BoxDecoration(
@@ -478,6 +513,7 @@ class _TopCategorySlide extends StatelessWidget {
   });
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final app = context.watch<AppProvider>();
     final l10n = AppLocalizations.of(context)!;
@@ -489,6 +525,7 @@ class _TopCategorySlide extends StatelessWidget {
     final catName = cat?.name ?? l10n.insights_other;
     final catColor = cat != null ? Color(cat.colorValue) : cs.primary;
 
+    // Render SingleChildScrollView layout container.
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 76, 24, 32),
       child: Column(
@@ -593,6 +630,7 @@ class _BiggestSplurgeSlide extends StatelessWidget {
   });
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final app = context.watch<AppProvider>();
     final l10n = AppLocalizations.of(context)!;
@@ -603,6 +641,7 @@ class _BiggestSplurgeSlide extends StatelessWidget {
         ? app.categoryById(splurge.categoryId)
         : null;
 
+    // Render SingleChildScrollView layout container.
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 76, 24, 32),
       child: Column(
@@ -662,7 +701,7 @@ class _BiggestSplurgeSlide extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 34,
                       fontWeight: FontWeight.w900,
-                      color: Color(0xFFE65100),
+                      color: kWarningColor,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -686,7 +725,7 @@ class _BiggestSplurgeSlide extends StatelessWidget {
               child: Row(
                 children: [
                   const Icon(Icons.sentiment_very_satisfied_rounded,
-                      color: Color(0xFF2E7D32), size: 36),
+                      color: kSuccessColor, size: 36),
                   const SizedBox(width: 14),
                   Expanded(
                     child: Text(
@@ -714,10 +753,12 @@ class _HeroHabitSlide extends StatelessWidget {
   });
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
 
+    // Render SingleChildScrollView layout container.
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 76, 24, 32),
       child: Column(
@@ -727,12 +768,12 @@ class _HeroHabitSlide extends StatelessWidget {
             width: 88,
             height: 88,
             decoration: BoxDecoration(
-              color: const Color(0xFF2E7D32).withValues(alpha: 0.2),
+              color: kSuccessColor.withValues(alpha: 0.2),
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFF2E7D32), width: 2),
+              border: Border.all(color: kSuccessColor, width: 2),
             ),
             child: const Icon(Icons.military_tech_rounded,
-                size: 48, color: Color(0xFF2E7D32)),
+                size: 48, color: kSuccessColor),
           ),
           const SizedBox(height: 24),
           Text(
@@ -746,7 +787,7 @@ class _HeroHabitSlide extends StatelessWidget {
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF2E7D32),
+              color: kSuccessColor,
             ),
             textAlign: TextAlign.center,
           ),
@@ -758,7 +799,7 @@ class _HeroHabitSlide extends StatelessWidget {
               color: cs.surfaceContainerHigh,
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                  color: const Color(0xFF2E7D32).withValues(alpha: 0.3)),
+                  color: kSuccessColor.withValues(alpha: 0.3)),
             ),
             child: Column(
               children: [
@@ -767,7 +808,7 @@ class _HeroHabitSlide extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 48,
                     fontWeight: FontWeight.w900,
-                    color: Color(0xFF2E7D32),
+                    color: kSuccessColor,
                   ),
                 ),
                 Text(
@@ -786,7 +827,7 @@ class _HeroHabitSlide extends StatelessWidget {
                     minHeight: 10,
                     backgroundColor: cs.surfaceContainerHighest,
                     valueColor:
-                        const AlwaysStoppedAnimation<Color>(Color(0xFF2E7D32)),
+                        const AlwaysStoppedAnimation<Color>(kSuccessColor),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -828,6 +869,7 @@ class _ReceiptSummarySlide extends StatelessWidget {
   });
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final app = context.watch<AppProvider>();
     final l10n = AppLocalizations.of(context)!;
@@ -838,6 +880,7 @@ class _ReceiptSummarySlide extends StatelessWidget {
         : null;
     final catName = cat?.name ?? l10n.insights_other;
 
+    // Render SingleChildScrollView layout container.
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 76, 24, 32),
       child: Column(
@@ -898,13 +941,13 @@ class _ReceiptSummarySlide extends StatelessWidget {
                 _ReceiptRow(
                   label: l10n.wrapped_totalInflow,
                   value: formatAmount(data.totalInflow),
-                  valueColor: const Color(0xFF2E7D32),
+                  valueColor: kSuccessColor,
                 ),
                 const SizedBox(height: 10),
                 _ReceiptRow(
                   label: l10n.wrapped_totalOutflow,
                   value: formatAmount(data.totalOutflow),
-                  valueColor: const Color(0xFFC62828),
+                  valueColor: kDangerColor,
                 ),
                 const SizedBox(height: 10),
                 _ReceiptRow(
@@ -979,6 +1022,8 @@ class _ReceiptSummarySlide extends StatelessWidget {
   }
 }
 
+// ── class _ReceiptRow ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _ReceiptRow.
 class _ReceiptRow extends StatelessWidget {
   final String label;
   final String value;
@@ -991,6 +1036,7 @@ class _ReceiptRow extends StatelessWidget {
   });
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Row(

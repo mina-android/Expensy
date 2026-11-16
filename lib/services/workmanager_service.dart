@@ -19,7 +19,8 @@ void callbackDispatcher() {
         return true;
       } else if (task == AutoBackupService.taskKey) {
         final result = await AutoBackupService.runNow(BackupTrigger.scheduled);
-        return result.success;
+        // Return true when disabled or skipped so WorkManager does not retry-storm
+        return result.success || result.skipped;
       }
       return true;
     } catch (e) {

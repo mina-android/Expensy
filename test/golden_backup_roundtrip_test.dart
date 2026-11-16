@@ -6,7 +6,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:expensy/database/app_database.dart';
 import 'package:expensy/providers/app_provider.dart';
-import 'package:expensy/services/data_check_service.dart';
+import 'helpers/data_check_service.dart';
 import 'package:drift/native.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -43,14 +43,27 @@ void main() {
       expect(provider.transactions.length, 108);
       expect(provider.recurring.length, 14);
 
-      // Verify DataCheckService flags the known findings (D1, D2, D3, D5)
+      // Verify post-restore v28 data migration repairs D1, D2, D3, and D5 (B6)
       final report = await DataCheckService(db).runCheck();
-      expect(report.hasIssues, isTrue);
       final issueCodes = report.issues.map((i) => i.code).toSet();
-      expect(issueCodes.contains('D1'), isTrue); // Legacy transfers
-      expect(issueCodes.contains('D2'), isTrue); // Orphan history
-      expect(issueCodes.contains('D3'), isTrue); // Positive credit card
-      expect(issueCodes.contains('D5'), isTrue); // Stray debit card balance
+      expect(issueCodes.contains('D1'), isFalse, reason: 'Legacy transfers must be paired on restore');
+      expect(issueCodes.contains('D2'), isFalse, reason: 'Orphan recurring history must be cleaned on restore');
+      expect(issueCodes.contains('D3'), isFalse, reason: 'Positive credit card balance must be negated on restore');
+      expect(issueCodes.contains('D5'), isFalse, reason: 'Debit card txs must be collapsed into parent bank on restore');
+
+      // Verify debit card transactions were redirected to parent bank with paidViaAccountId preserved
+      final redirectedCardTxs = provider.transactions
+          .where((t) => t.paidViaAccountId == '82a14cfc-5ac7-4b9b-82be-de56592acce4')
+          .toList();
+      expect(redirectedCardTxs.length, 24);
+      expect(
+        redirectedCardTxs.every((t) => t.accountId == '9b820f1e-b99e-460a-a497-e749f827f56c'),
+        isTrue,
+      );
+
+      // Verify credit card balance is now negative liability (-7950.0)
+      final creditCard = provider.accountById('78890b97-a89e-4743-924e-569ad1a05fa1')!;
+      expect(creditCard.balance, -7950.0);
 
       // 2. Restore again into populated DB (full overwrite)
       final ver2 = await provider.restoreBackupData(data);

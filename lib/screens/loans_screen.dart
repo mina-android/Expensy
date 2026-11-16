@@ -29,9 +29,9 @@ class _LoansScreenState extends State<LoansScreen> {
   }
 
   Color _barColor(double pct) {
-    if (pct >= 0.8) return const Color(0xFF2E7D32); // Green
-    if (pct >= 0.4) return const Color(0xFFE65100); // Orange
-    return const Color(0xFFC62828); // Red
+    if (pct >= 0.8) return kSuccessColor; // Green
+    if (pct >= 0.4) return kWarningColor; // Orange
+    return kDangerColor; // Red
   }
 
   @override
@@ -73,14 +73,10 @@ class _LoansScreenState extends State<LoansScreen> {
           
           Expanded(
             child: app.loans.isEmpty
-                ? Center(
-                    child: Text(
-                      'No loans tracked yet',
-                      style: TextStyle(
-                        color: cs.onSurface.withValues(alpha: 0.5),
-                        fontSize: 14,
-                      ),
-                    ),
+                ? EmptyState(
+                    icon: Icons.account_balance_outlined,
+                    message: l10n.loans_noLoans,
+                    subMessage: l10n.loans_noLoansSub,
                   )
                 : ListView(
                     padding: const EdgeInsets.fromLTRB(14, 6, 14, 110),
@@ -115,7 +111,7 @@ class _LoansScreenState extends State<LoansScreen> {
                               child: _LoanCard(
                                 loan: l,
                                 app: app,
-                                barColor: const Color(0xFF2E7D32),
+                                barColor: kSuccessColor,
                                 onTap: () => Navigator.push(
                                   context,
                                   ExpensyRoute(builder: (_) => LoanDetailScreen(loan: l)),
@@ -246,7 +242,7 @@ class _LoanCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color: remaining > 0 ? cs.primary : const Color(0xFF2E7D32),
+                      color: remaining > 0 ? cs.primary : kSuccessColor,
                     ),
                   ),
                 ],

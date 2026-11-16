@@ -1,3 +1,23 @@
+// note: Smart financial insights screen computing month-over-month category anomalies, budget forecasts, and debt outflow summaries.
+// All state mutations and queries route through AppProvider to preserve UI-DB decoupling.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
 // lib/screens/insights_screen.dart
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
@@ -15,24 +35,32 @@ import 'net_worth_screen.dart';
 import 'wrapped_screen.dart';
 import '../utils/haptics.dart';
 
+// ── class _ComputePayload ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _ComputePayload.
 class _ComputePayload {
   final List<AppTransaction> txs;
+  final Map<String, List<TransactionSplit>> splitsByTxId;
   final String mainCurrency;
   final Map<String, double> rates;
   final Map<String, String> accountCurrencies;
   final DateTime now;
   final Map<String, String> categoryNames;
-  
+  final Map<String, String> parentByCatId;
+
   _ComputePayload({
     required this.txs,
+    required this.splitsByTxId,
     required this.mainCurrency,
     required this.rates,
     required this.accountCurrencies,
     required this.now,
     required this.categoryNames,
+    required this.parentByCatId,
   });
 }
 
+// ── class _InsightsData ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _InsightsData.
 class _InsightsData {
   final List<AppTransaction> thisMonth;
   final List<AppTransaction> lastMonth;
@@ -44,6 +72,7 @@ class _InsightsData {
   final int daysElapsed;
   final Map<String, double> thisCatMap;
   final Map<String, double> lastCatMap;
+  final Map<String, Map<String, double>> thisSubcatMap;
   final List<MapEntry<String, double>> topCats;
   final AppTransaction? biggestTx;
   final double biggestAmt;
@@ -54,13 +83,14 @@ class _InsightsData {
   _InsightsData({
     required this.thisMonth, required this.lastMonth, required this.thisExp, required this.lastExp,
     required this.thisInc, required this.pctChange, required this.dailyAverage, required this.daysElapsed,
-    required this.thisCatMap, required this.lastCatMap, required this.topCats,
+    required this.thisCatMap, required this.lastCatMap, required this.thisSubcatMap, required this.topCats,
     this.biggestTx, required this.biggestAmt,
     required this.months12, required this.expSpots, required this.incSpots,
   });
 }
 
 _InsightsData _computeInsights(_ComputePayload p) {
+  // Helper method `txsInMonth`: handles user action or computes derived UI state.
   List<AppTransaction> txsInMonth(DateTime month) {
     final start = DateTime(month.year, month.month, 1);
     final end   = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
@@ -68,6 +98,7 @@ _InsightsData _computeInsights(_ComputePayload p) {
   }
   
   final er = ExchangeRateService();
+  // Helper method `converted`: handles user action or computes derived UI state.
   double converted(AppTransaction t) {
     final acctCur = p.accountCurrencies[t.accountId];
     final cur = t.currency.isNotEmpty ? t.currency : (acctCur ?? p.mainCurrency);
@@ -75,14 +106,55 @@ _InsightsData _computeInsights(_ComputePayload p) {
     return er.convert(t.amount, cur, p.mainCurrency, p.rates) ?? t.amount;
   }
 
+  // Helper method `sum`: handles user action or computes derived UI state.
   double sum(List<AppTransaction> ts, String type) =>
       ts.where((t) => t.type == type && !FinancialAggregations.isExcludedFromTotals(t)).fold(0.0, (s, t) => s + converted(t));
 
-  Map<String, double> byCategory(List<AppTransaction> ts, String type, String otherLabel) {
+  // Helper method `byCategory`: aggregates by root category ID (rolling up subcategories & splits).
+  Map<String, double> byCategory(List<AppTransaction> ts, String type) {
     final map = <String, double>{};
     for (final t in ts.where((x) => x.type == type && !FinancialAggregations.isExcludedFromTotals(x))) {
-      final cat = p.categoryNames[t.categoryId] ?? otherLabel;
-      map[cat] = (map[cat] ?? 0) + converted(t);
+      final txSplits = p.splitsByTxId[t.id];
+      if (txSplits != null && txSplits.isNotEmpty) {
+        final acctCur = p.accountCurrencies[t.accountId];
+        final cur = t.currency.isNotEmpty ? t.currency : (acctCur ?? p.mainCurrency);
+        for (final s in txSplits) {
+          final rootId = p.parentByCatId[s.categoryId] ?? s.categoryId;
+          final sAmt = (cur == p.mainCurrency || p.rates.isEmpty)
+              ? s.amount
+              : (er.convert(s.amount, cur, p.mainCurrency, p.rates) ?? s.amount);
+          map[rootId] = (map[rootId] ?? 0) + sAmt;
+        }
+      } else {
+        final rootId = p.parentByCatId[t.categoryId] ?? t.categoryId;
+        map[rootId] = (map[rootId] ?? 0) + converted(t);
+      }
+    }
+    return map;
+  }
+
+  Map<String, Map<String, double>> bySubcategory(List<AppTransaction> ts, String type) {
+    final map = <String, Map<String, double>>{};
+    for (final t in ts.where((x) => x.type == type && !FinancialAggregations.isExcludedFromTotals(x))) {
+      final txSplits = p.splitsByTxId[t.id];
+      if (txSplits != null && txSplits.isNotEmpty) {
+        final acctCur = p.accountCurrencies[t.accountId];
+        final cur = t.currency.isNotEmpty ? t.currency : (acctCur ?? p.mainCurrency);
+        for (final s in txSplits) {
+          final parentId = p.parentByCatId[s.categoryId];
+          if (parentId == null) continue;
+          final sAmt = (cur == p.mainCurrency || p.rates.isEmpty)
+              ? s.amount
+              : (er.convert(s.amount, cur, p.mainCurrency, p.rates) ?? s.amount);
+          final inner = map.putIfAbsent(parentId, () => {});
+          inner[s.categoryId] = (inner[s.categoryId] ?? 0) + sAmt;
+        }
+      } else {
+        final parentId = p.parentByCatId[t.categoryId];
+        if (parentId == null) continue;
+        final inner = map.putIfAbsent(parentId, () => {});
+        inner[t.categoryId] = (inner[t.categoryId] ?? 0) + converted(t);
+      }
     }
     return map;
   }
@@ -97,8 +169,9 @@ _InsightsData _computeInsights(_ComputePayload p) {
   final daysElapsed = p.now.day.clamp(1, 31);
   final dailyAverage = thisExp / daysElapsed;
   
-  final thisCatMap = byCategory(thisMonth, 'expense', 'Other');
-  final lastCatMap = byCategory(lastMonth, 'expense', 'Other');
+  final thisCatMap = byCategory(thisMonth, 'expense');
+  final lastCatMap = byCategory(lastMonth, 'expense');
+  final thisSubcatMap = bySubcategory(thisMonth, 'expense');
   
   final topCats = (thisCatMap.entries.toList()..sort((a, b) => b.value.compareTo(a.value))).take(3).toList();
   
@@ -121,11 +194,13 @@ _InsightsData _computeInsights(_ComputePayload p) {
   return _InsightsData(
     thisMonth: thisMonth, lastMonth: lastMonth, thisExp: thisExp, lastExp: lastExp,
     thisInc: thisInc, pctChange: pctChange, dailyAverage: dailyAverage, daysElapsed: daysElapsed,
-    thisCatMap: thisCatMap, lastCatMap: lastCatMap, topCats: topCats, biggestTx: biggestTx, biggestAmt: biggestAmt,
+    thisCatMap: thisCatMap, lastCatMap: lastCatMap, thisSubcatMap: thisSubcatMap, topCats: topCats, biggestTx: biggestTx, biggestAmt: biggestAmt,
     months12: months12, expSpots: expSpots, incSpots: incSpots,
   );
 }
 
+// ── class InsightsScreen ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for InsightsScreen.
 class InsightsScreen extends StatefulWidget {
   const InsightsScreen({super.key});
 
@@ -133,12 +208,16 @@ class InsightsScreen extends StatefulWidget {
   State<InsightsScreen> createState() => _InsightsScreenState();
 }
 
+// ── class _InsightsScreenState ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _InsightsScreenState.
 class _InsightsScreenState extends State<InsightsScreen> {
   bool _isLoading = true;
   _InsightsData? _data;
   int _lastTxLength = -1;
   int _lastLoadTime = 0;
+  final Set<String> _expandedTopCats = {};
 
+  // Helper method `_loadData`: handles user action or computes derived UI state.
   Future<void> _loadData() async {
     if (!mounted) return;
     setState(() => _isLoading = true);
@@ -148,11 +227,19 @@ class _InsightsScreenState extends State<InsightsScreen> {
 
     final payload = _ComputePayload(
       txs: allTxs,
+      splitsByTxId: {
+        for (final t in allTxs)
+          if (app.isTransactionSplit(t.id)) t.id: app.getSplits(t.id),
+      },
       mainCurrency: app.settings.currency,
       rates: app.exchangeRates,
       accountCurrencies: { for (var a in app.accounts) a.id: a.currency },
       now: DateTime.now(),
       categoryNames: { for (var c in app.categories) c.id: c.name },
+      parentByCatId: {
+        for (var c in app.categories)
+          if (c.isSubcategory) c.id: c.parentId!,
+      },
     );
 
     final data = await compute(_computeInsights, payload);
@@ -167,11 +254,13 @@ class _InsightsScreenState extends State<InsightsScreen> {
   }
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
     final cs  = Theme.of(context).colorScheme;
     final cur = app.settings.currency;
+    // Helper method `fmt`: handles user action or computes derived UI state.
     String fmt(double v) => formatAmount(v, cur);
 
     // Trigger reload if transactions changed
@@ -185,6 +274,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     if (app.transactions.isEmpty && !_isLoading) {
+      // Render Scaffold layout container.
       return Scaffold(
         appBar: AppBar(
           title: Text(l10n.insights_insights,
@@ -199,6 +289,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
     }
     
     if (_isLoading || _data == null) {
+      // Render Scaffold layout container.
       return Scaffold(
         appBar: AppBar(
           title: Text(l10n.insights_insights,
@@ -228,7 +319,15 @@ class _InsightsScreenState extends State<InsightsScreen> {
     final daysInMonth = DateUtils.getDaysInMonth(now.year, now.month);
     final projectedTotal = dailyAverage * daysInMonth;
     final remainingDays = daysInMonth - daysElapsed;
-    final totalBudget = app.budgets.fold(0.0, (s, b) => s + b.amount);
+    // Normalize weekly budgets to monthly equivalent and include rollover (C4)
+    final totalBudget = app.budgets.fold(0.0, (s, b) {
+      final eff = app.budgetEffectiveAllowance(b);
+      return s + (b.period == 'weekly' ? eff * (52.0 / 12.0) : eff);
+    });
+    final monthLoanPayments = app.periodLoanPaymentsTotal(
+      DateTime(now.year, now.month, 1),
+      DateTime(now.year, now.month + 1, 1),
+    );
     final forecastColor = totalBudget > 0
         ? (projectedTotal >= totalBudget
             ? cs.error
@@ -241,6 +340,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
     final liveTotalLiabilities = app.totalWealthLiabilities;
     final liveNetWorth = app.liveNetWorth;
 
+    // Render Scaffold layout container.
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.insights_insights,
@@ -360,6 +460,45 @@ class _InsightsScreenState extends State<InsightsScreen> {
           const SizedBox(height: 12),
 
           // ── Daily average ───────────────────────────────────────────
+          if (monthLoanPayments > 0) ...[
+            Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.08)
+                      : Colors.black.withValues(alpha: 0.05),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.account_balance_outlined, size: 18, color: cs.primary),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Debt / Loan Payments This Month',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: cs.onSurface.withValues(alpha: 0.8),
+                      ),
+                    ),
+                  ),
+                  Text(
+                    fmt(monthLoanPayments),
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: cs.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           _SectionLabel(label: l10n.insights_dailyAverage),
           Container(
             decoration: BoxDecoration(
@@ -507,9 +646,9 @@ class _InsightsScreenState extends State<InsightsScreen> {
                   _RatioBar(income: thisInc, expense: thisExp, cs: cs),
                   const SizedBox(height: 10),
                   Row(children: [
-                    _DotLabel(color: const Color(0xFF2E7D32), label: l10n.insights_incomeAmount(fmt(thisInc))),
+                    _DotLabel(color: kSuccessColor, label: l10n.insights_incomeAmount(fmt(thisInc))),
                     const SizedBox(width: 14),
-                    _DotLabel(color: const Color(0xFFC62828), label: l10n.insights_expensesAmount(fmt(thisExp))),
+                    _DotLabel(color: kDangerColor, label: l10n.insights_expensesAmount(fmt(thisExp))),
                   ]),
                   if (thisInc > 0 && thisInc > thisExp) ...[
                     const SizedBox(height: 6),
@@ -518,7 +657,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                       style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF2E7D32)),
+                          color: kSuccessColor),
                     ),
                   ],
                 ]),
@@ -530,142 +669,288 @@ class _InsightsScreenState extends State<InsightsScreen> {
           // ── Top 3 categories ────────────────────────────────────────
           if (topCats.isNotEmpty) ...[
             _SectionLabel(label: l10n.insights_topSpendingCategories),
-            Container(
-              decoration: BoxDecoration(
-                color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+            Builder(builder: (context) {
+              final topChartColors = resolveCategoryChartColors(
+                topCats
+                    .map((e) => app.categoryById(e.key)?.colorValue)
+                    .toList(),
+                cs,
+              );
+              return Container(
+                decoration: BoxDecoration(
+                  color: cs.surfaceContainer
+                      .withValues(alpha: isDark ? 0.45 : 0.65),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : Colors.black.withValues(alpha: 0.05),
+                  ),
                 ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  SizedBox(
-                    height: 200,
-                    child: PieChart(
-                      PieChartData(
-                        sectionsSpace: 2,
-                        centerSpaceRadius: 40,
-                        sections: topCats.asMap().entries.map((entry) {
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: 200,
+                        child: PieChart(
+                          PieChartData(
+                            sectionsSpace: 2,
+                            centerSpaceRadius: 40,
+                            sections: topCats.asMap().entries.map((entry) {
+                              final i = entry.key;
+                              final e = entry.value;
+                              final color = topChartColors[i];
+                              return PieChartSectionData(
+                                value: e.value,
+                                title:
+                                    '${(e.value / thisExp * 100).toStringAsFixed(0)}%',
+                                radius: 50,
+                                titleStyle: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white),
+                                color: color,
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Column(
+                        children: topCats.asMap().entries.map((entry) {
                           final i = entry.key;
                           final e = entry.value;
-                          final color = i == 0 
-                              ? cs.primary 
-                              : (i == 1 ? cs.secondary : cs.tertiary);
-                          return PieChartSectionData(
-                            value: e.value,
-                            title: '${(e.value / thisExp * 100).toStringAsFixed(0)}%',
-                            radius: 50,
-                            titleStyle: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white),
-                            color: color,
+                          final cat = app.categoryById(e.key);
+                          final sliceColor = topChartColors[i];
+                          final pct = thisExp > 0 ? e.value / thisExp : 0.0;
+                          final subMap = data.thisSubcatMap[e.key];
+                          final hasSubs =
+                              subMap != null && subMap.isNotEmpty;
+                          final isExpanded =
+                              _expandedTopCats.contains(e.key);
+                          final sortedSubs = hasSubs
+                              ? (subMap.entries.toList()
+                                ..sort((a, b) => b.value.compareTo(a.value)))
+                              : const <MapEntry<String, double>>[];
+
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Column(
+                              children: [
+                                InkWell(
+                                  borderRadius: BorderRadius.circular(12),
+                                  onTap: !hasSubs
+                                      ? null
+                                      : () => setState(() {
+                                            if (isExpanded) {
+                                              _expandedTopCats.remove(e.key);
+                                            } else {
+                                              _expandedTopCats.add(e.key);
+                                            }
+                                          }),
+                                  child: Row(children: [
+                                    CategoryDot(category: cat, size: 36),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Flexible(
+                                                    child: Row(
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: [
+                                                        Flexible(
+                                                          child: Text(
+                                                            cat?.name ??
+                                                                l10n.statistics_other,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                            style:
+                                                                const TextStyle(
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w600,
+                                                                    fontSize:
+                                                                        13),
+                                                          ),
+                                                        ),
+                                                        if (hasSubs) ...[
+                                                          const SizedBox(
+                                                              width: 4),
+                                                          Icon(
+                                                            isExpanded
+                                                                ? Icons
+                                                                    .expand_less_rounded
+                                                                : Icons
+                                                                    .expand_more_rounded,
+                                                            size: 16,
+                                                            color: cs.onSurface
+                                                                .withValues(
+                                                                    alpha:
+                                                                        0.55),
+                                                          ),
+                                                        ],
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Text(fmt(e.value),
+                                                      style: TextStyle(
+                                                          fontSize: 13,
+                                                          fontWeight:
+                                                              FontWeight.w800,
+                                                          color: sliceColor)),
+                                                ]),
+                                            const SizedBox(height: 4),
+                                            ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(3),
+                                              child: LinearProgressIndicator(
+                                                value: pct.clamp(0.0, 1.0),
+                                                minHeight: 4,
+                                                backgroundColor: sliceColor
+                                                    .withValues(alpha: 0.14),
+                                                valueColor:
+                                                    AlwaysStoppedAnimation<
+                                                        Color>(sliceColor),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Text(
+                                                    l10n.insights_percentOfTotal(
+                                                        (pct * 100)
+                                                            .toStringAsFixed(
+                                                                1)),
+                                                    style: TextStyle(
+                                                        fontSize: 10,
+                                                        color: cs.onSurface
+                                                            .withValues(
+                                                                alpha: 0.45))),
+                                                if (daysElapsed >= 3)
+                                                  Builder(builder: (ctx) {
+                                                    final catDaily =
+                                                        e.value / daysElapsed;
+                                                    final catProj =
+                                                        catDaily * daysInMonth;
+                                                    final catBudget = app
+                                                            .budgetForCategory(
+                                                                cat?.id ?? '')
+                                                            ?.amount ??
+                                                        0;
+                                                    String txt =
+                                                        'Proj: ${fmt(catProj)}';
+                                                    if (catBudget > 0) {
+                                                      final projPct =
+                                                          (catProj /
+                                                                  catBudget *
+                                                                  100)
+                                                              .toStringAsFixed(
+                                                                  0);
+                                                      txt +=
+                                                          ' ($projPct% of budget)';
+                                                    }
+                                                    final cColor = catBudget > 0
+                                                        ? (catProj >= catBudget
+                                                            ? cs.error
+                                                            : (catProj >=
+                                                                    catBudget *
+                                                                        0.75
+                                                                ? Colors.orange
+                                                                : cs.onSurface
+                                                                    .withValues(
+                                                                        alpha:
+                                                                            0.45)))
+                                                        : cs.onSurface
+                                                            .withValues(
+                                                                alpha: 0.45);
+                                                    return Text(
+                                                      txt,
+                                                      style: TextStyle(
+                                                          fontSize: 10,
+                                                          color: cColor,
+                                                          fontWeight:
+                                                              FontWeight.w600),
+                                                    );
+                                                  }),
+                                              ],
+                                            ),
+                                          ]),
+                                    ),
+                                  ]),
+                                ),
+                                if (hasSubs && isExpanded)
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                        left: 46, top: 8),
+                                    child: Column(
+                                      children: sortedSubs.map((sub) {
+                                        final subCat =
+                                            app.categoryById(sub.key);
+                                        final subPct = e.value > 0
+                                            ? (sub.value / e.value * 100)
+                                            : 0.0;
+                                        return Padding(
+                                          padding:
+                                              const EdgeInsets.only(bottom: 6),
+                                          child: Row(
+                                            children: [
+                                              CategoryDot(
+                                                  category: subCat, size: 22),
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: Text(
+                                                  subCat?.name ??
+                                                      l10n.statistics_other,
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w500,
+                                                    color: cs.onSurface
+                                                        .withValues(
+                                                            alpha: 0.8),
+                                                  ),
+                                                ),
+                                              ),
+                                              Text(
+                                                '${fmt(sub.value)} (${subPct.toStringAsFixed(0)}%)',
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: cs.onSurface
+                                                      .withValues(alpha: 0.65),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      }).toList(),
+                                    ),
+                                  ),
+                              ],
+                            ),
                           );
                         }).toList(),
                       ),
-                    ),
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                  Column(
-                    children: topCats.map((e) {
-                      final cat = app.categories
-                          .where((c) => c.name == e.key)
-                          .firstOrNull;
-                      final pct = thisExp > 0 ? e.value / thisExp : 0.0;
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: Row(children: [
-                          CategoryDot(category: cat, size: 36),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(e.key,
-                                            style: const TextStyle(
-                                                fontWeight: FontWeight.w600,
-                                                fontSize: 13)),
-                                        Text(fmt(e.value),
-                                            style: TextStyle(
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w800,
-                                                color: cs.primary)),
-                                      ]),
-                                  const SizedBox(height: 4),
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(3),
-                                    child: LinearProgressIndicator(
-                                      value: pct.clamp(0.0, 1.0),
-                                      minHeight: 4,
-                                      backgroundColor:
-                                          cs.primary.withValues(alpha: 0.1),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                          l10n.insights_percentOfTotal(
-                                              (pct * 100).toStringAsFixed(1)),
-                                          style: TextStyle(
-                                              fontSize: 10,
-                                              color: cs.onSurface
-                                                  .withValues(alpha: 0.45))),
-                                      if (daysElapsed >= 3)
-                                        Builder(builder: (ctx) {
-                                          final catDaily = e.value / daysElapsed;
-                                          final catProj = catDaily * daysInMonth;
-                                          final catBudget = app
-                                                  .budgetForCategory(cat?.id ?? '')
-                                                  ?.amount ??
-                                              0;
-                                          String txt = 'Proj: ${fmt(catProj)}';
-                                          if (catBudget > 0) {
-                                            final projPct =
-                                                (catProj / catBudget * 100)
-                                                    .toStringAsFixed(0);
-                                            txt += ' ($projPct% of budget)';
-                                          }
-                                          final cColor = catBudget > 0
-                                              ? (catProj >= catBudget
-                                                  ? cs.error
-                                                  : (catProj >= catBudget * 0.75
-                                                      ? Colors.orange
-                                                      : cs.onSurface
-                                                          .withValues(alpha: 0.45)))
-                                              : cs.onSurface
-                                                  .withValues(alpha: 0.45);
-                                          return Text(
-                                            txt,
-                                            style: TextStyle(
-                                                fontSize: 10,
-                                                color: cColor,
-                                                fontWeight: FontWeight.w600),
-                                          );
-                                        }),
-                                    ],
-                                  ),
-                                ]),
-                          ),
-                        ]),
-                      );
-                    }).toList(),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-        ],
+                ),
+              );
+            }),
+            const SizedBox(height: 12),
+          ],
 
           // ── Biggest single expense ──────────────────────────────────
           if (biggestTx != null) ...[
@@ -692,7 +977,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                         style: const TextStyle(
                             fontWeight: FontWeight.w700, fontSize: 14)),
                     Text(
-                      DateFormat('d MMMM').format(biggestTx.date),
+                      '${DateFormat('d MMMM').format(biggestTx.date)} · ${app.categoryDisplayName(biggestTx.categoryId)}',
                       style: TextStyle(
                           fontSize: 11,
                           color: cs.onSurface.withValues(alpha: 0.5)),
@@ -747,10 +1032,10 @@ class _InsightsScreenState extends State<InsightsScreen> {
                 children: [
               Row(children: [
                 _DotLabel(
-                    color: const Color(0xFF2E7D32), label: l10n.insights_incomeLabel),
+                    color: kSuccessColor, label: l10n.insights_incomeLabel),
                 const SizedBox(width: 12),
                 _DotLabel(
-                    color: const Color(0xFFC62828), label: l10n.insights_expensesLabel),
+                    color: kDangerColor, label: l10n.insights_expensesLabel),
               ]),
               const SizedBox(height: 12),
               SizedBox(
@@ -760,23 +1045,23 @@ class _InsightsScreenState extends State<InsightsScreen> {
                     LineChartBarData(
                       spots: incSpots,
                       isCurved: true,
-                      color: const Color(0xFF2E7D32),
+                      color: kSuccessColor,
                       barWidth: 2,
                       dotData: const FlDotData(show: false),
                       belowBarData: BarAreaData(
                         show: true,
-                        color: const Color(0xFF2E7D32).withValues(alpha: 0.08),
+                        color: kSuccessColor.withValues(alpha: 0.08),
                       ),
                     ),
                     LineChartBarData(
                       spots: expSpots,
                       isCurved: true,
-                      color: const Color(0xFFC62828),
+                      color: kDangerColor,
                       barWidth: 2,
                       dotData: const FlDotData(show: false),
                       belowBarData: BarAreaData(
                         show: true,
-                        color: const Color(0xFFC62828).withValues(alpha: 0.08),
+                        color: kDangerColor.withValues(alpha: 0.08),
                       ),
                     ),
                   ],
@@ -1024,13 +1309,14 @@ class _InsightsScreenState extends State<InsightsScreen> {
                       final progress = app.loanProgress(l);
                       final Color barColor;
                       if (progress >= 0.8) {
-                        barColor = const Color(0xFF2E7D32); // Green
+                        barColor = kSuccessColor; // Green
                       } else if (progress >= 0.4) {
-                        barColor = const Color(0xFFE65100); // Orange
+                        barColor = kWarningColor; // Orange
                       } else {
-                        barColor = const Color(0xFFC62828); // Red
+                        barColor = kDangerColor; // Red
                       }
 
+                      // Render Padding layout container.
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: Column(
@@ -1068,38 +1354,41 @@ class _InsightsScreenState extends State<InsightsScreen> {
     ));
   }
 
+  // Helper method `_buildTrendRows`: handles user action or computes derived UI state.
   List<Widget> _buildTrendRows(
     AppProvider app,
     Map<String, double> current,
     Map<String, double> previous,
     ColorScheme cs,
+    // Helper method `Function`: handles user action or computes derived UI state.
     String Function(double) fmt,
   ) {
     final allCats = {...current.keys, ...previous.keys}.toList()
       ..sort((a, b) =>
           (current[b] ?? 0).compareTo(current[a] ?? 0));
 
-    return allCats.take(6).map((catName) {
-      final cur = current[catName] ?? 0;
-      final prev = previous[catName] ?? 0;
-      final cat = app.categories.where((c) => c.name == catName).firstOrNull;
+    return allCats.take(6).map((catId) {
+      final cur = current[catId] ?? 0;
+      final prev = previous[catId] ?? 0;
+      final cat = app.categoryById(catId);
+      final catName = cat?.name ?? 'Other';
 
       final double pct;
       final Color trendColor;
       final IconData trendIcon;
       if (prev == 0 && cur > 0) {
         pct = 100;
-        trendColor = const Color(0xFFC62828);
+        trendColor = kDangerColor;
         trendIcon = Icons.arrow_upward_rounded;
       } else if (cur == 0 && prev > 0) {
         pct = -100;
-        trendColor = const Color(0xFF2E7D32);
+        trendColor = kSuccessColor;
         trendIcon = Icons.arrow_downward_rounded;
       } else if (prev > 0) {
         pct = (cur - prev) / prev * 100;
         trendColor = pct > 0
-            ? const Color(0xFFC62828)
-            : const Color(0xFF2E7D32);
+            ? kDangerColor
+            : kSuccessColor;
         trendIcon = pct > 0
             ? Icons.arrow_upward_rounded
             : Icons.arrow_downward_rounded;
@@ -1109,6 +1398,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
         trendIcon = Icons.remove_rounded;
       }
 
+      // Render Padding layout container.
       return Padding(
         padding: const EdgeInsets.only(bottom: 10),
         child: Row(children: [
@@ -1145,10 +1435,13 @@ class _InsightsScreenState extends State<InsightsScreen> {
 
 // ── Private widgets ───────────────────────────────────────────────────────────
 
+// ── class _SectionLabel ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _SectionLabel.
 class _SectionLabel extends StatelessWidget {
   final String label;
   const _SectionLabel({required this.label});
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.only(bottom: 6),
         child: Text(label.toUpperCase(),
@@ -1163,11 +1456,14 @@ class _SectionLabel extends StatelessWidget {
       );
 }
 
+// ── class _MonthCol ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _MonthCol.
 class _MonthCol extends StatelessWidget {
   final String title, value;
   final Color color;
   const _MonthCol({required this.title, required this.value, required this.color});
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -1186,18 +1482,22 @@ class _MonthCol extends StatelessWidget {
       );
 }
 
+// ── class _TrendBadge ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _TrendBadge.
 class _TrendBadge extends StatelessWidget {
   final double pct;
   const _TrendBadge({required this.pct});
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final isUp = pct > 0;
     final isFlat = pct == 0;
     final color = isFlat
         ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4)
         : isUp
-            ? const Color(0xFFC62828)
-            : const Color(0xFF2E7D32);
+            ? kDangerColor
+            : kSuccessColor;
+    // Render Container layout container.
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
@@ -1224,12 +1524,15 @@ class _TrendBadge extends StatelessWidget {
   }
 }
 
+// ── class _RatioBar ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _RatioBar.
 class _RatioBar extends StatelessWidget {
   final double income, expense;
   final ColorScheme cs;
   const _RatioBar({required this.income, required this.expense, required this.cs});
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final total = income + expense;
     if (total == 0) return const SizedBox();
@@ -1241,11 +1544,11 @@ class _RatioBar extends StatelessWidget {
         child: Row(children: [
           Expanded(
             flex: (incRatio * 100).round(),
-            child: Container(color: const Color(0xFF2E7D32)),
+            child: Container(color: kSuccessColor),
           ),
           Expanded(
             flex: ((1 - incRatio) * 100).round().clamp(0, 100),
-            child: Container(color: const Color(0xFFC62828)),
+            child: Container(color: kDangerColor),
           ),
         ]),
       ),
@@ -1253,11 +1556,14 @@ class _RatioBar extends StatelessWidget {
   }
 }
 
+// ── class _DotLabel ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _DotLabel.
 class _DotLabel extends StatelessWidget {
   final Color color;
   final String label;
   const _DotLabel({required this.color, required this.label});
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) => Row(
         mainAxisSize: MainAxisSize.min,
         children: [

@@ -6,6 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
 import 'app_localizations_ar.dart';
+import 'app_localizations_bn.dart';
 import 'app_localizations_de.dart';
 import 'app_localizations_en.dart';
 import 'app_localizations_es.dart';
@@ -104,6 +105,7 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('ar'),
+    Locale('bn'),
     Locale('de'),
     Locale('en'),
     Locale('es'),
@@ -5071,6 +5073,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Maybe Later'**
   String get onboarding_maybeLater;
+
+  /// No description provided for @categories_subcategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Subcategories'**
+  String get categories_subcategories;
+
+  /// No description provided for @categories_addSubcategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Subcategory'**
+  String get categories_addSubcategory;
+
+  /// No description provided for @categories_parentCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Parent Category'**
+  String get categories_parentCategory;
+
+  /// No description provided for @categories_noneRoot.
+  ///
+  /// In en, this message translates to:
+  /// **'None (Top-Level Category)'**
+  String get categories_noneRoot;
+
+  /// No description provided for @categories_loadDefaults.
+  ///
+  /// In en, this message translates to:
+  /// **'Load Default Subcategories'**
+  String get categories_loadDefaults;
+
+  /// No description provided for @categories_defaultsLoaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Loaded {count} default subcategories'**
+  String categories_defaultsLoaded(int count);
+
+  /// No description provided for @categories_defaultsAlreadyLoaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Default subcategories are already loaded'**
+  String get categories_defaultsAlreadyLoaded;
+
+  /// No description provided for @statistics_byCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'By Category'**
+  String get statistics_byCategory;
+
+  /// No description provided for @statistics_bySubcategory.
+  ///
+  /// In en, this message translates to:
+  /// **'By Subcategory'**
+  String get statistics_bySubcategory;
+
+  /// No description provided for @backup_importFromTrackWallet.
+  ///
+  /// In en, this message translates to:
+  /// **'Import from TrackWallet (.csv)'**
+  String get backup_importFromTrackWallet;
+
+  /// No description provided for @backup_importedTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported {count} transactions successfully!'**
+  String backup_importedTransactions(int count);
+
+  /// No description provided for @onboarding_restoreTrackWallet.
+  ///
+  /// In en, this message translates to:
+  /// **'Import from TrackWallet (.csv)'**
+  String get onboarding_restoreTrackWallet;
+
+  /// No description provided for @transfer_categoryLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer (Default & Only Category)'**
+  String get transfer_categoryLocked;
+
+  /// No description provided for @loans_noLoans.
+  ///
+  /// In en, this message translates to:
+  /// **'No loans tracked yet'**
+  String get loans_noLoans;
+
+  /// No description provided for @loans_noLoansSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap + to track mortgages, personal loans, or installments'**
+  String get loans_noLoansSub;
+
+  /// No description provided for @certificates_noCertificatesSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap + to track bank certificates and fixed deposits'**
+  String get certificates_noCertificatesSub;
 }
 
 class _AppLocalizationsDelegate
@@ -5085,6 +5183,7 @@ class _AppLocalizationsDelegate
   @override
   bool isSupported(Locale locale) => <String>[
         'ar',
+        'bn',
         'de',
         'en',
         'es',
@@ -5106,6 +5205,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   switch (locale.languageCode) {
     case 'ar':
       return AppLocalizationsAr();
+    case 'bn':
+      return AppLocalizationsBn();
     case 'de':
       return AppLocalizationsDe();
     case 'en':

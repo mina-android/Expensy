@@ -14,11 +14,11 @@ import 'main_shell.dart';
 const List<int> _kColors = [
   0xFF6750A4,
   0xFF7D5260,
-  0xFF1565C0,
-  0xFF2E7D32,
-  0xFFE65100,
-  0xFF00897B,
-  0xFFC62828,
+  kAssetsColorValue,
+  kSuccessColorValue,
+  kWarningColorValue,
+  kCertificateColorValue,
+  kDangerColorValue,
   0xFF37474F,
   0xFF0077B6,
   0xFF9C27B0,
@@ -255,14 +255,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final _accBalCtrl = TextEditingController(text: '0');
   String _accType = 'bank';
   String _accCur = 'USD';
-  int _accColor = 0xFF1565C0;
+  int _accColor = kAssetsColorValue;
   bool _accExcludeFromTotal = false;
 
   // Step 5 — Debit Card
   final _cardNameCtrl = TextEditingController(text: 'Debit Card');
   final _cardHolderCtrl = TextEditingController();
   final _cardDigitsCtrl = TextEditingController(text: '1234');
-  int _cardColor = 0xFF1565C0;
+  int _cardColor = kAssetsColorValue;
 
   @override
   void initState() {
@@ -344,6 +344,59 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
+  Future<String?> _promptForBackupPassword() async {
+    final ctrl = TextEditingController();
+    bool obscure = true;
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: const Text('Encrypted Backup'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Enter the password used to encrypt this backup file:',
+                style: TextStyle(fontSize: 13),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: ctrl,
+                obscureText: obscure,
+                autofocus: true,
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      obscure
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                    ),
+                    onPressed: () => setDialogState(() => obscure = !obscure),
+                  ),
+                ),
+                onSubmitted: (v) => Navigator.pop(ctx, v.trim()),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, null),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
+              child: const Text('Decrypt & Continue'),
+            ),
+          ],
+        ),
+      ),
+    );
+    ctrl.dispose();
+    return result;
+  }
+
   Future<void> _restoreFromWelcome() async {
     final l10n = AppLocalizations.of(context)!;
     setState(() {
@@ -352,7 +405,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     });
     try {
       final app = context.read<AppProvider>();
-      final originalVersion = await app.restoreBackup();
+      final originalVersion = await app.restoreBackup(
+        onPasswordRequired: _promptForBackupPassword,
+      );
       if (originalVersion == 0) {
         if (mounted) setState(() => _restoring = false);
         return;
@@ -695,6 +750,7 @@ class _PageLanguage extends StatelessWidget {
               _langTile('de', 'Deutsch', s.languageCode, context),
               _langTile('es', 'Español', s.languageCode, context),
               _langTile('hi', 'हिन्दी', s.languageCode, context),
+              _langTile('bn', 'বাংলা', s.languageCode, context),
               _langTile('pt', 'Português', s.languageCode, context),
               _langTile('zh', '中文', s.languageCode, context),
               _langTile('ja', '日本語', s.languageCode, context),
@@ -892,6 +948,14 @@ class _PageWelcome extends StatelessWidget {
           onPressed: restoring ? null : () => onRestoreExternal('greenstash'),
           icon: Icon(Icons.savings_outlined, size: 18, color: cs.primary),
           label: l10n.onboarding_restoreGreenStash,
+        ),
+        const SizedBox(height: 10),
+        // External TrackWallet CSV restore button
+        _FintechSecondaryButton(
+          onPressed: restoring ? null : () => onRestoreExternal('trackwallet'),
+          icon: Icon(Icons.account_balance_wallet_outlined,
+              size: 18, color: cs.primary),
+          label: l10n.onboarding_restoreTrackWallet,
         ),
 
         const SizedBox(height: 20),

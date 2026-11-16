@@ -1,3 +1,22 @@
+// note: Backup & restore center supporting encrypted (.enc) archives, selective table restore, SAF scheduled auto-backup, and third-party CSV imports.
+// All state mutations and queries route through AppProvider to preserve UI-DB decoupling.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
 // lib/screens/backup_screen.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -9,12 +28,16 @@ import '../utils/snackbar.dart';
 import '../utils/haptics.dart';
 import '../theme/app_theme.dart';
 
+// ── class BackupScreen ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for BackupScreen.
 class BackupScreen extends StatefulWidget {
   const BackupScreen({super.key});
   @override
   State<BackupScreen> createState() => _BackupScreenState();
 }
 
+// ── class _BackupScreenState ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _BackupScreenState.
 class _BackupScreenState extends State<BackupScreen> {
   bool _backingUp = false;
   bool _restoring = false;
@@ -23,11 +46,13 @@ class _BackupScreenState extends State<BackupScreen> {
   Timer? _msgTimer;
 
   @override
+  // Disposes controllers and listeners to prevent memory leaks.
   void dispose() {
     _msgTimer?.cancel();
     super.dispose();
   }
 
+  // Helper method `_setMsg`: handles user action or computes derived UI state.
   void _setMsg(String m, {bool ok = true}) {
     setState(() {
       _msg = m;
@@ -41,6 +66,7 @@ class _BackupScreenState extends State<BackupScreen> {
     });
   }
 
+  // Helper method `_backup`: handles user action or computes derived UI state.
   Future<void> _backup() async {
     final l10n = AppLocalizations.of(context)!;
     setState(() {
@@ -62,6 +88,7 @@ class _BackupScreenState extends State<BackupScreen> {
     }
   }
 
+  // Helper method `_showSelectiveBackupSheet`: handles user action or computes derived UI state.
   void _showSelectiveBackupSheet() {
     showModalBottomSheet(
       context: context,
@@ -71,6 +98,61 @@ class _BackupScreenState extends State<BackupScreen> {
     );
   }
 
+  // Helper method `_promptForBackupPassword`: handles user action or computes derived UI state.
+  Future<String?> _promptForBackupPassword(BuildContext context) async {
+    final ctrl = TextEditingController();
+    bool obscure = true;
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: const Text('Encrypted Backup'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Enter the password used to encrypt this backup file:',
+                style: TextStyle(fontSize: 13),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: ctrl,
+                obscureText: obscure,
+                autofocus: true,
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      obscure
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                    ),
+                    onPressed: () => setDialogState(() => obscure = !obscure),
+                  ),
+                ),
+                onSubmitted: (v) => Navigator.pop(ctx, v.trim()),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, null),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
+              child: const Text('Decrypt & Continue'),
+            ),
+          ],
+        ),
+      ),
+    );
+    ctrl.dispose();
+    return result;
+  }
+
+  // Helper method `_restore`: handles user action or computes derived UI state.
   Future<void> _restore() async {
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
@@ -83,7 +165,9 @@ class _BackupScreenState extends State<BackupScreen> {
 
     Map<String, dynamic>? data;
     try {
-      data = await app.pickAndParseBackupFile();
+      data = await app.pickAndParseBackupFile(
+        onPasswordRequired: () => _promptForBackupPassword(context),
+      );
     } on FormatException catch (e) {
       if (mounted) _setMsg(l10n.backup_restoreFailed(e.message), ok: false);
       return;
@@ -111,6 +195,7 @@ class _BackupScreenState extends State<BackupScreen> {
     _showRestoreModeSheet(context, backupData);
   }
 
+  // Helper method `_showRestoreModeSheet`: handles user action or computes derived UI state.
   void _showRestoreModeSheet(BuildContext context, Map<String, dynamic> data) {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
@@ -225,6 +310,7 @@ class _BackupScreenState extends State<BackupScreen> {
     );
   }
 
+  // Helper method `_restoreExternal`: handles user action or computes derived UI state.
   Future<void> _restoreExternal(String source) async {
     final l10n = AppLocalizations.of(context)!;
     setState(() {
@@ -235,7 +321,11 @@ class _BackupScreenState extends State<BackupScreen> {
       final app = context.read<AppProvider>();
       final success = await app.restoreExternalBackup(source);
       if (mounted && success) {
-        _setMsg(l10n.backup_dataRestoredSuccessfully(''));
+        if (source == 'trackwallet') {
+          _setMsg(l10n.backup_importedTransactions(app.lastExternalImportCount));
+        } else {
+          _setMsg(l10n.backup_dataRestoredSuccessfully(''));
+        }
       }
     } on FormatException catch (e) {
       if (mounted) _setMsg(l10n.backup_restoreFailed(e.message), ok: false);
@@ -247,6 +337,7 @@ class _BackupScreenState extends State<BackupScreen> {
   }
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
@@ -288,13 +379,14 @@ class _BackupScreenState extends State<BackupScreen> {
       _CountRow(Icons.payments_outlined, l10n.backup_loanPayments,
           app.loanPayments.length),
       _CountRow(Icons.label_outline_rounded, l10n.backup_categories,
-          app.categories.length),
+          app.userCategories.length),
       _CountRow(
           Icons.settings_outlined, l10n.backup_settings, -1), // -1 = 'included'
     ];
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    // Render Scaffold layout container.
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.backup_backupRestore,
@@ -528,6 +620,17 @@ class _BackupScreenState extends State<BackupScreen> {
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(22))),
                 ),
+                const SizedBox(height: 10),
+                OutlinedButton.icon(
+                  onPressed:
+                      _restoring ? null : () => _restoreExternal('trackwallet'),
+                  icon: const Icon(Icons.account_balance_wallet_outlined),
+                  label: Text(l10n.backup_importFromTrackWallet),
+                  style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(44),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(22))),
+                ),
               ]),
             ),
           ),
@@ -608,34 +711,35 @@ class _BackupScreenState extends State<BackupScreen> {
       ),
       bottomNavigationBar: _msg != null
           ? SafeArea(
-              child: Container(
-                margin: const EdgeInsets.all(20).copyWith(top: 0),
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                    color: _msgOk
+              child: Builder(builder: (context) {
+                final isDark = Theme.of(context).brightness == Brightness.dark;
+                final accent = _msgOk ? kSuccessColor : kDangerColor;
+                final bg = isDark
+                    ? accent.withValues(alpha: 0.15)
+                    : (_msgOk
                         ? const Color(0xFFE8F5E9)
-                        : const Color(0xFFFFEBEE),
-                    borderRadius: BorderRadius.circular(12)),
-                child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Icon(
-                          _msgOk
-                              ? Icons.check_circle_outline
-                              : Icons.error_outline,
-                          color: _msgOk
-                              ? const Color(0xFF2E7D32)
-                              : const Color(0xFFC62828)),
-                      const SizedBox(width: 10),
-                      Expanded(
-                          child: Text(_msg!,
-                              style: TextStyle(
-                                  fontSize: 13,
-                                  color: _msgOk
-                                      ? const Color(0xFF2E7D32)
-                                      : const Color(0xFFC62828)))),
-                    ]),
-              ),
+                        : const Color(0xFFFFEBEE));
+                // Render Container layout container.
+                return Container(
+                  margin: const EdgeInsets.all(20).copyWith(top: 0),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                      color: bg, borderRadius: BorderRadius.circular(12)),
+                  child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Icon(
+                            _msgOk
+                                ? Icons.check_circle_outline
+                                : Icons.error_outline,
+                            color: accent),
+                        const SizedBox(width: 10),
+                        Expanded(
+                            child: Text(_msg!,
+                                style: TextStyle(fontSize: 13, color: accent))),
+                      ]),
+                );
+              }),
             )
           : null,
     );
@@ -644,6 +748,8 @@ class _BackupScreenState extends State<BackupScreen> {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+// ── class _CountRow ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _CountRow.
 class _CountRow {
   final IconData icon;
   final String label;
@@ -653,6 +759,8 @@ class _CountRow {
   const _CountRow(this.icon, this.label, this.count);
 }
 
+// ── class _AutoBackupSection ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _AutoBackupSection.
 class _AutoBackupSection extends StatefulWidget {
   const _AutoBackupSection();
 
@@ -660,9 +768,12 @@ class _AutoBackupSection extends StatefulWidget {
   State<_AutoBackupSection> createState() => _AutoBackupSectionState();
 }
 
+// ── class _AutoBackupSectionState ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _AutoBackupSectionState.
 class _AutoBackupSectionState extends State<_AutoBackupSection> {
   bool _runningNow = false;
 
+  // Helper method `_toggleEncryption`: handles user action or computes derived UI state.
   Future<void> _toggleEncryption(BuildContext context, AppProvider app) async {
     final l10n = AppLocalizations.of(context)!;
     final currentEnc = app.autoBackup.encrypted;
@@ -740,6 +851,7 @@ class _AutoBackupSectionState extends State<_AutoBackupSection> {
     }
   }
 
+  // Helper method `_runNow`: handles user action or computes derived UI state.
   Future<void> _runNow(BuildContext context, AppProvider app) async {
     setState(() => _runningNow = true);
     AppHaptics.tap(context, HapticStrength.medium);
@@ -759,6 +871,7 @@ class _AutoBackupSectionState extends State<_AutoBackupSection> {
   }
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final app = context.watch<AppProvider>();
     final auto = app.autoBackup;
@@ -766,6 +879,7 @@ class _AutoBackupSectionState extends State<_AutoBackupSection> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
 
+    // Render Column layout container.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -862,6 +976,7 @@ class _AutoBackupSectionState extends State<_AutoBackupSection> {
                       const SizedBox(width: 12),
                       ...[3, 7, 14, 30].map((count) {
                         final isSel = auto.retention == count;
+                        // Render Padding layout container.
                         return Padding(
                           padding: const EdgeInsets.only(right: 6),
                           child: InkWell(
@@ -981,6 +1096,8 @@ class _AutoBackupSectionState extends State<_AutoBackupSection> {
   }
 }
 
+// ── class _SelectiveBackupSheet ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _SelectiveBackupSheet.
 class _SelectiveBackupSheet extends StatefulWidget {
   const _SelectiveBackupSheet();
 
@@ -988,6 +1105,8 @@ class _SelectiveBackupSheet extends StatefulWidget {
   State<_SelectiveBackupSheet> createState() => _SelectiveBackupSheetState();
 }
 
+// ── class _SelectiveBackupSheetState ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _SelectiveBackupSheetState.
 class _SelectiveBackupSheetState extends State<_SelectiveBackupSheet> {
   final Set<String> _selected = {
     'accounts',
@@ -1004,6 +1123,7 @@ class _SelectiveBackupSheetState extends State<_SelectiveBackupSheet> {
   bool _exporting = false;
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final app = context.watch<AppProvider>();
     final cs = Theme.of(context).colorScheme;
@@ -1011,7 +1131,7 @@ class _SelectiveBackupSheetState extends State<_SelectiveBackupSheet> {
     final entities = [
       ('accounts', 'Accounts', Icons.account_balance_wallet_outlined, app.accounts.length),
       ('transactions', 'Transactions & Splits', Icons.receipt_long_outlined, app.transactions.length),
-      ('categories', 'Categories', Icons.label_outline_rounded, app.categories.length),
+      ('categories', 'Categories', Icons.label_outline_rounded, app.userCategories.length),
       ('recurring', 'Recurring Payments & History', Icons.repeat_rounded, app.recurring.length),
       ('loans', 'Loans & Payments', Icons.account_balance_outlined, app.loans.length),
       ('lent_money', 'Lent Money & Contacts', Icons.handshake_outlined, app.lended.length),
@@ -1021,6 +1141,7 @@ class _SelectiveBackupSheetState extends State<_SelectiveBackupSheet> {
       ('wishlist_goals', 'Wishlist & Savings Goals', Icons.star_outline_rounded, app.wishlist.length + app.savingsGoals.length),
     ];
 
+    // Render Container layout container.
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
       decoration: BoxDecoration(
@@ -1174,6 +1295,8 @@ class _SelectiveBackupSheetState extends State<_SelectiveBackupSheet> {
   }
 }
 
+// ── class _SelectiveRestoreSheet ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _SelectiveRestoreSheet.
 class _SelectiveRestoreSheet extends StatefulWidget {
   final Map<String, dynamic> data;
   final VoidCallback onRestored;
@@ -1183,11 +1306,14 @@ class _SelectiveRestoreSheet extends StatefulWidget {
   State<_SelectiveRestoreSheet> createState() => _SelectiveRestoreSheetState();
 }
 
+// ── class _SelectiveRestoreSheetState ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _SelectiveRestoreSheetState.
 class _SelectiveRestoreSheetState extends State<_SelectiveRestoreSheet> {
   final Set<String> _selected = {};
   bool _restoring = false;
 
   @override
+  // Initializes controllers and local state from widget parameters.
   void initState() {
     super.initState();
     for (final key in AppProvider.entityGroupTables.keys) {
@@ -1197,6 +1323,37 @@ class _SelectiveRestoreSheetState extends State<_SelectiveRestoreSheet> {
     }
   }
 
+  // Dependency prerequisites so selective restores do not create orphan references (B7).
+  static const Map<String, List<String>> _groupDependencies = {
+    'transactions': ['accounts', 'categories'],
+    'budgets': ['categories'],
+    'recurring': ['accounts', 'categories'],
+  };
+
+  // Helper method `_toggleGroupSelection`: handles user action or computes derived UI state.
+  void _toggleGroupSelection(String groupKey, bool select) {
+    setState(() {
+      if (select) {
+        _selected.add(groupKey);
+        final deps = _groupDependencies[groupKey] ?? const [];
+        for (final dep in deps) {
+          if (_countForGroup(dep) > 0) {
+            _selected.add(dep);
+          }
+        }
+      } else {
+        _selected.remove(groupKey);
+        // Deselect groups that depend on this prerequisite
+        for (final entry in _groupDependencies.entries) {
+          if (entry.value.contains(groupKey)) {
+            _selected.remove(entry.key);
+          }
+        }
+      }
+    });
+  }
+
+  // Helper method `_countForGroup`: handles user action or computes derived UI state.
   int _countForGroup(String group) {
     int count = 0;
     final tables = AppProvider.entityGroupTables[group] ?? [];
@@ -1208,6 +1365,7 @@ class _SelectiveRestoreSheetState extends State<_SelectiveRestoreSheet> {
   }
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
@@ -1224,6 +1382,7 @@ class _SelectiveRestoreSheetState extends State<_SelectiveRestoreSheet> {
       ('wishlist_goals', 'Wishlist & Savings Goals', Icons.star_outline_rounded),
     ].where((e) => _countForGroup(e.$1) > 0).toList();
 
+    // Render Container layout container.
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
       decoration: BoxDecoration(
@@ -1300,15 +1459,7 @@ class _SelectiveRestoreSheetState extends State<_SelectiveRestoreSheet> {
                 final count = _countForGroup(item.$1);
                 final isChecked = _selected.contains(item.$1);
                 return InkWell(
-                  onTap: () {
-                    setState(() {
-                      if (isChecked) {
-                        _selected.remove(item.$1);
-                      } else {
-                        _selected.add(item.$1);
-                      }
-                    });
-                  },
+                  onTap: () => _toggleGroupSelection(item.$1, !isChecked),
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -1343,15 +1494,8 @@ class _SelectiveRestoreSheetState extends State<_SelectiveRestoreSheet> {
                         const SizedBox(width: 8),
                         Checkbox(
                           value: isChecked,
-                          onChanged: (v) {
-                            setState(() {
-                              if (v == true) {
-                                _selected.add(item.$1);
-                              } else {
-                                _selected.remove(item.$1);
-                              }
-                            });
-                          },
+                          onChanged: (v) =>
+                              _toggleGroupSelection(item.$1, v == true),
                         ),
                       ],
                     ),

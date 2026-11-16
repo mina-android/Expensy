@@ -552,13 +552,13 @@ class _AccountCard extends StatelessWidget {
       _Stat(
           label: l10n.accounts_income,
           value: '+${formatAmount(app.getAccountIncome(acc.id), acc.currency)}',
-          color: const Color(0xFF2E7D32)),
+          color: kSuccessColor),
       _Divider(),
       _Stat(
           label: l10n.accounts_expense,
           value:
               '-${formatAmount(app.getAccountExpense(acc.id), acc.currency)}',
-          color: const Color(0xFFC62828)),
+          color: kDangerColor),
       _Divider(),
       _Stat(
           label: l10n.accounts_txs,
@@ -592,7 +592,7 @@ class _AccountCard extends StatelessWidget {
         label: l10n.accounts_karat,
         value: '${karat}k',
         subValue: l10n.accounts_pure((karat / 24 * 100).toStringAsFixed(1)),
-        color: const Color(0xFFB8860B),
+        color: kGoldColor,
       ),
       _Divider(),
       _Stat(
@@ -686,11 +686,11 @@ IconData _typeIcon(String type) {
 const List<int> _kColors = [
   0xFF6750A4,
   0xFF7D5260,
-  0xFF1565C0,
-  0xFF2E7D32,
-  0xFFE65100,
-  0xFF00897B,
-  0xFFC62828,
+  kAssetsColorValue,
+  kSuccessColorValue,
+  kWarningColorValue,
+  kCertificateColorValue,
+  kDangerColorValue,
   0xFF37474F,
   0xFF0077B6,
   0xFF9C27B0,
@@ -1061,7 +1061,7 @@ class _AccountSheetState extends State<_AccountSheet> {
                     decoration: BoxDecoration(
                       color: sel
                           ? (val == 'gold'
-                              ? const Color(0xFFB8860B)
+                              ? kGoldColor
                               : cs.primary)
                           : cs.surfaceContainerHigh,
                       borderRadius: BorderRadius.circular(12),
@@ -1138,13 +1138,13 @@ class _AccountSheetState extends State<_AccountSheet> {
                         const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
                     decoration: BoxDecoration(
                       color: sel
-                          ? const Color(0xFFB8860B)
-                          : const Color(0xFFB8860B).withValues(alpha: 0.1),
+                          ? kGoldColor
+                          : kGoldColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
                         color: sel
-                            ? const Color(0xFFB8860B)
-                            : const Color(0xFFB8860B).withValues(alpha: 0.3),
+                            ? kGoldColor
+                            : kGoldColor.withValues(alpha: 0.3),
                       ),
                     ),
                     child: Column(mainAxisSize: MainAxisSize.min, children: [
@@ -1154,13 +1154,13 @@ class _AccountSheetState extends State<_AccountSheet> {
                               fontSize: 14,
                               color: sel
                                   ? Colors.white
-                                  : const Color(0xFFB8860B))),
+                                  : kGoldColor)),
                       Text('${(k / 24 * 100).toStringAsFixed(0)}%',
                           style: TextStyle(
                               fontSize: 9,
                               color: sel
                                   ? Colors.white.withValues(alpha: 0.8)
-                                  : const Color(0xFFB8860B)
+                                  : kGoldColor
                                       .withValues(alpha: 0.7))),
                     ]),
                   ),
@@ -1847,7 +1847,7 @@ class _CardSheetState extends State<_CardSheet> {
                     decoration: BoxDecoration(
                       color: sel
                           ? (val == 'gold'
-                              ? const Color(0xFFB8860B)
+                              ? kGoldColor
                               : cs.primary)
                           : cs.surfaceContainerHigh,
                       borderRadius: BorderRadius.circular(12),
@@ -1924,13 +1924,13 @@ class _CardSheetState extends State<_CardSheet> {
                         const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
                     decoration: BoxDecoration(
                       color: sel
-                          ? const Color(0xFFB8860B)
-                          : const Color(0xFFB8860B).withValues(alpha: 0.1),
+                          ? kGoldColor
+                          : kGoldColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
                         color: sel
-                            ? const Color(0xFFB8860B)
-                            : const Color(0xFFB8860B).withValues(alpha: 0.3),
+                            ? kGoldColor
+                            : kGoldColor.withValues(alpha: 0.3),
                       ),
                     ),
                     child: Column(mainAxisSize: MainAxisSize.min, children: [
@@ -1940,13 +1940,13 @@ class _CardSheetState extends State<_CardSheet> {
                               fontSize: 14,
                               color: sel
                                   ? Colors.white
-                                  : const Color(0xFFB8860B))),
+                                  : kGoldColor)),
                       Text('${(k / 24 * 100).toStringAsFixed(0)}%',
                           style: TextStyle(
                               fontSize: 9,
                               color: sel
                                   ? Colors.white.withValues(alpha: 0.8)
-                                  : const Color(0xFFB8860B)
+                                  : kGoldColor
                                       .withValues(alpha: 0.7))),
                     ]),
                   ),
@@ -2574,7 +2574,7 @@ class _RealWorldCard extends StatelessWidget {
     final statement = app.getCreditCardStatement(acc);
     final Color tierColor;
     if (statement.utilizationPercent < 30.0) {
-      tierColor = const Color(0xFF2E7D32); // Low: Emerald Green
+      tierColor = kSuccessColor; // Low: Emerald Green
     } else if (statement.utilizationPercent <= 70.0) {
       tierColor = const Color(0xFFFFA000); // Moderate: Amber
     } else {
@@ -2802,12 +2802,12 @@ class _RealWorldCard extends StatelessWidget {
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
                           color:
-                              const Color(0xFF2E7D32).withValues(alpha: 0.15),
+                              kSuccessColor.withValues(alpha: 0.15),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
                           Icons.check_circle_rounded,
-                          color: Color(0xFF2E7D32),
+                          color: kSuccessColor,
                           size: 18,
                         ),
                       ),
@@ -2873,7 +2873,7 @@ class _GoldPreviewCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
-    const goldColor = Color(0xFFB8860B);
+    const goldColor = kGoldColor;
 
     // Price per gram of this karat in the chosen currency
     final pricePerGram24k = app.goldPricePerGram(currency);

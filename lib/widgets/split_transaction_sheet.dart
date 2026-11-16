@@ -147,7 +147,7 @@ class SplitTransactionSheet extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFFC62828),
+                    color: kDangerColor,
                   ),
                 ),
               ],
@@ -180,7 +180,10 @@ class SplitTransactionSheet extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              cat?.name ?? 'Category',
+                              app.categoryDisplayName(
+                                split.categoryId,
+                                fallback: cat?.name ?? 'Category',
+                              ),
                               style: const TextStyle(
                                   fontWeight: FontWeight.w600, fontSize: 14),
                             ),

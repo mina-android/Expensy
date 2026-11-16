@@ -73,7 +73,12 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
     final zeroSpendDays = app.zeroSpendDaysCount(_selectedMonth, now);
 
     final daysInMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1, 0).day;
-    final avgDailyExpense = daysInMonth > 0 ? totalSpentMonth / daysInMonth : 0.0;
+    final isCurrentMonth =
+        _selectedMonth.year == now.year && _selectedMonth.month == now.month;
+    final elapsedDays =
+        isCurrentMonth ? now.day.clamp(1, daysInMonth) : daysInMonth;
+    final avgDailyExpense =
+        elapsedDays > 0 ? totalSpentMonth / elapsedDays : 0.0;
 
     // Weekday alignment
     final startDayOffset = app.settings.weekStart == 'sunday'
@@ -150,7 +155,7 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
                   child: _SummaryPill(
                     label: l10n.home_expenses,
                     amount: formatAmount(totalSpentMonth, cur),
-                    color: const Color(0xFFC62828),
+                    color: kDangerColor,
                     icon: Icons.arrow_upward_rounded,
                   ),
                 ),
@@ -159,7 +164,7 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
                   child: _SummaryPill(
                     label: l10n.home_income,
                     amount: formatAmount(totalIncomeMonth, cur),
-                    color: const Color(0xFF2E7D32),
+                    color: kSuccessColor,
                     icon: Icons.arrow_downward_rounded,
                   ),
                 ),
@@ -168,7 +173,7 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
                   child: _SummaryPill(
                     label: l10n.calendar_zeroSpendDays(zeroSpendDays.toString()),
                     amount: '$zeroSpendDays d',
-                    color: const Color(0xFF00897B),
+                    color: kCertificateColor,
                     icon: Icons.star_rounded,
                   ),
                 ),
@@ -247,9 +252,9 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
 
                         if (isPastOrToday) {
                           if (expense <= 0.001) {
-                            cellBg = const Color(0xFF2E7D32).withValues(alpha: isDark ? 0.2 : 0.1);
+                            cellBg = kSuccessColor.withValues(alpha: isDark ? 0.2 : 0.1);
                           } else if (expense > (avgDailyExpense * 1.5) && avgDailyExpense > 0) {
-                            cellBg = const Color(0xFFC62828).withValues(alpha: isDark ? 0.25 : 0.15);
+                            cellBg = kDangerColor.withValues(alpha: isDark ? 0.25 : 0.15);
                           } else {
                             cellBg = cs.surfaceContainerHighest.withValues(alpha: isDark ? 0.35 : 0.45);
                           }
@@ -287,7 +292,7 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
                                   ),
                                 ),
                                 if (isPastOrToday && expense <= 0.001) ...[
-                                  const Icon(Icons.star_rounded, size: 9, color: Color(0xFF2E7D32)),
+                                  const Icon(Icons.star_rounded, size: 9, color: kSuccessColor),
                                 ] else if (isPastOrToday && expense > 0) ...[
                                   Text(
                                     formatAmount(expense, cur),
@@ -297,7 +302,7 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
                                       fontSize: 8.5,
                                       fontWeight: FontWeight.w700,
                                       color: expense > (avgDailyExpense * 1.5)
-                                          ? const Color(0xFFC62828)
+                                          ? kDangerColor
                                           : cs.onSurface.withValues(alpha: 0.65),
                                     ),
                                   ),
@@ -312,7 +317,7 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
                                           width: 4,
                                           height: 4,
                                           decoration: const BoxDecoration(
-                                            color: Color(0xFF1565C0),
+                                            color: kAssetsColor,
                                             shape: BoxShape.circle,
                                           ),
                                         ),
@@ -322,7 +327,7 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
                                           width: 4,
                                           height: 4,
                                           decoration: const BoxDecoration(
-                                            color: Color(0xFFE65100),
+                                            color: kWarningColor,
                                             shape: BoxShape.circle,
                                           ),
                                         ),
@@ -332,7 +337,7 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
                                           width: 4,
                                           height: 4,
                                           decoration: const BoxDecoration(
-                                            color: Color(0xFF00897B),
+                                            color: kCertificateColor,
                                             shape: BoxShape.circle,
                                           ),
                                         ),
@@ -392,12 +397,12 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
                       children: [
                         Text(
                           '${l10n.home_expenses}: ${formatAmount(selectedDayExpense, cur)}',
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFFC62828)),
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: kDangerColor),
                         ),
                         const SizedBox(width: 12),
                         Text(
                           '${l10n.home_income}: ${formatAmount(selectedDayIncome, cur)}',
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF2E7D32)),
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: kSuccessColor),
                         ),
                       ],
                     ),
@@ -410,15 +415,15 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
                         margin: const EdgeInsets.only(bottom: 12),
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF2E7D32).withValues(alpha: isDark ? 0.2 : 0.1),
+                          color: kSuccessColor.withValues(alpha: isDark ? 0.2 : 0.1),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: const Color(0xFF2E7D32).withValues(alpha: 0.3),
+                            color: kSuccessColor.withValues(alpha: 0.3),
                           ),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.celebration_rounded, color: Color(0xFF2E7D32), size: 22),
+                            const Icon(Icons.celebration_rounded, color: kSuccessColor, size: 22),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Column(
@@ -429,7 +434,7 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
                                     style: const TextStyle(
                                       fontWeight: FontWeight.w800,
                                       fontSize: 13,
-                                      color: Color(0xFF2E7D32),
+                                      color: kSuccessColor,
                                     ),
                                   ),
                                   Text(
@@ -451,7 +456,7 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
                     if (selectedDayRecurring.isNotEmpty) ...[
                       Text(
                         l10n.calendar_billsDue,
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF1565C0)),
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: kAssetsColor),
                       ),
                       const SizedBox(height: 6),
                       ...selectedDayRecurring.map((r) => ListTile(
@@ -459,7 +464,7 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
                             contentPadding: EdgeInsets.zero,
                             leading: const CircleAvatar(
                               radius: 14,
-                              backgroundColor: Color(0xFF1565C0),
+                              backgroundColor: kAssetsColor,
                               child: Icon(Icons.repeat_rounded, size: 14, color: Colors.white),
                             ),
                             title: Text(r.name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
@@ -472,7 +477,7 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
                     if (selectedDayLoans.isNotEmpty) ...[
                       Text(
                         l10n.calendar_loansDue,
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFFE65100)),
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: kWarningColor),
                       ),
                       const SizedBox(height: 6),
                       ...selectedDayLoans.map((l) => ListTile(
@@ -480,7 +485,7 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
                             contentPadding: EdgeInsets.zero,
                             leading: const CircleAvatar(
                               radius: 14,
-                              backgroundColor: Color(0xFFE65100),
+                              backgroundColor: kWarningColor,
                               child: Icon(Icons.account_balance_outlined, size: 14, color: Colors.white),
                             ),
                             title: Text(l.name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
@@ -493,7 +498,7 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
                     if (selectedDayLended.isNotEmpty) ...[
                       Text(
                         l10n.calendar_lendedDue,
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF00897B)),
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: kCertificateColor),
                       ),
                       const SizedBox(height: 6),
                       ...selectedDayLended.map((m) {
@@ -503,7 +508,7 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
                           contentPadding: EdgeInsets.zero,
                           leading: const CircleAvatar(
                             radius: 14,
-                            backgroundColor: Color(0xFF00897B),
+                            backgroundColor: kCertificateColor,
                             child: Icon(Icons.handshake_outlined, size: 14, color: Colors.white),
                           ),
                           title: Text(person?.name ?? 'Repayment', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
@@ -533,6 +538,48 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
                                   transaction: t,
                                   splits: app.getSplits(t.id),
                                   app: app,
+                                );
+                              } else if (t.isTransfer) {
+                                showDialog(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    title: const Text('Transfer Transaction'),
+                                    content: const Text(
+                                      'This transaction is part of an account transfer. Individual legs cannot be modified directly to preserve balance integrity. Would you like to delete this transfer?',
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(ctx),
+                                        child: Text(l10n.shared_widgets_cancel),
+                                      ),
+                                      FilledButton(
+                                        style: FilledButton.styleFrom(
+                                          backgroundColor: cs.error,
+                                        ),
+                                        onPressed: () async {
+                                          Navigator.pop(ctx);
+                                          await app.deleteTransaction(t.id);
+                                        },
+                                        child: const Text('Delete Transfer'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              } else if (t.isInvestment) {
+                                showDialog(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    title: const Text('Certificate Transaction'),
+                                    content: const Text(
+                                      'This transaction is linked to a time deposit / certificate. Manage it from the Certificates screen.',
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(ctx),
+                                        child: Text(l10n.shared_widgets_cancel),
+                                      ),
+                                    ],
+                                  ),
                                 );
                               } else {
                                 Navigator.push(
@@ -583,7 +630,7 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w800,
-                                color: isExpense ? const Color(0xFFC62828) : const Color(0xFF2E7D32),
+                                color: isExpense ? kDangerColor : kSuccessColor,
                               ),
                             ),
                           ),

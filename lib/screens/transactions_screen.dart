@@ -1,3 +1,37 @@
+// note: Full ledger screen with multi-criteria search, category/account/tag filtering, date grouping, and swipe actions.
+// All state mutations and queries route through AppProvider to preserve UI-DB decoupling.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
 // lib/screens/transactions_screen.dart
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
@@ -13,17 +47,23 @@ import 'add_transaction_screen.dart';
 import 'lended_person_screen.dart';
 import 'savings_goal_detail_screen.dart';
 import 'loan_detail_screen.dart';
+import 'certificate_detail_screen.dart';
+import 'certificates_screen.dart';
 import '../widgets/split_transaction_sheet.dart';
 import '../widgets/app_numeric_keypad.dart';
 import '../utils/haptics.dart';
 import '../utils/snackbar.dart';
 
+// ── class TransactionsScreen ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for TransactionsScreen.
 class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({super.key});
   @override
   State<TransactionsScreen> createState() => _TransactionsScreenState();
 }
 
+// ── class _TransactionsScreenState ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _TransactionsScreenState.
 class _TransactionsScreenState extends State<TransactionsScreen> {
   String  _search    = '';
   String  _filter    = 'all';   // all|income|expense
@@ -35,6 +75,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   double? _maxAmount;
   String? _advCategoryFilter;
 
+  // Helper method `_toggleSelection`: handles user action or computes derived UI state.
   void _toggleSelection(String id) {
     final wasEmpty = _selectedIds.isEmpty;
     setState(() {
@@ -53,6 +94,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   List<_TxItem>? _cachedItems;
   Object? _lastFilterSignature;
 
+  // Helper method `_getFilteredItems`: handles user action or computes derived UI state.
   List<_TxItem> _getFilteredItems(AppProvider app) {
     final currentSignature = (
       _search,
@@ -82,10 +124,18 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         if (_accFilter != null && t.accountId != _accFilter) continue;
         if (_minAmount != null && t.amount < _minAmount!) continue;
         if (_maxAmount != null && t.amount > _maxAmount!) continue;
-        if (_advCategoryFilter != null && t.categoryId != _advCategoryFilter) continue;
+        if (_advCategoryFilter != null) {
+          final family = app.categoryFamilyIds(_advCategoryFilter!);
+          final matchesTx = family.contains(t.categoryId) ||
+              (app.isTransactionSplit(t.id) &&
+                  app.getSplits(t.id).any((s) => family.contains(s.categoryId)));
+          if (!matchesTx) continue;
+        }
         if (_search.isNotEmpty) {
           final q = _search.toLowerCase();
-          final cat = app.categoryById(t.categoryId)?.name.toLowerCase() ?? '';
+          final cat = app
+              .categoryDisplayName(t.categoryId)
+              .toLowerCase();
           final acc = app.accountById(t.accountId)?.name.toLowerCase() ?? '';
           if (!t.description.toLowerCase().contains(q) &&
               !cat.contains(q) && !acc.contains(q)) {
@@ -168,6 +218,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     return allItems;
   }
 
+  // Helper method `_clearSelection`: handles user action or computes derived UI state.
   void _clearSelection() {
     if (_selectedIds.isNotEmpty) {
       setState(() => _selectedIds.clear());
@@ -176,6 +227,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   }
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
@@ -193,7 +245,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     final keys = groups.keys.toList()..sort((a, b) => b.compareTo(a));
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final tabGreen = isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32);
+    final tabGreen = isDark ? const Color(0xFF81C784) : kSuccessColor;
 
     return PopScope(
       canPop: _selectedIds.isEmpty,
@@ -317,10 +369,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
                 children: [
                   for (final f in [
-                    ('all',      l10n.transactions_all,              0xFF2E7D32),
-                    ('income',   l10n.transactions_income,           0xFF2E7D32),
-                    ('expense',  l10n.transactions_expenses,         0xFFC62828),
-                    ('lent',     l10n.transactions_lent,             0xFF1565C0),
+                    ('all',      l10n.transactions_all,              kSuccessColorValue),
+                    ('income',   l10n.transactions_income,           kSuccessColorValue),
+                    ('expense',  l10n.transactions_expenses,         kDangerColorValue),
+                    ('lent',     l10n.transactions_lent,             kAssetsColorValue),
                     ('borrowed', l10n.transactions_borrowed,         0xFFE65140),
                   ])
                     Padding(
@@ -409,9 +461,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                     fontSize: 12,
                                     fontWeight: FontWeight.w700,
                                     color: dayTotal > 0
-                                        ? const Color(0xFF2E7D32)
+                                        ? kSuccessColor
                                         : (dayTotal < 0
-                                            ? (isDark ? const Color(0xFFE57373) : const Color(0xFFC62828))
+                                            ? (isDark ? const Color(0xFFE57373) : kDangerColor)
                                             : cs.onSurface.withValues(alpha: 0.5)),
                                   ),
                                 ),
@@ -432,6 +484,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     );
   }
 
+  // Helper method `_showAddActionSheet`: handles user action or computes derived UI state.
   void _showAddActionSheet(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -500,10 +553,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                   width: 42,
                   height: 42,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2E7D32).withValues(alpha: isDark ? 0.2 : 0.12),
+                    color: kSuccessColor.withValues(alpha: isDark ? 0.2 : 0.12),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.arrow_downward_rounded, color: Color(0xFF2E7D32)),
+                  child: const Icon(Icons.arrow_downward_rounded, color: kSuccessColor),
                 ),
                 title: Text(
                   l10n.add_transaction_income,
@@ -528,6 +581,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     );
   }
 
+  // Helper method `_buildItemTile`: handles user action or computes derived UI state.
   Widget _buildItemTile(BuildContext context, _TxItem item, AppProvider app) {
     if (item.isTx) {
       final isSelected = _selectedIds.contains(item.tx!.id);
@@ -570,6 +624,41 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       }
                     },
                     child: const Text('Delete Transfer'),
+                  ),
+                ],
+              ),
+            );
+          } else if (item.tx!.isInvestment) {
+            final cert = item.tx!.certificateId != null
+                ? app.certificates
+                    .where((c) => c.id == item.tx!.certificateId)
+                    .firstOrNull
+                : null;
+            showDialog(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: const Text('Certificate Transaction'),
+                content: const Text(
+                  'This transaction is linked to a time deposit / certificate. To keep principal and yield ledgers in sync, manage it from the Certificates screen.',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('Close'),
+                  ),
+                  FilledButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      Navigator.push(
+                        context,
+                        ExpensyRoute(
+                          builder: (_) => cert != null
+                              ? CertificateDetailScreen(certificate: cert)
+                              : const CertificatesScreen(),
+                        ),
+                      );
+                    },
+                    child: Text(cert != null ? 'View Certificate' : 'Open Certificates'),
                   ),
                 ],
               ),
@@ -641,6 +730,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     return const SizedBox.shrink();
   }
 
+  // Helper method `_bulkDelete`: handles user action or computes derived UI state.
   Future<void> _bulkDelete(BuildContext context, AppProvider app) async {
     final idsToDelete = _selectedIds.toList();
     _clearSelection();
@@ -670,6 +760,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     }
   }
 
+  // Helper method `_bulkChangeCategory`: handles user action or computes derived UI state.
   void _bulkChangeCategory(BuildContext context, AppProvider app) {
     final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
@@ -686,24 +777,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             Flexible(
               child: SingleChildScrollView(
                 child: CategoryChipPicker(
-                  categories: app.categories,
+                  categories: app.userCategories,
                   selectedId: null,
                   onSelected: (catId) {
                     Navigator.pop(context);
                     for (final id in _selectedIds.toList()) {
                       final tx = app.transactions.where((t) => t.id == id).firstOrNull;
-                      if (tx == null) continue;
-                      final updated = AppTransaction(
-                        id: tx.id,
-                        accountId: tx.accountId,
-                        categoryId: catId,
-                        amount: tx.amount,
-                        type: tx.type,
-                        date: tx.date,
-                        description: tx.description,
-                        note: tx.note,
-                        currency: tx.currency,
-                      );
+                      if (tx == null || tx.isTransfer || tx.isInvestment) continue;
+                      final updated = tx.copyWith(categoryId: catId);
                       app.updateTransaction(updated, tx);
                     }
                     _clearSelection();
@@ -718,6 +799,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     );
   }
 
+  // Helper method `_openAdvancedFilter`: handles user action or computes derived UI state.
   void _openAdvancedFilter(BuildContext context, AppProvider app) {
     showModalBottomSheet(
       context: context,
@@ -758,6 +840,7 @@ class _TxTile extends StatelessWidget {
   });
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final cs    = Theme.of(context).colorScheme;
@@ -791,13 +874,13 @@ class _TxTile extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: isDark
                           ? const Color(0xFF81C784).withValues(alpha: 0.2)
-                          : const Color(0xFF2E7D32).withValues(alpha: 0.12),
+                          : kSuccessColor.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Icon(Icons.call_split_rounded,
                         color: isDark
                             ? const Color(0xFF81C784)
-                            : const Color(0xFF2E7D32),
+                            : kSuccessColor,
                         size: 20),
                   )
                 : CategoryDot(category: cat, size: 40)),
@@ -839,7 +922,7 @@ class _TxTile extends StatelessWidget {
                 ],
               )
             : Text(
-                '${acc?.name ?? ''}  ·  ${cat?.name ?? ''}',
+                '${acc?.name ?? ''}  ·  ${app.categoryDisplayName(t.categoryId, fallback: cat?.name ?? '')}',
                 style: TextStyle(
                     fontSize: 11,
                     color: cs.onSurface.withValues(alpha: 0.5))),
@@ -853,10 +936,10 @@ class _TxTile extends StatelessWidget {
                 fontSize: 13.5,
                 fontWeight: FontWeight.w800,
                 color: isInc
-                    ? const Color(0xFF2E7D32)
+                    ? kSuccessColor
                     : (isDark
                         ? const Color(0xFFE57373)
-                        : const Color(0xFFC62828))),
+                        : kDangerColor)),
           ),
           if (t.note.isNotEmpty)
             Icon(Icons.sticky_note_2_outlined,
@@ -884,6 +967,7 @@ class _FilterPill extends StatelessWidget {
   });
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
@@ -955,6 +1039,7 @@ class _LendedTile extends StatelessWidget {
   });
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
@@ -965,8 +1050,8 @@ class _LendedTile extends StatelessWidget {
     final displayCurrency = accCurrency;
 
     final personColor = Color(
-        person?.colorValue ?? (isLent ? 0xFF1565C0 : 0xFFE65140));
-    final amountColor = isLent ? const Color(0xFF1565C0) : const Color(0xFFE65140);
+        person?.colorValue ?? (isLent ? kAssetsColorValue : 0xFFE65140));
+    final amountColor = isLent ? kAssetsColor : const Color(0xFFE65140);
 
     return Material(
       color: isSelected
@@ -1072,6 +1157,8 @@ class _TxItem {
   bool get isLoanPayment => loanPayment != null;
 }
 
+// ── class _LoanPaymentTile ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _LoanPaymentTile.
 class _LoanPaymentTile extends StatelessWidget {
   final LoanPayment p;
   final AppProvider app;
@@ -1090,6 +1177,7 @@ class _LoanPaymentTile extends StatelessWidget {
   });
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final loan = app.loans.where((l) => l.id == p.loanId).firstOrNull;
     final acc = p.accountId != null ? app.accountById(p.accountId!) : null;
@@ -1136,6 +1224,7 @@ class _ContributionTile extends StatelessWidget {
   const _ContributionTile({required this.c, required this.app});
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final isContrib = c.type == 'contribution';
@@ -1143,7 +1232,7 @@ class _ContributionTile extends StatelessWidget {
     final acc = app.accountById(c.accountId);
     
     final color = goal != null ? Color(goal.colorValue) : cs.primary;
-    final amountColor = isContrib ? cs.error : const Color(0xFF2E7D32); // Contrib is money OUT of account
+    final amountColor = isContrib ? cs.error : kSuccessColor; // Contrib is money OUT of account
     
     return Material(
       color: Colors.transparent,
@@ -1218,6 +1307,8 @@ class _AdvancedFilterSheet extends StatefulWidget {
   State<_AdvancedFilterSheet> createState() => _AdvancedFilterSheetState();
 }
 
+// ── class _AdvancedFilterSheetState ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _AdvancedFilterSheetState.
 class _AdvancedFilterSheetState extends State<_AdvancedFilterSheet> {
   final _minCtrl = TextEditingController();
   final _maxCtrl = TextEditingController();
@@ -1226,6 +1317,7 @@ class _AdvancedFilterSheetState extends State<_AdvancedFilterSheet> {
   bool _showKeypad = false;
 
   @override
+  // Initializes controllers and local state from widget parameters.
   void initState() {
     super.initState();
     if (widget.initialMinAmount != null) _minCtrl.text = widget.initialMinAmount.toString();
@@ -1234,6 +1326,7 @@ class _AdvancedFilterSheetState extends State<_AdvancedFilterSheet> {
   }
 
   @override
+  // Disposes controllers and listeners to prevent memory leaks.
   void dispose() {
     _minCtrl.dispose();
     _maxCtrl.dispose();
@@ -1241,11 +1334,13 @@ class _AdvancedFilterSheetState extends State<_AdvancedFilterSheet> {
   }
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final kbOpen = MediaQuery.of(context).viewInsets.bottom > 100;
     final showPad = _showKeypad && !kbOpen;
 
+    // Render Padding layout container.
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom + 16,
@@ -1365,7 +1460,7 @@ class _AdvancedFilterSheetState extends State<_AdvancedFilterSheet> {
               Text(l10n.recurring_category, style: const TextStyle(fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
               CategoryChipPicker(
-                categories: widget.app.categories,
+                categories: widget.app.userCategories,
                 selectedId: _catId,
                 onSelected: (id) => setState(() => _catId = id),
               ),

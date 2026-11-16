@@ -1,7 +1,7 @@
-// lib/services/data_check_service.dart
+// test/helpers/data_check_service.dart
 // note: Diagnostic service to verify database integrity, orphan records, and consistency.
 
-import '../database/app_database.dart';
+import 'package:expensy/database/app_database.dart';
 
 class DataHealthIssue {
   final String code; // D1, D2, D3, D5, P0_1, COUNTER_DRIFT
@@ -128,11 +128,11 @@ class DataCheckService {
       ));
     }
 
-    // 6. Recurring payment counter drift (paid_payments != count of paid history)
+    // 6. Recurring payment counter drift (paid_payments != count of paid + skipped history)
     final counterDrift = await db.customSelect('''
       SELECT rp.id, rp.paid_payments, COUNT(rh.id) as history_count
       FROM recurring_payments rp
-      LEFT JOIN recurring_history rh ON rp.id = rh.recurring_id AND rh.action = 'paid'
+      LEFT JOIN recurring_history rh ON rp.id = rh.recurring_id AND rh.action IN ('paid', 'skipped')
       GROUP BY rp.id
       HAVING rp.paid_payments != history_count
     ''').get();
@@ -143,6 +143,41 @@ class DataCheckService {
         details: 'Recurring payment paid_payments counter does not match number of paid history logs.',
         count: counterDrift.length,
         affectedIds: counterDrift.map((r) => r.data['id'].toString()).toList(),
+      ));
+    }
+
+    // 7. Transfer category integrity (no transfer with non-sys_transfer category)
+    final badTransfers = await db.customSelect('''
+      SELECT id FROM transactions
+      WHERE (
+        (transfer_group_id IS NOT NULL AND transfer_group_id != '')
+        OR type = 'transfer'
+      )
+      AND category_id != 'sys_transfer'
+    ''').get();
+    if (badTransfers.isNotEmpty) {
+      issues.add(DataHealthIssue(
+        code: 'TRANSFER_CAT',
+        title: 'Transfer with non-Transfer category',
+        details: 'Transfer transactions must always use sys_transfer.',
+        count: badTransfers.length,
+        affectedIds: badTransfers.map((r) => r.data['id'].toString()).toList(),
+      ));
+    }
+
+    // 8. Orphan subcategories (parent_id pointing to missing category)
+    final orphanSubcats = await db.customSelect('''
+      SELECT c.id FROM categories c
+      LEFT JOIN categories p ON c.parent_id = p.id
+      WHERE c.parent_id IS NOT NULL AND c.parent_id != '' AND p.id IS NULL
+    ''').get();
+    if (orphanSubcats.isNotEmpty) {
+      issues.add(DataHealthIssue(
+        code: 'ORPHAN_SUBCAT',
+        title: 'Orphan subcategories',
+        details: 'Subcategories reference a missing parent category.',
+        count: orphanSubcats.length,
+        affectedIds: orphanSubcats.map((r) => r.data['id'].toString()).toList(),
       ));
     }
 

@@ -15,8 +15,8 @@ class YearlyLineItem {
   const YearlyLineItem(this.name, this.amount);
 }
 
-const _kGreenAccent = Color(0xFF2E7D32);
-const _kTealAccent  = Color(0xFF00897B);
+const _kGreenAccent = kSuccessColor;
+const _kTealAccent  = kCertificateColor;
 const _kOrangeAccent = Color(0xFFF57C00);
 const _kPurpleAccent = Color(0xFF7B1FA2);
 
@@ -100,18 +100,20 @@ Map<int, Map<int, YearlyMonthData>> buildYearlyAnalysis(AppProvider app) {
     }
   }
 
-  // 2. Lent money due back (informational inflow)
+  // 2. Lent money due back (informational inflow) — converted to main currency (C3)
   for (final l in app.lended
       .where((x) => x.type == 'lent' && !x.isSettled && x.dueDate != null)) {
     final person = app.personById(l.personId)?.name ?? '';
-    bucket(l.dueDate!).lentDueItems.add(YearlyLineItem(person, l.amount));
+    final convertedAmt = app.convertToMain(l.amount, l.currency);
+    bucket(l.dueDate!).lentDueItems.add(YearlyLineItem(person, convertedAmt));
   }
 
-  // 3. Borrowed money due (outflow)
+  // 3. Borrowed money due (outflow) — converted to main currency (C3)
   for (final l in app.lended
       .where((x) => x.type == 'borrowed' && !x.isSettled && x.dueDate != null)) {
     final person = app.personById(l.personId)?.name ?? '';
-    bucket(l.dueDate!).borrowedItems.add(YearlyLineItem(person, l.amount));
+    final convertedAmt = app.convertToMain(l.amount, l.currency);
+    bucket(l.dueDate!).borrowedItems.add(YearlyLineItem(person, convertedAmt));
   }
 
   // 4. Loans
@@ -395,8 +397,8 @@ class _MonthCardState extends State<_MonthCard> {
     final monthName = DateFormat('MMMM').format(widget.month);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final netColor = widget.data.netFlow >= 0
-        ? const Color(0xFF2E7D32)
-        : const Color(0xFFC62828);
+        ? kSuccessColor
+        : kDangerColor;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),

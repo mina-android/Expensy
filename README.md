@@ -1,173 +1,212 @@
 <div align="center">
 
-<img src="assets/splash_icon.png" alt="Expensy Logo" width="120" height="120" style="border-radius: 24px"/>
+<img src="assets/splash_icon.png" alt="Expensy Logo" width="112" height="112" />
 
-<h1>Expensy</h1>
+# Expensy
 
-<h3>A finance tracker that stays on your phone, not in the cloud</h3>
+[![Platform](https://img.shields.io/badge/Platform-Android-grey.svg?style=flat-square)](https://android.com) [![Release](https://img.shields.io/badge/Release-v1.2.2-blue.svg?style=flat-square)](https://github.com/mina-android/Expensy/releases) [![License](https://img.shields.io/badge/License-GPL--3.0-black.svg?style=flat-square)](LICENSE) [![Build](https://img.shields.io/badge/Build-Passing-brightgreen.svg?style=flat-square)](https://github.com/mina-android/Expensy/actions)
 
-[![Platform](https://img.shields.io/badge/Platform-Android-3DDC84?logo=android&logoColor=white)](https://android.com) [![Version](https://img.shields.io/badge/Version-1.2.2-brightgreen)](https://github.com/mina-android/Expensy/releases) [![License](https://img.shields.io/badge/License-GPL--3.0-blue)](LICENSE)
-
-Expensy is a simple app that helps anyone manage their money, track debts, and plan ahead with complete peace of mind.  
-It works completely offline, with no sign-ups or ads, and your financial data never leaves your phone.
-
-[**Download**](#-download) · [**Features**](#-what-you-can-do) · [**Screenshots**](#-take-a-look) · [**FAQ**](#-questions-you-might-have) · [**For Developers**](#-for-developers)
+<p align="center">
+  A local-first personal finance tracker and budget manager for Android that keeps all financial records, accounts, and transaction history strictly on your physical device.
+</p>
 
 </div>
 
 ---
 
-## ✨ What you can do
+## Navigation
 
-- **💳 Accounts & Cards with dynamic balance inheritance**: Manage bank accounts, cash, digital wallets, debit cards, credit cards, and gold holdings. The Home screen features dedicated carousels for Accounts and Cards with quick "+ Add" action tiles. Debit cards mirror linked bank balances in transaction entry, transfers route strictly between liquid bank accounts without card clutter, and cards handle payments seamlessly.
-- **🏦 Time Deposits & Certificates of Deposit**: Track fixed-term certificates and time deposits with flexible daily, monthly, or yearly yield collection deposited straight into your bank account. Features rich loan-style detail pages, early redemption, 2-day-early reminder notifications, and full transaction balance restoral upon deposit deletion.
-- **⚡ 1-Tap quick presets & built-in calculator**: Pin your frequent daily expenses right on your home screen for one-tap logging, and calculate taxes or split totals instantly with the tactile in-app keypad.
-- **🎯 Rollover budgets & safe-to-spend pacer**: Set category spending targets where unused funds roll over into next month, and see at a glance how much you can comfortably spend each day.
-- **🔄 Subscriptions, bills & auto-pay**: Keep tabs on recurring bills, installment plans, and salaries, complete with custom auto-pay times and scheduled reminder notifications.
-- **📈 Wealth management & net worth**: Get a clear picture of what you own versus what you owe, with automatic daily net worth snapshots, asset tracking, and interactive growth charts.
-- **🔔 Gentle reminders**: Get a nudge when a recurring bill is due, an installment is approaching, a deposit interest payout is scheduled, or when someone's repayment date arrives so nothing slips through the cracks.
-- **📤 Share your data**: Turn what you've logged into a clean, multi-page vector PDF statement or a spreadsheet in a couple of taps, rendered 100% offline.
-- **💾 Fault-Tolerant Selective & Encrypted backups**: Export or restore the entire database or choose specific financial domains (accounts, transactions, recurring rules, loans, certificates, budgets). Supports fault-tolerant plaintext or password-protected AES-GCM encrypted backups with platform-isolated error handling and direct byte stream parsing.
-- **🎨 Easy on the eyes & elevated Fintech aesthetics**: Built with modern Material You dynamic theming, 29 vibrant accent colors, a true AMOLED pure-black mode, edge-to-edge status bar styling, fintech onboarding flows, modernized 24px dialogs, and responsive floating navigation.
+[Features](#features) &bull; [Screenshots](#screenshots) &bull; [Downloads](#downloads) &bull; [Self Building & Local Setup](#self-building--local-setup) &bull; [Frequently Asked Questions](#frequently-asked-questions) &bull; [Contribution](#contribution) &bull; [About the Developer](#about-the-developer) &bull; [Donate](#donate) &bull; [License](#license)
 
 ---
 
-## 🧭 Getting started
+## Features
 
-1. **Set up your profile & currency**: Choose your primary currency, pick your favorite accent color and font, or let Material You match your phone's wallpaper.
-2. **Add your primary accounts**: Add your cash wallet, bank accounts, or credit cards to see your starting total balance.
-3. **Log your first transaction or pin a preset**: Tap the center action button to log an expense, or pin daily expenses like morning coffee to your home screen for 1-tap entry.
-4. **Plan ahead & export reports**: Set category budgets, schedule your recurring monthly bills, or generate a tidy PDF report whenever you like.
+### Core Capabilities
 
----
+- **Account & Card Balance Management**: Manage liquid bank accounts, cash wallets, debit cards, credit cards, and asset holdings. Debit cards inherit balances directly from linked bank accounts to prevent ledger duplication.
+- **Term Deposits & Certificates of Deposit**: Record fixed-term deposits with customizable yield collection frequencies (daily, monthly, yearly) crediting linked accounts automatically, complete with early redemption calculations.
+- **Budgeting with Roll-Over Tracking**: Establish category budgets where unused allocations carry forward into subsequent billing cycles, complemented by a daily expenditure allowance pacer.
+- **Fast Transaction Logging**: Register routine transactions using configurable one-tap presets and an integrated numerical calculator supporting split amounts and tax computation.
+- **Debt & Loan Tracking**: Track incoming receivables and outgoing debt obligations with settlement schedules, partial repayments, and balance deduction workflows.
+- **Data Export & Reporting**: Export structured account balances and transactional histories into standard Excel (.xlsx) workbooks and standalone JSON backups.
 
-## 📸 Take a look
+### Architecture & Data Handling
 
-<p align="center">
-  <img src="screenshots/home.png" width="32%" alt="Home" />
-  <img src="screenshots/transactions.png" width="32%" alt="Transactions" />
-  <img src="screenshots/recurring.png" width="32%" alt="Recurring" />
-</p>
-
-<p align="center">
-  <img src="screenshots/accounts.png" width="32%" alt="Accounts" />
-  <img src="screenshots/budgets.png" width="32%" alt="Budgets" />
-  <img src="screenshots/more.png" width="32%" alt="More" />
-</p>
-
-<p align="center">
-  <img src="screenshots/currency_converter.png" width="32%" alt="Currency Converter" />
-  <img src="screenshots/financial_calendar.png" width="32%" alt="Financial Calendar" />
-  <img src="screenshots/insights.png" width="32%" alt="Insights" />
-</p>
+- **Local-First Architecture**: All transactional ledgers, accounts, and preferences reside exclusively in an on-device SQLite database. No external account registration or cloud connectivity is required.
+- **Zero Outbound Telemetry**: The application runs completely offline. No diagnostic events, behavioral metrics, or financial figures are transmitted across the network.
+- **Resource Footprint**: Minimal storage footprint under 30 MB with near-instant startup times and zero persistent background services outside optional local notification triggers.
 
 ---
 
-## 📲 Download
+## Screenshots
 
-1. Head over to the [**Releases page**](https://github.com/mina-android/Expensy/releases)
-2. Grab the latest APK. If you're not sure which one, pick the file ending in `arm64-v8a`, since most newer phones use that
-3. Open it, and if Android asks, allow installs from unknown sources
-
-It runs on Android 5.0 (Lollipop) or newer and takes up about 27 MB.
-
----
-
-## 🔒 Your privacy
-
-I take this seriously, so here's the plain version:
-
-- **Everything stays on your phone**: All your records are stored locally using a high-performance SQLite database via Drift over Dart FFI in a background isolate.
-- **No accounts, no ads, and no tracking**: No sign-up screens, no telemetry, no analytics SDKs, and zero cloud databases pinging external servers.
-- **If you uninstall the app, your data goes with it**: Because nothing is stored remotely, make sure to save a backup to your storage or drive before changing phones or uninstalling.
-
----
-
-## ❓ Questions you might have
-
-**Do I need an internet connection to use it?**  
-No. Expensy works entirely offline. The only optional network requests are to fetch live currency conversion rates and spot gold prices when you choose to refresh them.
-
-**What happens to my data if I get a new phone?**  
-Go to More → Backup & Restore, tap "Create Backup", and save the JSON backup file to your Google Drive or send it to your new phone. Once you install Expensy on your new device, tap "Restore Backup".
-
-**Can I import data from other finance apps?**  
-Yes! Expensy includes built-in support for importing backups from GreenStash and restoring previous Expensy JSON backups.
-
-**Is there an iPhone version?**  
-Not right now. Expensy is tailored specifically for Android with native Material You theming, Quick Settings tiles, home-screen widgets, and app shortcuts.
-
----
-
-## 💬 Say hello
-
-- Ran into a bug or want a new feature? [Open an issue](https://github.com/mina-android/Expensy/issues)
-- Just want to chat or give feedback? Reach me via GitHub Issues or discussions
-- If the app has made your life a little easier, a ⭐ on the repo would make my day
+<table width="100%" border="0" cellspacing="0" cellpadding="4">
+  <tr>
+    <td width="33.33%" align="center" valign="top">
+      <img src="screenshots/home.png" alt="Home Overview" width="100%" />
+    </td>
+    <td width="33.33%" align="center" valign="top">
+      <img src="screenshots/accounts.png" alt="Accounts & Cards" width="100%" />
+    </td>
+    <td width="33.33%" align="center" valign="top">
+      <img src="screenshots/budgets.png" alt="Budgets & Goals" width="100%" />
+    </td>
+  </tr>
+  <tr>
+    <td width="33.33%" align="center" valign="top">
+      <img src="screenshots/transactions.png" alt="Transaction History" width="100%" />
+    </td>
+    <td width="33.33%" align="center" valign="top">
+      <img src="screenshots/recurring.png" alt="Recurring Payments" width="100%" />
+    </td>
+    <td width="33.33%" align="center" valign="top">
+      <img src="screenshots/insights.png" alt="Financial Insights" width="100%" />
+    </td>
+  </tr>
+  <tr>
+    <td width="33.33%" align="center" valign="top">
+      <img src="screenshots/financial_calendar.png" alt="Financial Calendar" width="100%" />
+    </td>
+    <td width="33.33%" align="center" valign="top">
+      <img src="screenshots/currency_converter.png" alt="Currency Converter" width="100%" />
+    </td>
+    <td width="33.33%" align="center" valign="top">
+      <img src="screenshots/more.png" alt="Settings & Data Management" width="100%" />
+    </td>
+  </tr>
+</table>
 
 ---
 
-## 🛠 For developers
+## Downloads
 
-<details>
-<summary><strong>What it's built with</strong></summary>
+Official release packages are published under the [GitHub Releases](https://github.com/mina-android/Expensy/releases) repository page.
 
-- **Flutter & Dart**: Flutter 3.47+ / Dart 3.13+ targeting Android (minSdk 21 / Android 5.0+, compileSdk 36).
-- **Toolchain**: Gradle 9.3.1, AGP 9.1.0, Kotlin 2.4.0 with AGP 9.0+ Built-in Kotlin enabled.
-- **Drift & SQLite**: Compile-time type-safe persistence executing in a dedicated background isolate via Dart FFI.
-- **Provider**: Streamlined and responsive app-wide state management.
-- **System Architecture**: Complete database ERD diagrams, lifecycle sequence charts, and data flow pipelines are documented in [`STRUCTURE.md`](STRUCTURE.md).
-- **Key Packages**: `fl_chart` (financial visualizations), `pdf` & `printing` (offline vector reports), `excel` (spreadsheets), `home_widget` (interactive Android widgets), and `flutter_local_notifications` (offline bill & budget alerts).
+| Platform | Architecture | Package Type | Download Link | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| **Android** | arm64-v8a | `.apk` | [Download (v1.2.2)](https://github.com/mina-android/Expensy/releases/latest) | Modern 64-bit devices (recommended) |
+| **Android** | armeabi-v7a | `.apk` | [Download (v1.2.2)](https://github.com/mina-android/Expensy/releases/latest) | Legacy 32-bit devices |
+| **Android** | x86_64 | `.apk` | [Download (v1.2.2)](https://github.com/mina-android/Expensy/releases/latest) | Android emulators and Intel-based tablets |
+| **Android** | Universal | `.apk` | [Download (v1.2.2)](https://github.com/mina-android/Expensy/releases/latest) | Combined installer supporting all architectures |
 
-</details>
+---
 
-<details>
-<summary><strong>Run it yourself</strong></summary>
+## Self Building & Local Setup
 
-You'll need Flutter 3.47+ and Java JDK 21 LTS (or Android Studio with JDK 21). Then:
+### 1. Prerequisites
+
+Ensure your development environment has the following software installed:
+
+- **Flutter SDK**: `3.22.0` or higher (stable channel)
+- **Dart SDK**: `3.4.0` or higher
+- **Android SDK**: API level `34` (with Android Build Tools `34.0.0`)
+- **Java Development Kit**: JDK `17`
+- **Git**: `2.30+`
+
+### 2. Repository Setup
 
 ```bash
+# Clone the repository
 git clone https://github.com/mina-android/Expensy.git
+
+# Navigate into the project root
 cd Expensy
+
+# Verify Flutter environment
+flutter doctor
+```
+
+### 3. Dependency Installation
+
+```bash
+# Fetch required Flutter and Dart dependencies
 flutter pub get
-flutter run
 ```
 
-To build release split-per-ABI APKs:
+### 4. Build Compilation
+
 ```bash
-flutter build apk --split-per-abi
+# Compile split per-ABI release APKs
+flutter build apk --split-per-abi --release
+
+# Or compile a single universal APK
+flutter build apk --release
 ```
-To run tests and code analyzer:
+
+Compiled binaries will be generated inside `build/app/outputs/flutter-apk/`.
+
+### 5. Running the Application Locally
+
 ```bash
-flutter test
-flutter analyze
+# Connect a device or launch an emulator, then execute
+flutter run --release
 ```
-
-</details>
-
-<details>
-<summary><strong>Want to help out?</strong></summary>
-
-Contributions are welcome! Here's how:
-
-1. Fork the repo
-2. Create a branch: `git checkout -b feature/my-new-feature`
-3. Make your changes and push them
-4. Open a Pull Request and tell me what you changed
-
-Please run `flutter analyze` before opening a pull request to keep code quality and linting clean.
-
-</details>
 
 ---
 
-## 📄 License
+## Frequently Asked Questions
 
-GNU General Public License v3.0. Have a look at [LICENSE](LICENSE) for the details.  
-Copyright © 2026 [Mina Android](https://github.com/mina-android)
+#### Where is my financial data stored?
+All data is stored locally in an SQLite database file inside the application private directory on your device storage (`/data/user/0/com.mina.expensy/databases/`). It is never synced to any remote server.
+
+#### How do I transfer my records to a new phone?
+Navigate to Settings > Backup & Restore within Expensy. Generate a JSON or SQLite database backup, save the file to your secure external storage or device transfer folder, and import it on your new phone.
+
+#### How does balance inheritance work between Bank Accounts and Debit Cards?
+When you link a Debit Card to a specific Bank Account, transactions recorded against the debit card deduct directly from the parent bank account balance. This accurately reflects real-world banking where debit cards do not maintain an independent balance ledger.
+
+#### What happens if I delete an account with existing transactions?
+The application prompts you to choose between archiving the account (which preserves historic transactional records and spending reports) or cascade-deleting linked transactions.
+
+---
+
+## Contribution
+
+Contributions aimed at bug fixes, translation improvements, and performance optimizations are welcome.
+
+### Contribution Process
+
+1. **Check Issues**: Review existing GitHub Issues to verify whether a problem or enhancement is already documented.
+2. **Open a Discussion**: For substantial structural or database schema alterations, open an issue first to discuss the design.
+3. **Branching**: Branch off `main` using descriptive branch names (`fix/issue-description` or `feat/feature-name`).
+4. **Code Quality**:
+   - Ensure code passes static analysis: `flutter analyze`
+   - Run unit and widget tests: `flutter test`
+5. **Pull Request**: Open a pull request against `main` providing a clear breakdown of changes and relevant issue links.
+
+---
+
+## About the Developer
+
+This project is authored and maintained by **mina-android**, focused on developing transparent, local-first Android utilities and privacy-conscious software.
+
+- **Developer Portfolio**: [portfolio.minaashraf285.workers.dev](https://portfolio.minaashraf285.workers.dev/)
+- **GitHub Profile**: [github.com/mina-android](https://github.com/mina-android)
+- **Issue Tracker**: [github.com/mina-android/Expensy/issues](https://github.com/mina-android/Expensy/issues)
+
+---
+
+## Donate
+
+Development and maintenance of this software are independent and self-supported. If this project helps you manage your finances reliably, consider supporting development:
+
+- **PayPal**: [paypal.me/minaashraf285](https://paypal.me/minaashraf285)
+- **GitHub Sponsors**: [github.com/sponsors/mina-android](https://github.com/sponsors/mina-android)
+
+---
+
+## License
+
+Distributed under the **GNU General Public License v3.0**. See the [`LICENSE`](LICENSE) file in the root directory for the complete legal text.
+
+```text
+Copyright (c) 2026 mina-android
+Licensed under the GNU General Public License v3.0.
+```
+
+---
 
 <div align="center">
-
-Made with ❤️ for anyone who wants to take control of their finances · [**See my other projects**](https://github.com/mina-android)
-
+  <sub>Expensy &bull; Maintained by mina-android &bull; Local-first financial tracking for Android.</sub>
 </div>

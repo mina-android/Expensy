@@ -1,5 +1,6 @@
 // lib/screens/categories_screen.dart
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import '../utils/snackbar.dart';
 import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
@@ -16,8 +17,8 @@ class CategoriesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
-    final expenses = app.categories.where((c) => c.type == 'expense').toList();
-    final incomes = app.categories.where((c) => c.type == 'income').toList();
+    final expenses = app.rootCategoriesForType('expense');
+    final incomes = app.rootCategoriesForType('income');
 
     return Scaffold(
       appBar: AppBar(
@@ -40,7 +41,10 @@ class CategoriesScreen extends StatelessWidget {
             },
             itemBuilder: (context, i) => Container(
               key: ValueKey(expenses[i].id),
-              child: _CatTile(cat: expenses[i]),
+              child: _CatTile(
+                cat: expenses[i],
+                subcategories: app.subcategoriesOf(expenses[i].id),
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -57,7 +61,10 @@ class CategoriesScreen extends StatelessWidget {
             },
             itemBuilder: (context, i) => Container(
               key: ValueKey(incomes[i].id),
-              child: _CatTile(cat: incomes[i]),
+              child: _CatTile(
+                cat: incomes[i],
+                subcategories: app.subcategoriesOf(incomes[i].id),
+              ),
             ),
           ),
         ],
@@ -69,12 +76,21 @@ class CategoriesScreen extends StatelessWidget {
     );
   }
 
-  static void _openSheet(BuildContext context, {AppCategory? existing}) {
+  static void _openSheet(
+    BuildContext context, {
+    AppCategory? existing,
+    String? initialParentId,
+    String? initialType,
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (_) => _CategorySheet(existing: existing),
+      builder: (_) => _CategorySheet(
+        existing: existing,
+        initialParentId: initialParentId,
+        initialType: initialType,
+      ),
     );
   }
 }
@@ -82,7 +98,9 @@ class CategoriesScreen extends StatelessWidget {
 // ── Category tile ─────────────────────────────────────────────────────────────
 class _CatTile extends StatelessWidget {
   final AppCategory cat;
-  const _CatTile({required this.cat});
+  final List<AppCategory> subcategories;
+  const _CatTile({required this.cat, this.subcategories = const []});
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -94,38 +112,119 @@ class _CatTile extends StatelessWidget {
         color: cs.surfaceContainer.withValues(alpha: isDark ? 0.35 : 0.55),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04),
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.06)
+              : Colors.black.withValues(alpha: 0.04),
         ),
       ),
-      child: ListTile(
-        leading: CategoryDot(category: cat, size: 36),
-        title:
-            Text(cat.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Text(
-            cat.type == 'expense'
-                ? l10n.categories_expenseLabel
-                : l10n.categories_incomeLabel,
-            style: TextStyle(
-                fontSize: 11, color: cs.onSurface.withValues(alpha: 0.5))),
-        trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-          IconButton(
-              icon: const Icon(Icons.edit_outlined, size: 18),
-              onPressed: () =>
-                  CategoriesScreen._openSheet(context, existing: cat)),
-          IconButton(
-              icon:
-                  Icon(Icons.delete_outline_rounded, size: 18, color: cs.error),
-              onPressed: () async {
-                final undo = await context
-                    .read<AppProvider>()
-                    .deleteCategoryWithUndo(cat.id);
-                if (context.mounted) {
-                  showAppSnackbar(
-                      context, l10n.common_itemDeleted(cat.name),
-                      onUndo: undo);
-                }
-              }),
-        ]),
+      child: Column(
+        children: [
+          ListTile(
+            leading: CategoryDot(category: cat, size: 36),
+            title: Text(cat.name,
+                style: const TextStyle(fontWeight: FontWeight.w600)),
+            subtitle: Text(
+              subcategories.isEmpty
+                  ? (cat.type == 'expense'
+                      ? l10n.categories_expenseLabel
+                      : l10n.categories_incomeLabel)
+                  : '${cat.type == 'expense' ? l10n.categories_expenseLabel : l10n.categories_incomeLabel} · ${subcategories.length} ${l10n.categories_subcategories.toLowerCase()}',
+              style: TextStyle(
+                  fontSize: 11, color: cs.onSurface.withValues(alpha: 0.5)),
+            ),
+            trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+              IconButton(
+                tooltip: l10n.categories_addSubcategory,
+                icon: Icon(Icons.add_circle_outline_rounded,
+                    size: 18, color: cs.primary),
+                onPressed: () => CategoriesScreen._openSheet(
+                  context,
+                  initialParentId: cat.id,
+                  initialType: cat.type,
+                ),
+              ),
+              IconButton(
+                  icon: const Icon(Icons.edit_outlined, size: 18),
+                  onPressed: () =>
+                      CategoriesScreen._openSheet(context, existing: cat)),
+              IconButton(
+                  icon: Icon(Icons.delete_outline_rounded,
+                      size: 18, color: cs.error),
+                  onPressed: () async {
+                    final undo = await context
+                        .read<AppProvider>()
+                        .deleteCategoryWithUndo(cat.id);
+                    if (context.mounted) {
+                      showAppSnackbar(
+                          context, l10n.common_itemDeleted(cat.name),
+                          onUndo: undo);
+                    }
+                  }),
+            ]),
+          ),
+          if (subcategories.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 0, 10, 10),
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border(
+                    left: BorderSide(
+                      color: Color(cat.colorValue).withValues(alpha: 0.45),
+                      width: 2,
+                    ),
+                  ),
+                ),
+                padding: const EdgeInsets.only(left: 10),
+                child: Column(
+                  children: subcategories
+                      .map((sub) => Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Row(
+                              children: [
+                                CategoryDot(category: sub, size: 26),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    sub.name,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  visualDensity: VisualDensity.compact,
+                                  icon: const Icon(Icons.edit_outlined, size: 16),
+                                  onPressed: () => CategoriesScreen._openSheet(
+                                    context,
+                                    existing: sub,
+                                  ),
+                                ),
+                                IconButton(
+                                  visualDensity: VisualDensity.compact,
+                                  icon: Icon(Icons.delete_outline_rounded,
+                                      size: 16, color: cs.error),
+                                  onPressed: () async {
+                                    final undo = await context
+                                        .read<AppProvider>()
+                                        .deleteCategoryWithUndo(sub.id);
+                                    if (context.mounted) {
+                                      showAppSnackbar(
+                                        context,
+                                        l10n.common_itemDeleted(sub.name),
+                                        onUndo: undo,
+                                      );
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                          ))
+                      .toList(),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -136,15 +235,15 @@ const List<int> _kCatColors = [
   // Purples & violets
   0xFF6750A4, 0xFF4527A0, 0xFF6A1B9A, 0xFF880E4F, 0xFF7D5260,
   // Blues
-  0xFF1565C0, 0xFF0D47A1, 0xFF283593, 0xFF0077B6, 0xFF006064,
+  kAssetsColorValue, 0xFF0D47A1, 0xFF283593, 0xFF0077B6, 0xFF006064,
   // Teals & cyans
-  0xFF00695C, 0xFF00897B, 0xFF00838F, 0xFF006874, 0xFF004D40,
+  0xFF00695C, kCertificateColorValue, 0xFF00838F, 0xFF006874, 0xFF004D40,
   // Greens
-  0xFF2E7D32, 0xFF1B5E20, 0xFF33691E, 0xFF558B2F, 0xFF827717,
+  kSuccessColorValue, 0xFF1B5E20, 0xFF33691E, 0xFF558B2F, 0xFF827717,
   // Reds & pinks
-  0xFFC62828, 0xFFB71C1C, 0xFFAD1457, 0xFF9C4257, 0xFF7B1FA2,
+  kDangerColorValue, 0xFFB71C1C, 0xFFAD1457, 0xFF9C4257, 0xFF7B1FA2,
   // Oranges & ambers
-  0xFFE65100, 0xFFBF360C, 0xFFD84315, 0xFFF57F17, 0xFFF9A825,
+  kWarningColorValue, 0xFFBF360C, 0xFFD84315, 0xFFF57F17, 0xFFF9A825,
   // Browns & warm neutrals
   0xFF4E342E, 0xFF5D4037, 0xFF6D4C41, 0xFF795548, 0xFF8D6E63,
   // Slates & grays
@@ -154,7 +253,13 @@ const List<int> _kCatColors = [
 // ── Sheet ─────────────────────────────────────────────────────────────────────
 class _CategorySheet extends StatefulWidget {
   final AppCategory? existing;
-  const _CategorySheet({this.existing});
+  final String? initialParentId;
+  final String? initialType;
+  const _CategorySheet({
+    this.existing,
+    this.initialParentId,
+    this.initialType,
+  });
   @override
   State<_CategorySheet> createState() => _CategorySheetState();
 }
@@ -162,6 +267,7 @@ class _CategorySheet extends StatefulWidget {
 class _CategorySheetState extends State<_CategorySheet> {
   final _nameCtrl = TextEditingController();
   String _type = 'expense';
+  String? _parentId;
   int _color = 0xFF6750A4;
   // Stores a 1-based index into kCategoryIconOptions.
   // 0 = auto (name-based heuristic). Never store a raw IconData.codePoint here
@@ -178,8 +284,21 @@ class _CategorySheetState extends State<_CategorySheet> {
     if (e != null) {
       _nameCtrl.text = e.name;
       _type = e.type;
+      _parentId = e.parentId;
       _color = e.colorValue;
       _iconIndex = e.iconCodePoint; // field repurposed as 1-based index
+    } else {
+      if (widget.initialType != null) _type = widget.initialType!;
+      if (widget.initialParentId != null) {
+        _parentId = widget.initialParentId;
+        final parent = context
+            .read<AppProvider>()
+            .categoryById(widget.initialParentId!);
+        if (parent != null) {
+          _type = parent.type;
+          _color = parent.colorValue;
+        }
+      }
     }
   }
 
@@ -207,6 +326,8 @@ class _CategorySheetState extends State<_CategorySheet> {
         name: _nameCtrl.text.trim(),
         colorValue: _color,
         iconCodePoint: _iconIndex, // 1-based index stored as iconCodePoint
+        parentId: _parentId,
+        clearParentId: _parentId == null,
       ));
     } else {
       await app.addCategory(AppCategory(
@@ -215,6 +336,7 @@ class _CategorySheetState extends State<_CategorySheet> {
         type: _type,
         colorValue: _color,
         iconCodePoint: _iconIndex,
+        parentId: _parentId,
       ));
     }
     if (mounted) Navigator.pop(context);
@@ -291,52 +413,78 @@ class _CategorySheetState extends State<_CategorySheet> {
               const SizedBox(height: 14),
 
               // ── Type (add only) ─────────────────────────────────────────
-              if (!isEdit)
-                Row(children: [
-                  Expanded(
-                      child: GestureDetector(
-                    onTap: () => setState(() => _type = 'expense'),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 140),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      decoration: BoxDecoration(
-                          color: _type == 'expense'
-                              ? const Color(0xFFC62828)
-                              : const Color(0xFFFFEBEE),
-                          borderRadius: BorderRadius.circular(12)),
-                      child: Center(
-                          child: Text(l10n.categories_expense,
-                              style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  color: _type == 'expense'
-                                      ? Colors.white
-                                      : const Color(0xFFC62828)))),
-                    ),
-                  )),
-                  const SizedBox(width: 10),
-                  Expanded(
-                      child: GestureDetector(
-                    onTap: () => setState(() => _type = 'income'),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 140),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      decoration: BoxDecoration(
-                          color: _type == 'income'
-                              ? const Color(0xFF2E7D32)
-                              : const Color(0xFFE8F5E9),
-                          borderRadius: BorderRadius.circular(12)),
-                      child: Center(
-                          child: Text(l10n.categories_income,
-                              style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  color: _type == 'income'
-                                      ? Colors.white
-                                      : const Color(0xFF2E7D32)))),
-                    ),
-                  )),
-                ]),
+              if (!isEdit) ...[
+                TypeToggleChips(
+                  selectedValue: _type,
+                  firstValue: 'expense',
+                  firstLabel: l10n.categories_expense,
+                  firstLightTint: const Color(0xFFFFEBEE),
+                  secondValue: 'income',
+                  secondLabel: l10n.categories_income,
+                  secondLightTint: const Color(0xFFE8F5E9),
+                  onChanged: (v) => setState(() {
+                    _type = v;
+                    _parentId = null;
+                  }),
+                ),
+                const SizedBox(height: 14),
+              ],
 
-              const SizedBox(height: 14),
+              // ── Parent Category (Subcategory support) ───────────────────
+              Builder(builder: (ctx) {
+                final app = ctx.watch<AppProvider>();
+                final hasChildren = isEdit &&
+                    app.subcategoriesOf(widget.existing!.id).isNotEmpty;
+                if (hasChildren) return const SizedBox.shrink();
+                final rootChoices = app
+                    .rootCategoriesForType(_type)
+                    .where((c) => !isEdit || c.id != widget.existing!.id)
+                    .toList();
+                if (rootChoices.isEmpty) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: AppDropdownFormField<String?>(
+                    value: _parentId,
+                    labelText: l10n.categories_parentCategory,
+                    prefixIcon: const Icon(Icons.account_tree_outlined),
+                    items: [
+                      DropdownMenuItem<String?>(
+                        value: null,
+                        child: Text(l10n.categories_noneRoot,
+                            style: const TextStyle(fontSize: 13)),
+                      ),
+                      ...rootChoices.map(
+                        (p) => DropdownMenuItem<String?>(
+                          value: p.id,
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 10,
+                                height: 10,
+                                decoration: BoxDecoration(
+                                  color: Color(p.colorValue),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(p.name, style: const TextStyle(fontSize: 13)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                    onChanged: (val) {
+                      setState(() {
+                        _parentId = val;
+                        if (val != null && !isEdit) {
+                          final p = app.categoryById(val);
+                          if (p != null) _color = p.colorValue;
+                        }
+                      });
+                    },
+                  ),
+                );
+              }),
 
               // ── Color ─────────────────────────────────────────────────
               Text(l10n.categories_color,

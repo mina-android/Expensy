@@ -46,7 +46,7 @@ void main() {
       amount: 20.0,
       paymentType: 'expense',
       freqVal: 1,
-      freqUnit: 'week',
+      freqUnit: 'weeks',
       startDate: threeWeeksAgo,
       nextDate: threeWeeksAgo,
       autoPayEnabled: true,
@@ -86,5 +86,33 @@ void main() {
     await provider.checkAndProcessAutoPay();
     final txCountAfter = (await db.getTransactions()).length;
     expect(txCountAfter, equals(txCountBefore));
+  });
+
+  test('RecurringPayment.advanceDateFrom normalizes singular freqUnit and clamps leap-year Feb 29 (C9, C10)', () {
+    final recSingularWeek = RecurringPayment(
+      id: 'r_w',
+      name: 'Weekly',
+      accountId: 'acc',
+      categoryId: 'bills',
+      amount: 10,
+      freqVal: 1,
+      freqUnit: 'week',
+      startDate: DateTime(2024, 1, 1),
+      nextDate: DateTime(2024, 1, 1),
+    );
+    expect(recSingularWeek.advanceDateFrom(DateTime(2024, 1, 1)), equals(DateTime(2024, 1, 8)));
+
+    final recLeapYear = RecurringPayment(
+      id: 'r_y',
+      name: 'Yearly on Leap Day',
+      accountId: 'acc',
+      categoryId: 'bills',
+      amount: 100,
+      freqVal: 1,
+      freqUnit: 'year',
+      startDate: DateTime(2024, 2, 29),
+      nextDate: DateTime(2024, 2, 29),
+    );
+    expect(recLeapYear.advanceDateFrom(DateTime(2024, 2, 29)), equals(DateTime(2025, 2, 28)));
   });
 }

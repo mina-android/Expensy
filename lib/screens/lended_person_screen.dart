@@ -38,9 +38,9 @@ class LendedPersonScreen extends StatelessWidget {
     final color = Color(current.colorValue);
 
     final balColor = balance > 0
-        ? const Color(0xFF2E7D32)
+        ? kSuccessColor
         : balance < 0
-            ? const Color(0xFFC62828)
+            ? kDangerColor
             : cs.onPrimary;
     final balLabel = balance > 0
         ? l10n.lended_person_owesYou(current.name)
@@ -329,7 +329,7 @@ class _EntryCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     final isLent = l.type == 'lent';
-    final color = isLent ? const Color(0xFF2E7D32) : const Color(0xFFC62828);
+    final color = isLent ? kSuccessColor : kDangerColor;
 
     final now = DateTime.now();
     final isOverdue = l.dueDate != null &&
@@ -426,16 +426,9 @@ class _EntryCard extends StatelessWidget {
           const SizedBox(height: 8),
           Row(children: [
             if (l.isSettled)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                    color: const Color(0xFFE8F5E9),
-                    borderRadius: BorderRadius.circular(8)),
-                child: Text(l10n.lended_person_settled,
-                    style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF2E7D32))),
+              StatusBadge(
+                label: l10n.lended_person_settled,
+                color: kSuccessColor,
               )
             else
               TextButton.icon(
@@ -624,78 +617,26 @@ class _EntrySheetState extends State<_EntrySheet> {
     final app = context.watch<AppProvider>();
     final cs = Theme.of(context).colorScheme;
     final sym = currencyInfo(app.settings.currency).symbol;
-    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
 
-    return Padding(
-      padding: EdgeInsets.only(
-          bottom: bottomInset + 16,
-          left: 20,
-          right: 20,
-          top: 20),
-      child: SingleChildScrollView(
-          child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-              isEdit
-                  ? l10n.lended_person_editRecord
-                  : l10n.lended_person_addRecord,
-              style: Theme.of(context)
-                  .textTheme
-                  .titleLarge
-                  ?.copyWith(fontWeight: FontWeight.w800)),
-          Text(widget.person.name,
-              style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: cs.onSurface.withValues(alpha: 0.55))),
-          const SizedBox(height: 12),
-
+    return SheetShell(
+      title: isEdit
+          ? l10n.lended_person_editRecord
+          : l10n.lended_person_addRecord,
+      subtitle: widget.person.name,
+      children: [
           // Type toggle
-          Row(children: [
-            Expanded(
-                child: GestureDetector(
-              onTap: () => setState(() => _type = 'lent'),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 120),
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: BoxDecoration(
-                    color: _type == 'lent'
-                        ? const Color(0xFF2E7D32)
-                        : const Color(0xFFE8F5E9),
-                    borderRadius: BorderRadius.circular(12)),
-                child: Center(
-                    child: Text(l10n.lended_person_iLent,
-                        style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: _type == 'lent'
-                                ? Colors.white
-                                : const Color(0xFF2E7D32)))),
-              ),
-            )),
-            const SizedBox(width: 10),
-            Expanded(
-                child: GestureDetector(
-              onTap: () => setState(() => _type = 'borrowed'),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 120),
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: BoxDecoration(
-                    color: _type == 'borrowed'
-                        ? const Color(0xFFC62828)
-                        : const Color(0xFFFFEBEE),
-                    borderRadius: BorderRadius.circular(12)),
-                child: Center(
-                    child: Text(l10n.lended_person_iBorrowed,
-                        style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: _type == 'borrowed'
-                                ? Colors.white
-                                : const Color(0xFFC62828)))),
-              ),
-            )),
-          ]),
+          TypeToggleChips(
+            selectedValue: _type,
+            firstValue: 'lent',
+            firstLabel: l10n.lended_person_iLent,
+            firstColor: kSuccessColor,
+            firstLightTint: const Color(0xFFE8F5E9),
+            secondValue: 'borrowed',
+            secondLabel: l10n.lended_person_iBorrowed,
+            secondColor: kDangerColor,
+            secondLightTint: const Color(0xFFFFEBEE),
+            onChanged: (v) => setState(() => _type = v),
+          ),
           const SizedBox(height: 12),
 
           TextField(
@@ -879,7 +820,6 @@ class _EntrySheetState extends State<_EntrySheet> {
                 : l10n.lended_person_addRecordBtn),
           ),
         ],
-      )),
     );
   }
 }

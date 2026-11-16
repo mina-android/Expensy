@@ -88,7 +88,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       _accountId = transactableAccounts.first.id;
       _currency = transactableAccounts.first.currency;
     }
-    final cats = app.categories.where((c) => c.type == _type).toList();
+    final cats = app.userCategories.where((c) => c.type == _type).toList();
     if (cats.isNotEmpty) _categoryId = cats.first.id;
 
     final e = widget.existing;
@@ -148,7 +148,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   void _setType(String t) {
     final app = context.read<AppProvider>();
-    final cats = app.categories.where((c) => c.type == t).toList();
+    final cats = app.userCategories.where((c) => c.type == t).toList();
     setState(() {
       _type = t;
       _categoryId = cats.isNotEmpty ? cats.first.id : null;
@@ -278,55 +278,65 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   Future<void> _pickCategoryForSplit(int index, List<AppCategory> cats) async {
     AppHaptics.tap(context, HapticStrength.light);
+    String? tempSelected = _splits[index].categoryId;
     final picked = await showModalBottomSheet<String>(
       context: context,
       builder: (ctx) {
         final l10n = AppLocalizations.of(ctx)!;
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(2),
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) => Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                l10n.add_transaction_category,
-                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
-              ),
-              const SizedBox(height: 12),
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(ctx).size.height * 0.45,
+                const SizedBox(height: 12),
+                Text(
+                  l10n.add_transaction_category,
+                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
                 ),
-                child: SingleChildScrollView(
-                  child: Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: cats.map((c) {
-                      final isSelected = c.id == _splits[index].categoryId;
-                      return ChoiceChip(
-                        selected: isSelected,
-                        avatar: CategoryDot(category: c, size: 18),
-                        label: Text(c.name,
-                            style: const TextStyle(
-                                fontSize: 13, fontWeight: FontWeight.w600)),
-                        onSelected: (_) => Navigator.pop(ctx, c.id),
-                      );
-                    }).toList(),
+                const SizedBox(height: 12),
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(ctx).size.height * 0.5,
+                  ),
+                  child: SingleChildScrollView(
+                    child: CategoryChipPicker(
+                      categories: cats,
+                      selectedId: tempSelected,
+                      onSelected: (id) {
+                        setSheetState(() => tempSelected = id);
+                        final hasChildren = cats.any((c) => c.parentId == id);
+                        if (!hasChildren ||
+                            cats.any((c) => c.id == id && c.isSubcategory)) {
+                          Navigator.pop(ctx, id);
+                        }
+                      },
+                    ),
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: tempSelected == null
+                        ? null
+                        : () => Navigator.pop(ctx, tempSelected),
+                    child: Text(l10n.categories_saveChanges),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -441,16 +451,22 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     final accCurrency = acc?.currency ?? app.settings.currency;
     final storeCurrency = _currency == accCurrency ? '' : _currency;
 
+    final isTransferTx = isEdit && widget.existing!.isTransfer;
     final targetTx = AppTransaction(
       id: isEdit ? widget.existing!.id : app.newId(),
       type: _type,
       amount: amount,
       description: _descCtrl.text.trim(),
       accountId: _accountId!,
-      categoryId: _categoryId!,
+      paidViaAccountId: isEdit && widget.existing!.accountId == _accountId
+          ? widget.existing!.paidViaAccountId
+          : null,
+      categoryId: isTransferTx ? 'sys_transfer' : _categoryId!,
       date: _date,
       note: _noteCtrl.text.trim(),
       currency: storeCurrency,
+      transferGroupId: isEdit ? widget.existing!.transferGroupId : null,
+      certificateId: isEdit ? widget.existing!.certificateId : null,
     );
 
     final dupes =
@@ -461,14 +477,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       _dupeWarningDismissed = true;
     }
 
-    if (isEdit) {
-      await app.updateTransaction(targetTx, widget.existing!);
-    } else {
-      await app.addTransaction(targetTx);
-    }
-
+    final List<TransactionSplit>? splitPayload;
     if (_isSplit) {
-      final splitEntities = _splits
+      splitPayload = _splits
           .map((s) => TransactionSplit(
                 id: s.id.isNotEmpty ? s.id : app.newId(),
                 transactionId: targetTx.id,
@@ -477,12 +488,26 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 note: s.noteCtrl.text.trim(),
               ))
           .toList();
-      await app.saveTransactionSplits(targetTx.id, splitEntities);
     } else if (isEdit) {
-      await app.saveTransactionSplits(targetTx.id, []);
+      splitPayload = const <TransactionSplit>[];
+    } else {
+      splitPayload = null;
     }
 
-    if (mounted) Navigator.pop(context);
+    try {
+      if (isEdit) {
+        await app.updateTransaction(
+          targetTx,
+          widget.existing!,
+          splits: splitPayload,
+        );
+      } else {
+        await app.addTransaction(targetTx, splits: splitPayload);
+      }
+      if (mounted) Navigator.pop(context);
+    } on RatesUnavailableException catch (e) {
+      if (mounted) showAppSnackbar(context, e.message);
+    }
   }
 
   @override
@@ -490,7 +515,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
     final cs = Theme.of(context).colorScheme;
-    final cats = app.categories.where((c) => c.type == _type).toList();
+    final cats = app.userCategories.where((c) => c.type == _type).toList();
     final sym = currencyInfo(_currency.isNotEmpty
             ? _currency
             : (app.accountById(_accountId ?? '')?.currency ??
@@ -557,49 +582,17 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               ],
 
               // ── Type toggle ───────────────────────────────────────────────
-              Row(children: [
-                Expanded(
-                    child: GestureDetector(
-                  onTap: () => _setType('expense'),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 100),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                        color: _type == 'expense'
-                            ? const Color(0xFFC62828)
-                            : const Color(0xFFFFEBEE),
-                        borderRadius: BorderRadius.circular(12)),
-                    child: Center(
-                        child: Text(l10n.add_transaction_expense,
-                            style: TextStyle(
-                                fontWeight: FontWeight.w700,
-                                color: _type == 'expense'
-                                    ? Colors.white
-                                    : const Color(0xFFC62828)))),
-                  ),
-                )),
-                const SizedBox(width: 10),
-                Expanded(
-                    child: GestureDetector(
-                  onTap: () => _setType('income'),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 100),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                        color: _type == 'income'
-                            ? const Color(0xFF2E7D32)
-                            : const Color(0xFFE8F5E9),
-                        borderRadius: BorderRadius.circular(12)),
-                    child: Center(
-                        child: Text(l10n.add_transaction_income,
-                            style: TextStyle(
-                                fontWeight: FontWeight.w700,
-                                color: _type == 'income'
-                                    ? Colors.white
-                                    : const Color(0xFF2E7D32)))),
-                  ),
-                )),
-              ]),
+              TypeToggleChips(
+                selectedValue: _type,
+                firstValue: 'expense',
+                firstLabel: l10n.add_transaction_expense,
+                firstLightTint: const Color(0xFFFFEBEE),
+                secondValue: 'income',
+                secondLabel: l10n.add_transaction_income,
+                secondLightTint: const Color(0xFFE8F5E9),
+                verticalPadding: 12,
+                onChanged: _setType,
+              ),
               const SizedBox(height: 16),
 
               // ── Amount + currency row ─────────────────────────────────────
@@ -773,7 +766,34 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 ],
               ),
               const SizedBox(height: 8),
-              if (!_isSplit)
+              if (isEdit && widget.existing!.isTransfer)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: cs.surfaceContainerHighest.withValues(alpha: 0.45),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                        color: cs.outlineVariant.withValues(alpha: 0.5)),
+                  ),
+                  child: Row(
+                    children: [
+                      CategoryDot(category: app.transferCategory, size: 30),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          l10n.transfer_categoryLocked,
+                          style: const TextStyle(
+                              fontSize: 13, fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                      Icon(Icons.lock_outline_rounded,
+                          size: 16,
+                          color: cs.onSurface.withValues(alpha: 0.5)),
+                    ],
+                  ),
+                )
+              else if (!_isSplit)
                 CategoryChipPicker(
                   categories: cats,
                   selectedId: _categoryId,
@@ -870,17 +890,17 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
             color: isBalanced
-                ? const Color(0xFF2E7D32).withValues(alpha: 0.12)
+                ? kSuccessColor.withValues(alpha: 0.12)
                 : (remaining < 0
                     ? cs.errorContainer.withValues(alpha: 0.5)
-                    : const Color(0xFFE65100).withValues(alpha: 0.12)),
+                    : kWarningColor.withValues(alpha: 0.12)),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: isBalanced
-                  ? const Color(0xFF2E7D32).withValues(alpha: 0.4)
+                  ? kSuccessColor.withValues(alpha: 0.4)
                   : (remaining < 0
                       ? cs.error.withValues(alpha: 0.4)
-                      : const Color(0xFFE65100).withValues(alpha: 0.4)),
+                      : kWarningColor.withValues(alpha: 0.4)),
             ),
           ),
           child: Column(
@@ -905,10 +925,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                             : Icons.info_outline_rounded,
                         size: 15,
                         color: isBalanced
-                            ? const Color(0xFF2E7D32)
+                            ? kSuccessColor
                             : (remaining < 0
                                 ? cs.error
-                                : const Color(0xFFE65100)),
+                                : kWarningColor),
                       ),
                       const SizedBox(width: 4),
                       Text(
@@ -919,10 +939,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                           fontSize: 13,
                           fontWeight: FontWeight.w800,
                           color: isBalanced
-                              ? const Color(0xFF2E7D32)
+                              ? kSuccessColor
                               : (remaining < 0
                                   ? cs.error
-                                  : const Color(0xFFE65100)),
+                                  : kWarningColor),
                         ),
                       ),
                     ],
@@ -1010,7 +1030,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    cat?.name ?? 'Category',
+                                    app.categoryDisplayName(
+                                      split.categoryId,
+                                      fallback: cat?.name ?? 'Category',
+                                    ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(

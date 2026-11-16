@@ -7,6 +7,7 @@ import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
 import '../widgets/app_numeric_keypad.dart';
 import '../utils/haptics.dart';
+import '../utils/snackbar.dart';
 
 class TransferScreen extends StatefulWidget {
   const TransferScreen({super.key});
@@ -16,6 +17,7 @@ class TransferScreen extends StatefulWidget {
 
 class _TransferScreenState extends State<TransferScreen> {
   final _amtCtrl = TextEditingController();
+  final _toAmtCtrl = TextEditingController();
   final _noteCtrl = TextEditingController();
   String? _fromId;
   String? _toId;
@@ -38,6 +40,7 @@ class _TransferScreenState extends State<TransferScreen> {
   @override
   void dispose() {
     _amtCtrl.dispose();
+    _toAmtCtrl.dispose();
     _noteCtrl.dispose();
     super.dispose();
   }
@@ -48,13 +51,45 @@ class _TransferScreenState extends State<TransferScreen> {
     final evalAmount = ExpressionEvaluator.evaluate(_amtCtrl.text);
     final amount = evalAmount ?? double.tryParse(_amtCtrl.text);
     if (amount == null || amount <= 0) return;
-    await context.read<AppProvider>().addTransfer(
-          fromId: _fromId!,
-          toId: _toId!,
-          fromAmount: amount,
-          note: _noteCtrl.text.trim(),
-        );
-    if (mounted) Navigator.pop(context);
+
+    final app = context.read<AppProvider>();
+    final l10n = AppLocalizations.of(context)!;
+    final from = app.accountById(_fromId!);
+    final to = app.accountById(_toId!);
+    final fromCur = from?.currency ?? app.settings.currency;
+    final toCur = to?.currency ?? app.settings.currency;
+    final isCrossCurrency = from != null && to != null && fromCur != toCur;
+
+    double? explicitToAmount;
+    if (isCrossCurrency) {
+      final manualTo = double.tryParse(_toAmtCtrl.text.trim());
+      if (manualTo != null && manualTo > 0) {
+        explicitToAmount = manualTo;
+      } else {
+        if (app.exchangeRates.isEmpty) {
+          showAppSnackbar(context, l10n.transfer_exchangeRatesNotLoaded);
+          return;
+        }
+        explicitToAmount = app.convertBetween(amount, fromCur, toCur);
+        if (explicitToAmount == null) {
+          showAppSnackbar(context, l10n.transfer_exchangeRatesNotLoaded);
+          return;
+        }
+      }
+    }
+
+    try {
+      await app.addTransfer(
+        fromId: _fromId!,
+        toId: _toId!,
+        fromAmount: amount,
+        toAmount: explicitToAmount,
+        note: _noteCtrl.text.trim(),
+      );
+      if (mounted) Navigator.pop(context);
+    } on RatesUnavailableException catch (e) {
+      if (mounted) showAppSnackbar(context, e.message);
+    }
   }
 
   @override
@@ -309,7 +344,50 @@ class _TransferScreenState extends State<TransferScreen> {
                   decoration: InputDecoration(
                       labelText: l10n.transfer_noteOptional,
                       prefixIcon: const Icon(Icons.sticky_note_2_outlined))),
-              const SizedBox(height: 24),
+              const SizedBox(height: 12),
+
+              // Locked "Transfer" category indicator (default & only option)
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: cs.surfaceContainerHighest.withValues(alpha: 0.45),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                      color: cs.outlineVariant.withValues(alpha: 0.5)),
+                ),
+                child: Row(
+                  children: [
+                    CategoryDot(category: app.transferCategory, size: 32),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.add_transaction_category,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: cs.onSurface.withValues(alpha: 0.55),
+                            ),
+                          ),
+                          Text(
+                            l10n.transfer_categoryLocked,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.lock_outline_rounded,
+                        size: 16, color: cs.onSurface.withValues(alpha: 0.5)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
 
               FilledButton.icon(
                 onPressed: () {

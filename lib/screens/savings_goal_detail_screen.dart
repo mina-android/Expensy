@@ -1,3 +1,10 @@
+// lib/screens/savings_goal_detail_screen.dart
+// note: Detail view for an individual savings goal showing contribution history, progress ring, and deposit/withdraw actions.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
+// All state mutations and queries route through AppProvider to preserve UI-DB decoupling.
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
@@ -10,11 +17,14 @@ import '../widgets/app_numeric_keypad.dart';
 import '../utils/haptics.dart';
 import 'package:intl/intl.dart';
 
+// ── class SavingsGoalDetailScreen ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for SavingsGoalDetailScreen.
 class SavingsGoalDetailScreen extends StatelessWidget {
   final SavingsGoal goal;
   const SavingsGoalDetailScreen({super.key, required this.goal});
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
@@ -24,6 +34,7 @@ class SavingsGoalDetailScreen extends StatelessWidget {
     final currentGoal =
         app.savingsGoals.where((g) => g.id == goal.id).firstOrNull;
     if (currentGoal == null) {
+      // Render Scaffold layout container.
       return Scaffold(body: Center(child: Text(l10n.savings_goalNotFound)));
     }
 
@@ -32,6 +43,7 @@ class SavingsGoalDetailScreen extends StatelessWidget {
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    // Render Scaffold layout container.
     return Scaffold(
       appBar: AppBar(
         title: Text(currentGoal.name,
@@ -111,7 +123,7 @@ class SavingsGoalDetailScreen extends StatelessWidget {
                       value: progress,
                       minHeight: 10,
                       color: currentGoal.isCompleted
-                          ? const Color(0xFF2E7D32)
+                          ? kSuccessColor
                           : color,
                       backgroundColor: color.withValues(alpha: 0.15),
                     ),
@@ -142,20 +154,21 @@ class SavingsGoalDetailScreen extends StatelessWidget {
           if (app.wishlistForGoal(currentGoal) != null) ...[
             Builder(builder: (context) {
               final linkedWishlist = app.wishlistForGoal(currentGoal)!;
+              // Render Container layout container.
               return Container(
                 margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 padding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2E7D32).withValues(alpha: 0.08),
+                  color: kSuccessColor.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                      color: const Color(0xFF2E7D32).withValues(alpha: 0.25)),
+                      color: kSuccessColor.withValues(alpha: 0.25)),
                 ),
                 child: Row(
                   children: [
                     const Icon(Icons.star_rounded,
-                        color: Color(0xFF2E7D32), size: 20),
+                        color: kSuccessColor, size: 20),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
@@ -166,7 +179,7 @@ class SavingsGoalDetailScreen extends StatelessWidget {
                             style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF2E7D32)),
+                                color: kSuccessColor),
                           ),
                           if (linkedWishlist.isPurchased)
                             Text(
@@ -197,7 +210,7 @@ class SavingsGoalDetailScreen extends StatelessWidget {
                     icon: const Icon(Icons.add),
                     label: Text(l10n.savings_contribute),
                     style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF2E7D32)),
+                        backgroundColor: kSuccessColor),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -232,6 +245,7 @@ class SavingsGoalDetailScreen extends StatelessWidget {
                     final c = contributions[index];
                     final isContrib = c.type == 'contribution';
                     final acc = app.accountById(c.accountId);
+                    // Render Container layout container.
                     return Container(
                       margin: const EdgeInsets.only(bottom: 8),
                       decoration: BoxDecoration(
@@ -246,11 +260,11 @@ class SavingsGoalDetailScreen extends StatelessWidget {
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                         leading: CircleAvatar(
                           backgroundColor: isContrib
-                              ? const Color(0xFF2E7D32).withValues(alpha: 0.12)
+                              ? kSuccessColor.withValues(alpha: 0.12)
                               : cs.error.withValues(alpha: 0.12),
                           child: Icon(
                             isContrib ? Icons.arrow_downward : Icons.arrow_upward,
-                            color: isContrib ? const Color(0xFF2E7D32) : cs.error,
+                            color: isContrib ? kSuccessColor : cs.error,
                           ),
                         ),
                         title: Text(isContrib ? l10n.savings_contribution : l10n.savings_withdrawal,
@@ -266,7 +280,7 @@ class SavingsGoalDetailScreen extends StatelessWidget {
                               fontSize: 15,
                               fontWeight: FontWeight.w800,
                               color: isContrib
-                                  ? const Color(0xFF2E7D32)
+                                  ? kSuccessColor
                                   : cs.onSurface),
                         ),
                       ),
@@ -281,6 +295,7 @@ class SavingsGoalDetailScreen extends StatelessWidget {
     );
   }
 
+  // Helper method `_showContributionSheet`: handles user action or computes derived UI state.
   void _showContributionSheet(BuildContext context, AppProvider app,
       SavingsGoal goal, bool isContribution) {
     AppHaptics.tap(context, HapticStrength.medium);
@@ -293,6 +308,8 @@ class SavingsGoalDetailScreen extends StatelessWidget {
   }
 }
 
+// ── class _ContributionSheet ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _ContributionSheet.
 class _ContributionSheet extends StatefulWidget {
   final SavingsGoal goal;
   final bool isContribution;
@@ -305,6 +322,8 @@ class _ContributionSheet extends StatefulWidget {
   State<_ContributionSheet> createState() => _ContributionSheetState();
 }
 
+// ── class _ContributionSheetState ──────────────────────────────────────────────────────────
+// Encapsulates UI state and rendering logic for _ContributionSheetState.
 class _ContributionSheetState extends State<_ContributionSheet> {
   final _amountCtrl = TextEditingController();
   final _noteCtrl = TextEditingController();
@@ -313,6 +332,7 @@ class _ContributionSheetState extends State<_ContributionSheet> {
   bool _showKeypad = true;
 
   @override
+  // Initializes controllers and local state from widget parameters.
   void initState() {
     super.initState();
     // Preselect the primary account or the first one with matching currency
@@ -326,12 +346,14 @@ class _ContributionSheetState extends State<_ContributionSheet> {
   }
 
   @override
+  // Disposes controllers and listeners to prevent memory leaks.
   void dispose() {
     _amountCtrl.dispose();
     _noteCtrl.dispose();
     super.dispose();
   }
 
+  // Helper method `_submit`: handles user action or computes derived UI state.
   void _submit() {
     setState(() => _submitted = true);
     final amt = double.tryParse(_amountCtrl.text.replaceAll(',', '')) ?? 0.0;
@@ -356,8 +378,10 @@ class _ContributionSheetState extends State<_ContributionSheet> {
   }
 
   @override
+  // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    // Render Padding layout container.
     return Padding(
       padding: const EdgeInsets.only(left: 16, right: 16, top: 24, bottom: 24),
       child: Column(
@@ -445,7 +469,7 @@ class _ContributionSheetState extends State<_ContributionSheet> {
               },
               style: FilledButton.styleFrom(
                   backgroundColor: widget.isContribution
-                      ? const Color(0xFF2E7D32)
+                      ? kSuccessColor
                       : Theme.of(context).colorScheme.error,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(

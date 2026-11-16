@@ -1,6 +1,8 @@
 // lib/services/backup_validator.dart
 // note: Safety validator that inspects backup payloads, generates preview summaries, and detects orphans.
 
+import '../database/app_database.dart';
+
 class RestorePreview {
   final bool isValid;
   final int schemaVersion;
@@ -24,7 +26,7 @@ class RestorePreview {
 }
 
 class BackupValidator {
-  static const int currentSchemaVersion = 28;
+  static const int currentSchemaVersion = AppDatabase.currentSchemaVersion;
 
   static const Set<String> knownTables = {
     'accounts',
@@ -44,6 +46,7 @@ class BackupValidator {
     'transaction_presets',
     'transaction_splits',
     'certificates',
+    'net_worth_snapshots',
   };
 
   /// Inspects a raw decoded backup map and returns a RestorePreview report.
@@ -112,6 +115,22 @@ class BackupValidator {
       }
       if (missingAccTxs > 0) {
         warnings.add('$missingAccTxs transactions reference accounts not in this backup.');
+      }
+    }
+
+    // Check subcategory parent references
+    if (data.containsKey('categories')) {
+      final cats = (data['categories'] as List?)?.whereType<Map<String, dynamic>>().toList() ?? [];
+      final catIds = cats.map((c) => c['id'] as String?).whereType<String>().toSet();
+      int orphanSubs = 0;
+      for (final c in cats) {
+        final pid = c['parent_id'] as String?;
+        if (pid != null && pid.isNotEmpty && !catIds.contains(pid)) {
+          orphanSubs++;
+        }
+      }
+      if (orphanSubs > 0) {
+        warnings.add('$orphanSubs subcategories reference a missing parent category and will be promoted on restore.');
       }
     }
 

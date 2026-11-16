@@ -33,7 +33,7 @@ class AssetsScreen extends StatelessWidget {
             FintechSummaryChip(
               label: l10n.assets_totalAssets,
               value: formatAmount(total, app.settings.currency),
-              color: const Color(0xFF1565C0),
+              color: kAssetsColor,
             ),
             const SizedBox(width: 8),
             FintechSummaryChip(
@@ -67,7 +67,7 @@ class AssetsScreen extends StatelessWidget {
       ]),
       floatingActionButton: FintechFab(
         tooltip: l10n.assets_addAsset,
-        color: const Color(0xFF1565C0),
+        color: kAssetsColor,
         onPressed: () => _openSheet(context),
       ),
     );
@@ -99,7 +99,7 @@ class _AssetCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    const assetColor = Color(0xFF1565C0);
+    const assetColor = kAssetsColor;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),

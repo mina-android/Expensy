@@ -74,7 +74,35 @@ const Map<String, String> kSeedLabels = {
   'lavender': 'Lavender',
 };
 
-Color seedColor(String key) => kSeedColors[key] ?? const Color(0xFF6750A4);
+// ── Semantic Accent Colors ──────────────────────────────────────────────────
+const int kSuccessColorValue = 0xFF2E7D32;
+const int kDangerColorValue = 0xFFC62828;
+const int kCertificateColorValue = 0xFF00897B;
+const int kWarningColorValue = 0xFFE65100;
+const int kAssetsColorValue = 0xFF1565C0;
+const int kGoldColorValue = 0xFFB8860B;
+
+const Color kSuccessColor = Color(kSuccessColorValue);
+const Color kDangerColor = Color(kDangerColorValue);
+const Color kCertificateColor = Color(kCertificateColorValue);
+const Color kWarningColor = Color(kWarningColorValue);
+const Color kAssetsColor = Color(kAssetsColorValue);
+const Color kGoldColor = Color(kGoldColorValue);
+
+/// Returns a semantic pace/tier color based on a 0..1+ budget or utilization ratio.
+Color paceTierColor(double ratio) {
+  if (ratio > 1.0) return kDangerColor;
+  if (ratio >= 0.85) return kWarningColor;
+  return kSuccessColor;
+}
+
+/// Standard subtle hairline border color across cards and containers.
+Color hairlineBorderColor(ColorScheme cs) =>
+    cs.outlineVariant.withValues(alpha: 0.4);
+
+/// Whether the given ColorScheme is rendered on a pitch-black AMOLED surface.
+bool isAmoledSurface(ColorScheme cs) =>
+    cs.brightness == Brightness.dark && cs.surface == Colors.black;
 
 // ── Fonts ─────────────────────────────────────────────────────────────────────
 /// Key stored in AppSettings.appFont → display label shown in Settings UI.
@@ -175,7 +203,7 @@ ThemeData buildTheme({
 /// Resolves popup/sheet surface color based on theme and AMOLED state.
 Color popupSurfaceColor(ColorScheme cs) {
   final isDark = cs.brightness == Brightness.dark;
-  if (isDark && cs.surface == Colors.black) {
+  if (isAmoledSurface(cs)) {
     return Colors.black;
   }
   return isDark ? cs.surfaceContainerHigh : cs.surface;
@@ -184,7 +212,7 @@ Color popupSurfaceColor(ColorScheme cs) {
 /// Resolves popup/sheet border side based on theme and AMOLED state.
 BorderSide popupBorderSide(ColorScheme cs) {
   final isDark = cs.brightness == Brightness.dark;
-  if (isDark && cs.surface == Colors.black) {
+  if (isAmoledSurface(cs)) {
     return BorderSide(color: cs.outlineVariant.withValues(alpha: 0.45), width: 1);
   }
   if (isDark) {
@@ -464,4 +492,73 @@ String formatAmount(double amount, String code) {
     ),
   );
   return fmt.format(amount);
+}
+
+// ── Chart Category Color Resolution (#24) ────────────────────────────────────
+const List<Color> kChartFallbackPalette = [
+  Color(0xFF1565C0), // Cobalt
+  Color(0xFFE65100), // Deep Orange
+  Color(0xFF2E7D32), // Emerald
+  Color(0xFF880E4F), // Magenta
+  Color(0xFF00838F), // Cyan
+  Color(0xFF6A1B9A), // Purple
+  Color(0xFFF9A825), // Gold
+  Color(0xFFAD1457), // Pink
+  Color(0xFF00695C), // Mint
+  Color(0xFFD84315), // Coral
+  Color(0xFF283593), // Indigo
+  Color(0xFF558B2F), // Lime
+];
+
+/// Resolves visually distinct, surface-contrast-safe colors for category charts,
+/// prioritizing each category's configured [colorValue] so chart slices match
+/// their category badges and legend dots.
+List<Color> resolveCategoryChartColors(
+  List<int?> colorValues,
+  ColorScheme cs,
+) {
+  final isDark = cs.brightness == Brightness.dark;
+  final resolved = <Color>[];
+  final usedHsls = <HSLColor>[];
+
+  Color adaptForSurface(Color base) {
+    final hsl = HSLColor.fromColor(base);
+    final minL = isDark ? 0.48 : 0.30;
+    final maxL = isDark ? 0.72 : 0.54;
+    final clampedL = hsl.lightness.clamp(minL, maxL);
+    final minSat = hsl.saturation < 0.25 ? 0.35 : hsl.saturation;
+    return hsl.withLightness(clampedL).withSaturation(minSat.clamp(0.0, 1.0)).toColor();
+  }
+
+  bool isTooClose(HSLColor a, HSLColor b) {
+    final hueDiff = (a.hue - b.hue).abs();
+    final wrappedHueDiff = hueDiff > 180 ? 360 - hueDiff : hueDiff;
+    return wrappedHueDiff < 22 && (a.lightness - b.lightness).abs() < 0.16;
+  }
+
+  int fallbackIdx = 0;
+  for (final val in colorValues) {
+    Color candidate = val != null
+        ? adaptForSurface(Color(val))
+        : adaptForSurface(kChartFallbackPalette[fallbackIdx++ % kChartFallbackPalette.length]);
+    var candHsl = HSLColor.fromColor(candidate);
+
+    if (usedHsls.any((u) => isTooClose(u, candHsl))) {
+      for (int attempt = 0; attempt < kChartFallbackPalette.length; attempt++) {
+        final alt = adaptForSurface(
+          kChartFallbackPalette[(fallbackIdx + attempt) % kChartFallbackPalette.length],
+        );
+        final altHsl = HSLColor.fromColor(alt);
+        if (!usedHsls.any((u) => isTooClose(u, altHsl))) {
+          candidate = alt;
+          candHsl = altHsl;
+          fallbackIdx = (fallbackIdx + attempt + 1) % kChartFallbackPalette.length;
+          break;
+        }
+      }
+    }
+    usedHsls.add(candHsl);
+    resolved.add(candidate);
+  }
+  return resolved;
 }

@@ -1,6 +1,57 @@
 # Changelog
 
+## [1.2.3] - 2026-11-16
+
+### Subcategories, Transfer Category Enforcement, Chart Color Harmonization, TrackWallet Migration, Bangla & F-Droid Readiness
+- **Subcategories (#26)**:
+  - Upgraded Drift database to Schema v30 (`categories.parent_id` + `idx_cat_parent` index, plus `_syncRecurringProgressFromHistory` syncing `paid_payments` from `paid` + `skipped` history) supporting single-level `Parent › Subcategory` hierarchies.
+  - Updated `CategoriesScreen` with nested subcategory display, `+ Subcategory` quick creation, and a **Parent Category** selector in `_CategorySheet`.
+  - Updated `skipNextRecurring` to increment `paidPayments` so skipping a recurring installment advances its progress bar and remaining count.
+  - Updated `LoansScreen` and `CertificatesScreen` empty-state prompts to use `EmptyState` matching `WishlistScreen`, `LendedScreen`, and `AssetsScreen`.
+  - Updated `CategoryChipPicker` to a two-tier progressive parent → subcategory picker across `AddTransactionScreen` (including Split Transaction picker `_pickCategoryForSplit`), `BudgetScreen`, `RecurringScreen`, `PresetSheet`, `WishlistScreen`, and `TransactionsScreen` filters & bulk recategorization.
+  - Rolled up subcategory and split-transaction spending into parent budgets (`budgetSpentInPeriod`, `_checkBudgetAlert`) with `nonOverlappingBudgets` double-count prevention, `FinancialAggregations.categoryTotals`, `InsightsScreen` (with expandable subcategory breakdown), `StatisticsScreen` (`By Category` / `By Subcategory` toggle), `WrappedScreen` (`getWrappedData`), `PdfReportService` (parent roll-up + indented subcategory rows), and `ExportScreen` Excel export (`Category` + `Subcategory` columns).
+  - Updated `BackupValidator`, `AppDatabase._repairOrphanSubcategories`, and `_SelectiveRestoreSheet` (`recurring -> categories` dependency).
+- **Transfer Category Enforcement & Leak Fix (#26 comment)**:
+  - Enforced `'sys_transfer'` (`Transfer`) as the default and sole category for transfers across `TransferScreen`, `AddTransactionScreen`, `FinancialCalendarScreen`, `TransactionsScreen._bulkChangeCategory`, and `AppProvider.updateTransaction`, and added Schema v29 self-healing (`_repairTransferCategories`).
+- **Chart Colour Palette Harmonization (#24)**:
+  - Added `resolveCategoryChartColors` in `lib/theme/app_theme.dart` so `InsightsScreen` and `StatisticsScreen` pie charts, progress bars, and legends match each category's configured `colorValue` with dark/AMOLED contrast tuning and collision separation.
+- **TrackWallet CSV Migration (#27)**:
+  - Added `AppProvider.restoreTrackWallet` with RFC-4180 CSV parsing, smart parent category & subcategory mapping, paired/single-leg transfer handling (`sys_transfer`), atomic batch persistence, and pre-import safety snapshots.
+  - Surfaced **Import from TrackWallet (.csv)** in both `BackupScreen` and `OnboardingScreen` (`_PageWelcome`).
+- **Bangla (`bn`) Localization (#26 comment)**:
+  - Added `lib/l10n/app_bn.arb` (`বাংলা`) and registered `বাংলা` in `SettingsScreen` and `OnboardingScreen`.
+- **F-Droid & IzzyOnDroid Readiness (#6)**:
+  - Disabled `dependenciesInfo` in `android/app/build.gradle`, allowed unsigned release builds when `key.properties` is absent, disabled runtime Google Fonts network fetching (`GoogleFonts.config.allowRuntimeFetching = false`), and added `fastlane/metadata/android/en-US/` store metadata.
+
 ## [1.2.2-hotfix] - 2026-10-24
+
+### Full 7-Phase Audit Remediation (Financial Correctness, Concurrency, Backup Hardening, Theme & Reuse)
+- **Phase 1 — P0 Money Correctness (`A1`–`A6`)**:
+  - **Multi-Cycle Certificate Interest Catch-Up (`A1`)**: Fixed `Certificate.nextCollectionDateAt` date-only comparison (`today`), uncapped yearly collection days (`29`–`31`), and added `nextUncollectedPeriodDate` with a `while` loop in `_checkAndProcessCertificates` to process every elapsed payout period with its historical occurrence date.
+  - **Loan Installment Settlement & Reversal (`A2`, `A2b`)**: Fixed `payLoanInstallment` so the newly inserted `LoanPayment` is not double-counted when checking `totalPaid >= principal`; added un-settlement (`isSettled = false`, reschedule reminder) when `deleteLoanPayment` drops total paid below principal.
+  - **Transaction Currency Resolution (`A3`)**: Added `AppProvider.txCurrency(AppTransaction)` and `TransactionCurrencyResolver` to `periodTotals`, `categoryTotals`, and `dayTotals` so transactions with empty `currency` resolve via their account's currency instead of defaulting to main currency.
+  - **Debit Card Currency Normalization (`A4`)**: Resolved debit card parent bank currency in `_txDelta`, normalized `t.currency` on debit-card redirect in `addTransaction`/`updateTransaction`, and resolved parent currency in `RecurringPaymentProcessor`.
+  - **Cross-Currency Rate Guard (`A5`)**: Added `RatesUnavailableException` when `exchangeRates` are empty during cross-currency mutations, blocked cross-currency transfer submission in `TransferScreen` when rates are unavailable, and passed explicit `toAmount` into `AppProvider.transfer`.
+  - **Paired Transfer Deletion Undo (`A6`)**: Updated `deleteTransactionWithUndo` to snapshot and restore all legs sharing `transferGroupId` along with their atomic balance deltas and transaction splits.
+- **Phase 2 — P1 Concurrency & Integrity (`B1`–`B4`, `B10`)**:
+  - **Serialized Account & Split Mutations (`B1`, `B3`, `B4`)**: Wrapped `addAccount`, `updateAccount` (using atomic `balanceDelta`), `deleteAccount`, `deleteAccountWithUndo` (and its undo callback), `saveTransactionSplits`, `_executeRecordNetWorthSnapshot`, `undoLastRestore`, `restoreBackupData`, `restoreSelective`, `_restoreGreenStash`, and `restoreSay` (with RFC-4180 CSV parsing) inside `_serializeMutation`.
+  - **Atomic Transaction + Splits Persistence (`B3`)**: Added optional `splits` parameter to `addTransaction` and `updateTransaction`, and preserved `paidViaAccountId` and `certificateId` when editing transactions in `AddTransactionScreen`.
+  - **Idempotent Manual Recurring Actions (`B10`)**: Guarded `markRecurringPaid` and `skipNextRecurring` with `RecurringPaymentProcessor.hasHistoryForDate` to prevent duplicate charges when racing with background auto-pay.
+- **Phase 3 — P1 Backup & Restore Hardening (`B5`–`B9`, `B13`)**:
+  - **Encrypted `.enc` Backup Restore (`B5`)**: Added `parseBackupBytes` and `onPasswordRequired` decryption flow across `AppProvider`, `BackupScreen`, and `OnboardingScreen`.
+  - **Post-Import Legacy Data Repair (`B6`)**: Extracted idempotent `AppDatabase.runDataMigrationDataFixes()` (repairing `D1` paired/single-leg transfers, `D2` orphan recurring history, `D3` positive credit card balances, and `D5` debit card balances/transactions) and invoked it automatically when restoring `< v28` backups.
+  - **Selective Restore Validation & Dependencies (`B7`)**: Routed `restoreSelective` through `BackupValidator.validate`, re-seeded system categories after category imports, and auto-selected `accounts` + `categories` when `transactions` is checked in `_SelectiveRestoreSheet`.
+  - **`net_worth_snapshots` Backup Table (`B8`, `B13`)**: Unified `AppDatabase.currentSchemaVersion = 28` and added `net_worth_snapshots` as the 18th backup table in `AppDatabase.backupTables` and `BackupValidator.knownTables`.
+  - **Pre-Restore Safety Snapshot Abort Guard (`B9`)**: Validated settings payload before database wipe and aborted restore with `StateError` if both primary and fallback safety snapshots fail.
+- **Phase 4 — P1/P2 Calculation Polish (`B11`, `B12`, `C1`–`C13`)**:
+  - **Credit Card Statement Carry-Over & Minimum Floor (`B11`)**: Carried unpaid prior-cycle debt into `statementBalance` and enforced a `25.0` minimum payment floor (capped at statement balance).
+  - **Certificate Transaction Guard (`B12`)**: Narrowed legacy certificate transaction deletion matching in `deleteCertificate` and guarded certificate-linked (`isInvestment`) transactions in `TransactionsScreen` and `HomeScreen` with a dialog linking to `CertificateDetailScreen`.
+  - **Analytics & Budget Accuracy (`C1`–`C13`)**: Made `InsightsScreen` category anomalies split-aware (`C1`), included `paidViaAccountId` in `StatisticsScreen` account filter (`C2`), converted lent/borrowed totals via `convertToMain` in `YearlyAnalysisScreen` (`C3`), normalized weekly budgets (`* 52 / 12`) with `budgetEffectiveAllowance` in `InsightsScreen` (`C4`), used elapsed days for current-month daily average in `FinancialCalendarScreen` (`C5`), guarded brand-new budget rollover against synthetic prior-period deficits (`C6`), keyed budget alerts to `getCurrentPeriodStart` (`C7`), passed user's `defaultCurrency` into `RecurringPaymentProcessor` (`C8`), normalized singular `freqUnit` values and leap-year Feb 29 dates (`C9`, `C10`), and surfaced `periodLoanPaymentsTotal` in `InsightsScreen` (`C11`).
+- **Phases 5–7 — Code Hygiene, Shared Theme Constants, Reusable Widgets & Documentation (`D1`–`D8`, `E`)**:
+  - Centralized semantic colors (`kSuccessColor`, `kDangerColor`, `kCertificateColor`, `kWarningColor`, `kAssetsColor`, `kGoldColor`), `paceTierColor`, `hairlineBorderColor`, and `isAmoledSurface` in `lib/theme/app_theme.dart` (`D1`, `D3`, `D4`).
+  - Added reusable `SheetShell`, `StatusBadge`, and `TypeToggleChips` (with dark/AMOLED-safe unselected tints) in `lib/widgets/shared_widgets.dart` (`D2`, `D5`), and centralized `nextMonthlyReminderOccurrence` in `lib/services/date_scheduling.dart` (`D5.4`).
+  - Removed dead code (`seedColor`, `TransactionSkeleton`, `shimmer` dependency, unused SQL aggregation methods in `DBHelper`/`AppDatabase`) and moved `DataCheckService` to `test/helpers/data_check_service.dart` (`D6`).
+  - Fixed WorkManager disabled auto-backup return status (`result.success || result.skipped`) to prevent retry storms (`D8`) and documented all 19 low-comment files to `>= 5.3%` comment density (`E`).
 
 ### Transfer Origin Fix, Credit Card Available Limit, Pure AMOLED Theming & Upcoming Recurring Installments
 - **Transfer Accounts Normalization**:

@@ -419,10 +419,10 @@ class _CertificateSheetState extends State<CertificateSheet> {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF00897B).withValues(alpha: 0.1),
+                  color: kCertificateColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                      color: const Color(0xFF00897B).withValues(alpha: 0.3)),
+                      color: kCertificateColor.withValues(alpha: 0.3)),
                 ),
                 child: Column(
                   children: [
@@ -439,7 +439,7 @@ class _CertificateSheetState extends State<CertificateSheet> {
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
-                            color: Color(0xFF00897B),
+                            color: kCertificateColor,
                           ),
                         ),
                       ],
@@ -475,7 +475,7 @@ class _CertificateSheetState extends State<CertificateSheet> {
               FintechReminderToggle(
                 value: _reminderEnabled,
                 title: l10n.certificates_paymentReminder,
-                activeColor: const Color(0xFF00897B),
+                activeColor: kCertificateColor,
                 onChanged: (v) async {
                   if (v) {
                     final granted =
@@ -516,7 +516,7 @@ class _CertificateSheetState extends State<CertificateSheet> {
                               children: [
                                 Icon(Icons.access_time_rounded,
                                     size: 20,
-                                    color: const Color(0xFF00897B)),
+                                    color: kCertificateColor),
                                 const SizedBox(width: 10),
                                 Text(
                                   l10n.certificates_reminderTime,
@@ -530,7 +530,7 @@ class _CertificateSheetState extends State<CertificateSheet> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF00897B)
+                                color: kCertificateColor
                                     .withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(8),
                               ),
@@ -538,7 +538,7 @@ class _CertificateSheetState extends State<CertificateSheet> {
                                 _reminderTime,
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w700,
-                                  color: Color(0xFF00897B),
+                                  color: kCertificateColor,
                                   fontSize: 13,
                                 ),
                               ),
@@ -558,7 +558,7 @@ class _CertificateSheetState extends State<CertificateSheet> {
                             fontSize: 13.5, fontWeight: FontWeight.w600),
                       ),
                       value: _reminderEarlyEnabled,
-                      activeTrackColor: const Color(0xFF00897B),
+                      activeTrackColor: kCertificateColor,
                       onChanged: (v) =>
                           setState(() => _reminderEarlyEnabled = v),
                     ),

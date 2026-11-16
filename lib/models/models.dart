@@ -200,13 +200,25 @@ class AppCategory {
   /// The order in which the category should appear in lists.
   int orderIndex;
 
+  /// Optional parent category ID for single-level subcategories.
+  final String? parentId;
+
+  bool get isSubcategory => parentId != null && parentId!.isNotEmpty;
+
+  bool get isSystem =>
+      id == 'sys_transfer' ||
+      id == 'sys_investment' ||
+      type == 'transfer' ||
+      type == 'investment';
+
   AppCategory(
       {required this.id,
       required this.name,
       required this.type,
       required this.colorValue,
       this.iconCodePoint = 0,
-      this.orderIndex = 0});
+      this.orderIndex = 0,
+      this.parentId});
 
   Map<String, dynamic> toMap() => {
         'id': id,
@@ -215,6 +227,7 @@ class AppCategory {
         'color_value': colorValue,
         'icon_code_point': iconCodePoint,
         'order_index': orderIndex,
+        'parent_id': parentId,
       };
 
   static AppCategory fromMap(Map<String, dynamic> m) => AppCategory(
@@ -224,20 +237,26 @@ class AppCategory {
         colorValue: (m['color_value'] as int?) ?? 0xFF6750A4,
         iconCodePoint: m['icon_code_point'] as int? ?? 0,
         orderIndex: m['order_index'] as int? ?? 0,
+        parentId: (m['parent_id'] as String?)?.isNotEmpty == true
+            ? m['parent_id'] as String
+            : null,
       );
 
   AppCategory copyWith(
           {String? name,
           int? colorValue,
           int? iconCodePoint,
-          int? orderIndex}) =>
+          int? orderIndex,
+          String? parentId,
+          bool clearParentId = false}) =>
       AppCategory(
           id: id,
           name: name ?? this.name,
           type: type,
           colorValue: colorValue ?? this.colorValue,
           iconCodePoint: iconCodePoint ?? this.iconCodePoint,
-          orderIndex: orderIndex ?? this.orderIndex);
+          orderIndex: orderIndex ?? this.orderIndex,
+          parentId: clearParentId ? null : (parentId ?? this.parentId));
 }
 
 class AppTransaction {
@@ -259,7 +278,10 @@ class AppTransaction {
   bool get isTransfer =>
       (transferGroupId != null && transferGroupId!.isNotEmpty) ||
       categoryId == 'sys_transfer' ||
-      type == 'transfer';
+      type == 'transfer' ||
+      description == 'Transfer out' ||
+      description == 'Transfer in' ||
+      description.startsWith('Credit card bill payment');
 
   bool get isInvestment =>
       categoryId == 'sys_investment' ||
@@ -432,13 +454,17 @@ class RecurringPayment {
     if (last.isBefore(first)) return 0;
     switch (freqUnit) {
       case 'days':
+      case 'day':
         return (last.difference(first).inDays ~/ freqVal) + 1;
       case 'weeks':
+      case 'week':
         return (last.difference(first).inDays ~/ (freqVal * 7)) + 1;
       case 'months':
+      case 'month':
         final months = (last.year - first.year) * 12 + last.month - first.month;
         return (months ~/ freqVal) + 1;
       case 'years':
+      case 'year':
         return ((last.year - first.year) ~/ freqVal) + 1;
       default:
         final months = (last.year - first.year) * 12 + last.month - first.month;
@@ -446,21 +472,28 @@ class RecurringPayment {
     }
   }
 
+  // Advances [from] by one recurrence cycle, normalizing singular units and clamping month lengths.
   DateTime advanceDateFrom(DateTime from) {
     if (freqVal <= 0) return from.add(const Duration(days: 30));
-    switch (freqUnit) {
+    switch (freqUnit.toLowerCase()) {
       case 'days':
+      case 'day':
         return from.add(Duration(days: freqVal));
       case 'weeks':
+      case 'week':
         return from.add(Duration(days: freqVal * 7));
       case 'months':
+      case 'month':
         final m = from.month + freqVal;
         final y = from.year + (m - 1) ~/ 12;
         final mon = ((m - 1) % 12) + 1;
         final day = from.day.clamp(1, DateTime(y, mon + 1, 0).day);
         return DateTime(y, mon, day);
       case 'years':
-        return DateTime(from.year + freqVal, from.month, from.day);
+      case 'year':
+        final y = from.year + freqVal;
+        final day = from.day.clamp(1, DateTime(y, from.month + 1, 0).day);
+        return DateTime(y, from.month, day);
       default:
         return from.add(Duration(days: freqVal * 30));
     }
@@ -1637,25 +1670,69 @@ class Certificate {
 
   bool get isMatured => DateTime.now().isAfter(endDate);
 
-  DateTime? get nextCollectionDate {
-    if (isSettled || isMatured) return null;
-    final now = DateTime.now();
+  // Returns the single next uncollected period date after [lastCollectedDate ?? startDate]
+  // without skipping elapsed cycles, enabling bounded catch-up in [checkAndProcessCertificates].
+  DateTime? get nextUncollectedPeriodDate {
+    if (isSettled) return null;
+    final anchor = lastCollectedDate ?? startDate;
+    final anchorDay = DateTime(anchor.year, anchor.month, anchor.day);
+    final endDay = DateTime(endDate.year, endDate.month, endDate.day);
+    if (!anchorDay.isBefore(endDay)) return null;
+
+    DateTime candidate;
+    switch (collectionType) {
+      case 'daily':
+        candidate = anchorDay.add(const Duration(days: 1));
+        break;
+      case 'yearly':
+        final year = anchor.year + 1;
+        final maxDays = DateTime(year, anchor.month + 1, 0).day;
+        candidate = DateTime(year, anchor.month, collectionDay.clamp(1, maxDays));
+        break;
+      case 'monthly':
+      default:
+        int year = anchor.year;
+        int month = anchor.month + 1;
+        if (month > 12) {
+          year++;
+          month = 1;
+        }
+        final maxDays = DateTime(year, month + 1, 0).day;
+        candidate = DateTime(year, month, collectionDay.clamp(1, maxDays));
+        break;
+    }
+
+    if (candidate.isAfter(endDay)) return endDay;
+    return candidate;
+  }
+
+  // Computes the current/upcoming collection date relative to [nowOverride ?? DateTime.now()].
+  // Uses date-only comparison so due-day checks at any time 00:00..23:59 return today.
+  DateTime? nextCollectionDateAt([DateTime? nowOverride]) {
+    if (isSettled) return null;
+    final now = nowOverride ?? DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final endDay = DateTime(endDate.year, endDate.month, endDate.day);
+    if (today.isAfter(endDay)) return null;
     final anchor = lastCollectedDate ?? startDate;
 
     DateTime candidate;
     switch (collectionType) {
       case 'daily':
-        candidate = anchor.add(const Duration(days: 1));
-        if (candidate.isBefore(now)) {
-          candidate = DateTime(now.year, now.month, now.day);
+        candidate = DateTime(anchor.year, anchor.month, anchor.day)
+            .add(const Duration(days: 1));
+        if (candidate.isBefore(today)) {
+          candidate = today;
         }
         break;
       case 'yearly':
-        candidate =
-            DateTime(anchor.year + 1, anchor.month, collectionDay.clamp(1, 28));
-        while (candidate.isBefore(now)) {
-          candidate =
-              DateTime(candidate.year + 1, candidate.month, candidate.day);
+        int year = anchor.year + 1;
+        int maxDays = DateTime(year, anchor.month + 1, 0).day;
+        candidate = DateTime(year, anchor.month, collectionDay.clamp(1, maxDays));
+        while (candidate.isBefore(today)) {
+          year++;
+          maxDays = DateTime(year, anchor.month + 1, 0).day;
+          candidate = DateTime(year, anchor.month, collectionDay.clamp(1, maxDays));
         }
         break;
       case 'monthly':
@@ -1669,7 +1746,7 @@ class Certificate {
         final maxDays = DateTime(year, month + 1, 0).day;
         final day = collectionDay.clamp(1, maxDays);
         candidate = DateTime(year, month, day);
-        while (candidate.isBefore(now)) {
+        while (candidate.isBefore(today)) {
           month++;
           if (month > 12) {
             year++;
@@ -1681,9 +1758,11 @@ class Certificate {
         break;
     }
 
-    if (candidate.isAfter(endDate)) return endDate;
+    if (candidate.isAfter(endDay)) return endDate;
     return candidate;
   }
+
+  DateTime? get nextCollectionDate => nextCollectionDateAt();
 
   Map<String, dynamic> toMap() => {
         'id': id,
