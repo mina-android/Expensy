@@ -207,9 +207,3 @@ Distributed under the **GNU General Public License v3.0**. See the [`LICENSE`](L
 Copyright (c) 2026 mina-android
 Licensed under the GNU General Public License v3.0.
 ```
-
----
-
-<div align="center">
-  <sub>Expensy &bull; Maintained by mina-android &bull; Local-first financial tracking for Android.</sub>
-</div>
