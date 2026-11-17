@@ -1,26 +1,6 @@
 // note: Application preferences screen controlling theme palette, AMOLED mode, typography, base currency, security lock, and notifications.
 // All state mutations and queries route through AppProvider to preserve UI-DB decoupling.
 // Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
 // lib/screens/settings_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

@@ -4,7 +4,9 @@ import '../l10n/app_localizations.dart';
 import '../models/models.dart';
 import '../theme/app_theme.dart';
 import '../utils/haptics.dart';
-import '../screens/add_transaction_screen.dart';
+import '../utils/snackbar.dart';
+import '../screens/certificate_detail_screen.dart';
+import '../screens/certificates_screen.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 
@@ -265,6 +267,7 @@ Future<bool> showDeleteConfirm(BuildContext context, String name) async {
 class AccountCardPicker extends StatelessWidget {
   final List<Account> accounts;
   final String? selectedId;
+  final String? disabledId;
   final bool allowNone;
   final void Function(String?) onSelected;
 
@@ -272,6 +275,7 @@ class AccountCardPicker extends StatelessWidget {
     super.key,
     required this.accounts,
     required this.selectedId,
+    this.disabledId,
     this.allowNone = false,
     required this.onSelected,
   });
@@ -296,21 +300,30 @@ class AccountCardPicker extends StatelessWidget {
             final sel = selectedId == null;
             return _NoneCard(sel: sel, cs: cs, onTap: () => onSelected(null));
           }
-          final sel = selectedId == acc.id;
+          final isDisabled = disabledId != null && acc.id == disabledId;
+          final sel = !isDisabled && selectedId == acc.id;
           final color = Color(acc.colorValue);
           final balance =
               app != null ? app.getEffectiveBalance(acc) : acc.balance;
           return GestureDetector(
-            onTap: () => onSelected(acc.id),
+            onTap: isDisabled ? null : () => onSelected(acc.id),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 100),
               width: 125,
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
-                color: sel ? color : color.withValues(alpha: 0.10),
+                color: isDisabled
+                    ? cs.surfaceContainerHigh
+                    : sel
+                        ? color
+                        : color.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                    color: sel ? color : color.withValues(alpha: 0.35),
+                    color: isDisabled
+                        ? Colors.transparent
+                        : sel
+                            ? color
+                            : color.withValues(alpha: 0.35),
                     width: sel ? 2 : 1),
               ),
               child: Column(
@@ -320,7 +333,11 @@ class AccountCardPicker extends StatelessWidget {
                   AccountTypeIcon(
                       type: acc.type,
                       size: 14,
-                      color: sel ? Colors.white : color),
+                      color: isDisabled
+                          ? cs.onSurface.withValues(alpha: 0.3)
+                          : sel
+                              ? Colors.white
+                              : color),
                   const SizedBox(height: 3),
                   Text(acc.name,
                       maxLines: 1,
@@ -328,15 +345,21 @@ class AccountCardPicker extends StatelessWidget {
                       style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
-                          color: sel ? Colors.white : color)),
+                          color: isDisabled
+                              ? cs.onSurface.withValues(alpha: 0.3)
+                              : sel
+                                  ? Colors.white
+                                  : color)),
                   Text(formatAmount(balance, acc.currency),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                           fontSize: 9,
-                          color: sel
-                              ? Colors.white.withValues(alpha: 0.8)
-                              : cs.onSurface.withValues(alpha: 0.5))),
+                          color: isDisabled
+                              ? cs.onSurface.withValues(alpha: 0.2)
+                              : sel
+                                  ? Colors.white.withValues(alpha: 0.8)
+                                  : cs.onSurface.withValues(alpha: 0.5))),
                 ],
               ),
             ),
@@ -402,8 +425,14 @@ class CategoryChipPicker extends StatelessWidget {
     this.showSubcategories = true,
   });
 
-  Widget _buildChip(AppCategory cat, bool sel, {String? labelOverride}) {
+  Widget _buildChip(
+    AppCategory cat,
+    bool sel,
+    AppLocalizations l10n, {
+    String? labelOverride,
+  }) {
     final color = Color(cat.colorValue);
+    final label = labelOverride ?? AppProvider.localizeCategoryName(cat, l10n);
     return GestureDetector(
       onTap: () => onSelected(cat.id),
       child: AnimatedContainer(
@@ -424,7 +453,7 @@ class CategoryChipPicker extends StatelessWidget {
                   color: sel ? Colors.white : color,
                   shape: BoxShape.circle)),
           const SizedBox(width: 6),
-          Text(labelOverride ?? cat.name,
+          Text(label,
               style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -436,6 +465,7 @@ class CategoryChipPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final visible = categories.where((c) => !c.isSystem).toList();
     final roots = visible.where((c) => !c.isSubcategory).toList();
     final selectedCat = visible.where((c) => c.id == selectedId).firstOrNull;
@@ -458,7 +488,7 @@ class CategoryChipPicker extends StatelessWidget {
           spacing: 8,
           runSpacing: 8,
           children: topList
-              .map((cat) => _buildChip(cat, cat.id == activeRootId))
+              .map((cat) => _buildChip(cat, cat.id == activeRootId, l10n))
               .toList(),
         ),
         if (subs.isNotEmpty && activeRoot != null) ...[
@@ -483,9 +513,11 @@ class CategoryChipPicker extends StatelessWidget {
                 _buildChip(
                   activeRoot,
                   selectedId == activeRoot.id,
-                  labelOverride: 'All ${activeRoot.name}',
+                  l10n,
+                  labelOverride:
+                      '${l10n.transactions_all} ${AppProvider.localizeCategoryName(activeRoot, l10n)}',
                 ),
-                ...subs.map((sub) => _buildChip(sub, selectedId == sub.id)),
+                ...subs.map((sub) => _buildChip(sub, selectedId == sub.id, l10n)),
               ],
             ),
           ),
@@ -634,121 +666,6 @@ Future<String?> showCurrencyPicker(BuildContext context,
   );
 }
 
-// ── Add Transaction Type Sheet ──────────────────────────────────────────────────
-Future<void> showAddTransactionTypeSheet(BuildContext context) async {
-  await showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    backgroundColor: Colors.transparent,
-    builder: (ctx) => _AddTypeSheet(),
-  );
-}
-
-class _AddTypeSheet extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final l10n = AppLocalizations.of(context)!;
-    return SafeArea(
-      child: Container(
-        margin: const EdgeInsets.all(12),
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: popupSurfaceColor(cs),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.fromBorderSide(popupBorderSide(cs)),
-        ),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                  color: cs.onSurface.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(2))),
-          const SizedBox(height: 20),
-          Row(children: [
-            Expanded(
-                child: _TypeOptionCard(
-              icon: Icons.arrow_downward_rounded,
-              label: l10n.add_transaction_income,
-              color: kSuccessColor,
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                    context,
-                    ExpensySlideUpRoute(
-                        builder: (_) =>
-                            const AddTransactionScreen(initialType: 'income')));
-              },
-            )),
-            const SizedBox(width: 12),
-            Expanded(
-                child: _TypeOptionCard(
-              icon: Icons.arrow_upward_rounded,
-              label: l10n.add_transaction_expense,
-              color: kDangerColor,
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                    context,
-                    ExpensySlideUpRoute(
-                        builder: (_) => const AddTransactionScreen(
-                            initialType: 'expense')));
-              },
-            )),
-          ]),
-        ]),
-      ),
-    );
-  }
-}
-
-class _TypeOptionCard extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _TypeOptionCard({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        AppHaptics.tap(context, HapticStrength.medium);
-        onTap();
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 100),
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: color, size: 32),
-            const SizedBox(height: 12),
-            Text(label,
-                style: TextStyle(
-                  color: color,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 16,
-                )),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 // ── Expandable FAB ────────────────────────────────────────────────────────────
 
 class ExpandableFabItem {
@@ -769,6 +686,7 @@ class ExpandableFab extends StatefulWidget {
   final String label;
   final VoidCallback? onIncome;
   final VoidCallback? onExpense;
+  final VoidCallback? onTransfer;
   final List<ExpandableFabItem>? items;
   final Color? color;
   final CrossAxisAlignment alignment;
@@ -778,6 +696,7 @@ class ExpandableFab extends StatefulWidget {
     required this.label,
     this.onIncome,
     this.onExpense,
+    this.onTransfer,
     this.items,
     this.color,
     this.alignment = CrossAxisAlignment.end,
@@ -790,8 +709,6 @@ class ExpandableFab extends StatefulWidget {
 class _ExpandableFabState extends State<ExpandableFab>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<double> _expandAnimation0;
-  late Animation<double> _expandAnimation1;
   bool _open = false;
 
   @override
@@ -802,15 +719,16 @@ class _ExpandableFabState extends State<ExpandableFab>
       duration: const Duration(milliseconds: 180),
       vsync: this,
     );
-    _expandAnimation0 = CurvedAnimation(
+  }
+
+  Animation<double> _animationForIndex(int index, int count) {
+    if (count <= 1) return _controller;
+    final start = (index / (count + 1)).clamp(0.0, 0.5);
+    final end = ((index + 2) / (count + 1)).clamp(0.5, 1.0);
+    return CurvedAnimation(
       parent: _controller,
-      curve: const Interval(0.0, 0.7, curve: Curves.fastOutSlowIn),
-      reverseCurve: const Interval(0.0, 0.7, curve: Curves.easeOutQuad),
-    );
-    _expandAnimation1 = CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.3, 1.0, curve: Curves.fastOutSlowIn),
-      reverseCurve: const Interval(0.3, 1.0, curve: Curves.easeOutQuad),
+      curve: Interval(start, end, curve: Curves.fastOutSlowIn),
+      reverseCurve: Interval(start, end, curve: Curves.easeOutQuad),
     );
   }
 
@@ -855,6 +773,13 @@ class _ExpandableFabState extends State<ExpandableFab>
     final primaryColor = widget.color ?? cs.primary;
 
     final List<ExpandableFabItem> actions = widget.items ?? [
+      if (widget.onTransfer != null)
+        ExpandableFabItem(
+          label: l10n.transfer_transfer,
+          icon: Icons.swap_horiz_rounded,
+          color: cs.primary,
+          onTap: widget.onTransfer!,
+        ),
       ExpandableFabItem(
         label: l10n.add_transaction_expense,
         icon: Icons.arrow_upward_rounded,
@@ -876,7 +801,7 @@ class _ExpandableFabState extends State<ExpandableFab>
         ...actions.asMap().entries.map((entry) {
           final idx = entry.key;
           final item = entry.value;
-          final anim = idx == 0 ? _expandAnimation0 : _expandAnimation1;
+          final anim = _animationForIndex(idx, actions.length);
           return _buildAction(
             color: item.color,
             icon: item.icon,
@@ -956,18 +881,20 @@ class _ExpandableFabState extends State<ExpandableFab>
     required Animation<double> animation,
     required bool isDark,
   }) {
-    final Alignment animAlignment = widget.alignment == CrossAxisAlignment.end
-        ? Alignment.bottomRight
-        : (widget.alignment == CrossAxisAlignment.start
-            ? Alignment.bottomLeft
-            : Alignment.bottomCenter);
+    final textDir = Directionality.of(context);
+    final Alignment animAlignment = (widget.alignment == CrossAxisAlignment.end
+            ? AlignmentDirectional.bottomEnd
+            : (widget.alignment == CrossAxisAlignment.start
+                ? AlignmentDirectional.bottomStart
+                : AlignmentDirectional.bottomCenter))
+        .resolve(textDir);
 
     return Align(
       alignment: widget.alignment == CrossAxisAlignment.end
-          ? Alignment.centerRight
+          ? AlignmentDirectional.centerEnd
           : (widget.alignment == CrossAxisAlignment.start
-              ? Alignment.centerLeft
-              : Alignment.center),
+              ? AlignmentDirectional.centerStart
+              : AlignmentDirectional.center),
       child: SizeTransition(
         sizeFactor: animation,
         axis: Axis.vertical,
@@ -1288,9 +1215,9 @@ class StatusBadge extends StatelessWidget {
   }
 }
 
-// ── Reusable Binary Type Toggle Chips (D5.3) ──────────────────────────────────
-/// Animated two-option toggle row (e.g. Expense/Income or Lent/Borrowed) with
-/// dark/AMOLED-safe unselected tinting.
+// ── Reusable Binary or Ternary Type Toggle Chips (D5.3) ───────────────────────
+/// Animated two- or three-option toggle row (e.g. Expense/Income/Transfer or
+/// Lent/Borrowed) with dark/AMOLED-safe unselected tinting.
 class TypeToggleChips extends StatelessWidget {
   final String selectedValue;
   final String firstValue;
@@ -1301,6 +1228,10 @@ class TypeToggleChips extends StatelessWidget {
   final String secondLabel;
   final Color secondColor;
   final Color? secondLightTint;
+  final String? thirdValue;
+  final String? thirdLabel;
+  final Color? thirdColor;
+  final Color? thirdLightTint;
   final ValueChanged<String> onChanged;
   final double verticalPadding;
 
@@ -1315,71 +1246,258 @@ class TypeToggleChips extends StatelessWidget {
     required this.secondLabel,
     this.secondColor = kSuccessColor,
     this.secondLightTint,
+    this.thirdValue,
+    this.thirdLabel,
+    this.thirdColor,
+    this.thirdLightTint,
     required this.onChanged,
     this.verticalPadding = 10,
   });
 
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final firstSel = selectedValue == firstValue;
-    final secondSel = selectedValue == secondValue;
+  Widget _buildOption({
+    required BuildContext context,
+    required bool isDark,
+    required String value,
+    required String label,
+    required Color color,
+    Color? lightTint,
+  }) {
+    final sel = selectedValue == value;
+    final unselectedBg = isDark
+        ? color.withValues(alpha: 0.15)
+        : (lightTint ?? color.withValues(alpha: 0.12));
 
-    final firstUnselectedBg = isDark
-        ? firstColor.withValues(alpha: 0.15)
-        : (firstLightTint ?? firstColor.withValues(alpha: 0.12));
-    final secondUnselectedBg = isDark
-        ? secondColor.withValues(alpha: 0.15)
-        : (secondLightTint ?? secondColor.withValues(alpha: 0.12));
-
-    return Row(
-      children: [
-        Expanded(
-          child: GestureDetector(
-            onTap: () => onChanged(firstValue),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 120),
-              padding: EdgeInsets.symmetric(vertical: verticalPadding),
-              decoration: BoxDecoration(
-                color: firstSel ? firstColor : firstUnselectedBg,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Center(
-                child: Text(
-                  firstLabel,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: firstSel ? Colors.white : firstColor,
-                  ),
-                ),
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => onChanged(value),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          padding: EdgeInsets.symmetric(vertical: verticalPadding, horizontal: 6),
+          decoration: BoxDecoration(
+            color: sel ? color : unselectedBg,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: sel ? Colors.white : color,
               ),
             ),
           ),
         ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: GestureDetector(
-            onTap: () => onChanged(secondValue),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 120),
-              padding: EdgeInsets.symmetric(vertical: verticalPadding),
-              decoration: BoxDecoration(
-                color: secondSel ? secondColor : secondUnselectedBg,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Center(
-                child: Text(
-                  secondLabel,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: secondSel ? Colors.white : secondColor,
-                  ),
-                ),
-              ),
-            ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
+
+    return Row(
+      children: [
+        _buildOption(
+          context: context,
+          isDark: isDark,
+          value: firstValue,
+          label: firstLabel,
+          color: firstColor,
+          lightTint: firstLightTint,
+        ),
+        const SizedBox(width: 8),
+        _buildOption(
+          context: context,
+          isDark: isDark,
+          value: secondValue,
+          label: secondLabel,
+          color: secondColor,
+          lightTint: secondLightTint,
+        ),
+        if (thirdValue != null && thirdLabel != null) ...[
+          const SizedBox(width: 8),
+          _buildOption(
+            context: context,
+            isDark: isDark,
+            value: thirdValue!,
+            label: thirdLabel!,
+            color: thirdColor ?? cs.primary,
+            lightTint: thirdLightTint,
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+// ── Shared Detail Stat Cell ───────────────────────────────────────────────────
+class DetailStatCell extends StatelessWidget {
+  final String label;
+  final String value;
+  const DetailStatCell(this.label, this.value, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: cs.onSurface.withValues(alpha: 0.5),
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ],
     );
   }
+}
+
+// ── Shared Transfer & Certificate Transaction Dialogs ─────────────────────────
+Future<void> showTransferTransactionDialog(
+  BuildContext context,
+  AppTransaction t,
+) async {
+  final l10n = AppLocalizations.of(context)!;
+  final cs = Theme.of(context).colorScheme;
+  final app = context.read<AppProvider>();
+
+  await showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(l10n.transactions_transferTitle),
+      content: Text(l10n.transactions_transferBody),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: Text(l10n.shared_widgets_cancel),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: cs.error),
+          onPressed: () async {
+            Navigator.pop(ctx);
+            final undo = await app.deleteTransactionWithUndo(t.id);
+            if (context.mounted) {
+              showAppSnackbar(
+                context,
+                l10n.transactions_transferDeleted,
+                onUndo: undo,
+              );
+            }
+          },
+          child: Text(l10n.transactions_deleteTransfer),
+        ),
+      ],
+    ),
+  );
+}
+
+Future<void> showCertificateTransactionDialog(
+  BuildContext context,
+  AppTransaction t,
+) async {
+  final l10n = AppLocalizations.of(context)!;
+  final app = context.read<AppProvider>();
+  final cert = t.certificateId != null
+      ? app.certificates.where((c) => c.id == t.certificateId).firstOrNull
+      : null;
+
+  await showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(l10n.transactions_certTitle),
+      content: Text(l10n.transactions_certBody),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: Text(l10n.common_close),
+        ),
+        FilledButton(
+          onPressed: () {
+            Navigator.pop(ctx);
+            Navigator.push(
+              context,
+              ExpensyRoute(
+                builder: (_) => cert != null
+                    ? CertificateDetailScreen(certificate: cert)
+                    : const CertificatesScreen(),
+              ),
+            );
+          },
+          child: Text(
+            cert != null
+                ? l10n.transactions_viewCertificate
+                : l10n.transactions_openCertificates,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+Future<String?> showBackupPasswordDialog(BuildContext context) async {
+  final l10n = AppLocalizations.of(context)!;
+  final ctrl = TextEditingController();
+  bool obscure = true;
+  final result = await showDialog<String>(
+    context: context,
+    builder: (ctx) => StatefulBuilder(
+      builder: (ctx, setDialogState) => AlertDialog(
+        title: Text(l10n.backup_encryptedTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.backup_encryptedPrompt,
+              style: const TextStyle(fontSize: 13),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: ctrl,
+              obscureText: obscure,
+              autofocus: true,
+              decoration: InputDecoration(
+                labelText: l10n.backup_password,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    obscure
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                  ),
+                  onPressed: () => setDialogState(() => obscure = !obscure),
+                ),
+              ),
+              onSubmitted: (v) => Navigator.pop(ctx, v.trim()),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, null),
+            child: Text(l10n.shared_widgets_cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
+            child: Text(l10n.backup_decryptContinue),
+          ),
+        ],
+      ),
+    ),
+  );
+  ctrl.dispose();
+  return result;
 }

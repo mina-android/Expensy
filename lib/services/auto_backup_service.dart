@@ -5,6 +5,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 import 'package:expensy_saf/expensy_saf.dart';
+import '../utils/service_localizations.dart';
 import 'backup_builder.dart';
 
 enum BackupTrigger { scheduled, catchUp, manual }
@@ -287,10 +288,11 @@ class AutoBackupService {
         priority: Priority.high,
         icon: 'ic_notification',
       );
+      final loc = ServiceLocalizations.current;
       await plugin.show(
         id: 99201,
-        title: 'Auto Backup Failed',
-        body: 'Expensy was unable to create your scheduled backup: $error',
+        title: loc.notif_autoBackupFailedTitle,
+        body: loc.notif_autoBackupFailedBody(error),
         notificationDetails: const NotificationDetails(android: androidDetails),
       );
     } catch (e) {

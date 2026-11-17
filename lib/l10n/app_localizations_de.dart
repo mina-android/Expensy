@@ -837,7 +837,7 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get wrapped_title => 'Expensy Wrapped';
+  String get wrapped_title => 'Expensy Rückblick';
 
   @override
   String wrapped_bannerTitle(Object month) {
@@ -1082,8 +1082,8 @@ class AppLocalizationsDe extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count items',
-      one: '1 item',
+      other: '$count Artikel',
+      one: '1 Artikel',
     );
     return '$_temp0';
   }
@@ -1104,8 +1104,8 @@ class AppLocalizationsDe extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count items',
-      one: '1 item',
+      other: '$count Objekte',
+      one: '1 Objekt',
     );
     return '$_temp0';
   }
@@ -1118,8 +1118,8 @@ class AppLocalizationsDe extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count categories',
-      one: '1 category',
+      other: '$count Kategorien',
+      one: '1 Kategorie',
     );
     return '$_temp0';
   }
@@ -1278,8 +1278,8 @@ class AppLocalizationsDe extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count active records',
-      one: '1 active record',
+      other: '$count aktive Einträge',
+      one: '1 aktiver Eintrag',
     );
     return '$_temp0';
   }
@@ -1391,8 +1391,8 @@ class AppLocalizationsDe extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count transactions in range',
-      one: '1 transaction in range',
+      other: '$count Transaktionen im Zeitraum',
+      one: '1 Transaktion im Zeitraum',
     );
     return '$_temp0';
   }
@@ -2007,7 +2007,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String savings_targetDate(String date) {
-    return 'Target Date: $date';
+    return 'Zieldatum: $date';
   }
 
   @override
@@ -2820,57 +2820,1219 @@ class AppLocalizationsDe extends AppLocalizations {
   String get onboarding_maybeLater => 'Vielleicht später';
 
   @override
-  String get categories_subcategories => 'Subcategories';
+  String get categories_subcategories => 'Unterkategorien';
 
   @override
-  String get categories_addSubcategory => 'Add Subcategory';
+  String get categories_addSubcategory => 'Unterkategorie hinzufügen';
 
   @override
-  String get categories_parentCategory => 'Parent Category';
+  String get categories_parentCategory => 'Übergeordnete Kategorie';
 
   @override
-  String get categories_noneRoot => 'None (Top-Level Category)';
+  String get categories_noneRoot => 'Keine (Hauptkategorie)';
 
   @override
-  String get categories_loadDefaults => 'Load Default Subcategories';
+  String get categories_loadDefaults => 'Standard-Unterkategorien laden';
 
   @override
   String categories_defaultsLoaded(int count) {
-    return 'Loaded $count default subcategories';
+    return '$count Standard-Unterkategorien geladen';
   }
 
   @override
   String get categories_defaultsAlreadyLoaded =>
-      'Default subcategories are already loaded';
+      'Standard-Unterkategorien sind bereits geladen';
 
   @override
-  String get statistics_byCategory => 'By Category';
+  String get statistics_byCategory => 'Nach Kategorie';
 
   @override
-  String get statistics_bySubcategory => 'By Subcategory';
+  String get statistics_bySubcategory => 'Nach Unterkategorie';
 
   @override
-  String get backup_importFromTrackWallet => 'Import from TrackWallet (.csv)';
+  String get backup_importFromTrackWallet =>
+      'Aus TrackWallet importieren (.csv)';
 
   @override
   String backup_importedTransactions(int count) {
-    return 'Imported $count transactions successfully!';
+    return '$count Transaktionen erfolgreich importiert!';
   }
 
   @override
-  String get onboarding_restoreTrackWallet => 'Import from TrackWallet (.csv)';
+  String get onboarding_restoreTrackWallet =>
+      'Aus TrackWallet importieren (.csv)';
 
   @override
-  String get transfer_categoryLocked => 'Transfer (Default & Only Category)';
+  String get transfer_categoryLocked =>
+      'Umbuchung (Standard- & einzige Kategorie)';
 
   @override
-  String get loans_noLoans => 'No loans tracked yet';
+  String get loans_noLoans => 'Noch keine Kredite erfasst';
 
   @override
   String get loans_noLoansSub =>
-      'Tap + to track mortgages, personal loans, or installments';
+      'Tippe auf +, um Hypotheken, Raten- oder Privatkredite zu erfassen';
 
   @override
   String get certificates_noCertificatesSub =>
-      'Tap + to track bank certificates and fixed deposits';
+      'Tippe auf +, um Sparbriefe und Festgelder zu erfassen';
+
+  @override
+  String get common_undo => 'Rückgängig';
+
+  @override
+  String get common_close => 'Schließen';
+
+  @override
+  String get common_required => 'Erforderlich';
+
+  @override
+  String get common_invalid => 'Ungültig';
+
+  @override
+  String get common_none => 'Keine';
+
+  @override
+  String common_enabledAt(String time) {
+    return 'Aktiv ($time)';
+  }
+
+  @override
+  String get common_disabled => 'Deaktiviert';
+
+  @override
+  String get freq_daily => 'Täglich';
+
+  @override
+  String get freq_yearly => 'Jährlich';
+
+  @override
+  String recurring_transfers(Object count) {
+    return 'Umbuchungen ($count)';
+  }
+
+  @override
+  String get recurring_transfer => 'Umbuchung';
+
+  @override
+  String get recurring_transferCaps => 'UMBUCHUNG';
+
+  @override
+  String get recurring_noRecurringTransfers =>
+      'Keine wiederkehrenden Umbuchungen';
+
+  @override
+  String recurring_subtitleCount(int count) {
+    return '$count Abos & Wiederkehrendes';
+  }
+
+  @override
+  String recurring_perWeek(String amount) {
+    return '$amount / Woche';
+  }
+
+  @override
+  String get recurring_perMonth => '/ Monat';
+
+  @override
+  String get recurring_fromAccount => 'Von Konto';
+
+  @override
+  String get recurring_toAccount => 'Auf Konto';
+
+  @override
+  String recurring_targetAmount(String currency) {
+    return 'Zielbetrag ($currency)';
+  }
+
+  @override
+  String get recurring_autoPayAt => 'Auto-Zahlung um';
+
+  @override
+  String get recurring_autoPayOnDueDate => 'Auto-Zahlung am Fälligkeitstag';
+
+  @override
+  String get recurring_autoPayEnabledSub =>
+      'Wird am Fälligkeitstag automatisch gebucht';
+
+  @override
+  String get recurring_autoPayDisabledSub =>
+      'Zahlung bei Fälligkeit automatisch buchen';
+
+  @override
+  String get recurring_autoPayTime => 'Auto-Zahlungszeit';
+
+  @override
+  String get recurring_reminderEnabledSub =>
+      'Du wirst am Fälligkeitstag benachrichtigt';
+
+  @override
+  String get recurring_reminderDisabledSub =>
+      'Erhalte eine Erinnerung bei Fälligkeit';
+
+  @override
+  String get recurring_earlyReminderEnabledSub =>
+      'Zusätzliche Erinnerung 2 Tage vorher';
+
+  @override
+  String get recurring_earlyReminderDisabledSub =>
+      'Auch 2 Tage vor Fälligkeit erinnern';
+
+  @override
+  String get recurring_addRecurringBtn => 'Wiederkehrend hinzufügen';
+
+  @override
+  String get recurring_paymentDetails => 'Zahlungsdetails';
+
+  @override
+  String get recurring_linkedAccount => 'Verknüpftes Konto';
+
+  @override
+  String get recurring_deletedAccount => 'Gelöschtes Konto';
+
+  @override
+  String get recurring_frequency => 'Häufigkeit';
+
+  @override
+  String get recurring_type => 'Typ';
+
+  @override
+  String get recurring_startDate => 'Startdatum';
+
+  @override
+  String get recurring_nextDueDate => 'Nächste Fälligkeit';
+
+  @override
+  String get recurring_autoPay => 'Auto-Zahlung';
+
+  @override
+  String get recurring_reminder => 'Erinnerung';
+
+  @override
+  String get recurring_endDate => 'Enddatum';
+
+  @override
+  String get recurring_totalValue => 'Gesamtwert';
+
+  @override
+  String get recurring_notes => 'Notizen';
+
+  @override
+  String get recurring_upcomingPayments => 'Anstehende Zahlungen';
+
+  @override
+  String recurring_remainingCount(int count) {
+    return '$count verbleibend';
+  }
+
+  @override
+  String get recurring_allInstallmentsCompleted => 'Alle Raten abgeschlossen';
+
+  @override
+  String recurring_installmentOf(int num, int total) {
+    return '#$num von $total';
+  }
+
+  @override
+  String get recurring_paymentPaid => 'Zahlung beglichen';
+
+  @override
+  String get recurring_paymentSkipped => 'Zahlung übersprungen';
+
+  @override
+  String get presets_transfer => 'Umbuchung';
+
+  @override
+  String get presets_selectDifferentAccounts =>
+      'Bitte wähle unterschiedliche Quell- und Zielkonten.';
+
+  @override
+  String presets_targetAmountOptional(String currency) {
+    return 'Zielbetrag in $currency (Optional)';
+  }
+
+  @override
+  String get transactions_transfers => 'Umbuchungen';
+
+  @override
+  String transactions_selectedItemsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Elemente ausgewählt',
+      one: '1 Element ausgewählt',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String transactions_entriesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Einträge',
+      one: '1 Eintrag',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get transactions_clearSelection => 'Auswahl aufheben';
+
+  @override
+  String get transactions_transferTitle => 'Umbuchung';
+
+  @override
+  String get transactions_transferBody =>
+      'Diese Buchung ist Teil einer Konto-Umbuchung. Einzelne Teile können nicht direkt bearbeitet werden. Möchtest du die gesamte Umbuchung löschen?';
+
+  @override
+  String get transactions_deleteTransfer => 'Umbuchung löschen';
+
+  @override
+  String get transactions_transferDeleted => 'Umbuchung gelöscht';
+
+  @override
+  String get transactions_certTitle => 'Festgeldbuchung';
+
+  @override
+  String get transactions_certBody =>
+      'Diese Buchung gehört zu einem Festgeld / Zertifikat. Verwalte sie über den Zertifikate-Bildschirm.';
+
+  @override
+  String get transactions_viewCertificate => 'Zertifikat ansehen';
+
+  @override
+  String get transactions_openCertificates => 'Zertifikate öffnen';
+
+  @override
+  String get transactions_loanFallback => 'Kredit';
+
+  @override
+  String get transactions_loanPayment => 'Kreditrate';
+
+  @override
+  String get transactions_goalContribution => 'Sparziel-Einzahlung';
+
+  @override
+  String get transactions_goalWithdrawal => 'Sparziel-Abhebung';
+
+  @override
+  String get calendar_repayment => 'Rückzahlung';
+
+  @override
+  String get calendar_transfersDue => 'Fällige Umbuchungen';
+
+  @override
+  String accounts_subtitleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Konten',
+      one: '1 Konto',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get accounts_tabAccounts => 'Konten';
+
+  @override
+  String get accounts_tabCards => 'Karten';
+
+  @override
+  String get accounts_addCardBtn => 'Karte hinzufügen';
+
+  @override
+  String get accounts_addNewCardBtn => 'Neue Karte hinzufügen';
+
+  @override
+  String get accounts_editCard => 'Karte bearbeiten';
+
+  @override
+  String get accounts_cardNameHint => 'Kartenname (z. B. Visa Platinum)';
+
+  @override
+  String get accounts_debitCard => 'Debitkarte';
+
+  @override
+  String get accounts_prepaidCard => 'Prepaid-Karte';
+
+  @override
+  String get accounts_pinToWidget => 'An Widget anheften';
+
+  @override
+  String get accounts_unpinFromWidget => 'Vom Widget lösen';
+
+  @override
+  String get accounts_maxPinnedWarning => 'Maximal 3 Konten anheftbar';
+
+  @override
+  String get accounts_selectLinkedBank =>
+      'Bitte verknüpftes Bankkonto für diese Debitkarte wählen.';
+
+  @override
+  String get accounts_debitSharesBalance =>
+      'Debitkarten teilen sich den Saldo mit dem verknüpften Bankkonto.';
+
+  @override
+  String get accounts_linkedBankRequired =>
+      'Verknüpftes Bankkonto (Erforderlich)';
+
+  @override
+  String get accounts_amountCurrentlyOwed => 'Aktuell geschuldeter Betrag';
+
+  @override
+  String get accounts_initialAmountOwed => 'Anfänglich geschuldeter Betrag';
+
+  @override
+  String get accounts_cardDebtHint =>
+      'Aktuellen Schuldenstand dieser Karte eingeben (wird als Schuld gespeichert)';
+
+  @override
+  String accounts_nextCycleCloses(int day) {
+    return 'Nächste Abrechnung schließt um Tag $day';
+  }
+
+  @override
+  String accounts_spotPriceLabel(int karat) {
+    return 'Spotpreis (${karat}k Gold/g)';
+  }
+
+  @override
+  String get accounts_weightTimesPurity => 'Gewicht × Feingehalt';
+
+  @override
+  String accounts_blockDeleteRecurring(int count) {
+    return 'Konto hat $count aktive Daueraufträge. Bitte zuerst umbuchen oder löschen.';
+  }
+
+  @override
+  String accounts_blockDeleteLoans(int count) {
+    return 'Konto hat $count aktive Kredite. Bitte zuerst umbuchen oder löschen.';
+  }
+
+  @override
+  String accounts_blockDeleteCertificates(int count) {
+    return 'Konto hat $count aktive Sparbriefe. Bitte zuerst einlösen oder löschen.';
+  }
+
+  @override
+  String accounts_blockDeleteLended(int count) {
+    return 'Konto hat $count offene Leih-/Schuldeinträge. Bitte zuerst begleichen.';
+  }
+
+  @override
+  String accounts_blockDeleteSavings(int count) {
+    return 'Konto wird von $count Sparbeiträgen verwendet. Bitte zuerst ändern oder löschen.';
+  }
+
+  @override
+  String accounts_blockDeletePresets(int count) {
+    return 'Konto wird in $count Vorlagen verwendet. Bitte zuerst ändern oder löschen.';
+  }
+
+  @override
+  String accounts_blockDeleteCards(int count) {
+    return 'Konto ist mit $count Karten verknüpft. Bitte Verknüpfung aufheben oder Karten löschen.';
+  }
+
+  @override
+  String get add_transaction_selectAccountOrCard =>
+      'Bitte ein Konto oder eine Karte wählen.';
+
+  @override
+  String get add_transaction_balanced => 'Ausgeglichen';
+
+  @override
+  String add_transaction_similarExists(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ähnliche Transaktionen existieren bereits:',
+      one: 'Eine ähnliche Transaktion existiert bereits:',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String budget_goalsCountSubtitle(int budgets, int goals) {
+    return '$budgets Budgets · $goals Ziele';
+  }
+
+  @override
+  String get budget_savingsGoalsCaps => 'SPARZIELE';
+
+  @override
+  String budget_percentSaved(String percent) {
+    return '$percent% gespart';
+  }
+
+  @override
+  String budget_ofTarget(String amount) {
+    return 'von $amount Ziel';
+  }
+
+  @override
+  String get budget_goalsTab => 'Ziele';
+
+  @override
+  String get budget_completed => 'Abgeschlossen';
+
+  @override
+  String get savings_newGoal => 'Neues Sparziel';
+
+  @override
+  String get savings_editGoal => 'Sparziel bearbeiten';
+
+  @override
+  String get certificates_activePrincipal => 'Aktives Kapital';
+
+  @override
+  String get certificates_activeCount => 'Aktive Anzahl';
+
+  @override
+  String certificates_linkedBank(String name) {
+    return 'Verknüpft: $name';
+  }
+
+  @override
+  String certificates_yieldSummary(String amount, String type) {
+    return 'Rendite: $amount ($type)';
+  }
+
+  @override
+  String certificates_maturesOn(String date) {
+    return 'Fällig am: $date';
+  }
+
+  @override
+  String get certificates_settledCaps => 'EINGELÖST';
+
+  @override
+  String get certificates_activeCaps => 'AKTIV';
+
+  @override
+  String get certificates_annualRate => 'Jahreszins';
+
+  @override
+  String get certificates_periodicYieldLabel => 'Periodische Rendite';
+
+  @override
+  String get certificates_maturedAndSettled => 'Fällig & Abgerechnet';
+
+  @override
+  String get certificates_payoutOverride => 'Auszahlung (manuell)';
+
+  @override
+  String get certificates_dayRange => 'Tag (1-31)';
+
+  @override
+  String get certificates_noBankAccounts =>
+      'Keine Bankkonten verfügbar. Bitte erst ein Bankkonto für Auszahlungen anlegen.';
+
+  @override
+  String get certificates_selectLinkedBank =>
+      'Bitte ein verknüpftes Bankkonto wählen.';
+
+  @override
+  String get creditCard_noFundingAccounts =>
+      'Keine Bank- oder Barkonten für die Zahlung verfügbar.';
+
+  @override
+  String get creditCard_processing => 'Wird verarbeitet...';
+
+  @override
+  String creditCard_payAmountBtn(String amount) {
+    return '$amount zahlen';
+  }
+
+  @override
+  String get insights_loanPaymentsThisMonth =>
+      'Schulden- & Kreditraten diesen Monat';
+
+  @override
+  String get insights_spendingForecast => 'Ausgabenprognose';
+
+  @override
+  String get insights_forecastPrefix => 'Bei diesem Tempo gibst du ';
+
+  @override
+  String insights_forecastSuffix(String month, int days) {
+    return ' bis Ende $month aus — noch $days Tage.';
+  }
+
+  @override
+  String get insights_forecastDisclaimer =>
+      'Schätzung anhand bisheriger Ausgaben ohne künftige Daueraufträge.';
+
+  @override
+  String insights_forecastAccuracy(int days) {
+    return 'Basierend auf den ersten $days Tagen — Genauigkeit steigt im Monatsverlauf.';
+  }
+
+  @override
+  String insights_projAmount(String amount) {
+    return 'Progn.: $amount';
+  }
+
+  @override
+  String insights_projOfBudget(String percent) {
+    return ' ($percent% vom Budget)';
+  }
+
+  @override
+  String get insights_outstanding => 'Ausstehend';
+
+  @override
+  String get insights_monthlyObligation => 'Monatliche Rate';
+
+  @override
+  String get loans_principal => 'Kreditbetrag';
+
+  @override
+  String get loans_interestRate => 'Zinssatz';
+
+  @override
+  String get loans_duration => 'Laufzeit';
+
+  @override
+  String get loans_transferTo => 'Kreditbetrag gutschreiben auf';
+
+  @override
+  String get loans_payFrom => 'Raten zahlen von';
+
+  @override
+  String loans_dueDayTime(int day, String time) {
+    return 'Fällig: Tag $day um $time';
+  }
+
+  @override
+  String more_activeCount(int count) {
+    return '$count aktiv';
+  }
+
+  @override
+  String more_toolsSubtitle(int count) {
+    return '$count Finanztools & Einstellungen';
+  }
+
+  @override
+  String get more_totalWealthCaps => 'GESAMTVERMÖGEN';
+
+  @override
+  String get more_liveNetWorthSub =>
+      'Live-Nettovermögen über alle Konten und Anlagen';
+
+  @override
+  String more_assetsAmount(String amount) {
+    return 'Vermögen: $amount';
+  }
+
+  @override
+  String more_liabilitiesAmount(String amount) {
+    return 'Schulden: $amount';
+  }
+
+  @override
+  String get netWorth_debtFree => 'Schuldenfrei';
+
+  @override
+  String get netWorth_showLess => 'Weniger anzeigen';
+
+  @override
+  String netWorth_showAll(int count) {
+    return 'Alle anzeigen ($count)';
+  }
+
+  @override
+  String get netWorth_zeroLiabilities =>
+      'Keine Verbindlichkeiten erfasst! Aktuelle Schulden betragen 0,00.';
+
+  @override
+  String get netWorth_lentDebts => 'Verliehen / Schulden';
+
+  @override
+  String netWorth_snapBreakdown(String assets, String accounts) {
+    return 'Vermögen: $assets · Konten: $accounts';
+  }
+
+  @override
+  String get onboarding_nameRequired => 'Name ist erforderlich';
+
+  @override
+  String get onboarding_popularCurrencies => 'Beliebte Währungen';
+
+  @override
+  String get onboarding_debitCardNextStep =>
+      'Du kannst im nächsten Schritt eine Debitkarte für dieses Bankkonto hinzufügen';
+
+  @override
+  String get onboarding_addDebitCardTitle => 'Debitkarte hinzufügen';
+
+  @override
+  String get onboarding_addDebitCardDesc =>
+      'Verknüpfe eine Debitkarte mit deinem neuen Bankkonto für müheloses Tracking.';
+
+  @override
+  String get onboarding_cardName => 'Kartenname';
+
+  @override
+  String get onboarding_cardholderName => 'Karteninhaber';
+
+  @override
+  String get onboarding_last4Digits => 'Letzte 4 Ziffern';
+
+  @override
+  String get onboarding_cardColor => 'Kartenfarbe';
+
+  @override
+  String wrapped_zeroSpendOfDays(int total) {
+    return 'von $total Tagen ohne Ausgaben';
+  }
+
+  @override
+  String get wrapped_savingsRateLabel => 'Sparquote';
+
+  @override
+  String get wrapped_topCategoryLabel => 'Top-Kategorie';
+
+  @override
+  String get wrapped_zeroSpendDaysLabel => 'Tage ohne Ausgaben';
+
+  @override
+  String get wrapped_footerTag => '★ Private & Offline Finanzkontrolle ★';
+
+  @override
+  String get yearly_tapToExpand => 'Tippen zum Erweitern';
+
+  @override
+  String get yearly_noDataBadge => 'Keine Daten';
+
+  @override
+  String get export_formatHeader => 'EXPORTFORMAT';
+
+  @override
+  String export_pdfPeriod(String range) {
+    return 'Zeitraum: $range';
+  }
+
+  @override
+  String export_pdfCurrency(String currency) {
+    return 'Währung: $currency';
+  }
+
+  @override
+  String export_pdfGenerated(String date) {
+    return 'Erstellt: $date';
+  }
+
+  @override
+  String export_pdfPageOf(int page, int total) {
+    return 'Seite $page von $total';
+  }
+
+  @override
+  String get export_pdfTotalAssets => 'Gesamtvermögen';
+
+  @override
+  String get export_pdfTotalLiabilities => 'Gesamtverbindlichkeiten';
+
+  @override
+  String get export_pdfCurrentNetWorth => 'Aktuelles Nettovermögen';
+
+  @override
+  String get export_pdfCategory => 'Kategorie';
+
+  @override
+  String export_pdfAmountHeader(String currency) {
+    return 'Betrag ($currency)';
+  }
+
+  @override
+  String get export_pdfPercentOfExpenses => '% der Gesamtausgaben';
+
+  @override
+  String get backup_encryptedTitle => 'Verschlüsseltes Backup';
+
+  @override
+  String get backup_encryptedPrompt =>
+      'Gib das Passwort ein, mit dem diese Backupdatei verschlüsselt wurde:';
+
+  @override
+  String get backup_password => 'Passwort';
+
+  @override
+  String get backup_confirmPassword => 'Passwort bestätigen';
+
+  @override
+  String get backup_decryptContinue => 'Entschlüsseln & Fortfahren';
+
+  @override
+  String get backup_chooseRestoreMode => 'Wiederherstellungsmodus wählen';
+
+  @override
+  String get backup_chooseRestoreModeDesc =>
+      'Wähle, ob das gesamte Backup oder nur bestimmte Finanzdaten wiederhergestellt werden sollen.';
+
+  @override
+  String get backup_selectiveRestore => 'Selektive Wiederherstellung';
+
+  @override
+  String get backup_selectiveRestoreDesc =>
+      'Bestimmte Daten wiederherstellen, ohne den Rest zu überschreiben.';
+
+  @override
+  String get backup_fullRestore => 'Vollständige Wiederherstellung';
+
+  @override
+  String get backup_fullRestoreDesc =>
+      'Ersetzt alle aktuellen Tabellen und Einstellungen vollständig mit den Backupdaten.';
+
+  @override
+  String get backup_selectiveBackup => 'Selektives Backup';
+
+  @override
+  String get backup_selectiveBackupBtn => 'Selektives Backup...';
+
+  @override
+  String get backup_selectiveBackupDesc =>
+      'Wähle die Finanzdaten aus, die in JSON exportiert werden sollen.';
+
+  @override
+  String get backup_selectedRestoredSuccess =>
+      'Ausgewählte Daten erfolgreich wiederhergestellt!';
+
+  @override
+  String get backup_savingsGoals => 'Sparziele';
+
+  @override
+  String get backup_savingsContributions => 'Sparbeiträge';
+
+  @override
+  String get backup_encryptionDisabled => 'Backup-Verschlüsselung deaktiviert';
+
+  @override
+  String get backup_encryptionEnabled => 'Backup-Verschlüsselung aktiviert';
+
+  @override
+  String backup_encryptionFailed(String error) {
+    return 'Aktivierung fehlgeschlagen: $error';
+  }
+
+  @override
+  String get backup_encryptAutoTitle => 'Auto-Backups verschlüsseln';
+
+  @override
+  String get backup_encryptAutoDesc =>
+      'Schützt Auto-Backups mit AES-GCM-256. Ohne Passwort sind Backups unwiederbringlich.';
+
+  @override
+  String get backup_passwordEmpty => 'Passwort darf nicht leer sein';
+
+  @override
+  String get backup_passwordsMismatch => 'Passwörter stimmen nicht überein';
+
+  @override
+  String get backup_setPassword => 'Passwort festlegen';
+
+  @override
+  String backup_autoCreated(String file) {
+    return 'Auto-Backup erstellt: $file';
+  }
+
+  @override
+  String backup_autoFailed(String error) {
+    return 'Auto-Backup fehlgeschlagen: $error';
+  }
+
+  @override
+  String get backup_nightlySchedule =>
+      'Nächtlich um ca. 02:00 Uhr in gewählten Ordner';
+
+  @override
+  String get backup_noFolderSelected => 'Kein Ordner ausgewählt';
+
+  @override
+  String get backup_keepCopies => 'Kopien behalten:';
+
+  @override
+  String get backup_encryptAes => 'Backup verschlüsseln (AES-GCM)';
+
+  @override
+  String backup_failedError(String error) {
+    return 'Fehlgeschlagen: $error';
+  }
+
+  @override
+  String backup_lastSuccess(String date, String kb) {
+    return 'Zuletzt: $date ($kb KB)';
+  }
+
+  @override
+  String get backup_backingUp => 'Wird gesichert...';
+
+  @override
+  String get backup_backUpNow => 'Jetzt sichern';
+
+  @override
+  String get backup_androidIdleNote =>
+      'Läuft um ca. 02:00 Uhr. Android kann die Ausführung im Ruhezustand verzögern.';
+
+  @override
+  String get backup_selectAll => 'Alle auswählen';
+
+  @override
+  String get backup_deselectAll => 'Alle abwählen';
+
+  @override
+  String get backup_selectiveSaved => 'Selektives Backup gespeichert!';
+
+  @override
+  String backup_exportFailed(String error) {
+    return 'Export fehlgeschlagen: $error';
+  }
+
+  @override
+  String backup_exportSelected(int count) {
+    return '$count Kategorien exportieren';
+  }
+
+  @override
+  String backup_restoreSelected(int count) {
+    return '$count Kategorien wiederherstellen';
+  }
+
+  @override
+  String get backup_selectiveRestoreNote =>
+      'Nur ausgewählte Bereiche werden wiederhergestellt. Übrige Konten und Daten bleiben erhalten.';
+
+  @override
+  String backup_countInBackup(int count) {
+    return '$count im Backup';
+  }
+
+  @override
+  String get backup_entityTxSplitsPresets =>
+      'Transaktionen, Aufteilungen & Vorlagen';
+
+  @override
+  String get backup_entityRecurringHistory => 'Daueraufträge & Verlauf';
+
+  @override
+  String get backup_entityLoansPayments => 'Kredite & Zahlungen';
+
+  @override
+  String get backup_entityLentContacts => 'Verliehenes Geld & Kontakte';
+
+  @override
+  String get backup_entityAssetsValuables => 'Vermögenswerte & Wertsachen';
+
+  @override
+  String get backup_entityWishlistGoals => 'Wunschliste & Sparziele';
+
+  @override
+  String get common_perDay => '/ Tag';
+
+  @override
+  String common_daysShort(int count) {
+    return '$count T';
+  }
+
+  @override
+  String get common_splitCaps => 'GETEILT';
+
+  @override
+  String budget_deletedCategory(String name) {
+    return '$name gelöscht';
+  }
+
+  @override
+  String get loans_paymentDeleted => 'Zahlung gelöscht';
+
+  @override
+  String certificates_collectionDayLabel(String frequency, int day) {
+    return '$frequency (Tag $day)';
+  }
+
+  @override
+  String add_transaction_duplicateItem(
+      String amount, String date, String desc) {
+    return '• $amount am $date$desc';
+  }
+
+  @override
+  String creditCard_billPaymentDesc(String name) {
+    return 'Kreditkartenabrechnung — $name';
+  }
+
+  @override
+  String get onboarding_defaultBankName => 'Hauptbank';
+
+  @override
+  String get onboarding_defaultCardholder => 'EXPENSY MITGLIED';
+
+  @override
+  String get onboarding_defaultUser => 'Benutzer';
+
+  @override
+  String get export_excelSheetName => 'Transaktionen';
+
+  @override
+  String get export_headerDate => 'Datum';
+
+  @override
+  String get export_headerDescription => 'Beschreibung';
+
+  @override
+  String get export_headerType => 'Typ';
+
+  @override
+  String get export_headerAmount => 'Betrag';
+
+  @override
+  String get export_headerCurrency => 'Währung';
+
+  @override
+  String get export_headerAccount => 'Konto';
+
+  @override
+  String get export_headerCategory => 'Kategorie';
+
+  @override
+  String get export_headerSubcategory => 'Unterkategorie';
+
+  @override
+  String get export_headerNote => 'Notiz';
+
+  @override
+  String get cat_food_exp => 'Essen & Trinken';
+
+  @override
+  String get cat_transport => 'Verkehr';
+
+  @override
+  String get cat_shopping => 'Einkaufen';
+
+  @override
+  String get cat_bills => 'Rechnungen & Nebenkosten';
+
+  @override
+  String get cat_health => 'Gesundheit';
+
+  @override
+  String get cat_entertainment => 'Unterhaltung';
+
+  @override
+  String get cat_education => 'Bildung';
+
+  @override
+  String get cat_personal => 'Körperpflege';
+
+  @override
+  String get cat_salary => 'Gehalt';
+
+  @override
+  String get cat_freelance => 'Freiberuf';
+
+  @override
+  String get cat_investments => 'Investitionen';
+
+  @override
+  String get cat_gifts => 'Geschenke';
+
+  @override
+  String get cat_other_inc => 'Sonstige Einnahmen';
+
+  @override
+  String get cat_other_exp => 'Sonstige Ausgaben';
+
+  @override
+  String get cat_sys_transfer => 'Überweisung';
+
+  @override
+  String get cat_sys_investment => 'Anlage';
+
+  @override
+  String get sub_groceries => 'Lebensmittel';
+
+  @override
+  String get sub_restaurants => 'Restaurants';
+
+  @override
+  String get sub_delivery => 'Lieferdienst';
+
+  @override
+  String get sub_coffee_tea => 'Kaffee & Tee';
+
+  @override
+  String get sub_fuel => 'Kraftstoff';
+
+  @override
+  String get sub_public_transit => 'Öffentliche Verkehrsmittel';
+
+  @override
+  String get sub_taxi_ride => 'Taxi & Fahrten';
+
+  @override
+  String get sub_maintenance => 'Wartung';
+
+  @override
+  String get sub_parking_tolls => 'Parken & Maut';
+
+  @override
+  String get sub_clothing => 'Kleidung';
+
+  @override
+  String get sub_electronics => 'Elektronik';
+
+  @override
+  String get sub_home_furniture => 'Haus & Möbel';
+
+  @override
+  String get sub_gifts => 'Geschenke';
+
+  @override
+  String get sub_electricity => 'Strom';
+
+  @override
+  String get sub_internet => 'Internet';
+
+  @override
+  String get sub_water => 'Wasser';
+
+  @override
+  String get sub_phone => 'Telefon';
+
+  @override
+  String get sub_medicine => 'Medikamente';
+
+  @override
+  String get sub_doctor => 'Arzt';
+
+  @override
+  String get sub_movies => 'Filme';
+
+  @override
+  String get sub_games => 'Spiele';
+
+  @override
+  String get sub_subscriptions => 'Abonnements';
+
+  @override
+  String get notif_overBudgetTitle => '🚨 Budget überschritten';
+
+  @override
+  String notif_overBudgetBody(String category, String amount, String period) {
+    return '$category — $amount über Ihrem $period-Limit';
+  }
+
+  @override
+  String get notif_goalReachedTitle => '🎉 Sparziel erreicht';
+
+  @override
+  String notif_goalReachedBody(String amount, String name) {
+    return 'Sie haben Ihr Sparziel von $amount für $name erreicht!';
+  }
+
+  @override
+  String get notif_certPayoutDueTitle => '📈 Zertifikatsausschüttung fällig';
+
+  @override
+  String get notif_certPayoutUpcomingTitle =>
+      '📈 Bevorstehende Zertifikatsausschüttung';
+
+  @override
+  String notif_certPayoutBody(String name) {
+    return 'Zinsertrag für $name ist heute fällig.';
+  }
+
+  @override
+  String notif_certPayoutSoonBody(String name) {
+    return 'Zinsertrag für $name ist in 2 Tagen fällig.';
+  }
+
+  @override
+  String get notif_creditBillDueTodayTitle => '💳 Rechnung heute fällig';
+
+  @override
+  String get notif_creditBillDueSoonTitle => '💳 Rechnung bald fällig';
+
+  @override
+  String get notif_dailyReminderTitle => '📝 Tägliche Erinnerung';
+
+  @override
+  String get notif_dailyReminderBody =>
+      'Vergessen Sie nicht, Ihre heutigen Ausgaben einzutragen.';
+
+  @override
+  String notif_lendedDueTitle(String emoji, String name) {
+    return '$emoji Fällig: $name';
+  }
+
+  @override
+  String get notif_loanPaymentDueTitle => '🏦 Kreditrate fällig';
+
+  @override
+  String notif_loanPaymentDueBody(String name) {
+    return 'Die Rate für $name ist heute fällig.';
+  }
+
+  @override
+  String get notif_autoBackupFailedTitle => 'Auto-Backup fehlgeschlagen';
+
+  @override
+  String notif_autoBackupFailedBody(String error) {
+    return 'Expensy konnte Ihr geplantes Backup nicht erstellen: $error';
+  }
+
+  @override
+  String notif_recurringTransferBody(String amount) {
+    return 'Überweisung über $amount fällig';
+  }
+
+  @override
+  String notif_recurringIncomeBody(String amount) {
+    return 'Einnahme über $amount fällig';
+  }
+
+  @override
+  String notif_recurringExpenseBody(String amount) {
+    return 'Zahlung über $amount fällig';
+  }
+
+  @override
+  String notif_creditBillDueTodayBody(String name) {
+    return 'Ihre $name-Rechnung ist heute fällig.';
+  }
+
+  @override
+  String notif_creditBillDueSoonBody(String name) {
+    return 'Ihre $name-Rechnung ist in 2 Tagen fällig.';
+  }
+
+  @override
+  String notif_lendedLentDueBody(String amount, String name) {
+    return '$amount, die Sie an $name verliehen haben, sind heute fällig';
+  }
+
+  @override
+  String notif_lendedBorrowedDueBody(String amount, String name) {
+    return '$amount, die Sie von $name geliehen haben, sind heute fällig';
+  }
+
+  @override
+  String notif_recurringTransferDueSoonBody(String amount) {
+    return 'Überweisung über $amount in 2 Tagen fällig';
+  }
+
+  @override
+  String notif_recurringIncomeDueSoonBody(String amount) {
+    return '$amount in 2 Tagen erwartet';
+  }
+
+  @override
+  String notif_recurringExpenseDueSoonBody(String amount) {
+    return '$amount in 2 Tagen fällig';
+  }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import '../models/models.dart';
+import '../utils/service_localizations.dart';
 import 'date_scheduling.dart';
 
 class CreditReminderService {
@@ -98,6 +99,8 @@ class CreditReminderService {
       final hour = int.tryParse(parts[0]) ?? 9;
       final minute = parts.length > 1 ? (int.tryParse(parts[1]) ?? 0) : 0;
 
+      final loc = ServiceLocalizations.current;
+
       // 1. On due date reminder
       final tzDate = nextMonthlyReminderTzDate(
         dueDay: acc.dueDay!,
@@ -106,11 +109,10 @@ class CreditReminderService {
         minute: minute,
       );
       if (tzDate != null) {
-        final body = 'Your ${acc.name} bill is due today.';
         await _plugin.zonedSchedule(
           id: _notifId(acc.id),
-          title: '💳 Bill Due Today',
-          body: body,
+          title: loc.notif_creditBillDueTodayTitle,
+          body: loc.notif_creditBillDueTodayBody(acc.name),
           scheduledDate: tzDate,
           notificationDetails: _buildDetails(),
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
@@ -127,11 +129,10 @@ class CreditReminderService {
           minute: minute,
         );
         if (advTzDate != null) {
-          final body = 'Your ${acc.name} bill is due in 2 days.';
           await _plugin.zonedSchedule(
             id: _advanceId(acc.id),
-            title: '💳 Bill Due Soon',
-            body: body,
+            title: loc.notif_creditBillDueSoonTitle,
+            body: loc.notif_creditBillDueSoonBody(acc.name),
             scheduledDate: advTzDate,
             notificationDetails: _buildDetails(),
             androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,

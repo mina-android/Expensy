@@ -1,4 +1,5 @@
 // lib/models/models.dart
+import '../l10n/app_localizations.dart';
 
 class Account {
   final String id;
@@ -281,6 +282,8 @@ class AppTransaction {
       type == 'transfer' ||
       description == 'Transfer out' ||
       description == 'Transfer in' ||
+      description.endsWith('(Transfer out)') ||
+      description.endsWith('(Transfer in)') ||
       description.startsWith('Credit card bill payment');
 
   bool get isInvestment =>
@@ -377,7 +380,7 @@ class RecurringPayment {
   String accountId;
   String categoryId;
   double amount;
-  String paymentType; // expense|income
+  String paymentType; // expense|income|transfer
   int freqVal;
   String freqUnit; // days|weeks|months|years
   DateTime startDate; // first payment
@@ -396,6 +399,10 @@ class RecurringPayment {
   String recurringType; // 'subscription' | 'installment'
   bool autoPayEnabled;
   String autoPayTime; // 'HH:mm'
+  final String? toAccountId;
+  final double? toAmount;
+
+  bool get isTransfer => paymentType == 'transfer';
 
   RecurringPayment({
     required this.id,
@@ -417,6 +424,8 @@ class RecurringPayment {
     this.recurringType = 'subscription',
     this.autoPayEnabled = false,
     this.autoPayTime = '09:00',
+    this.toAccountId,
+    this.toAmount,
   });
 
   // Inclusive count: first → last
@@ -448,6 +457,30 @@ class RecurringPayment {
       }
     }
     return 'Every $freqVal $freqUnit';
+  }
+
+  /// Localized frequency label for UI rendering.
+  String localizedFrequencyLabel(AppLocalizations l10n) {
+    if (freqVal == 1) {
+      switch (freqUnit) {
+        case 'days':
+          return l10n.freq_daily;
+        case 'weeks':
+          return l10n.recurring_weekly;
+        case 'months':
+          return l10n.recurring_monthly;
+        case 'years':
+          return l10n.freq_yearly;
+      }
+    }
+    final unit = switch (freqUnit) {
+      'days' => l10n.recurring_days,
+      'weeks' => l10n.recurring_weeks,
+      'months' => l10n.recurring_months,
+      'years' => l10n.recurring_years,
+      _ => freqUnit,
+    };
+    return '${l10n.recurring_every}$freqVal $unit';
   }
 
   int _countPayments(DateTime first, DateTime last) {
@@ -535,6 +568,8 @@ class RecurringPayment {
         'recurring_type': recurringType,
         'auto_pay_enabled': autoPayEnabled ? 1 : 0,
         'auto_pay_time': autoPayTime,
+        'to_account_id': toAccountId,
+        'to_amount': toAmount,
       };
 
   static RecurringPayment fromMap(Map<String, dynamic> m) => RecurringPayment(
@@ -563,6 +598,10 @@ class RecurringPayment {
         recurringType: (m['recurring_type'] as String?) ?? 'subscription',
         autoPayEnabled: (m['auto_pay_enabled'] as int? ?? 0) == 1,
         autoPayTime: (m['auto_pay_time'] as String?) ?? '09:00',
+        toAccountId: (m['to_account_id'] as String?)?.isNotEmpty == true
+            ? m['to_account_id'] as String
+            : null,
+        toAmount: (m['to_amount'] as num?)?.toDouble(),
       );
 
   RecurringPayment copyWith({
@@ -586,6 +625,10 @@ class RecurringPayment {
     String? recurringType,
     bool? autoPayEnabled,
     String? autoPayTime,
+    String? toAccountId,
+    bool clearToAccountId = false,
+    double? toAmount,
+    bool clearToAmount = false,
   }) =>
       RecurringPayment(
         id: id ?? this.id,
@@ -607,6 +650,9 @@ class RecurringPayment {
         recurringType: recurringType ?? this.recurringType,
         autoPayEnabled: autoPayEnabled ?? this.autoPayEnabled,
         autoPayTime: autoPayTime ?? this.autoPayTime,
+        toAccountId:
+            clearToAccountId ? null : (toAccountId ?? this.toAccountId),
+        toAmount: clearToAmount ? null : (toAmount ?? this.toAmount),
       );
 }
 
@@ -1384,7 +1430,7 @@ class LoanPayment {
 class TransactionPreset {
   final String id;
   String title;
-  String type; // expense | income
+  String type; // expense | income | transfer
   double amount;
   String accountId;
   String categoryId;
@@ -1394,6 +1440,10 @@ class TransactionPreset {
   int iconCodePoint;
   int orderIndex;
   DateTime createdAt;
+  String? toAccountId;
+  double? toAmount;
+
+  bool get isTransfer => type == 'transfer';
 
   TransactionPreset({
     required this.id,
@@ -1408,6 +1458,8 @@ class TransactionPreset {
     this.iconCodePoint = 0,
     this.orderIndex = 0,
     DateTime? createdAt,
+    this.toAccountId,
+    this.toAmount,
   }) : createdAt = createdAt ?? DateTime.now();
 
   Map<String, dynamic> toMap() => {
@@ -1423,6 +1475,8 @@ class TransactionPreset {
         'icon_code_point': iconCodePoint,
         'order_index': orderIndex,
         'created_at': createdAt.toIso8601String(),
+        'to_account_id': toAccountId,
+        'to_amount': toAmount,
       };
 
   static TransactionPreset fromMap(Map<String, dynamic> m) => TransactionPreset(
@@ -1440,6 +1494,10 @@ class TransactionPreset {
         createdAt: m['created_at'] != null
             ? DateTime.tryParse(m['created_at'] as String) ?? DateTime.now()
             : DateTime.now(),
+        toAccountId: (m['to_account_id'] as String?)?.isNotEmpty == true
+            ? m['to_account_id'] as String
+            : null,
+        toAmount: (m['to_amount'] as num?)?.toDouble(),
       );
 
   TransactionPreset copyWith({
@@ -1453,6 +1511,10 @@ class TransactionPreset {
     int? colorValue,
     int? iconCodePoint,
     int? orderIndex,
+    String? toAccountId,
+    bool clearToAccountId = false,
+    double? toAmount,
+    bool clearToAmount = false,
   }) =>
       TransactionPreset(
         id: id,
@@ -1467,6 +1529,9 @@ class TransactionPreset {
         iconCodePoint: iconCodePoint ?? this.iconCodePoint,
         orderIndex: orderIndex ?? this.orderIndex,
         createdAt: createdAt,
+        toAccountId:
+            clearToAccountId ? null : (toAccountId ?? this.toAccountId),
+        toAmount: clearToAmount ? null : (toAmount ?? this.toAmount),
       );
 }
 

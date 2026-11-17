@@ -1,27 +1,6 @@
 // note: Wishlist screen for tracking planned purchases, affordability indicators, priority filtering, and purchase conversion.
 // All state mutations and queries route through AppProvider to preserve UI-DB decoupling.
 // Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
 // lib/screens/wishlist_screen.dart
 import 'package:flutter/material.dart';
 import '../utils/snackbar.dart';

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import '../models/models.dart';
+import '../utils/service_localizations.dart';
 import 'date_scheduling.dart';
 
 class LoanReminderService {
@@ -87,10 +88,11 @@ class LoanReminderService {
       minute: minute,
     );
     if (tzDate != null) {
+      final loc = ServiceLocalizations.current;
       await _plugin.zonedSchedule(
         id: _notifId(l.id),
-        title: '🏦 Loan Payment Due',
-        body: '${l.name} installment is due today.',
+        title: loc.notif_loanPaymentDueTitle,
+        body: loc.notif_loanPaymentDueBody(l.name),
         scheduledDate: tzDate,
         notificationDetails: _buildDetails(),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,

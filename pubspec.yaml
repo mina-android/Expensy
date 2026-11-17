@@ -1,7 +1,7 @@
 name: expensy
 description: A fully offline expense manager with Material You design.
 publish_to: 'none'
-version: 1.2.3+20
+version: 1.2.4+21
 
 environment:
   sdk: '>=3.3.0 <4.0.0'

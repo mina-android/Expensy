@@ -164,17 +164,17 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String recurring_fromOngoing(Object date) {
-    return 'From $date · Ongoing';
+    return '$date から・継続中';
   }
 
   @override
   String recurring_paidPayments(Object paid, Object total) {
-    return '$paid/$total paid';
+    return '$paid/$total 回完了';
   }
 
   @override
   String recurring_totalAmount(Object amount) {
-    return 'Total: $amount';
+    return '合計: $amount';
   }
 
   @override
@@ -185,7 +185,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String recurring_dueInDays(Object days) {
-    return 'Due in ${days}d';
+    return 'あと$days日';
   }
 
   @override
@@ -196,7 +196,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String recurring_nextDate(Object date) {
-    return 'Next: $date';
+    return '次回: $date';
   }
 
   @override
@@ -234,12 +234,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String recurring_firstDate(Object date) {
-    return 'First: $date';
+    return '初回: $date';
   }
 
   @override
   String recurring_lastDate(Object date) {
-    return 'Last: $date';
+    return '最終: $date';
   }
 
   @override
@@ -292,7 +292,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String accounts_pure(Object percentage) {
-    return '$percentage% pure';
+    return '純度 $percentage%';
   }
 
   @override
@@ -385,12 +385,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String lended_person_due(Object date) {
-    return 'Due $date';
+    return '期日 $date';
   }
 
   @override
   String lended_person_reminderAt(Object time) {
-    return 'Reminder at $time';
+    return '$time にリマインド';
   }
 
   @override
@@ -411,7 +411,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String lended_person_dueColon(Object date) {
-    return 'Due: $date';
+    return '期日: $date';
   }
 
   @override
@@ -473,7 +473,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String transactions_lentTo(Object name) {
-    return 'Lent to $name';
+    return '$nameへ貸付';
   }
 
   @override
@@ -486,7 +486,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String transactions_due(Object date) {
-    return 'Due $date';
+    return '期日 $date';
   }
 
   @override
@@ -604,12 +604,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String backup_backupSavedSuccessfully(Object savedPath) {
-    return 'Backup saved successfully:\n$savedPath';
+    return 'バックアップを保存しました:\n$savedPath';
   }
 
   @override
   String backup_backupFailed(Object error) {
-    return 'Backup failed: $error';
+    return 'バックアップ失敗: $error';
   }
 
   @override
@@ -624,7 +624,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String backup_restoreFailed(Object error) {
-    return 'Restore failed: $error';
+    return '復元に失敗しました: $error';
   }
 
   @override
@@ -660,17 +660,17 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String budget_overAmount(Object amount) {
-    return '$amount over';
+    return '$amount 超過';
   }
 
   @override
   String budget_leftAmount(Object amount) {
-    return '$amount left';
+    return '残り $amount';
   }
 
   @override
   String budget_percentUsed(Object percent) {
-    return '$percent% used';
+    return '$percent% 使用';
   }
 
   @override
@@ -689,12 +689,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String budget_spentAmount(Object amount) {
-    return 'Spent: $amount';
+    return '支出: $amount';
   }
 
   @override
   String budget_ofAmount(Object amount) {
-    return 'of $amount';
+    return '/ $amount';
   }
 
   @override
@@ -817,7 +817,7 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get wrapped_title => 'Expensy Wrapped';
+  String get wrapped_title => 'Expensy まとめ';
 
   @override
   String wrapped_bannerTitle(Object month) {
@@ -913,7 +913,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String insights_perDayBasedOn(Object days) {
-    return 'per day · based on $days days this month';
+    return '1日あたり · 今月$days日間の平均';
   }
 
   @override
@@ -921,12 +921,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String insights_incomeAmount(Object amount) {
-    return 'Income $amount';
+    return '収入 $amount';
   }
 
   @override
   String insights_expensesAmount(Object amount) {
-    return 'Expenses $amount';
+    return '支出 $amount';
   }
 
   @override
@@ -995,7 +995,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String statistics_6MonthOverviewAccount(Object accountName) {
-    return '6-Month Overview · $accountName';
+    return '6か月推移 · $accountName';
   }
 
   @override
@@ -1058,8 +1058,7 @@ class AppLocalizationsJa extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count items',
-      one: '1 item',
+      other: '$count件',
     );
     return '$_temp0';
   }
@@ -1080,8 +1079,7 @@ class AppLocalizationsJa extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count items',
-      one: '1 item',
+      other: '$count件',
     );
     return '$_temp0';
   }
@@ -1094,8 +1092,7 @@ class AppLocalizationsJa extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count categories',
-      one: '1 category',
+      other: '$count個のカテゴリ',
     );
     return '$_temp0';
   }
@@ -1129,7 +1126,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String home_greeting(Object name) {
-    return 'Hi, $name 👋';
+    return 'こんにちは、$name さん 👋';
   }
 
   @override
@@ -1251,8 +1248,7 @@ class AppLocalizationsJa extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count active records',
-      one: '1 active record',
+      other: '$count件の有効な記録',
     );
     return '$_temp0';
   }
@@ -1314,17 +1310,17 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String currency_converter_rateAgeMins(Object minutes) {
-    return '${minutes}m ago';
+    return '$minutes分前';
   }
 
   @override
   String currency_converter_rateAgeHours(Object hours) {
-    return '${hours}h ago';
+    return '$hours時間前';
   }
 
   @override
   String currency_converter_rateAgeDays(Object days) {
-    return '${days}d ago';
+    return '$days日前';
   }
 
   @override
@@ -1334,12 +1330,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String transfer_fromAcc(Object currency) {
-    return 'From ($currency)';
+    return '振替元 ($currency)';
   }
 
   @override
   String transfer_toAcc(Object currency) {
-    return 'To ($currency)';
+    return '振替先 ($currency)';
   }
 
   @override
@@ -1363,15 +1359,14 @@ class AppLocalizationsJa extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count transactions in range',
-      one: '1 transaction in range',
+      other: '期間内 $count 件の取引',
     );
     return '$_temp0';
   }
 
   @override
   String export_saved(Object path) {
-    return 'Saved: $path';
+    return '保存完了: $path';
   }
 
   @override
@@ -1385,7 +1380,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String shared_widgets_deleteConfirm(Object name) {
-    return 'Delete \"$name\"? This cannot be undone.';
+    return '「$name」を削除しますか？元に戻すことはできません。';
   }
 
   @override
@@ -2722,57 +2717,1178 @@ class AppLocalizationsJa extends AppLocalizations {
   String get onboarding_maybeLater => 'あとで設定';
 
   @override
-  String get categories_subcategories => 'Subcategories';
+  String get categories_subcategories => 'サブカテゴリ';
 
   @override
-  String get categories_addSubcategory => 'Add Subcategory';
+  String get categories_addSubcategory => 'サブカテゴリを追加';
 
   @override
-  String get categories_parentCategory => 'Parent Category';
+  String get categories_parentCategory => '親カテゴリ';
 
   @override
-  String get categories_noneRoot => 'None (Top-Level Category)';
+  String get categories_noneRoot => 'なし (親カテゴリ)';
 
   @override
-  String get categories_loadDefaults => 'Load Default Subcategories';
+  String get categories_loadDefaults => '標準サブカテゴリを読み込む';
 
   @override
   String categories_defaultsLoaded(int count) {
-    return 'Loaded $count default subcategories';
+    return '$count個の標準サブカテゴリを読み込みました';
   }
 
   @override
-  String get categories_defaultsAlreadyLoaded =>
-      'Default subcategories are already loaded';
+  String get categories_defaultsAlreadyLoaded => '標準サブカテゴリは既に読み込まれています';
 
   @override
-  String get statistics_byCategory => 'By Category';
+  String get statistics_byCategory => 'カテゴリ別';
 
   @override
-  String get statistics_bySubcategory => 'By Subcategory';
+  String get statistics_bySubcategory => 'サブカテゴリ別';
 
   @override
-  String get backup_importFromTrackWallet => 'Import from TrackWallet (.csv)';
+  String get backup_importFromTrackWallet => 'TrackWallet からインポート (.csv)';
 
   @override
   String backup_importedTransactions(int count) {
-    return 'Imported $count transactions successfully!';
+    return '$count件の取引をインポートしました！';
   }
 
   @override
-  String get onboarding_restoreTrackWallet => 'Import from TrackWallet (.csv)';
+  String get onboarding_restoreTrackWallet => 'TrackWallet からインポート (.csv)';
 
   @override
-  String get transfer_categoryLocked => 'Transfer (Default & Only Category)';
+  String get transfer_categoryLocked => '振替 (既定かつ唯一のカテゴリ)';
 
   @override
-  String get loans_noLoans => 'No loans tracked yet';
+  String get loans_noLoans => 'ローンはまだ登録されていません';
 
   @override
-  String get loans_noLoansSub =>
-      'Tap + to track mortgages, personal loans, or installments';
+  String get loans_noLoansSub => '+ をタップして住宅ローンや分割払いを記録';
 
   @override
-  String get certificates_noCertificatesSub =>
-      'Tap + to track bank certificates and fixed deposits';
+  String get certificates_noCertificatesSub => '+ をタップして定期預金や証書を記録';
+
+  @override
+  String get common_undo => '元に戻す';
+
+  @override
+  String get common_close => '閉じる';
+
+  @override
+  String get common_required => '必須';
+
+  @override
+  String get common_invalid => '無効';
+
+  @override
+  String get common_none => 'なし';
+
+  @override
+  String common_enabledAt(String time) {
+    return '有効 ($time)';
+  }
+
+  @override
+  String get common_disabled => '無効';
+
+  @override
+  String get freq_daily => '毎日';
+
+  @override
+  String get freq_yearly => '毎年';
+
+  @override
+  String recurring_transfers(Object count) {
+    return '振替 ($count)';
+  }
+
+  @override
+  String get recurring_transfer => '振替';
+
+  @override
+  String get recurring_transferCaps => '振替';
+
+  @override
+  String get recurring_noRecurringTransfers => '定期的な振替はありません';
+
+  @override
+  String recurring_subtitleCount(int count) {
+    return '$count件のサブスク・定期支払い';
+  }
+
+  @override
+  String recurring_perWeek(String amount) {
+    return '$amount / 週';
+  }
+
+  @override
+  String get recurring_perMonth => '/ 月';
+
+  @override
+  String get recurring_fromAccount => '振替元口座';
+
+  @override
+  String get recurring_toAccount => '振替先口座';
+
+  @override
+  String recurring_targetAmount(String currency) {
+    return '受取額 ($currency)';
+  }
+
+  @override
+  String get recurring_autoPayAt => '自動支払時刻';
+
+  @override
+  String get recurring_autoPayOnDueDate => '期日に自動支払い';
+
+  @override
+  String get recurring_autoPayEnabledSub => '期日に自動で記録されます';
+
+  @override
+  String get recurring_autoPayDisabledSub => '期日が来たら自動的に記録する';
+
+  @override
+  String get recurring_autoPayTime => '自動支払いの時刻';
+
+  @override
+  String get recurring_reminderEnabledSub => '期日に通知が届きます';
+
+  @override
+  String get recurring_reminderDisabledSub => '支払期日に通知を受け取る';
+
+  @override
+  String get recurring_earlyReminderEnabledSub => '2日前の同じ時刻にも事前通知します';
+
+  @override
+  String get recurring_earlyReminderDisabledSub => '期日の2日前にも通知を受け取る';
+
+  @override
+  String get recurring_addRecurringBtn => '定期支払いを追加';
+
+  @override
+  String get recurring_paymentDetails => '支払いの詳細';
+
+  @override
+  String get recurring_linkedAccount => '連携口座';
+
+  @override
+  String get recurring_deletedAccount => '削除された口座';
+
+  @override
+  String get recurring_frequency => '頻度';
+
+  @override
+  String get recurring_type => '種類';
+
+  @override
+  String get recurring_startDate => '開始日';
+
+  @override
+  String get recurring_nextDueDate => '次回期日';
+
+  @override
+  String get recurring_autoPay => '自動支払い';
+
+  @override
+  String get recurring_reminder => 'リマインダー';
+
+  @override
+  String get recurring_endDate => '終了日';
+
+  @override
+  String get recurring_totalValue => '合計金額';
+
+  @override
+  String get recurring_notes => 'メモ';
+
+  @override
+  String get recurring_upcomingPayments => '今後の予定';
+
+  @override
+  String recurring_remainingCount(int count) {
+    return '残り $count 回';
+  }
+
+  @override
+  String get recurring_allInstallmentsCompleted => 'すべての分割払いが完了しました';
+
+  @override
+  String recurring_installmentOf(int num, int total) {
+    return '第$num回 / 全$total回';
+  }
+
+  @override
+  String get recurring_paymentPaid => '支払い完了';
+
+  @override
+  String get recurring_paymentSkipped => 'スキップ済み';
+
+  @override
+  String get presets_transfer => '振替';
+
+  @override
+  String get presets_selectDifferentAccounts => '異なる振替元・振替先口座を選択してください。';
+
+  @override
+  String presets_targetAmountOptional(String currency) {
+    return '$currency の受取額 (任意)';
+  }
+
+  @override
+  String get transactions_transfers => '振替';
+
+  @override
+  String transactions_selectedItemsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count件選択中',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String transactions_entriesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count件',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get transactions_clearSelection => '選択を解除';
+
+  @override
+  String get transactions_transferTitle => '振替取引';
+
+  @override
+  String get transactions_transferBody =>
+      'この取引は口座振替の一部です。残高の整合性を保つため片側のみの編集はできません。この振替を削除しますか？';
+
+  @override
+  String get transactions_deleteTransfer => '振替を削除';
+
+  @override
+  String get transactions_transferDeleted => '振替を削除しました';
+
+  @override
+  String get transactions_certTitle => '定期預金の取引';
+
+  @override
+  String get transactions_certBody =>
+      'この取引は定期預金・証書に紐づいています。元本と利息の整合性を保つため、定期預金画面から操作してください。';
+
+  @override
+  String get transactions_viewCertificate => '定期預金を表示';
+
+  @override
+  String get transactions_openCertificates => '定期預金を開く';
+
+  @override
+  String get transactions_loanFallback => 'ローン';
+
+  @override
+  String get transactions_loanPayment => 'ローン返済';
+
+  @override
+  String get transactions_goalContribution => '目標への積立';
+
+  @override
+  String get transactions_goalWithdrawal => '目標からの出金';
+
+  @override
+  String get calendar_repayment => '返済';
+
+  @override
+  String get calendar_transfersDue => '予定された定期振替';
+
+  @override
+  String accounts_subtitleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count件の口座',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get accounts_tabAccounts => '口座';
+
+  @override
+  String get accounts_tabCards => 'カード';
+
+  @override
+  String get accounts_addCardBtn => 'カードを追加';
+
+  @override
+  String get accounts_addNewCardBtn => '新しいカードを追加';
+
+  @override
+  String get accounts_editCard => 'カードを編集';
+
+  @override
+  String get accounts_cardNameHint => 'カード名 (例: Visa Platinum)';
+
+  @override
+  String get accounts_debitCard => 'デビットカード';
+
+  @override
+  String get accounts_prepaidCard => 'プリペイドカード';
+
+  @override
+  String get accounts_pinToWidget => 'ウィジェットに固定';
+
+  @override
+  String get accounts_unpinFromWidget => 'ウィジェットから外す';
+
+  @override
+  String get accounts_maxPinnedWarning => '固定できる口座は最大3つです';
+
+  @override
+  String get accounts_selectLinkedBank => 'このデビットカードに連携する銀行口座を選択してください。';
+
+  @override
+  String get accounts_debitSharesBalance => 'デビットカードは連携する銀行口座の残高を共有します。';
+
+  @override
+  String get accounts_linkedBankRequired => '連携銀行口座 (必須)';
+
+  @override
+  String get accounts_amountCurrentlyOwed => '現在の利用残高';
+
+  @override
+  String get accounts_initialAmountOwed => '初期利用残高';
+
+  @override
+  String get accounts_cardDebtHint => 'カードの未払い残高を入力（負債として保存）';
+
+  @override
+  String accounts_nextCycleCloses(int day) {
+    return '次回の締め日は毎月 $day 日頃です';
+  }
+
+  @override
+  String accounts_spotPriceLabel(int karat) {
+    return '相場価格 ($karat金 / g)';
+  }
+
+  @override
+  String get accounts_weightTimesPurity => '重量 × 純度';
+
+  @override
+  String accounts_blockDeleteRecurring(int count) {
+    return 'この口座には$count件の定期支払いがあります。先に変更または削除してください。';
+  }
+
+  @override
+  String accounts_blockDeleteLoans(int count) {
+    return 'この口座には$count件のローンがあります。先に変更または削除してください。';
+  }
+
+  @override
+  String accounts_blockDeleteCertificates(int count) {
+    return 'この口座には$count件の定期預金があります。先に解約または削除してください。';
+  }
+
+  @override
+  String accounts_blockDeleteLended(int count) {
+    return 'この口座には$count件の未精算の貸借があります。先に精算してください。';
+  }
+
+  @override
+  String accounts_blockDeleteSavings(int count) {
+    return 'この口座は$count件の貯蓄目標で使用されています。先に変更または削除してください。';
+  }
+
+  @override
+  String accounts_blockDeletePresets(int count) {
+    return 'この口座は$count件のプリセットで使用されています。先に変更または削除してください。';
+  }
+
+  @override
+  String accounts_blockDeleteCards(int count) {
+    return 'この口座は$count枚のカードに連携しています。先に解除または削除してください。';
+  }
+
+  @override
+  String get add_transaction_selectAccountOrCard => '口座またはカードを選択してください。';
+
+  @override
+  String get add_transaction_balanced => '一致';
+
+  @override
+  String add_transaction_similarExists(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '類似する取引が $count 件すでに存在します:',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String budget_goalsCountSubtitle(int budgets, int goals) {
+    return '$budgets 予算 · $goals 目標';
+  }
+
+  @override
+  String get budget_savingsGoalsCaps => '貯蓄目標';
+
+  @override
+  String budget_percentSaved(String percent) {
+    return '$percent% 達成';
+  }
+
+  @override
+  String budget_ofTarget(String amount) {
+    return '目標 $amount 中';
+  }
+
+  @override
+  String get budget_goalsTab => '目標';
+
+  @override
+  String get budget_completed => '完了';
+
+  @override
+  String get savings_newGoal => '新しい貯蓄目標';
+
+  @override
+  String get savings_editGoal => '貯蓄目標を編集';
+
+  @override
+  String get certificates_activePrincipal => '運用中の元本';
+
+  @override
+  String get certificates_activeCount => '有効件数';
+
+  @override
+  String certificates_linkedBank(String name) {
+    return '連携口座: $name';
+  }
+
+  @override
+  String certificates_yieldSummary(String amount, String type) {
+    return '利回り: $amount ($type)';
+  }
+
+  @override
+  String certificates_maturesOn(String date) {
+    return '満期日: $date';
+  }
+
+  @override
+  String get certificates_settledCaps => '満期済';
+
+  @override
+  String get certificates_activeCaps => '運用中';
+
+  @override
+  String get certificates_annualRate => '年利';
+
+  @override
+  String get certificates_periodicYieldLabel => '定期利息';
+
+  @override
+  String get certificates_maturedAndSettled => '満期・精算済み';
+
+  @override
+  String get certificates_payoutOverride => '受取額 (手動設定)';
+
+  @override
+  String get certificates_dayRange => '日 (1〜31)';
+
+  @override
+  String get certificates_noBankAccounts =>
+      '銀行口座がありません。利息を受け取るために銀行口座を作成してください。';
+
+  @override
+  String get certificates_selectLinkedBank => '連携する銀行口座を選択してください。';
+
+  @override
+  String get creditCard_noFundingAccounts => '支払いに使える銀行または現金口座がありません。';
+
+  @override
+  String get creditCard_processing => '処理中...';
+
+  @override
+  String creditCard_payAmountBtn(String amount) {
+    return '$amount を支払う';
+  }
+
+  @override
+  String get insights_loanPaymentsThisMonth => '今月のローン返済額';
+
+  @override
+  String get insights_spendingForecast => '支出予測';
+
+  @override
+  String get insights_forecastPrefix => 'このペースでは ';
+
+  @override
+  String insights_forecastSuffix(String month, int days) {
+    return '（$month末まで・残り$days日）に達する見込みです。';
+  }
+
+  @override
+  String get insights_forecastDisclaimer => 'これまでの支出に基づく予測であり、今後の定期支払いは含まれません。';
+
+  @override
+  String insights_forecastAccuracy(int days) {
+    return '最初の$days日間のデータに基づいています — 月が進むほど精度が上がります。';
+  }
+
+  @override
+  String insights_projAmount(String amount) {
+    return '予測: $amount';
+  }
+
+  @override
+  String insights_projOfBudget(String percent) {
+    return ' (予算の$percent%)';
+  }
+
+  @override
+  String get insights_outstanding => '未払い残高';
+
+  @override
+  String get insights_monthlyObligation => '毎月の返済額';
+
+  @override
+  String get loans_principal => '元金';
+
+  @override
+  String get loans_interestRate => '金利';
+
+  @override
+  String get loans_duration => '期間';
+
+  @override
+  String get loans_transferTo => '融資金の入金先';
+
+  @override
+  String get loans_payFrom => '返済元の口座';
+
+  @override
+  String loans_dueDayTime(int day, String time) {
+    return '返済日: 毎月$day日 $time';
+  }
+
+  @override
+  String more_activeCount(int count) {
+    return '有効 $count件';
+  }
+
+  @override
+  String more_toolsSubtitle(int count) {
+    return '$count個のツールと設定';
+  }
+
+  @override
+  String get more_totalWealthCaps => '総資産';
+
+  @override
+  String get more_liveNetWorthSub => 'すべての保有資産のリアルタイム純資産';
+
+  @override
+  String more_assetsAmount(String amount) {
+    return '資産: $amount';
+  }
+
+  @override
+  String more_liabilitiesAmount(String amount) {
+    return '負債: $amount';
+  }
+
+  @override
+  String get netWorth_debtFree => '無借金';
+
+  @override
+  String get netWorth_showLess => '閉じる';
+
+  @override
+  String netWorth_showAll(int count) {
+    return 'すべて表示 ($count)';
+  }
+
+  @override
+  String get netWorth_zeroLiabilities => '負債はありません！現在の借入残高はゼロです。';
+
+  @override
+  String get netWorth_lentDebts => '貸付 / 借入';
+
+  @override
+  String netWorth_snapBreakdown(String assets, String accounts) {
+    return '資産: $assets · 口座: $accounts';
+  }
+
+  @override
+  String get onboarding_nameRequired => '名前は必須です';
+
+  @override
+  String get onboarding_popularCurrencies => '主な通貨';
+
+  @override
+  String get onboarding_debitCardNextStep => '次のステップでこの銀行口座のデビットカードを追加できます';
+
+  @override
+  String get onboarding_addDebitCardTitle => 'デビットカードを追加';
+
+  @override
+  String get onboarding_addDebitCardDesc =>
+      '新しい銀行口座にデビットカードを連携して、支出を簡単に記録できます。';
+
+  @override
+  String get onboarding_cardName => 'カード名';
+
+  @override
+  String get onboarding_cardholderName => '名義人';
+
+  @override
+  String get onboarding_last4Digits => '下4桁の番号';
+
+  @override
+  String get onboarding_cardColor => 'カードのカラー';
+
+  @override
+  String wrapped_zeroSpendOfDays(int total) {
+    return '$total日中の無支出日数';
+  }
+
+  @override
+  String get wrapped_savingsRateLabel => '貯蓄率';
+
+  @override
+  String get wrapped_topCategoryLabel => '最多カテゴリ';
+
+  @override
+  String get wrapped_zeroSpendDaysLabel => '無支出日数';
+
+  @override
+  String get wrapped_footerTag => '★ プライベート＆オフライン家計管理 ★';
+
+  @override
+  String get yearly_tapToExpand => 'タップして展開';
+
+  @override
+  String get yearly_noDataBadge => 'データなし';
+
+  @override
+  String get export_formatHeader => '出力形式';
+
+  @override
+  String export_pdfPeriod(String range) {
+    return '期間: $range';
+  }
+
+  @override
+  String export_pdfCurrency(String currency) {
+    return '通貨: $currency';
+  }
+
+  @override
+  String export_pdfGenerated(String date) {
+    return '作成日: $date';
+  }
+
+  @override
+  String export_pdfPageOf(int page, int total) {
+    return '$page / $total ページ';
+  }
+
+  @override
+  String get export_pdfTotalAssets => '総資産';
+
+  @override
+  String get export_pdfTotalLiabilities => '総負債';
+
+  @override
+  String get export_pdfCurrentNetWorth => '現在の純資産';
+
+  @override
+  String get export_pdfCategory => 'カテゴリ';
+
+  @override
+  String export_pdfAmountHeader(String currency) {
+    return '金額 ($currency)';
+  }
+
+  @override
+  String get export_pdfPercentOfExpenses => '総支出の割合 (%)';
+
+  @override
+  String get backup_encryptedTitle => '暗号化されたバックアップ';
+
+  @override
+  String get backup_encryptedPrompt => 'このバックアップの暗号化パスワードを入力してください:';
+
+  @override
+  String get backup_password => 'パスワード';
+
+  @override
+  String get backup_confirmPassword => 'パスワード確認';
+
+  @override
+  String get backup_decryptContinue => '復号して続行';
+
+  @override
+  String get backup_chooseRestoreMode => '復元モードを選択';
+
+  @override
+  String get backup_chooseRestoreModeDesc =>
+      'すべてのデータを復元するか、特定のデータのみを復元するか選択します。';
+
+  @override
+  String get backup_selectiveRestore => '選択復元';
+
+  @override
+  String get backup_selectiveRestoreDesc => '他のデータや設定を消さずに特定の項目のみ復元します。';
+
+  @override
+  String get backup_fullRestore => '完全復元';
+
+  @override
+  String get backup_fullRestoreDesc => '現在のすべてのデータと設定をバックアップで完全に置き換えます。';
+
+  @override
+  String get backup_selectiveBackup => '選択バックアップ';
+
+  @override
+  String get backup_selectiveBackupBtn => '選択バックアップ...';
+
+  @override
+  String get backup_selectiveBackupDesc => 'JSON形式でエクスポートするデータ項目を選択してください。';
+
+  @override
+  String get backup_selectedRestoredSuccess => '選択したデータを復元しました！';
+
+  @override
+  String get backup_savingsGoals => '貯蓄目標';
+
+  @override
+  String get backup_savingsContributions => '目標への積立';
+
+  @override
+  String get backup_encryptionDisabled => 'バックアップ暗号化を無効にしました';
+
+  @override
+  String get backup_encryptionEnabled => 'バックアップ暗号化を有効にしました';
+
+  @override
+  String backup_encryptionFailed(String error) {
+    return '暗号化の有効化に失敗: $error';
+  }
+
+  @override
+  String get backup_encryptAutoTitle => '自動バックアップを暗号化';
+
+  @override
+  String get backup_encryptAutoDesc =>
+      'AES-GCM-256で自動バックアップを保護します。パスワードを忘れると復元できません。';
+
+  @override
+  String get backup_passwordEmpty => 'パスワードを入力してください';
+
+  @override
+  String get backup_passwordsMismatch => 'パスワードが一致しません';
+
+  @override
+  String get backup_setPassword => 'パスワードを設定';
+
+  @override
+  String backup_autoCreated(String file) {
+    return '自動バックアップ作成完了: $file';
+  }
+
+  @override
+  String backup_autoFailed(String error) {
+    return '自動バックアップ失敗: $error';
+  }
+
+  @override
+  String get backup_nightlySchedule => '毎晩 2:00 頃に指定フォルダへ保存';
+
+  @override
+  String get backup_noFolderSelected => 'フォルダ未選択';
+
+  @override
+  String get backup_keepCopies => '保存世代数:';
+
+  @override
+  String get backup_encryptAes => '暗号化 (AES-GCM)';
+
+  @override
+  String backup_failedError(String error) {
+    return '失敗: $error';
+  }
+
+  @override
+  String backup_lastSuccess(String date, String kb) {
+    return '前回: $date ($kb KB)';
+  }
+
+  @override
+  String get backup_backingUp => 'バックアップ中...';
+
+  @override
+  String get backup_backUpNow => '今すぐバックアップ';
+
+  @override
+  String get backup_androidIdleNote => '深夜2:00頃に実行されます。端末の休止状態により遅延する場合があります。';
+
+  @override
+  String get backup_selectAll => 'すべて選択';
+
+  @override
+  String get backup_deselectAll => 'すべて解除';
+
+  @override
+  String get backup_selectiveSaved => '選択バックアップを保存しました！';
+
+  @override
+  String backup_exportFailed(String error) {
+    return 'エクスポート失敗: $error';
+  }
+
+  @override
+  String backup_exportSelected(int count) {
+    return '選択した $count 項目をエクスポート';
+  }
+
+  @override
+  String backup_restoreSelected(int count) {
+    return '選択した $count 項目を復元';
+  }
+
+  @override
+  String get backup_selectiveRestoreNote => '選択した項目のみ復元され、その他の口座や設定は維持されます。';
+
+  @override
+  String backup_countInBackup(int count) {
+    return 'バックアップ内に $count 件';
+  }
+
+  @override
+  String get backup_entityTxSplitsPresets => '取引・分割・プリセット';
+
+  @override
+  String get backup_entityRecurringHistory => '定期支払いと履歴';
+
+  @override
+  String get backup_entityLoansPayments => 'ローンと返済記録';
+
+  @override
+  String get backup_entityLentContacts => '貸借記録と連絡先';
+
+  @override
+  String get backup_entityAssetsValuables => '資産と貴重品';
+
+  @override
+  String get backup_entityWishlistGoals => 'ほしい物リストと貯蓄目標';
+
+  @override
+  String get common_perDay => '/ 日';
+
+  @override
+  String common_daysShort(int count) {
+    return '$count日';
+  }
+
+  @override
+  String get common_splitCaps => '分割';
+
+  @override
+  String budget_deletedCategory(String name) {
+    return '$name を削除しました';
+  }
+
+  @override
+  String get loans_paymentDeleted => '支払いを削除しました';
+
+  @override
+  String certificates_collectionDayLabel(String frequency, int day) {
+    return '$frequency ($day日)';
+  }
+
+  @override
+  String add_transaction_duplicateItem(
+      String amount, String date, String desc) {
+    return '• $date に $amount$desc';
+  }
+
+  @override
+  String creditCard_billPaymentDesc(String name) {
+    return 'クレジットカード請求書払い — $name';
+  }
+
+  @override
+  String get onboarding_defaultBankName => 'メイン銀行';
+
+  @override
+  String get onboarding_defaultCardholder => 'EXPENSY メンバー';
+
+  @override
+  String get onboarding_defaultUser => 'ユーザー';
+
+  @override
+  String get export_excelSheetName => '取引履歴';
+
+  @override
+  String get export_headerDate => '日付';
+
+  @override
+  String get export_headerDescription => '説明';
+
+  @override
+  String get export_headerType => '種類';
+
+  @override
+  String get export_headerAmount => '金額';
+
+  @override
+  String get export_headerCurrency => '通貨';
+
+  @override
+  String get export_headerAccount => '口座';
+
+  @override
+  String get export_headerCategory => 'カテゴリ';
+
+  @override
+  String get export_headerSubcategory => 'サブカテゴリ';
+
+  @override
+  String get export_headerNote => 'メモ';
+
+  @override
+  String get cat_food_exp => '食事・外食';
+
+  @override
+  String get cat_transport => '交通';
+
+  @override
+  String get cat_shopping => '買い物';
+
+  @override
+  String get cat_bills => '光熱費・請求書';
+
+  @override
+  String get cat_health => '健康・医療';
+
+  @override
+  String get cat_entertainment => '娯楽';
+
+  @override
+  String get cat_education => '教育';
+
+  @override
+  String get cat_personal => '身だしなみ';
+
+  @override
+  String get cat_salary => '給与';
+
+  @override
+  String get cat_freelance => 'フリーランス';
+
+  @override
+  String get cat_investments => '投資収益';
+
+  @override
+  String get cat_gifts => 'ギフト';
+
+  @override
+  String get cat_other_inc => 'その他の収入';
+
+  @override
+  String get cat_other_exp => 'その他の支出';
+
+  @override
+  String get cat_sys_transfer => '振替';
+
+  @override
+  String get cat_sys_investment => '投資';
+
+  @override
+  String get sub_groceries => '食料品';
+
+  @override
+  String get sub_restaurants => 'レストラン';
+
+  @override
+  String get sub_delivery => 'デリバリー';
+
+  @override
+  String get sub_coffee_tea => 'コーヒー・紅茶';
+
+  @override
+  String get sub_fuel => '燃料';
+
+  @override
+  String get sub_public_transit => '公共交通';
+
+  @override
+  String get sub_taxi_ride => 'タクシー';
+
+  @override
+  String get sub_maintenance => '整備・修理';
+
+  @override
+  String get sub_parking_tolls => '駐車・通行料';
+
+  @override
+  String get sub_clothing => '衣類';
+
+  @override
+  String get sub_electronics => '家電・電子機器';
+
+  @override
+  String get sub_home_furniture => '家具・日用品';
+
+  @override
+  String get sub_gifts => 'プレゼント';
+
+  @override
+  String get sub_electricity => '電気代';
+
+  @override
+  String get sub_internet => 'インターネット';
+
+  @override
+  String get sub_water => '水道代';
+
+  @override
+  String get sub_phone => '携帯電話';
+
+  @override
+  String get sub_medicine => '薬';
+
+  @override
+  String get sub_doctor => '診察';
+
+  @override
+  String get sub_movies => '映画';
+
+  @override
+  String get sub_games => 'ゲーム';
+
+  @override
+  String get sub_subscriptions => 'サブスク';
+
+  @override
+  String get notif_overBudgetTitle => '🚨 予算超過';
+
+  @override
+  String notif_overBudgetBody(String category, String amount, String period) {
+    return '$category — $periodの上限を $amount 超過しました';
+  }
+
+  @override
+  String get notif_goalReachedTitle => '🎉 目標達成';
+
+  @override
+  String notif_goalReachedBody(String amount, String name) {
+    return '$name の目標 $amount を達成しました！';
+  }
+
+  @override
+  String get notif_certPayoutDueTitle => '📈 証書配当期日';
+
+  @override
+  String get notif_certPayoutUpcomingTitle => '📈 まもなく証書配当期日';
+
+  @override
+  String notif_certPayoutBody(String name) {
+    return '$name の利払いが本日予定されています。';
+  }
+
+  @override
+  String notif_certPayoutSoonBody(String name) {
+    return '$name の利払いは2日後です。';
+  }
+
+  @override
+  String get notif_creditBillDueTodayTitle => '💳 本日が支払日';
+
+  @override
+  String get notif_creditBillDueSoonTitle => '💳 支払日が近づいています';
+
+  @override
+  String get notif_dailyReminderTitle => '📝 毎日のリマインダー';
+
+  @override
+  String get notif_dailyReminderBody => '今日の支出を記録するのを忘れずに。';
+
+  @override
+  String notif_lendedDueTitle(String emoji, String name) {
+    return '$emoji 期日: $name';
+  }
+
+  @override
+  String get notif_loanPaymentDueTitle => '🏦 ローン返済期日';
+
+  @override
+  String notif_loanPaymentDueBody(String name) {
+    return '$name の分割払いが本日期日です。';
+  }
+
+  @override
+  String get notif_autoBackupFailedTitle => '自動バックアップ失敗';
+
+  @override
+  String notif_autoBackupFailedBody(String error) {
+    return '予定されていたバックアップを作成できませんでした: $error';
+  }
+
+  @override
+  String notif_recurringTransferBody(String amount) {
+    return '$amount の振替が期日です';
+  }
+
+  @override
+  String notif_recurringIncomeBody(String amount) {
+    return '$amount の収入予定日です';
+  }
+
+  @override
+  String notif_recurringExpenseBody(String amount) {
+    return '$amount の支払い期日です';
+  }
+
+  @override
+  String notif_creditBillDueTodayBody(String name) {
+    return '$nameの請求日が本日です。';
+  }
+
+  @override
+  String notif_creditBillDueSoonBody(String name) {
+    return '$nameの請求日が2日後です。';
+  }
+
+  @override
+  String notif_lendedLentDueBody(String amount, String name) {
+    return '$nameに貸した$amountの返済期日が本日です';
+  }
+
+  @override
+  String notif_lendedBorrowedDueBody(String amount, String name) {
+    return '$nameから借りた$amountの返済期日が本日です';
+  }
+
+  @override
+  String notif_recurringTransferDueSoonBody(String amount) {
+    return '$amountの振替が2日後に予定されています';
+  }
+
+  @override
+  String notif_recurringIncomeDueSoonBody(String amount) {
+    return '$amountの収入が2日後に予定されています';
+  }
+
+  @override
+  String notif_recurringExpenseDueSoonBody(String amount) {
+    return '$amountの支払いが2日後に予定されています';
+  }
 }

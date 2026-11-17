@@ -57,8 +57,9 @@ Map<int, Map<int, YearlyMonthData>> buildYearlyAnalysis(AppProvider app) {
   final now = DateTime.now();
   final openEndedHorizon = DateTime(now.year + 2, now.month, now.day);
 
-  // 1. Recurring payments — project every future occurrence.
+  // 1. Recurring payments — project every future occurrence (excluding transfers).
   for (final r in app.recurring) {
+    if (r.isTransfer) continue;
     final currency =
         app.accountById(r.accountId)?.currency ?? app.settings.currency;
     final convertedAmount = app.convertToMain(r.amount, currency);
@@ -463,7 +464,7 @@ class _MonthCardState extends State<_MonthCard> {
                           ),
                           if (!isEmpty)
                             Text(
-                              _expanded ? l10n.yearly_netFlow : 'Tap to expand',
+                              _expanded ? l10n.yearly_netFlow : l10n.yearly_tapToExpand,
                               style: TextStyle(
                                 fontSize: 12,
                                 color: cs.onSurface.withValues(alpha: 0.5),
@@ -496,7 +497,7 @@ class _MonthCardState extends State<_MonthCard> {
                       ),
                     if (isEmpty)
                       Text(
-                        'No Data',
+                        l10n.yearly_noDataBadge,
                         style: TextStyle(
                           fontSize: 12,
                           color: cs.onSurface.withValues(alpha: 0.5),

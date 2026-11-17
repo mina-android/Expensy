@@ -174,7 +174,7 @@ class _ExportScreenState extends State<ExportScreen> {
           children: [
             // ── Format Segmented Picker ─────────────────────────────────────
             Text(
-              'EXPORT FORMAT',
+              l10n.export_formatHeader,
               style: Theme.of(context)
                   .textTheme
                   .labelMedium

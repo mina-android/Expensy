@@ -235,7 +235,7 @@ class _CertificateSheetState extends State<CertificateSheet> {
                       keyboardType:
                           const TextInputType.numberWithOptions(decimal: true),
                       decoration: InputDecoration(
-                        labelText: 'Payout (override)',
+                        labelText: l10n.certificates_payoutOverride,
                         prefixText: '${currencyInfo(_currency).symbol} ',
                       ),
                       onChanged: (val) {
@@ -270,12 +270,13 @@ class _CertificateSheetState extends State<CertificateSheet> {
                                   .withValues(alpha: 0.6)),
                         ),
                       ),
-                      items: const [
+                      items: [
                         DropdownMenuItem(
-                            value: 'monthly', child: Text('Monthly')),
-                        DropdownMenuItem(value: 'daily', child: Text('Daily')),
+                            value: 'monthly', child: Text(l10n.recurring_monthly)),
                         DropdownMenuItem(
-                            value: 'yearly', child: Text('Yearly')),
+                            value: 'daily', child: Text(l10n.freq_daily)),
+                        DropdownMenuItem(
+                            value: 'yearly', child: Text(l10n.freq_yearly)),
                       ],
                       onChanged: (v) =>
                           setState(() => _collectionType = v ?? 'monthly'),
@@ -288,7 +289,7 @@ class _CertificateSheetState extends State<CertificateSheet> {
                       initialValue: _collectionDay.toString(),
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
-                        labelText: 'Day (1-31)',
+                        labelText: l10n.certificates_dayRange,
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(16)),
                         enabledBorder: OutlineInputBorder(
@@ -331,7 +332,7 @@ class _CertificateSheetState extends State<CertificateSheet> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    'No Bank Accounts available. Please create a bank account to receive payouts.',
+                    l10n.certificates_noBankAccounts,
                     style: TextStyle(color: cs.onErrorContainer, fontSize: 12),
                   ),
                 ),
@@ -592,7 +593,7 @@ class _CertificateSheetState extends State<CertificateSheet> {
 
                   if (_accountId == null || _accountId!.isEmpty) {
                     showAppSnackbar(
-                        context, 'Please select a linked Bank Account.');
+                        context, l10n.certificates_selectLinkedBank);
                     return;
                   }
 

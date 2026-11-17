@@ -33,14 +33,15 @@ import 'package:sqflite/sqflite.dart' as sqflite show getDatabasesPath;
 import 'package:path/path.dart' as p;
 import 'package:expensy_saf/expensy_saf.dart';
 import '../theme/app_theme.dart';
+import '../utils/service_localizations.dart';
 
 // Thrown when a cross-currency transaction or transfer is attempted before
 // live or cached exchange rates have loaded.
 class RatesUnavailableException implements Exception {
-  final String message;
-  const RatesUnavailableException([
-    this.message = 'Exchange rates are still loading — try again in a moment',
-  ]);
+  final String? _message;
+  const RatesUnavailableException([String? message]) : _message = message;
+  String get message =>
+      _message ?? ServiceLocalizations.current.transfer_exchangeRatesNotLoaded;
   @override
   String toString() => 'RatesUnavailableException: $message';
 }
@@ -166,8 +167,22 @@ class AppSettings {
 
 class AppProvider extends ChangeNotifier {
   AppSettings settings = AppSettings();
-  List<Account>               accounts     = [];
-  List<AppCategory>           categories   = [];
+  List<Account> _accounts = [];
+  Map<String, Account> _accountsById = {};
+  List<Account> get accounts => _accounts;
+  set accounts(List<Account> value) {
+    _accounts = value;
+    _accountsById = {for (final a in value) a.id: a};
+  }
+
+  List<AppCategory> _categories = [];
+  Map<String, AppCategory> _categoriesById = {};
+  List<AppCategory> get categories => _categories;
+  set categories(List<AppCategory> value) {
+    _categories = value;
+    _categoriesById = {for (final c in value) c.id: c};
+  }
+
   List<AppTransaction>        transactions = [];
   List<RecurringPayment>      recurring    = [];
   List<WishlistItem>          wishlist     = [];
@@ -245,24 +260,45 @@ class AppProvider extends ChangeNotifier {
     if (raw != null) {
       settings = AppSettings.fromJson(jsonDecode(raw) as Map<String, dynamic>);
     }
-    accounts     = await DBHelper.getAccounts();
-    categories   = await DBHelper.getCategories();
-    transactions = await DBHelper.getTransactions();
-    recurring    = await DBHelper.getRecurring();
-    wishlist     = await DBHelper.getWishlist();
-    lendedPeople = await DBHelper.getLendedPeople();
-    lended       = await DBHelper.getLended();
-    assets       = await DBHelper.getAssets();
-    budgets      = await DBHelper.getBudgets();
-    savingsGoals = await DBHelper.getSavingsGoals();
-    savingsContributions = await DBHelper.getAllSavingsContributions();
-    loans        = await DBHelper.getLoans();
-    loanPayments = await DBHelper.getAllLoanPayments();
-    netWorthSnapshots = await DBHelper.getNetWorthSnapshots();
-    recurringHistoryCount = await DBHelper.getRecurringHistoryCount();
-    presets      = await DBHelper.getPresets();
-    splits       = await DBHelper.getAllSplits();
-    certificates = await DBHelper.getCertificates();
+    ServiceLocalizations.setLanguageCode(settings.languageCode);
+    final results = await Future.wait<dynamic>([
+      DBHelper.getAccounts(),
+      DBHelper.getCategories(),
+      DBHelper.getTransactions(),
+      DBHelper.getRecurring(),
+      DBHelper.getWishlist(),
+      DBHelper.getLendedPeople(),
+      DBHelper.getLended(),
+      DBHelper.getAssets(),
+      DBHelper.getBudgets(),
+      DBHelper.getSavingsGoals(),
+      DBHelper.getAllSavingsContributions(),
+      DBHelper.getLoans(),
+      DBHelper.getAllLoanPayments(),
+      DBHelper.getNetWorthSnapshots(),
+      DBHelper.getRecurringHistoryCount(),
+      DBHelper.getPresets(),
+      DBHelper.getAllSplits(),
+      DBHelper.getCertificates(),
+    ]);
+    accounts             = results[0] as List<Account>;
+    categories           = results[1] as List<AppCategory>;
+    transactions         = results[2] as List<AppTransaction>;
+    recurring            = results[3] as List<RecurringPayment>;
+    wishlist             = results[4] as List<WishlistItem>;
+    lendedPeople         = results[5] as List<LendedPerson>;
+    lended               = results[6] as List<LendedMoney>;
+    assets               = results[7] as List<AssetItem>;
+    budgets              = results[8] as List<Budget>;
+    savingsGoals         = results[9] as List<SavingsGoal>;
+    savingsContributions = results[10] as List<SavingsContribution>;
+    loans                = results[11] as List<Loan>;
+    loanPayments         = results[12] as List<LoanPayment>;
+    netWorthSnapshots    = results[13] as List<NetWorthSnapshot>;
+    recurringHistoryCount = results[14] as int;
+    presets              = results[15] as List<TransactionPreset>;
+    splits               = results[16] as List<TransactionSplit>;
+    certificates         = results[17] as List<Certificate>;
     _rebuildSplitsCache();
     _loaded = true;
     notifyListeners();
@@ -394,7 +430,7 @@ class AppProvider extends ChangeNotifier {
   Future<void> _executeRecordNetWorthSnapshot() async {
     await _serializeMutation(() async {
       try {
-        final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+        final today = DateFormat('yyyy-MM-dd', 'en_US').format(DateTime.now());
         final existing = await DBHelper.getNetWorthSnapshotForDate(today);
         final snap = NetWorthSnapshot(
           id: existing?.id ?? const Uuid().v4(),
@@ -509,8 +545,9 @@ class AppProvider extends ChangeNotifier {
     if (!exchangeRates.containsKey('XAU')) return;
 
     bool changed = false;
-    for (int i = 0; i < accounts.length; i++) {
-      final acc = accounts[i];
+    final nextAccounts = List<Account>.from(accounts);
+    for (int i = 0; i < nextAccounts.length; i++) {
+      final acc = nextAccounts[i];
       if (!acc.isGold) continue;
       final grams = acc.goldGrams;
       final karat = acc.goldKarat;
@@ -525,10 +562,11 @@ class AppProvider extends ChangeNotifier {
 
       final updated = acc.copyWith(balance: newBalance);
       await DBHelper.updateAccount(updated);
-      accounts[i] = updated;
+      nextAccounts[i] = updated;
       changed = true;
     }
     if (changed) {
+      accounts = nextAccounts;
       notifyListeners();
       await recordNetWorthSnapshot();
     }
@@ -555,7 +593,10 @@ class AppProvider extends ChangeNotifier {
       case 'appFont':        settings.appFont        = value as String; break;
       case 'amoledSurfaces': settings.amoledSurfaces = value as bool;  break;
       case 'dynamicColorEnabled': settings.dynamicColorEnabled = value as bool;  break;
-      case 'languageCode':   settings.languageCode   = value as String; break;
+      case 'languageCode':
+        settings.languageCode = value as String;
+        ServiceLocalizations.setLanguageCode(settings.languageCode);
+        break;
       case 'budgetAlertsEnabled':  settings.budgetAlertsEnabled  = value as bool;   break;
       case 'dailyReminderEnabled': settings.dailyReminderEnabled = value as bool;   break;
       case 'dailyReminderTime':    settings.dailyReminderTime    = value as String; break;
@@ -725,11 +766,10 @@ class AppProvider extends ChangeNotifier {
     return _erService.convert(xauAmount, 'XAU', currency, exchangeRates);
   }
 
-  Account?     accountById(String id)  =>
-      accounts.where((a) => a.id == id).firstOrNull;
+  Account? accountById(String id) => _accountsById[id];
 
   AppCategory get transferCategory =>
-      categories.where((c) => c.id == 'sys_transfer').firstOrNull ??
+      _categoriesById['sys_transfer'] ??
       AppCategory(
         id: 'sys_transfer',
         name: 'Transfer',
@@ -739,7 +779,7 @@ class AppProvider extends ChangeNotifier {
 
   AppCategory? categoryById(String id) {
     if (id == 'sys_transfer') return transferCategory;
-    return categories.where((c) => c.id == id).firstOrNull;
+    return _categoriesById[id];
   }
 
   /// User-editable categories (excludes hidden system categories like sys_transfer).
@@ -776,15 +816,109 @@ class AppProvider extends ChangeNotifier {
     return ids;
   }
 
-  /// Returns "Parent › Subcategory" for subcategories, or "Category" for roots.
-  String categoryDisplayName(String categoryId, {String fallback = ''}) {
-    final cat = categoryById(categoryId);
-    if (cat == null) return fallback;
-    if (cat.isSubcategory) {
-      final parent = categoryById(cat.parentId!);
-      if (parent != null) return '${parent.name} › ${cat.name}';
+  /// Localizes a seeded default category or subcategory when its name still
+  /// matches the original English default; preserves custom user-renamed names.
+  static String localizeCategoryName(AppCategory cat, AppLocalizations loc) {
+    final lower = cat.name.trim();
+    switch (cat.id) {
+      case 'food_exp':
+        if (lower == 'Food & Dining') return loc.cat_food_exp;
+      case 'transport':
+        if (lower == 'Transport') return loc.cat_transport;
+      case 'shopping':
+        if (lower == 'Shopping') return loc.cat_shopping;
+      case 'bills':
+        if (lower == 'Bills & Utilities') return loc.cat_bills;
+      case 'health':
+        if (lower == 'Health') return loc.cat_health;
+      case 'entertainment':
+        if (lower == 'Entertainment') return loc.cat_entertainment;
+      case 'education':
+        if (lower == 'Education') return loc.cat_education;
+      case 'personal':
+        if (lower == 'Personal Care') return loc.cat_personal;
+      case 'salary':
+        if (lower == 'Salary') return loc.cat_salary;
+      case 'freelance':
+        if (lower == 'Freelance') return loc.cat_freelance;
+      case 'investments':
+        if (lower == 'Investments') return loc.cat_investments;
+      case 'gifts':
+        if (lower == 'Gifts') return loc.cat_gifts;
+      case 'other_inc':
+        if (lower == 'Other Income') return loc.cat_other_inc;
+      case 'other_exp':
+        if (lower == 'Other Expense') return loc.cat_other_exp;
+      case 'sys_transfer':
+        if (lower == 'Transfer') return loc.cat_sys_transfer;
+      case 'sys_investment':
+        if (lower == 'Investment') return loc.cat_sys_investment;
+      case 'sub_food_exp_groceries':
+        if (lower == 'Groceries') return loc.sub_groceries;
+      case 'sub_food_exp_restaurants':
+        if (lower == 'Restaurants') return loc.sub_restaurants;
+      case 'sub_food_exp_delivery':
+        if (lower == 'Delivery') return loc.sub_delivery;
+      case 'sub_food_exp_coffee_tea':
+        if (lower == 'Coffee & Tea') return loc.sub_coffee_tea;
+      case 'sub_transport_fuel':
+        if (lower == 'Fuel') return loc.sub_fuel;
+      case 'sub_transport_public_transit':
+        if (lower == 'Public Transit') return loc.sub_public_transit;
+      case 'sub_transport_taxi_ride':
+        if (lower == 'Taxi & Ride') return loc.sub_taxi_ride;
+      case 'sub_transport_maintenance':
+        if (lower == 'Maintenance') return loc.sub_maintenance;
+      case 'sub_transport_parking_tolls':
+        if (lower == 'Parking & Tolls') return loc.sub_parking_tolls;
+      case 'sub_shopping_clothing':
+        if (lower == 'Clothing') return loc.sub_clothing;
+      case 'sub_shopping_electronics':
+        if (lower == 'Electronics') return loc.sub_electronics;
+      case 'sub_shopping_home_furniture':
+        if (lower == 'Home & Furniture') return loc.sub_home_furniture;
+      case 'sub_shopping_gifts':
+        if (lower == 'Gifts') return loc.sub_gifts;
+      case 'sub_bills_electricity':
+        if (lower == 'Electricity') return loc.sub_electricity;
+      case 'sub_bills_internet':
+        if (lower == 'Internet') return loc.sub_internet;
+      case 'sub_bills_water':
+        if (lower == 'Water') return loc.sub_water;
+      case 'sub_bills_phone':
+        if (lower == 'Phone') return loc.sub_phone;
+      case 'sub_health_medicine':
+        if (lower == 'Medicine') return loc.sub_medicine;
+      case 'sub_health_doctor':
+        if (lower == 'Doctor') return loc.sub_doctor;
+      case 'sub_entertainment_movies':
+        if (lower == 'Movies') return loc.sub_movies;
+      case 'sub_entertainment_games':
+        if (lower == 'Games') return loc.sub_games;
+      case 'sub_entertainment_subscriptions':
+        if (lower == 'Subscriptions') return loc.sub_subscriptions;
     }
     return cat.name;
+  }
+
+  /// Instance convenience wrapper using active [AppLocalizations].
+  String localizedCategoryName(AppCategory cat, [AppLocalizations? l10n]) =>
+      localizeCategoryName(cat, l10n ?? ServiceLocalizations.current);
+
+  /// Returns "Parent › Subcategory" for subcategories, or "Category" for roots.
+  String categoryDisplayName(String categoryId,
+      {String fallback = '', AppLocalizations? l10n}) {
+    final loc = l10n ?? ServiceLocalizations.current;
+    final cat = categoryById(categoryId);
+    if (cat == null) return fallback;
+    final catLabel = localizeCategoryName(cat, loc);
+    if (cat.isSubcategory) {
+      final parent = categoryById(cat.parentId!);
+      if (parent != null) {
+        return '${localizeCategoryName(parent, loc)} › $catLabel';
+      }
+    }
+    return catLabel;
   }
 
   /// Seeds curated default subcategories under matching default parent categories.
@@ -903,36 +1037,50 @@ class AppProvider extends ChangeNotifier {
     return accountId;
   }
 
-  String? getAccountDeletionBlockReason(String id) {
-    final activeRecurring = recurring.where((r) => r.accountId == id).length;
+  String? getAccountDeletionBlockReason(String id, [AppLocalizations? l10n]) {
+    final activeRecurring = recurring
+        .where((r) => r.accountId == id || r.toAccountId == id)
+        .length;
     if (activeRecurring > 0) {
-      return 'Account has $activeRecurring active recurring payments. Please reassign or delete them first.';
+      return l10n?.accounts_blockDeleteRecurring(activeRecurring) ??
+          'Account has $activeRecurring active recurring payments. Please reassign or delete them first.';
     }
     final activeLoans = loans
         .where((l) => l.accountId == id || l.transferAccountId == id)
         .length;
     if (activeLoans > 0) {
-      return 'Account has $activeLoans active loans. Please reassign or delete them first.';
+      return l10n?.accounts_blockDeleteLoans(activeLoans) ??
+          'Account has $activeLoans active loans. Please reassign or delete them first.';
     }
-    final activeCerts = certificates.where((c) => c.accountId == id && !c.isSettled).length;
+    final activeCerts =
+        certificates.where((c) => c.accountId == id && !c.isSettled).length;
     if (activeCerts > 0) {
-      return 'Account has $activeCerts active certificates. Please redeem or delete them first.';
+      return l10n?.accounts_blockDeleteCertificates(activeCerts) ??
+          'Account has $activeCerts active certificates. Please redeem or delete them first.';
     }
-    final activeLended = lended.where((l) => l.accountId == id && !l.isSettled).length;
+    final activeLended =
+        lended.where((l) => l.accountId == id && !l.isSettled).length;
     if (activeLended > 0) {
-      return 'Account has $activeLended unsettled lend/borrow records. Please settle them first.';
+      return l10n?.accounts_blockDeleteLended(activeLended) ??
+          'Account has $activeLended unsettled lend/borrow records. Please settle them first.';
     }
-    final usedContribs = savingsContributions.where((s) => s.accountId == id).length;
+    final usedContribs =
+        savingsContributions.where((s) => s.accountId == id).length;
     if (usedContribs > 0) {
-      return 'Account is referenced by $usedContribs savings contributions. Please reassign or delete them first.';
+      return l10n?.accounts_blockDeleteSavings(usedContribs) ??
+          'Account is referenced by $usedContribs savings contributions. Please reassign or delete them first.';
     }
-    final usedPresets = presets.where((p) => p.accountId == id).length;
+    final usedPresets = presets
+        .where((p) => p.accountId == id || p.toAccountId == id)
+        .length;
     if (usedPresets > 0) {
-      return 'Account is used by $usedPresets transaction presets. Please reassign or delete them first.';
+      return l10n?.accounts_blockDeletePresets(usedPresets) ??
+          'Account is used by $usedPresets transaction presets. Please reassign or delete them first.';
     }
     final linkedCards = accounts.where((a) => a.linkedAccountId == id).length;
     if (linkedCards > 0) {
-      return 'Account is linked to $linkedCards cards. Please unlink or delete them first.';
+      return l10n?.accounts_blockDeleteCards(linkedCards) ??
+          'Account is linked to $linkedCards cards. Please unlink or delete them first.';
     }
     return null;
   }
@@ -1441,18 +1589,20 @@ class AppProvider extends ChangeNotifier {
     });
   }
 
-  Future<void> addTransfer({
+  Future<AppTransaction?> addTransfer({
     required String fromId,
     required String toId,
     required double fromAmount,
     double? toAmount,
     String note = '',
+    String? title,
+    DateTime? date,
   }) async {
-    if (fromId == toId || fromAmount <= 0) return;
-    await _serializeMutation(() async {
+    if (fromId == toId || fromAmount <= 0) return null;
+    return await _serializeMutation<AppTransaction?>(() async {
       final effFromId = balanceAccountIdFor(fromId);
       final effToId = balanceAccountIdFor(toId);
-      if (effFromId == effToId) return;
+      if (effFromId == effToId) return null;
 
       final fromAcc = accountById(effFromId);
       final toAcc   = accountById(effToId);
@@ -1475,19 +1625,26 @@ class AppProvider extends ChangeNotifier {
         creditAmount = converted;
       }
 
-      final now = DateTime.now();
+      final txDate = date ?? DateTime.now();
       const catId = 'sys_transfer';
       final transferGroupId = newId();
+      final cleanTitle = title?.trim() ?? '';
+      final outDesc = cleanTitle.isNotEmpty
+          ? '$cleanTitle (Transfer out)'
+          : 'Transfer out';
+      final inDesc = cleanTitle.isNotEmpty
+          ? '$cleanTitle (Transfer in)'
+          : 'Transfer in';
 
       final debit = AppTransaction(
         id: newId(),
         type: 'expense',
         amount: fromAmount,
-        description: 'Transfer out',
+        description: outDesc,
         accountId: effFromId,
         paidViaAccountId: effFromId != fromId ? fromId : null,
         categoryId: catId,
-        date: now,
+        date: txDate,
         note: note,
         currency: fromCurrency,
         transferGroupId: transferGroupId,
@@ -1496,11 +1653,11 @@ class AppProvider extends ChangeNotifier {
         id: newId(),
         type: 'income',
         amount: creditAmount,
-        description: 'Transfer in',
+        description: inDesc,
         accountId: effToId,
         paidViaAccountId: effToId != toId ? toId : null,
         categoryId: catId,
-        date: now,
+        date: txDate,
         note: note,
         currency: toCurrency,
         transferGroupId: transferGroupId,
@@ -1521,6 +1678,7 @@ class AppProvider extends ChangeNotifier {
       notifyListeners();
       updateHomeWidgets();
       recordNetWorthSnapshot();
+      return debit;
     });
   }
 
@@ -1539,12 +1697,26 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> deletePreset(String id) async {
     await DBHelper.deletePreset(id);
-    presets.removeWhere((p) => p.id == id);
+    presets = presets.where((p) => p.id != id).toList();
     notifyListeners();
   }
 
-  /// 1-Tap Log a Transaction from a Preset for the current time
+  /// 1-Tap Log a Transaction or Transfer from a Preset for the current time.
   Future<AppTransaction> logPreset(TransactionPreset preset) async {
+    if (preset.isTransfer &&
+        preset.toAccountId != null &&
+        preset.toAccountId!.isNotEmpty) {
+      final debit = await addTransfer(
+        fromId: preset.accountId,
+        toId: preset.toAccountId!,
+        fromAmount: preset.amount,
+        toAmount: preset.toAmount,
+        note: preset.note,
+        title: preset.title,
+      );
+      if (debit != null) return debit;
+    }
+
     final acc = accountById(preset.accountId);
     final accCurrency = acc?.currency ?? settings.currency;
     final storeCurrency = preset.currency == accCurrency ? '' : preset.currency;
@@ -1641,16 +1813,29 @@ class AppProvider extends ChangeNotifier {
       }
 
       final txDate = occurrenceDate ?? DateTime.now();
-      final t = AppTransaction(
-        id: newId(),
-        type: r.paymentType,
-        amount: r.amount,
-        description: '${r.name} (recurring)',
-        accountId: r.accountId,
-        categoryId: r.categoryId,
-        date: txDate,
-      );
-      await addTransaction(t);
+      if (r.isTransfer) {
+        if (r.toAccountId == null || r.toAccountId!.isEmpty) return;
+        await addTransfer(
+          fromId: r.accountId,
+          toId: r.toAccountId!,
+          fromAmount: r.amount,
+          toAmount: r.toAmount,
+          note: r.notes,
+          title: r.name,
+          date: txDate,
+        );
+      } else {
+        final t = AppTransaction(
+          id: newId(),
+          type: r.paymentType,
+          amount: r.amount,
+          description: '${r.name} (recurring)',
+          accountId: r.accountId,
+          categoryId: r.categoryId,
+          date: txDate,
+        );
+        await addTransaction(t);
+      }
       await _recordHistory(r, 'paid', date: effectiveDate);
 
       final updated = r.copyWith(
@@ -2217,13 +2402,6 @@ class AppProvider extends ChangeNotifier {
       return budgetSpent(b) > 0 ? 1.0 : 0.0;
     }
     return (budgetSpent(b) / allowance).clamp(0.0, 1.0);
-  }
-
-  /// Remaining amount of effective budget allowance.
-  double budgetRemaining(Budget b) {
-    final allowance = budgetEffectiveAllowance(b);
-    final rem = allowance - budgetSpent(b);
-    return rem < 0 ? 0.0 : rem;
   }
 
   /// True if current spending exceeds the effective budget allowance.
@@ -2931,20 +3109,21 @@ class AppProvider extends ChangeNotifier {
         .toList();
     if (filtered.isEmpty) throw Exception('No transactions in this date range');
 
+    final l10n = ServiceLocalizations.current;
     final excel = Excel.createExcel();
-    final sheet = excel['Transactions'];
+    final sheet = excel[l10n.export_excelSheetName];
     try { excel.delete('Sheet1'); } catch (_) {}
 
-    const headers = [
-      'Date',
-      'Description',
-      'Type',
-      'Amount',
-      'Currency',
-      'Account',
-      'Category',
-      'Subcategory',
-      'Note'
+    final headers = [
+      l10n.export_headerDate,
+      l10n.export_headerDescription,
+      l10n.export_headerType,
+      l10n.export_headerAmount,
+      l10n.export_headerCurrency,
+      l10n.export_headerAccount,
+      l10n.export_headerCategory,
+      l10n.export_headerSubcategory,
+      l10n.export_headerNote,
     ];
     for (int col = 0; col < headers.length; col++) {
       final cell = sheet.cell(
@@ -3122,7 +3301,7 @@ class AppProvider extends ChangeNotifier {
       await addTransaction(tx);
 
       await DBHelper.insertCertificate(c);
-      certificates.insert(0, c);
+      certificates = [c, ...certificates];
       notifyListeners();
       recordNetWorthSnapshot();
       await CertificateReminderService().scheduleReminder(c);
@@ -3150,7 +3329,9 @@ class AppProvider extends ChangeNotifier {
       await DBHelper.updateCertificate(c);
       final idx = certificates.indexWhere((item) => item.id == c.id);
       if (idx != -1) {
-        certificates[idx] = c;
+        final next = List<Certificate>.from(certificates);
+        next[idx] = c;
+        certificates = next;
       }
       notifyListeners();
       recordNetWorthSnapshot();
@@ -3588,7 +3769,7 @@ class AppProvider extends ChangeNotifier {
       if (tList != null) tables.addAll(tList);
     }
     final dt = DateTime.now();
-    final timestamp = DateFormat('yyyyMMdd_HHmmss').format(dt);
+    final timestamp = DateFormat('yyyyMMdd_HHmmss', 'en_US').format(dt);
     final data = await DBHelper.exportSelective(tables);
     data['exported_at'] = dt.toIso8601String();
 
@@ -4083,104 +4264,6 @@ class AppProvider extends ChangeNotifier {
     return fields;
   }
 
-  Future<void> restoreSay(String csvContent) async {
-    await _serializeMutation(() async {
-      final lines = csvContent.split(RegExp(r'\r?\n'));
-      int startIndex = -1;
-      for (int i = 0; i < lines.length; i++) {
-        if (lines[i].toLowerCase().startsWith('date,description,amount')) {
-          startIndex = i + 1;
-          break;
-        }
-      }
-      if (startIndex == -1) {
-        throw const FormatException(
-            'Invalid Say CSV format: Header row not found.');
-      }
-
-      for (int i = startIndex; i < lines.length; i++) {
-        final line = lines[i].trim();
-        if (line.isEmpty) continue;
-
-        try {
-          final row = _parseCsvRow(line);
-          if (row.length < 7) continue;
-
-          final dateStr = row[0];
-          final desc = row[1];
-          final amountStr = row[2];
-          final currencyStr = row[3];
-          final accountName = row[4];
-          final categoryName = row[5];
-          final typeStr = row[6]; // Expense, Income, Adjustment
-          final hint = row.length > 7 ? row[7] : '';
-
-          final date = DateTime.tryParse(dateStr) ?? DateTime.now();
-          final amount = double.tryParse(amountStr) ?? 0.0;
-
-          if (amount == 0 && typeStr != 'Adjustment') continue;
-
-          var acc = accounts.firstWhereOrNull(
-            (a) => a.name.toLowerCase() == accountName.toLowerCase(),
-          );
-          if (acc == null) {
-            acc = Account(
-              id: newId(),
-              name: accountName,
-              type: 'bank',
-              currency: currencyStr,
-              balance: 0,
-              colorValue: 0xFF6750A4,
-            );
-            await DBHelper.insertAccount(acc);
-            accounts = [...accounts, acc];
-          }
-
-          final isIncome = typeStr == 'Income' || typeStr == 'Adjustment';
-          final catType = isIncome ? 'income' : 'expense';
-          final catNameToUse =
-              typeStr == 'Adjustment' && categoryName.isEmpty
-                  ? 'Balance Adjustment'
-                  : categoryName;
-          var cat = categories.firstWhereOrNull(
-            (c) =>
-                c.name.toLowerCase() == catNameToUse.toLowerCase() &&
-                c.type == catType,
-          );
-          if (cat == null) {
-            cat = AppCategory(
-              id: newId(),
-              name: catNameToUse,
-              type: catType,
-              colorValue: 0xFF9C27B0,
-            );
-            await DBHelper.insertCategory(cat);
-            categories = [...categories, cat];
-          }
-
-          final tx = AppTransaction(
-            id: newId(),
-            type: catType,
-            amount: amount,
-            description: typeStr == 'Adjustment' && desc.isEmpty
-                ? 'Initial Balance'
-                : desc,
-            accountId: acc.id,
-            categoryId: cat.id,
-            date: date,
-            note: hint,
-            currency: currencyStr,
-          );
-
-          await addTransaction(tx);
-        } catch (_) {
-          continue;
-        }
-      }
-      await load();
-    });
-  }
-  
   bool isTransactionSelectionMode = false;
   void setTransactionSelectionMode(bool value) {
     if (isTransactionSelectionMode != value) {
@@ -4193,6 +4276,10 @@ class AppProvider extends ChangeNotifier {
 
   List<Account> get nonBankAccounts =>
       accounts.where((a) => a.type != 'bank' || a.dontLinkToCard).toList();
+
+  /// Accounts eligible for internal transfers (Bank, Cash, Savings — excludes Cards & Gold).
+  List<Account> get transferableAccounts =>
+      accounts.where((a) => !a.isCard && !a.isGold).toList();
 
   void reorderCategories(int oldIndex, int newIndex, String type,
       {String? parentId}) {
@@ -4278,10 +4365,12 @@ class AppProvider extends ChangeNotifier {
 
   void reorderAccounts(int oldIndex, int newIndex) {
     if (oldIndex < newIndex) newIndex -= 1;
-    final item = accounts.removeAt(oldIndex);
-    accounts.insert(newIndex, item);
+    final next = List<Account>.from(accounts);
+    final item = next.removeAt(oldIndex);
+    next.insert(newIndex, item);
+    accounts = next;
     notifyListeners();
-    final ids = accounts.map((a) => a.id).toList();
+    final ids = next.map((a) => a.id).toList();
     _serializeMutation(() async {
       await DBHelper.updateAccountOrder(ids);
     });

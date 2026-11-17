@@ -1069,8 +1069,8 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count items',
-      one: '1 item',
+      other: '$count عناصر',
+      one: 'عنصر واحد',
     );
     return '$_temp0';
   }
@@ -1091,8 +1091,8 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count items',
-      one: '1 item',
+      other: '$count أصول',
+      one: 'أصل واحد',
     );
     return '$_temp0';
   }
@@ -1105,8 +1105,8 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count categories',
-      one: '1 category',
+      other: '$count فئات',
+      one: 'فئة واحدة',
     );
     return '$_temp0';
   }
@@ -1263,8 +1263,8 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count active records',
-      one: '1 active record',
+      other: '$count سجلات نشطة',
+      one: 'سجل نشط واحد',
     );
     return '$_temp0';
   }
@@ -1375,8 +1375,8 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count transactions in range',
-      one: '1 transaction in range',
+      other: '$count معاملات في النطاق',
+      one: 'معاملة واحدة في النطاق',
     );
     return '$_temp0';
   }
@@ -1950,7 +1950,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String backup_runsDailyAt(String time) {
-    return 'Runs daily at $time';
+    return 'يعمل يومياً الساعة $time';
   }
 
   @override
@@ -1960,7 +1960,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String backup_savingTo(String path) {
-    return 'Saving to: $path';
+    return 'الحفظ في: $path';
   }
 
   @override
@@ -1986,7 +1986,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String savings_targetDate(String date) {
-    return 'Target Date: $date';
+    return 'التاريخ المستهدف: $date';
   }
 
   @override
@@ -2499,7 +2499,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'هل أنت متأكد من حذف هذه المعاملة المتكررة؟';
 
   @override
-  String get export_formatExcelOption => 'Excel (.xlsx)';
+  String get export_formatExcelOption => 'إكسل (.xlsx)';
 
   @override
   String get export_formatPdfOption => 'تقرير PDF';
@@ -2846,4 +2846,1154 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get certificates_noCertificatesSub =>
       'اضغط على + لتتبع الشهادات البنكية والودائع الثابتة';
+
+  @override
+  String get common_undo => 'تراجع';
+
+  @override
+  String get common_close => 'إغلاق';
+
+  @override
+  String get common_required => 'مطلوب';
+
+  @override
+  String get common_invalid => 'غير صالح';
+
+  @override
+  String get common_none => 'لا شيء';
+
+  @override
+  String common_enabledAt(String time) {
+    return 'مفعل ($time)';
+  }
+
+  @override
+  String get common_disabled => 'معطل';
+
+  @override
+  String get freq_daily => 'يومي';
+
+  @override
+  String get freq_yearly => 'سنوي';
+
+  @override
+  String recurring_transfers(Object count) {
+    return 'التحويلات ($count)';
+  }
+
+  @override
+  String get recurring_transfer => 'تحويل';
+
+  @override
+  String get recurring_transferCaps => 'تحويل';
+
+  @override
+  String get recurring_noRecurringTransfers => 'لا توجد تحويلات متكررة';
+
+  @override
+  String recurring_subtitleCount(int count) {
+    return '$count اشتراكات ودفعات متكررة';
+  }
+
+  @override
+  String recurring_perWeek(String amount) {
+    return '$amount / أسبوع';
+  }
+
+  @override
+  String get recurring_perMonth => '/ شهر';
+
+  @override
+  String get recurring_fromAccount => 'من حساب';
+
+  @override
+  String get recurring_toAccount => 'إلى حساب';
+
+  @override
+  String recurring_targetAmount(String currency) {
+    return 'المبلغ المستلم ($currency)';
+  }
+
+  @override
+  String get recurring_autoPayAt => 'الدفع التلقائي في';
+
+  @override
+  String get recurring_autoPayOnDueDate => 'دفع تلقائي في تاريخ الاستحقاق';
+
+  @override
+  String get recurring_autoPayEnabledSub =>
+      'يتم التسجيل تلقائياً في تاريخ الاستحقاق';
+
+  @override
+  String get recurring_autoPayDisabledSub =>
+      'سجل هذه الدفعة تلقائياً عند الاستحقاق';
+
+  @override
+  String get recurring_autoPayTime => 'وقت الدفع التلقائي';
+
+  @override
+  String get recurring_reminderEnabledSub => 'سيتم إشعارك في تاريخ الاستحقاق';
+
+  @override
+  String get recurring_reminderDisabledSub =>
+      'احصل على إشعار عند استحقاق الدفعة';
+
+  @override
+  String get recurring_earlyReminderEnabledSub =>
+      'تذكير إضافي قبل يومين في نفس الوقت';
+
+  @override
+  String get recurring_earlyReminderDisabledSub =>
+      'احصل أيضاً على إشعار قبل يومين من الاستحقاق';
+
+  @override
+  String get recurring_addRecurringBtn => 'إضافة متكرر';
+
+  @override
+  String get recurring_paymentDetails => 'تفاصيل الدفعة';
+
+  @override
+  String get recurring_linkedAccount => 'الحساب المرتبط';
+
+  @override
+  String get recurring_deletedAccount => 'حساب محذوف';
+
+  @override
+  String get recurring_frequency => 'التكرار';
+
+  @override
+  String get recurring_type => 'النوع';
+
+  @override
+  String get recurring_startDate => 'تاريخ البدء';
+
+  @override
+  String get recurring_nextDueDate => 'الاستحقاق القادم';
+
+  @override
+  String get recurring_autoPay => 'الدفع التلقائي';
+
+  @override
+  String get recurring_reminder => 'التذكير';
+
+  @override
+  String get recurring_endDate => 'تاريخ الانتهاء';
+
+  @override
+  String get recurring_totalValue => 'القيمة الإجمالية';
+
+  @override
+  String get recurring_notes => 'ملاحظات';
+
+  @override
+  String get recurring_upcomingPayments => 'الدفعات القادمة';
+
+  @override
+  String recurring_remainingCount(int count) {
+    return 'متبقي $count';
+  }
+
+  @override
+  String get recurring_allInstallmentsCompleted => 'تم إكمال جميع الأقساط';
+
+  @override
+  String recurring_installmentOf(int num, int total) {
+    return '#$num من $total';
+  }
+
+  @override
+  String get recurring_paymentPaid => 'تم الدفع';
+
+  @override
+  String get recurring_paymentSkipped => 'تم التخطي';
+
+  @override
+  String get presets_transfer => 'تحويل';
+
+  @override
+  String get presets_selectDifferentAccounts =>
+      'يرجى اختيار حسابين مختلفين للمصدر والوجهة.';
+
+  @override
+  String presets_targetAmountOptional(String currency) {
+    return 'المبلغ المستلم بـ $currency (اختياري)';
+  }
+
+  @override
+  String get transactions_transfers => 'التحويلات';
+
+  @override
+  String transactions_selectedItemsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تم تحديد $count عناصر',
+      one: 'تم تحديد عنصر واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String transactions_entriesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count سجلات',
+      one: 'سجل واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get transactions_clearSelection => 'مسح التحديد';
+
+  @override
+  String get transactions_transferTitle => 'عملية تحويل';
+
+  @override
+  String get transactions_transferBody =>
+      'هذه المعاملة جزء من تحويل بين الحسابات. لا يمكن تعديل أحد الطرفين منفرداً للحفاظ على دقة الأرصدة. هل تريد حذف هذا التحويل؟';
+
+  @override
+  String get transactions_deleteTransfer => 'حذف التحويل';
+
+  @override
+  String get transactions_transferDeleted => 'تم حذف التحويل';
+
+  @override
+  String get transactions_certTitle => 'معاملة شهادة ادخار';
+
+  @override
+  String get transactions_certBody =>
+      'هذه المعاملة مرتبطة بشهادة ادخار أو وديعة. لإبقاء السجلات متزامنة، قم بإدارتها من شاشة الشهادات.';
+
+  @override
+  String get transactions_viewCertificate => 'عرض الشهادة';
+
+  @override
+  String get transactions_openCertificates => 'فتح الشهادات';
+
+  @override
+  String get transactions_loanFallback => 'قرض';
+
+  @override
+  String get transactions_loanPayment => 'قسط قرض';
+
+  @override
+  String get transactions_goalContribution => 'إيداع في هدف';
+
+  @override
+  String get transactions_goalWithdrawal => 'سحب من هدف';
+
+  @override
+  String get calendar_repayment => 'سداد';
+
+  @override
+  String get calendar_transfersDue => 'التحويلات المتكررة المستحقة';
+
+  @override
+  String accounts_subtitleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count حسابات',
+      one: 'حساب واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get accounts_tabAccounts => 'الحسابات';
+
+  @override
+  String get accounts_tabCards => 'البطاقات';
+
+  @override
+  String get accounts_addCardBtn => 'إضافة بطاقة';
+
+  @override
+  String get accounts_addNewCardBtn => 'إضافة بطاقة جديدة';
+
+  @override
+  String get accounts_editCard => 'تعديل البطاقة';
+
+  @override
+  String get accounts_cardNameHint => 'اسم البطاقة (مثال: Visa Platinum)';
+
+  @override
+  String get accounts_debitCard => 'بطاقة خصم مباشر';
+
+  @override
+  String get accounts_prepaidCard => 'بطاقة مسبقة الدفع';
+
+  @override
+  String get accounts_pinToWidget => 'تثبيت في الأداة';
+
+  @override
+  String get accounts_unpinFromWidget => 'إلغاء التثبيت';
+
+  @override
+  String get accounts_maxPinnedWarning => 'لا يمكنك تثبيت أكثر من 3 حسابات';
+
+  @override
+  String get accounts_selectLinkedBank =>
+      'يرجى اختيار الحساب البنكي المرتبط لبطاقة الخصم هذه.';
+
+  @override
+  String get accounts_debitSharesBalance =>
+      'بطاقات الخصم تشارك الرصيد مع الحساب البنكي المرتبط بها.';
+
+  @override
+  String get accounts_linkedBankRequired => 'الحساب البنكي المرتبط (مطلوب)';
+
+  @override
+  String get accounts_amountCurrentlyOwed => 'المبلغ المستحق حالياً';
+
+  @override
+  String get accounts_initialAmountOwed => 'المبلغ المستحق المبدئي';
+
+  @override
+  String get accounts_cardDebtHint =>
+      'أدخل المبلغ المستحق حالياً على هذه البطاقة (يُحفظ كدين)';
+
+  @override
+  String accounts_nextCycleCloses(int day) {
+    return 'تغلق الدورة القادمة حول يوم $day';
+  }
+
+  @override
+  String accounts_spotPriceLabel(int karat) {
+    return 'السعر الفوري ($karat عيار/جم)';
+  }
+
+  @override
+  String get accounts_weightTimesPurity => 'الوزن × العيار';
+
+  @override
+  String accounts_blockDeleteRecurring(int count) {
+    return 'يحتوي الحساب على $count مدفوعات متكررة نشطة. يرجى إعادة تعيينها أو حذفها أولاً.';
+  }
+
+  @override
+  String accounts_blockDeleteLoans(int count) {
+    return 'يحتوي الحساب على $count قروض نشطة. يرجى إعادة تعيينها أو حذفها أولاً.';
+  }
+
+  @override
+  String accounts_blockDeleteCertificates(int count) {
+    return 'يحتوي الحساب على $count شهادات نشطة. يرجى استردادها أو حذفها أولاً.';
+  }
+
+  @override
+  String accounts_blockDeleteLended(int count) {
+    return 'يحتوي الحساب على $count سجلات ديون غير مسواة. يرجى تسويتها أولاً.';
+  }
+
+  @override
+  String accounts_blockDeleteSavings(int count) {
+    return 'الحساب مرتبط بـ $count مساهمات ادخار. يرجى إعادة تعيينها أو حذفها أولاً.';
+  }
+
+  @override
+  String accounts_blockDeletePresets(int count) {
+    return 'الحساب مستخدم في $count قوالب سريعة. يرجى إعادة تعيينها أو حذفها أولاً.';
+  }
+
+  @override
+  String accounts_blockDeleteCards(int count) {
+    return 'الحساب مرتبط بـ $count بطاقات. يرجى إلغاء ربطها أو حذفها أولاً.';
+  }
+
+  @override
+  String get add_transaction_selectAccountOrCard =>
+      'يرجى اختيار حساب أو بطاقة.';
+
+  @override
+  String get add_transaction_balanced => 'متوازن';
+
+  @override
+  String add_transaction_similarExists(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'توجد $count معاملات مشابهة بالفعل:',
+      one: 'توجد معاملة مشابهة بالفعل:',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String budget_goalsCountSubtitle(int budgets, int goals) {
+    return '$budgets ميزانيات · $goals أهداف';
+  }
+
+  @override
+  String get budget_savingsGoalsCaps => 'أهداف الادخار';
+
+  @override
+  String budget_percentSaved(String percent) {
+    return 'تم ادخار $percent%';
+  }
+
+  @override
+  String budget_ofTarget(String amount) {
+    return 'من هدف $amount';
+  }
+
+  @override
+  String get budget_goalsTab => 'الأهداف';
+
+  @override
+  String get budget_completed => 'مكتمل';
+
+  @override
+  String get savings_newGoal => 'هدف ادخار جديد';
+
+  @override
+  String get savings_editGoal => 'تعديل هدف الادخار';
+
+  @override
+  String get certificates_activePrincipal => 'رأس المال النشط';
+
+  @override
+  String get certificates_activeCount => 'الشهادات النشطة';
+
+  @override
+  String certificates_linkedBank(String name) {
+    return 'مرتبط بـ: $name';
+  }
+
+  @override
+  String certificates_yieldSummary(String amount, String type) {
+    return 'العائد: $amount ($type)';
+  }
+
+  @override
+  String certificates_maturesOn(String date) {
+    return 'تاريخ الاستحقاق: $date';
+  }
+
+  @override
+  String get certificates_settledCaps => 'مسواة';
+
+  @override
+  String get certificates_activeCaps => 'نشطة';
+
+  @override
+  String get certificates_annualRate => 'العائد السنوي';
+
+  @override
+  String get certificates_periodicYieldLabel => 'العائد الدوري';
+
+  @override
+  String get certificates_maturedAndSettled => 'تم استحقاق الشهادة وتسويتها';
+
+  @override
+  String get certificates_payoutOverride => 'العائد (تعديل يدوي)';
+
+  @override
+  String get certificates_dayRange => 'اليوم (1-31)';
+
+  @override
+  String get certificates_noBankAccounts =>
+      'لا توجد حسابات بنكية متاحة. يرجى إنشاء حساب بنكي لاستلام العوائد.';
+
+  @override
+  String get certificates_selectLinkedBank => 'يرجى اختيار حساب بنكي مرتبط.';
+
+  @override
+  String get creditCard_noFundingAccounts =>
+      'لا توجد حسابات بنكية أو نقدية متاحة للسداد.';
+
+  @override
+  String get creditCard_processing => 'جاري المعالجة...';
+
+  @override
+  String creditCard_payAmountBtn(String amount) {
+    return 'سداد $amount';
+  }
+
+  @override
+  String get insights_loanPaymentsThisMonth => 'مدفوعات القروض هذا الشهر';
+
+  @override
+  String get insights_spendingForecast => 'توقعات الإنفاق';
+
+  @override
+  String get insights_forecastPrefix => 'بهذا المعدل، ستنفق ';
+
+  @override
+  String insights_forecastSuffix(String month, int days) {
+    return ' بحلول نهاية $month — متبقي $days يوم.';
+  }
+
+  @override
+  String get insights_forecastDisclaimer =>
+      'التوقع مبني على الإنفاق الحالي، ولا يشمل الفواتير المتكررة القادمة.';
+
+  @override
+  String insights_forecastAccuracy(int days) {
+    return 'بناءً على أول $days أيام — تتحسن الدقة مع تقدم الشهر.';
+  }
+
+  @override
+  String insights_projAmount(String amount) {
+    return 'المتوقع: $amount';
+  }
+
+  @override
+  String insights_projOfBudget(String percent) {
+    return ' ($percent% من الميزانية)';
+  }
+
+  @override
+  String get insights_outstanding => 'المتبقي';
+
+  @override
+  String get insights_monthlyObligation => 'الالتزام الشهري';
+
+  @override
+  String get loans_principal => 'أصل القرض';
+
+  @override
+  String get loans_interestRate => 'معدل الفائدة';
+
+  @override
+  String get loans_duration => 'المدة';
+
+  @override
+  String get loans_transferTo => 'تحويل مبلغ القرض إلى';
+
+  @override
+  String get loans_payFrom => 'دفع الأقساط من';
+
+  @override
+  String loans_dueDayTime(int day, String time) {
+    return 'الاستحقاق: يوم $day الساعة $time';
+  }
+
+  @override
+  String more_activeCount(int count) {
+    return '$count نشط';
+  }
+
+  @override
+  String more_toolsSubtitle(int count) {
+    return '$count أدوات مالية وتفضيلات';
+  }
+
+  @override
+  String get more_totalWealthCaps => 'إجمالي الثروة';
+
+  @override
+  String get more_liveNetWorthSub => 'صافي الثروة المباشر عبر جميع الأصول';
+
+  @override
+  String more_assetsAmount(String amount) {
+    return 'الأصول: $amount';
+  }
+
+  @override
+  String more_liabilitiesAmount(String amount) {
+    return 'الالتزامات: $amount';
+  }
+
+  @override
+  String get netWorth_debtFree => 'خالٍ من الديون';
+
+  @override
+  String get netWorth_showLess => 'عرض أقل';
+
+  @override
+  String netWorth_showAll(int count) {
+    return 'عرض الكل ($count)';
+  }
+
+  @override
+  String get netWorth_zeroLiabilities =>
+      'لا توجد التزامات مسجلة! إجمالي الديون 0.00.';
+
+  @override
+  String get netWorth_lentDebts => 'الديون';
+
+  @override
+  String netWorth_snapBreakdown(String assets, String accounts) {
+    return 'الأصول: $assets · الحسابات: $accounts';
+  }
+
+  @override
+  String get onboarding_nameRequired => 'الاسم مطلوب';
+
+  @override
+  String get onboarding_popularCurrencies => 'العملات الشائعة';
+
+  @override
+  String get onboarding_debitCardNextStep =>
+      'يمكنك إضافة بطاقة خصم لهذا الحساب في الخطوة التالية';
+
+  @override
+  String get onboarding_addDebitCardTitle => 'إضافة بطاقة خصم';
+
+  @override
+  String get onboarding_addDebitCardDesc =>
+      'اربط بطاقة خصم بحسابك البنكي الجديد لتتبع المصروفات بسهولة.';
+
+  @override
+  String get onboarding_cardName => 'اسم البطاقة';
+
+  @override
+  String get onboarding_cardholderName => 'اسم حامل البطاقة';
+
+  @override
+  String get onboarding_last4Digits => 'آخر 4 أرقام';
+
+  @override
+  String get onboarding_cardColor => 'لون البطاقة';
+
+  @override
+  String wrapped_zeroSpendOfDays(int total) {
+    return 'من أصل $total يوم بدون إنفاق';
+  }
+
+  @override
+  String get wrapped_savingsRateLabel => 'معدل الادخار';
+
+  @override
+  String get wrapped_topCategoryLabel => 'أعلى فئة';
+
+  @override
+  String get wrapped_zeroSpendDaysLabel => 'أيام بلا إنفاق';
+
+  @override
+  String get wrapped_footerTag => '★ إدارة مالية خاصة ودون اتصال ★';
+
+  @override
+  String get yearly_tapToExpand => 'اضغط للتوسيع';
+
+  @override
+  String get yearly_noDataBadge => 'لا توجد بيانات';
+
+  @override
+  String get export_formatHeader => 'صيغة التصدير';
+
+  @override
+  String export_pdfPeriod(String range) {
+    return 'الفترة: $range';
+  }
+
+  @override
+  String export_pdfCurrency(String currency) {
+    return 'العملة: $currency';
+  }
+
+  @override
+  String export_pdfGenerated(String date) {
+    return 'تاريخ الإنشاء: $date';
+  }
+
+  @override
+  String export_pdfPageOf(int page, int total) {
+    return 'صفحة $page من $total';
+  }
+
+  @override
+  String get export_pdfTotalAssets => 'إجمالي الأصول';
+
+  @override
+  String get export_pdfTotalLiabilities => 'إجمالي الالتزامات';
+
+  @override
+  String get export_pdfCurrentNetWorth => 'صافي الثروة الحالي';
+
+  @override
+  String get export_pdfCategory => 'الفئة';
+
+  @override
+  String export_pdfAmountHeader(String currency) {
+    return 'المبلغ ($currency)';
+  }
+
+  @override
+  String get export_pdfPercentOfExpenses => '% من إجمالي المصروفات';
+
+  @override
+  String get backup_encryptedTitle => 'نسخة احتياطية مشفرة';
+
+  @override
+  String get backup_encryptedPrompt =>
+      'أدخل كلمة المرور المستخدمة لتشفير ملف النسخة الاحتياطية:';
+
+  @override
+  String get backup_password => 'كلمة المرور';
+
+  @override
+  String get backup_confirmPassword => 'تأكيد كلمة المرور';
+
+  @override
+  String get backup_decryptContinue => 'فك التشفير والمتابعة';
+
+  @override
+  String get backup_chooseRestoreMode => 'اختر وضع الاستعادة';
+
+  @override
+  String get backup_chooseRestoreModeDesc =>
+      'اختر ما إذا كنت تريد استعادة النسخة الاحتياطية بالكامل أو بيانات مالية محددة فقط.';
+
+  @override
+  String get backup_selectiveRestore => 'استعادة انتقائية';
+
+  @override
+  String get backup_selectiveRestoreDesc =>
+      'اختر عناصر محددة دون مسح بياناتك أو إعداداتك الأخرى.';
+
+  @override
+  String get backup_fullRestore => 'استعادة كاملة';
+
+  @override
+  String get backup_fullRestoreDesc =>
+      'يستبدل جميع جداول قاعدة البيانات والإعدادات الحالية بالكامل.';
+
+  @override
+  String get backup_selectiveBackup => 'نسخ احتياطي انتقائي';
+
+  @override
+  String get backup_selectiveBackupBtn => 'نسخ احتياطي انتقائي...';
+
+  @override
+  String get backup_selectiveBackupDesc =>
+      'اختر البيانات المالية التي تريد تصديرها إلى ملف JSON.';
+
+  @override
+  String get backup_selectedRestoredSuccess =>
+      'تمت استعادة البيانات المحددة بنجاح!';
+
+  @override
+  String get backup_savingsGoals => 'أهداف الادخار';
+
+  @override
+  String get backup_savingsContributions => 'مساهمات الادخار';
+
+  @override
+  String get backup_encryptionDisabled => 'تم تعطيل تشفير النسخ الاحتياطي';
+
+  @override
+  String get backup_encryptionEnabled => 'تم تفعيل تشفير النسخ الاحتياطي';
+
+  @override
+  String backup_encryptionFailed(String error) {
+    return 'فشل تفعيل التشفير: $error';
+  }
+
+  @override
+  String get backup_encryptAutoTitle => 'تشفير النسخ التلقائي';
+
+  @override
+  String get backup_encryptAutoDesc =>
+      'احمِ نسخك الاحتياطية التلقائية بتشفير AES-GCM-256. إذا نسيت كلمة المرور، لا يمكن استعادة النسخ.';
+
+  @override
+  String get backup_passwordEmpty => 'لا يمكن أن تكون كلمة المرور فارغة';
+
+  @override
+  String get backup_passwordsMismatch => 'كلمات المرور غير متطابقة';
+
+  @override
+  String get backup_setPassword => 'تعيين كلمة المرور';
+
+  @override
+  String backup_autoCreated(String file) {
+    return 'تم إنشاء نسخة تلقائية: $file';
+  }
+
+  @override
+  String backup_autoFailed(String error) {
+    return 'فشل النسخ التلقائي: $error';
+  }
+
+  @override
+  String get backup_nightlySchedule =>
+      'ليلياً حوالي 2:00 صباحاً إلى المجلد المختار';
+
+  @override
+  String get backup_noFolderSelected => 'لم يتم اختيار مجلد';
+
+  @override
+  String get backup_keepCopies => 'الاحتفاظ بنسخ:';
+
+  @override
+  String get backup_encryptAes => 'تشفير النسخة (AES-GCM)';
+
+  @override
+  String backup_failedError(String error) {
+    return 'فشل: $error';
+  }
+
+  @override
+  String backup_lastSuccess(String date, String kb) {
+    return 'آخر نسخة: $date ($kb ك.ب)';
+  }
+
+  @override
+  String get backup_backingUp => 'جاري النسخ...';
+
+  @override
+  String get backup_backUpNow => 'نسخ احتياطي الآن';
+
+  @override
+  String get backup_androidIdleNote =>
+      'يعمل حوالي 2:00 صباحاً. قد يؤخره النظام أثناء خمول الهاتف.';
+
+  @override
+  String get backup_selectAll => 'تحديد الكل';
+
+  @override
+  String get backup_deselectAll => 'إلغاء تحديد الكل';
+
+  @override
+  String get backup_selectiveSaved => 'تم حفظ النسخة الانتقائية بنجاح!';
+
+  @override
+  String backup_exportFailed(String error) {
+    return 'فشل التصدير: $error';
+  }
+
+  @override
+  String backup_exportSelected(int count) {
+    return 'تصدير المحدد ($count)';
+  }
+
+  @override
+  String backup_restoreSelected(int count) {
+    return 'استعادة المحدد ($count)';
+  }
+
+  @override
+  String get backup_selectiveRestoreNote =>
+      'سيتم استعادة العناصر المحددة فقط. ستبقى حساباتك ومعاملاتك وإعداداتك الأخرى دون تغيير.';
+
+  @override
+  String backup_countInBackup(int count) {
+    return '$count في النسخة';
+  }
+
+  @override
+  String get backup_entityTxSplitsPresets => 'المعاملات والتقسيمات والقوالب';
+
+  @override
+  String get backup_entityRecurringHistory => 'المدفوعات المتكررة والسجل';
+
+  @override
+  String get backup_entityLoansPayments => 'القروض والمدفوعات';
+
+  @override
+  String get backup_entityLentContacts => 'الديون وجهات الاتصال';
+
+  @override
+  String get backup_entityAssetsValuables => 'الأصول والممتلكات';
+
+  @override
+  String get backup_entityWishlistGoals => 'قائمة الأمنيات وأهداف الادخار';
+
+  @override
+  String get common_perDay => '/ يوم';
+
+  @override
+  String common_daysShort(int count) {
+    return '$count يوم';
+  }
+
+  @override
+  String get common_splitCaps => 'مقسم';
+
+  @override
+  String budget_deletedCategory(String name) {
+    return 'تم حذف $name';
+  }
+
+  @override
+  String get loans_paymentDeleted => 'تم حذف الدفعة';
+
+  @override
+  String certificates_collectionDayLabel(String frequency, int day) {
+    return '$frequency (يوم $day)';
+  }
+
+  @override
+  String add_transaction_duplicateItem(
+      String amount, String date, String desc) {
+    return '• $amount في $date$desc';
+  }
+
+  @override
+  String creditCard_billPaymentDesc(String name) {
+    return 'سداد فاتورة البطاقة الائتمانية — $name';
+  }
+
+  @override
+  String get onboarding_defaultBankName => 'البنك الرئيسي';
+
+  @override
+  String get onboarding_defaultCardholder => 'عضو EXPENSY';
+
+  @override
+  String get onboarding_defaultUser => 'المستخدم';
+
+  @override
+  String get export_excelSheetName => 'المعاملات';
+
+  @override
+  String get export_headerDate => 'التاريخ';
+
+  @override
+  String get export_headerDescription => 'الوصف';
+
+  @override
+  String get export_headerType => 'النوع';
+
+  @override
+  String get export_headerAmount => 'المبلغ';
+
+  @override
+  String get export_headerCurrency => 'العملة';
+
+  @override
+  String get export_headerAccount => 'الحساب';
+
+  @override
+  String get export_headerCategory => 'الفئة';
+
+  @override
+  String get export_headerSubcategory => 'الفئة الفرعية';
+
+  @override
+  String get export_headerNote => 'ملاحظة';
+
+  @override
+  String get cat_food_exp => 'الطعام والمطاعم';
+
+  @override
+  String get cat_transport => 'المواصلات';
+
+  @override
+  String get cat_shopping => 'التسوق';
+
+  @override
+  String get cat_bills => 'الفواتير والخدمات';
+
+  @override
+  String get cat_health => 'الصحة';
+
+  @override
+  String get cat_entertainment => 'الترفيه';
+
+  @override
+  String get cat_education => 'التعليم';
+
+  @override
+  String get cat_personal => 'العناية الشخصية';
+
+  @override
+  String get cat_salary => 'الراتب';
+
+  @override
+  String get cat_freelance => 'العمل الحر';
+
+  @override
+  String get cat_investments => 'الاستثمارات';
+
+  @override
+  String get cat_gifts => 'الهدايا';
+
+  @override
+  String get cat_other_inc => 'دخل آخر';
+
+  @override
+  String get cat_other_exp => 'مصروفات أخرى';
+
+  @override
+  String get cat_sys_transfer => 'تحويل';
+
+  @override
+  String get cat_sys_investment => 'استثمار';
+
+  @override
+  String get sub_groceries => 'البقالة';
+
+  @override
+  String get sub_restaurants => 'المطاعم';
+
+  @override
+  String get sub_delivery => 'التوصيل';
+
+  @override
+  String get sub_coffee_tea => 'القهوة والشاي';
+
+  @override
+  String get sub_fuel => 'الوقود';
+
+  @override
+  String get sub_public_transit => 'المواصلات العامة';
+
+  @override
+  String get sub_taxi_ride => 'التاكسي والرحلات';
+
+  @override
+  String get sub_maintenance => 'الصيانة';
+
+  @override
+  String get sub_parking_tolls => 'المواقف والرسوم';
+
+  @override
+  String get sub_clothing => 'الملابس';
+
+  @override
+  String get sub_electronics => 'الإلكترونيات';
+
+  @override
+  String get sub_home_furniture => 'المنزل والأثاث';
+
+  @override
+  String get sub_gifts => 'الهدايا';
+
+  @override
+  String get sub_electricity => 'الكهرباء';
+
+  @override
+  String get sub_internet => 'الإنترنت';
+
+  @override
+  String get sub_water => 'المياه';
+
+  @override
+  String get sub_phone => 'الهاتف';
+
+  @override
+  String get sub_medicine => 'الأدوية';
+
+  @override
+  String get sub_doctor => 'الطبيب';
+
+  @override
+  String get sub_movies => 'الأفلام';
+
+  @override
+  String get sub_games => 'الألعاب';
+
+  @override
+  String get sub_subscriptions => 'الاشتراكات';
+
+  @override
+  String get notif_overBudgetTitle => '🚨 تجاوز الميزانية';
+
+  @override
+  String notif_overBudgetBody(String category, String amount, String period) {
+    return '$category — تجاوزت حد $period بمقدار $amount';
+  }
+
+  @override
+  String get notif_goalReachedTitle => '🎉 تم تحقيق الهدف';
+
+  @override
+  String notif_goalReachedBody(String amount, String name) {
+    return 'لقد حققت هدفك البالغ $amount لـ $name!';
+  }
+
+  @override
+  String get notif_certPayoutDueTitle => '📈 استحقاق عائد شهادة';
+
+  @override
+  String get notif_certPayoutUpcomingTitle => '📈 عائد شهادة قادم';
+
+  @override
+  String notif_certPayoutBody(String name) {
+    return 'عائد الفائدة لـ $name مستحق اليوم.';
+  }
+
+  @override
+  String notif_certPayoutSoonBody(String name) {
+    return 'عائد الفائدة لـ $name مستحق خلال يومين.';
+  }
+
+  @override
+  String get notif_creditBillDueTodayTitle => '💳 الفاتورة مستحقة اليوم';
+
+  @override
+  String get notif_creditBillDueSoonTitle => '💳 الفاتورة مستحقة قريباً';
+
+  @override
+  String get notif_dailyReminderTitle => '📝 تذكير يومي';
+
+  @override
+  String get notif_dailyReminderBody => 'لا تنسَ تسجيل مصروفات اليوم.';
+
+  @override
+  String notif_lendedDueTitle(String emoji, String name) {
+    return '$emoji مستحق: $name';
+  }
+
+  @override
+  String get notif_loanPaymentDueTitle => '🏦 قسط قرض مستحق';
+
+  @override
+  String notif_loanPaymentDueBody(String name) {
+    return 'قسط $name مستحق اليوم.';
+  }
+
+  @override
+  String get notif_autoBackupFailedTitle => 'فشل النسخ الاحتياطي التلقائي';
+
+  @override
+  String notif_autoBackupFailedBody(String error) {
+    return 'تعذر على Expensy إنشاء النسخة الاحتياطية المجدولة: $error';
+  }
+
+  @override
+  String notif_recurringTransferBody(String amount) {
+    return 'تحويل بمبلغ $amount مستحق';
+  }
+
+  @override
+  String notif_recurringIncomeBody(String amount) {
+    return 'دخل بمبلغ $amount مستحق';
+  }
+
+  @override
+  String notif_recurringExpenseBody(String amount) {
+    return 'دفعة بمبلغ $amount مستحقة';
+  }
+
+  @override
+  String notif_creditBillDueTodayBody(String name) {
+    return 'فاتورة $name مستحقة اليوم.';
+  }
+
+  @override
+  String notif_creditBillDueSoonBody(String name) {
+    return 'فاتورة $name مستحقة خلال يومين.';
+  }
+
+  @override
+  String notif_lendedLentDueBody(String amount, String name) {
+    return 'مبلغ $amount الذي أقرضته لـ $name مستحق اليوم';
+  }
+
+  @override
+  String notif_lendedBorrowedDueBody(String amount, String name) {
+    return 'مبلغ $amount الذي اقترضته من $name مستحق اليوم';
+  }
+
+  @override
+  String notif_recurringTransferDueSoonBody(String amount) {
+    return 'تحويل بقيمة $amount مستحق خلال يومين';
+  }
+
+  @override
+  String notif_recurringIncomeDueSoonBody(String amount) {
+    return 'دخل بقيمة $amount متوقع خلال يومين';
+  }
+
+  @override
+  String notif_recurringExpenseDueSoonBody(String amount) {
+    return 'دفعة بقيمة $amount مستحقة خلال يومين';
+  }
 }

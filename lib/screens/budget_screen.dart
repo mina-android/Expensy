@@ -1,28 +1,9 @@
 // note: Category & global budget management screen with rollover tracking, pace indicators, and historical period comparisons.
 // All state mutations and queries route through AppProvider to preserve UI-DB decoupling.
 // Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
 // lib/screens/budget_screen.dart
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
@@ -125,7 +106,10 @@ class _BudgetScreenState extends State<BudgetScreen> {
           // ── Transparent Edge-to-Edge Header ────────────────────────
           FintechHeader(
             title: l10n.budget_budgetsAndGoals,
-            subtitle: '${app.budgets.length} ${l10n.budget_budgets.toLowerCase()} · ${goals.length} goals',
+            subtitle: l10n.budget_goalsCountSubtitle(
+              app.budgets.length,
+              goals.length,
+            ),
           ),
 
           // ── Elevated Budget & Pacing Hero Card ──────────────────────
@@ -226,7 +210,9 @@ class _BudgetScreenState extends State<BudgetScreen> {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            overallPacing != null ? '/ day' : l10n.budget_leftToSpend.toLowerCase(),
+                            overallPacing != null
+                                ? l10n.common_perDay
+                                : l10n.budget_leftToSpend.toLowerCase(),
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
@@ -284,7 +270,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                                 Icon(Icons.savings_outlined, size: 12, color: tabRose),
                                 const SizedBox(width: 5),
                                 Text(
-                                  'SAVINGS GOALS',
+                                  l10n.budget_savingsGoalsCaps,
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w800,
@@ -296,7 +282,9 @@ class _BudgetScreenState extends State<BudgetScreen> {
                             ),
                           ),
                           Text(
-                            '${(goalsProgress * 100).toStringAsFixed(0)}% saved',
+                            l10n.budget_percentSaved(
+                              (goalsProgress * 100).toStringAsFixed(0),
+                            ),
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
@@ -315,7 +303,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'of ${formatAmount(totalTarget, cur)} target',
+                        l10n.budget_ofTarget(formatAmount(totalTarget, cur)),
                         style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.55)),
                       ),
                       const SizedBox(height: 10),
@@ -348,7 +336,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                 ),
                 FintechSegmentItem<int>(
                   value: 1,
-                  label: 'Goals',
+                  label: l10n.budget_goalsTab,
                   icon: Icons.savings_outlined,
                   badge: '${goals.length}',
                 ),
@@ -475,7 +463,7 @@ class _BudgetCard extends StatelessWidget {
               if (context.mounted) {
                 showAppSnackbar(
                   context,
-                  'Deleted ${cat?.name ?? 'Budget'}',
+                  l10n.budget_deletedCategory(cat?.name ?? l10n.budget_budget),
                   onUndo: undo,
                 );
               }
@@ -644,6 +632,7 @@ class _BudgetPacingRow extends StatelessWidget {
   @override
   // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -729,6 +718,7 @@ class _GoalCard extends StatelessWidget {
   @override
   // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final progress = app.goalProgress(goal);
@@ -762,7 +752,7 @@ class _GoalCard extends StatelessWidget {
               if (context.mounted) {
                 showAppSnackbar(
                   context,
-                  'Deleted ${goal.name}',
+                  l10n.common_itemDeleted(goal.name),
                   onUndo: undo,
                 );
               }
@@ -790,7 +780,9 @@ class _GoalCard extends StatelessWidget {
                             fontWeight: FontWeight.w700, fontSize: 15)),
                     if (goal.targetDate != null)
                       Text(
-                        'Target: ${goal.targetDate}',
+                        l10n.savings_targetDate(
+                          DateFormat('d MMM yyyy').format(goal.targetDate!),
+                        ),
                         style: TextStyle(
                             fontSize: 11,
                             color: cs.onSurface.withValues(alpha: 0.5)),
@@ -806,7 +798,11 @@ class _GoalCard extends StatelessWidget {
                         color: barColor),
                   ),
                   Text(
-                    isCompleted ? 'Completed' : 'of ${formatAmount(goal.targetAmount, goal.currency)}',
+                    isCompleted
+                        ? l10n.budget_completed
+                        : l10n.budget_ofTarget(
+                            formatAmount(goal.targetAmount, goal.currency),
+                          ),
                     style: TextStyle(
                         fontSize: 10,
                         color: isCompleted ? kSuccessColor : cs.onSurface.withValues(alpha: 0.5)),

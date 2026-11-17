@@ -4,6 +4,7 @@
 import 'package:uuid/uuid.dart';
 import '../database/app_database.dart';
 import '../models/models.dart';
+import 'exchange_rate_service.dart';
 
 class RecurringPaymentProcessor {
   final AppDatabase db;
@@ -70,6 +71,122 @@ class RecurringPaymentProcessor {
         if (!isPaymentDue(r, now)) break;
 
         final occurrence = occurrenceDateFor(r);
+
+        if (r.isTransfer) {
+          final toId = r.toAccountId;
+          if (toId == null || toId.isEmpty || toId == r.accountId) break;
+
+          final fromAcc = accountMap[r.accountId];
+          final toAcc = accountMap[toId];
+          final fromBalId = (fromAcc != null &&
+                  fromAcc.isDebit &&
+                  fromAcc.linkedAccountId != null &&
+                  fromAcc.linkedAccountId!.isNotEmpty)
+              ? fromAcc.linkedAccountId!
+              : r.accountId;
+          final toBalId = (toAcc != null &&
+                  toAcc.isDebit &&
+                  toAcc.linkedAccountId != null &&
+                  toAcc.linkedAccountId!.isNotEmpty)
+              ? toAcc.linkedAccountId!
+              : toId;
+          if (fromBalId == toBalId) break;
+
+          final fromBalAcc = accountMap[fromBalId] ?? fromAcc;
+          final toBalAcc = accountMap[toBalId] ?? toAcc;
+          final fromCurrency = fromBalAcc?.currency ?? defaultCurrency;
+          final toCurrency = toBalAcc?.currency ?? defaultCurrency;
+
+          double? creditAmount;
+          if (r.toAmount != null && r.toAmount! > 0) {
+            creditAmount = r.toAmount!;
+          } else if (fromCurrency == toCurrency) {
+            creditAmount = r.amount;
+          } else {
+            final er = ExchangeRateService();
+            final rates = await er.getRates();
+            if (rates.isNotEmpty) {
+              creditAmount =
+                  er.convert(r.amount, fromCurrency, toCurrency, rates);
+            }
+          }
+          if (creditAmount == null || creditAmount <= 0) {
+            // Skip cross-currency auto-pay when no target amount or rates exist.
+            break;
+          }
+
+          final transferGroupId = _uuid.v4();
+          final outTx = AppTransaction(
+            id: _uuid.v4(),
+            type: 'expense',
+            amount: r.amount,
+            description: '${r.name} (Transfer out)',
+            accountId: fromBalId,
+            paidViaAccountId: fromBalId != r.accountId ? r.accountId : null,
+            categoryId: 'sys_transfer',
+            date: occurrence,
+            note: r.notes,
+            currency: fromCurrency,
+            transferGroupId: transferGroupId,
+          );
+          final inTx = AppTransaction(
+            id: _uuid.v4(),
+            type: 'income',
+            amount: creditAmount,
+            description: '${r.name} (Transfer in)',
+            accountId: toBalId,
+            paidViaAccountId: toBalId != toId ? toId : null,
+            categoryId: 'sys_transfer',
+            date: occurrence,
+            note: r.notes,
+            currency: toCurrency,
+            transferGroupId: transferGroupId,
+          );
+
+          final updatedR = r.copyWith(
+            nextDate: r.calcNextDate(),
+            paidPayments: r.paidPayments + 1,
+          );
+
+          final historyEntry = RecurringHistoryEntry(
+            id: _uuid.v4(),
+            recurringId: r.id,
+            action: 'paid',
+            date: occurrence,
+            amount: r.amount,
+            currency: fromCurrency,
+          );
+
+          final didPay = await db.transaction(() async {
+            final alreadyPaid = await hasHistoryForDate(
+              r.id,
+              occurrence,
+              action: 'paid',
+            );
+            if (alreadyPaid) return false;
+            await db.applyTransferWithBalances(
+              outTx,
+              inTx,
+              -r.amount,
+              creditAmount!,
+            );
+            await db.insertRecurringHistory(historyEntry);
+            await db.updateRecurring(updatedR);
+            return true;
+          });
+
+          if (!didPay) {
+            r = r.copyWith(nextDate: r.calcNextDate());
+            break;
+          }
+
+          processedIds.add(r.id);
+          r = updatedR;
+          catchUpCycles++;
+
+          if (r.endDate != null && r.nextDate.isAfter(r.endDate!)) break;
+          continue;
+        }
 
         // Determine balance-holding account (Debit Card redirect)
         final acc = accountMap[r.accountId];

@@ -5,8 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'providers/app_provider.dart';
-import 'services/budget_notification_service.dart';
-import 'services/daily_reminder_service.dart';
 import 'l10n/app_localizations.dart';
 import 'theme/app_theme.dart';
 import 'screens/main_shell.dart';
@@ -14,13 +12,11 @@ import 'screens/onboarding_screen.dart';
 import 'screens/add_transaction_screen.dart';
 import 'screens/transfer_screen.dart';
 import 'widgets/preset_sheet.dart';
-import 'services/notification_service.dart';
-import 'services/lended_notification_service.dart';
+import 'services/notification_bootstrap.dart';
 import 'services/quick_add_service.dart';
-import 'services/loan_reminder_service.dart';
-import 'services/credit_reminder_service.dart';
 import 'services/workmanager_service.dart';
 import 'services/auto_backup_service.dart';
+import 'utils/service_localizations.dart';
 
 /// Root navigator key so the "Quick Add Transaction" home screen widget can
 /// push [AddTransactionScreen] on top of whatever's currently showing,
@@ -40,12 +36,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   GoogleFonts.config.allowRuntimeFetching = false;
   try {
-    await NotificationService().initialize();
-    await LendedNotificationService().initialize();
-    await BudgetNotificationService().initialize();
-    await DailyReminderService().initialize();
-    await LoanReminderService().initialize();
-    await CreditReminderService().initialize();
+    await NotificationBootstrap.init();
     await WorkmanagerService.initialize();
     AutoBackupService.scheduleNext();
   } catch (e, stack) {
@@ -162,6 +153,7 @@ class _ExpensyAppState extends State<ExpensyApp> {
 
     final usesDynamic = settingsRecord.$1;
     final languageCode = settingsRecord.$2;
+    ServiceLocalizations.setLanguageCode(languageCode);
     final themeMode = settingsRecord.$3;
     final themeSeed = settingsRecord.$4;
     final appFont = settingsRecord.$5;

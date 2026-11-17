@@ -1,9 +1,6 @@
 // lib/widgets/presets_carousel.dart
 // note: Horizontal quick-log carousel displaying user-configured transaction presets with 1-tap execution.
 // Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
 // All state mutations and queries route through AppProvider to preserve UI-DB decoupling.
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -19,8 +16,15 @@ import 'preset_sheet.dart';
 // Encapsulates UI state and rendering logic for PresetsCarousel.
 class PresetsCarousel extends StatelessWidget {
   final ValueChanged<TransactionPreset>? onPresetSelected;
+  final List<String>? allowedTypes;
+  final String? defaultNewType;
 
-  const PresetsCarousel({super.key, this.onPresetSelected});
+  const PresetsCarousel({
+    super.key,
+    this.onPresetSelected,
+    this.allowedTypes,
+    this.defaultNewType,
+  });
 
   @override
   // Builds the widget subtree using theme-adaptive colors and localization.
@@ -29,7 +33,9 @@ class PresetsCarousel extends StatelessWidget {
     final app = context.watch<AppProvider>();
     final cs = Theme.of(context).colorScheme;
     final isAmoled = isAmoledSurface(cs);
-    final presets = app.presets;
+    final presets = allowedTypes == null
+        ? app.presets
+        : app.presets.where((p) => allowedTypes!.contains(p.type)).toList();
 
     // Render Column layout container.
     return Column(
@@ -58,7 +64,7 @@ class PresetsCarousel extends StatelessWidget {
                 GestureDetector(
                   onTap: () {
                     AppHaptics.tap(context, HapticStrength.light);
-                    PresetSheet.show(context);
+                    PresetSheet.show(context, initialType: defaultNewType);
                   },
                   child: Text(
                     '+ ${l10n.home_add}',
@@ -82,7 +88,7 @@ class PresetsCarousel extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                 onTap: () {
                   AppHaptics.tap(context, HapticStrength.light);
-                  PresetSheet.show(context);
+                  PresetSheet.show(context, initialType: defaultNewType);
                 },
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -135,9 +141,21 @@ class PresetsCarousel extends StatelessWidget {
               itemCount: presets.length,
               itemBuilder: (context, i) {
                 final preset = presets[i];
-                final color = Color(preset.colorValue);
+                final isTransfer = preset.isTransfer;
+                final color = isTransfer ? cs.primary : Color(preset.colorValue);
                 final acc = app.accountById(preset.accountId);
-                final currency = preset.currency.isNotEmpty ? preset.currency : (acc?.currency ?? app.settings.currency);
+                final toAcc = preset.toAccountId != null
+                    ? app.accountById(preset.toAccountId!)
+                    : null;
+                final currency = preset.currency.isNotEmpty
+                    ? preset.currency
+                    : (acc?.currency ?? app.settings.currency);
+                final subtitle = isTransfer && acc != null && toAcc != null
+                    ? '${formatAmount(preset.amount, currency)} • ${acc.name} → ${toAcc.name}'
+                    : formatAmount(preset.amount, currency);
+                final subtitleColor = isTransfer
+                    ? cs.primary
+                    : (preset.type == 'expense' ? kDangerColor : kSuccessColor);
 
                 // Render Padding layout container.
                 return Padding(
@@ -153,13 +171,22 @@ class PresetsCarousel extends StatelessWidget {
                           onPresetSelected!(preset);
                           return;
                         }
-                        final tx = await app.logPreset(preset);
-                        if (context.mounted) {
-                          showAppSnackbar(
-                            context,
-                            l10n.presets_loggedPreset(preset.title, formatAmount(preset.amount, currency)),
-                            onUndo: () => app.deleteTransaction(tx.id),
-                          );
+                        try {
+                          final tx = await app.logPreset(preset);
+                          if (context.mounted) {
+                            showAppSnackbar(
+                              context,
+                              l10n.presets_loggedPreset(
+                                preset.title,
+                                formatAmount(preset.amount, currency),
+                              ),
+                              onUndo: () => app.deleteTransaction(tx.id),
+                            );
+                          }
+                        } on RatesUnavailableException catch (e) {
+                          if (context.mounted) {
+                            showAppSnackbar(context, e.message);
+                          }
                         }
                       },
                       onLongPress: () {
@@ -177,14 +204,17 @@ class PresetsCarousel extends StatelessWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: color,
-                                shape: BoxShape.circle,
+                            if (isTransfer)
+                              Icon(Icons.swap_horiz_rounded, size: 15, color: color)
+                            else
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: color,
+                                  shape: BoxShape.circle,
+                                ),
                               ),
-                            ),
                             const SizedBox(width: 8),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,13 +228,11 @@ class PresetsCarousel extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  formatAmount(preset.amount, currency),
+                                  subtitle,
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
-                                    color: preset.type == 'expense'
-                                        ? kDangerColor
-                                        : kSuccessColor,
+                                    color: subtitleColor,
                                   ),
                                 ),
                               ],

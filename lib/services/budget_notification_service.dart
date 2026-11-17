@@ -1,5 +1,7 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../models/models.dart';
+import '../providers/app_provider.dart';
+import '../utils/service_localizations.dart';
 import 'package:intl/intl.dart';
 
 class BudgetNotificationService {
@@ -47,7 +49,7 @@ class BudgetNotificationService {
     final amountStr = nf.format(overAmount).trim();
 
     // Stable ID that resets daily so budget alerts don't spam.
-    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final today = DateFormat('yyyy-MM-dd', 'en_US').format(DateTime.now());
     final id = ('budget_${budget.id}_$today').hashCode & 0x7FFFFFFF;
 
     const androidDetails = AndroidNotificationDetails(
@@ -64,10 +66,15 @@ class BudgetNotificationService {
     );
     const details = NotificationDetails(android: androidDetails);
 
+    final loc = ServiceLocalizations.current;
+    final catName = AppProvider.localizeCategoryName(category, loc);
+    final periodStr =
+        budget.period == 'weekly' ? loc.budget_weekly : loc.budget_monthly;
+
     await _plugin.show(
       id: id,
-      title: '🚨 Over Budget',
-      body: '${category.name} — $amountStr over your ${budget.period} limit',
+      title: loc.notif_overBudgetTitle,
+      body: loc.notif_overBudgetBody(catName, amountStr, periodStr),
       notificationDetails: details,
     );
   }
@@ -79,7 +86,7 @@ class BudgetNotificationService {
     final amountStr = nf.format(goal.targetAmount).trim();
 
     // Stable ID that resets daily.
-    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final today = DateFormat('yyyy-MM-dd', 'en_US').format(DateTime.now());
     final id = ('goal_${goal.id}_$today').hashCode & 0x7FFFFFFF;
 
     const androidDetails = AndroidNotificationDetails(
@@ -96,10 +103,11 @@ class BudgetNotificationService {
     );
     const details = NotificationDetails(android: androidDetails);
 
+    final loc = ServiceLocalizations.current;
     await _plugin.show(
       id: id,
-      title: '🎉 Goal Reached',
-      body: 'You reached your goal of $amountStr for ${goal.name}!',
+      title: loc.notif_goalReachedTitle,
+      body: loc.notif_goalReachedBody(amountStr, goal.name),
       notificationDetails: details,
     );
   }

@@ -2350,6 +2350,18 @@ class $RecurringPaymentsTable extends RecurringPayments
       type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultValue: const Constant('09:00'));
+  static const VerificationMeta _toAccountIdMeta =
+      const VerificationMeta('toAccountId');
+  @override
+  late final GeneratedColumn<String> toAccountId = GeneratedColumn<String>(
+      'to_account_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _toAmountMeta =
+      const VerificationMeta('toAmount');
+  @override
+  late final GeneratedColumn<double> toAmount = GeneratedColumn<double>(
+      'to_amount', aliasedName, true,
+      type: DriftSqlType.double, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -2370,7 +2382,9 @@ class $RecurringPaymentsTable extends RecurringPayments
         notes,
         recurringType,
         autoPayEnabled,
-        autoPayTime
+        autoPayTime,
+        toAccountId,
+        toAmount
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2490,6 +2504,16 @@ class $RecurringPaymentsTable extends RecurringPayments
           autoPayTime.isAcceptableOrUnknown(
               data['auto_pay_time']!, _autoPayTimeMeta));
     }
+    if (data.containsKey('to_account_id')) {
+      context.handle(
+          _toAccountIdMeta,
+          toAccountId.isAcceptableOrUnknown(
+              data['to_account_id']!, _toAccountIdMeta));
+    }
+    if (data.containsKey('to_amount')) {
+      context.handle(_toAmountMeta,
+          toAmount.isAcceptableOrUnknown(data['to_amount']!, _toAmountMeta));
+    }
     return context;
   }
 
@@ -2537,6 +2561,10 @@ class $RecurringPaymentsTable extends RecurringPayments
           .read(DriftSqlType.int, data['${effectivePrefix}auto_pay_enabled'])!,
       autoPayTime: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}auto_pay_time'])!,
+      toAccountId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}to_account_id']),
+      toAmount: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}to_amount']),
     );
   }
 
@@ -2567,6 +2595,8 @@ class RecurringPaymentEntry extends DataClass
   final String recurringType;
   final int autoPayEnabled;
   final String autoPayTime;
+  final String? toAccountId;
+  final double? toAmount;
   const RecurringPaymentEntry(
       {required this.id,
       required this.name,
@@ -2586,7 +2616,9 @@ class RecurringPaymentEntry extends DataClass
       required this.notes,
       required this.recurringType,
       required this.autoPayEnabled,
-      required this.autoPayTime});
+      required this.autoPayTime,
+      this.toAccountId,
+      this.toAmount});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -2611,6 +2643,12 @@ class RecurringPaymentEntry extends DataClass
     map['recurring_type'] = Variable<String>(recurringType);
     map['auto_pay_enabled'] = Variable<int>(autoPayEnabled);
     map['auto_pay_time'] = Variable<String>(autoPayTime);
+    if (!nullToAbsent || toAccountId != null) {
+      map['to_account_id'] = Variable<String>(toAccountId);
+    }
+    if (!nullToAbsent || toAmount != null) {
+      map['to_amount'] = Variable<double>(toAmount);
+    }
     return map;
   }
 
@@ -2637,6 +2675,12 @@ class RecurringPaymentEntry extends DataClass
       recurringType: Value(recurringType),
       autoPayEnabled: Value(autoPayEnabled),
       autoPayTime: Value(autoPayTime),
+      toAccountId: toAccountId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(toAccountId),
+      toAmount: toAmount == null && nullToAbsent
+          ? const Value.absent()
+          : Value(toAmount),
     );
   }
 
@@ -2664,6 +2708,8 @@ class RecurringPaymentEntry extends DataClass
       recurringType: serializer.fromJson<String>(json['recurringType']),
       autoPayEnabled: serializer.fromJson<int>(json['autoPayEnabled']),
       autoPayTime: serializer.fromJson<String>(json['autoPayTime']),
+      toAccountId: serializer.fromJson<String?>(json['toAccountId']),
+      toAmount: serializer.fromJson<double?>(json['toAmount']),
     );
   }
   @override
@@ -2689,6 +2735,8 @@ class RecurringPaymentEntry extends DataClass
       'recurringType': serializer.toJson<String>(recurringType),
       'autoPayEnabled': serializer.toJson<int>(autoPayEnabled),
       'autoPayTime': serializer.toJson<String>(autoPayTime),
+      'toAccountId': serializer.toJson<String?>(toAccountId),
+      'toAmount': serializer.toJson<double?>(toAmount),
     };
   }
 
@@ -2711,7 +2759,9 @@ class RecurringPaymentEntry extends DataClass
           String? notes,
           String? recurringType,
           int? autoPayEnabled,
-          String? autoPayTime}) =>
+          String? autoPayTime,
+          Value<String?> toAccountId = const Value.absent(),
+          Value<double?> toAmount = const Value.absent()}) =>
       RecurringPaymentEntry(
         id: id ?? this.id,
         name: name ?? this.name,
@@ -2732,6 +2782,8 @@ class RecurringPaymentEntry extends DataClass
         recurringType: recurringType ?? this.recurringType,
         autoPayEnabled: autoPayEnabled ?? this.autoPayEnabled,
         autoPayTime: autoPayTime ?? this.autoPayTime,
+        toAccountId: toAccountId.present ? toAccountId.value : this.toAccountId,
+        toAmount: toAmount.present ? toAmount.value : this.toAmount,
       );
   RecurringPaymentEntry copyWithCompanion(RecurringPaymentsCompanion data) {
     return RecurringPaymentEntry(
@@ -2769,6 +2821,9 @@ class RecurringPaymentEntry extends DataClass
           : this.autoPayEnabled,
       autoPayTime:
           data.autoPayTime.present ? data.autoPayTime.value : this.autoPayTime,
+      toAccountId:
+          data.toAccountId.present ? data.toAccountId.value : this.toAccountId,
+      toAmount: data.toAmount.present ? data.toAmount.value : this.toAmount,
     );
   }
 
@@ -2793,32 +2848,37 @@ class RecurringPaymentEntry extends DataClass
           ..write('notes: $notes, ')
           ..write('recurringType: $recurringType, ')
           ..write('autoPayEnabled: $autoPayEnabled, ')
-          ..write('autoPayTime: $autoPayTime')
+          ..write('autoPayTime: $autoPayTime, ')
+          ..write('toAccountId: $toAccountId, ')
+          ..write('toAmount: $toAmount')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
-      id,
-      name,
-      accountId,
-      categoryId,
-      amount,
-      paymentType,
-      freqVal,
-      freqUnit,
-      startDate,
-      nextDate,
-      endDate,
-      paidPayments,
-      reminderEnabled,
-      reminderTime,
-      earlyReminderEnabled,
-      notes,
-      recurringType,
-      autoPayEnabled,
-      autoPayTime);
+  int get hashCode => Object.hashAll([
+        id,
+        name,
+        accountId,
+        categoryId,
+        amount,
+        paymentType,
+        freqVal,
+        freqUnit,
+        startDate,
+        nextDate,
+        endDate,
+        paidPayments,
+        reminderEnabled,
+        reminderTime,
+        earlyReminderEnabled,
+        notes,
+        recurringType,
+        autoPayEnabled,
+        autoPayTime,
+        toAccountId,
+        toAmount
+      ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2841,7 +2901,9 @@ class RecurringPaymentEntry extends DataClass
           other.notes == this.notes &&
           other.recurringType == this.recurringType &&
           other.autoPayEnabled == this.autoPayEnabled &&
-          other.autoPayTime == this.autoPayTime);
+          other.autoPayTime == this.autoPayTime &&
+          other.toAccountId == this.toAccountId &&
+          other.toAmount == this.toAmount);
 }
 
 class RecurringPaymentsCompanion
@@ -2865,6 +2927,8 @@ class RecurringPaymentsCompanion
   final Value<String> recurringType;
   final Value<int> autoPayEnabled;
   final Value<String> autoPayTime;
+  final Value<String?> toAccountId;
+  final Value<double?> toAmount;
   final Value<int> rowid;
   const RecurringPaymentsCompanion({
     this.id = const Value.absent(),
@@ -2886,6 +2950,8 @@ class RecurringPaymentsCompanion
     this.recurringType = const Value.absent(),
     this.autoPayEnabled = const Value.absent(),
     this.autoPayTime = const Value.absent(),
+    this.toAccountId = const Value.absent(),
+    this.toAmount = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   RecurringPaymentsCompanion.insert({
@@ -2908,6 +2974,8 @@ class RecurringPaymentsCompanion
     this.recurringType = const Value.absent(),
     this.autoPayEnabled = const Value.absent(),
     this.autoPayTime = const Value.absent(),
+    this.toAccountId = const Value.absent(),
+    this.toAmount = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         name = Value(name),
@@ -2936,6 +3004,8 @@ class RecurringPaymentsCompanion
     Expression<String>? recurringType,
     Expression<int>? autoPayEnabled,
     Expression<String>? autoPayTime,
+    Expression<String>? toAccountId,
+    Expression<double>? toAmount,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2959,6 +3029,8 @@ class RecurringPaymentsCompanion
       if (recurringType != null) 'recurring_type': recurringType,
       if (autoPayEnabled != null) 'auto_pay_enabled': autoPayEnabled,
       if (autoPayTime != null) 'auto_pay_time': autoPayTime,
+      if (toAccountId != null) 'to_account_id': toAccountId,
+      if (toAmount != null) 'to_amount': toAmount,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2983,6 +3055,8 @@ class RecurringPaymentsCompanion
       Value<String>? recurringType,
       Value<int>? autoPayEnabled,
       Value<String>? autoPayTime,
+      Value<String?>? toAccountId,
+      Value<double?>? toAmount,
       Value<int>? rowid}) {
     return RecurringPaymentsCompanion(
       id: id ?? this.id,
@@ -3004,6 +3078,8 @@ class RecurringPaymentsCompanion
       recurringType: recurringType ?? this.recurringType,
       autoPayEnabled: autoPayEnabled ?? this.autoPayEnabled,
       autoPayTime: autoPayTime ?? this.autoPayTime,
+      toAccountId: toAccountId ?? this.toAccountId,
+      toAmount: toAmount ?? this.toAmount,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3068,6 +3144,12 @@ class RecurringPaymentsCompanion
     if (autoPayTime.present) {
       map['auto_pay_time'] = Variable<String>(autoPayTime.value);
     }
+    if (toAccountId.present) {
+      map['to_account_id'] = Variable<String>(toAccountId.value);
+    }
+    if (toAmount.present) {
+      map['to_amount'] = Variable<double>(toAmount.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -3096,6 +3178,8 @@ class RecurringPaymentsCompanion
           ..write('recurringType: $recurringType, ')
           ..write('autoPayEnabled: $autoPayEnabled, ')
           ..write('autoPayTime: $autoPayTime, ')
+          ..write('toAccountId: $toAccountId, ')
+          ..write('toAmount: $toAmount, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -8308,6 +8392,18 @@ class $TransactionPresetsTable extends TransactionPresets
   late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
       'created_at', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _toAccountIdMeta =
+      const VerificationMeta('toAccountId');
+  @override
+  late final GeneratedColumn<String> toAccountId = GeneratedColumn<String>(
+      'to_account_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _toAmountMeta =
+      const VerificationMeta('toAmount');
+  @override
+  late final GeneratedColumn<double> toAmount = GeneratedColumn<double>(
+      'to_amount', aliasedName, true,
+      type: DriftSqlType.double, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -8321,7 +8417,9 @@ class $TransactionPresetsTable extends TransactionPresets
         colorValue,
         iconCodePoint,
         orderIndex,
-        createdAt
+        createdAt,
+        toAccountId,
+        toAmount
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -8405,6 +8503,16 @@ class $TransactionPresetsTable extends TransactionPresets
     } else if (isInserting) {
       context.missing(_createdAtMeta);
     }
+    if (data.containsKey('to_account_id')) {
+      context.handle(
+          _toAccountIdMeta,
+          toAccountId.isAcceptableOrUnknown(
+              data['to_account_id']!, _toAccountIdMeta));
+    }
+    if (data.containsKey('to_amount')) {
+      context.handle(_toAmountMeta,
+          toAmount.isAcceptableOrUnknown(data['to_amount']!, _toAmountMeta));
+    }
     return context;
   }
 
@@ -8438,6 +8546,10 @@ class $TransactionPresetsTable extends TransactionPresets
           .read(DriftSqlType.int, data['${effectivePrefix}order_index'])!,
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}created_at'])!,
+      toAccountId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}to_account_id']),
+      toAmount: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}to_amount']),
     );
   }
 
@@ -8461,6 +8573,8 @@ class TransactionPresetEntry extends DataClass
   final int iconCodePoint;
   final int orderIndex;
   final String createdAt;
+  final String? toAccountId;
+  final double? toAmount;
   const TransactionPresetEntry(
       {required this.id,
       required this.title,
@@ -8473,7 +8587,9 @@ class TransactionPresetEntry extends DataClass
       required this.colorValue,
       required this.iconCodePoint,
       required this.orderIndex,
-      required this.createdAt});
+      required this.createdAt,
+      this.toAccountId,
+      this.toAmount});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -8489,6 +8605,12 @@ class TransactionPresetEntry extends DataClass
     map['icon_code_point'] = Variable<int>(iconCodePoint);
     map['order_index'] = Variable<int>(orderIndex);
     map['created_at'] = Variable<String>(createdAt);
+    if (!nullToAbsent || toAccountId != null) {
+      map['to_account_id'] = Variable<String>(toAccountId);
+    }
+    if (!nullToAbsent || toAmount != null) {
+      map['to_amount'] = Variable<double>(toAmount);
+    }
     return map;
   }
 
@@ -8506,6 +8628,12 @@ class TransactionPresetEntry extends DataClass
       iconCodePoint: Value(iconCodePoint),
       orderIndex: Value(orderIndex),
       createdAt: Value(createdAt),
+      toAccountId: toAccountId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(toAccountId),
+      toAmount: toAmount == null && nullToAbsent
+          ? const Value.absent()
+          : Value(toAmount),
     );
   }
 
@@ -8525,6 +8653,8 @@ class TransactionPresetEntry extends DataClass
       iconCodePoint: serializer.fromJson<int>(json['iconCodePoint']),
       orderIndex: serializer.fromJson<int>(json['orderIndex']),
       createdAt: serializer.fromJson<String>(json['createdAt']),
+      toAccountId: serializer.fromJson<String?>(json['toAccountId']),
+      toAmount: serializer.fromJson<double?>(json['toAmount']),
     );
   }
   @override
@@ -8543,6 +8673,8 @@ class TransactionPresetEntry extends DataClass
       'iconCodePoint': serializer.toJson<int>(iconCodePoint),
       'orderIndex': serializer.toJson<int>(orderIndex),
       'createdAt': serializer.toJson<String>(createdAt),
+      'toAccountId': serializer.toJson<String?>(toAccountId),
+      'toAmount': serializer.toJson<double?>(toAmount),
     };
   }
 
@@ -8558,7 +8690,9 @@ class TransactionPresetEntry extends DataClass
           int? colorValue,
           int? iconCodePoint,
           int? orderIndex,
-          String? createdAt}) =>
+          String? createdAt,
+          Value<String?> toAccountId = const Value.absent(),
+          Value<double?> toAmount = const Value.absent()}) =>
       TransactionPresetEntry(
         id: id ?? this.id,
         title: title ?? this.title,
@@ -8572,6 +8706,8 @@ class TransactionPresetEntry extends DataClass
         iconCodePoint: iconCodePoint ?? this.iconCodePoint,
         orderIndex: orderIndex ?? this.orderIndex,
         createdAt: createdAt ?? this.createdAt,
+        toAccountId: toAccountId.present ? toAccountId.value : this.toAccountId,
+        toAmount: toAmount.present ? toAmount.value : this.toAmount,
       );
   TransactionPresetEntry copyWithCompanion(TransactionPresetsCompanion data) {
     return TransactionPresetEntry(
@@ -8592,6 +8728,9 @@ class TransactionPresetEntry extends DataClass
       orderIndex:
           data.orderIndex.present ? data.orderIndex.value : this.orderIndex,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      toAccountId:
+          data.toAccountId.present ? data.toAccountId.value : this.toAccountId,
+      toAmount: data.toAmount.present ? data.toAmount.value : this.toAmount,
     );
   }
 
@@ -8609,7 +8748,9 @@ class TransactionPresetEntry extends DataClass
           ..write('colorValue: $colorValue, ')
           ..write('iconCodePoint: $iconCodePoint, ')
           ..write('orderIndex: $orderIndex, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('toAccountId: $toAccountId, ')
+          ..write('toAmount: $toAmount')
           ..write(')'))
         .toString();
   }
@@ -8627,7 +8768,9 @@ class TransactionPresetEntry extends DataClass
       colorValue,
       iconCodePoint,
       orderIndex,
-      createdAt);
+      createdAt,
+      toAccountId,
+      toAmount);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -8643,7 +8786,9 @@ class TransactionPresetEntry extends DataClass
           other.colorValue == this.colorValue &&
           other.iconCodePoint == this.iconCodePoint &&
           other.orderIndex == this.orderIndex &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.toAccountId == this.toAccountId &&
+          other.toAmount == this.toAmount);
 }
 
 class TransactionPresetsCompanion
@@ -8660,6 +8805,8 @@ class TransactionPresetsCompanion
   final Value<int> iconCodePoint;
   final Value<int> orderIndex;
   final Value<String> createdAt;
+  final Value<String?> toAccountId;
+  final Value<double?> toAmount;
   final Value<int> rowid;
   const TransactionPresetsCompanion({
     this.id = const Value.absent(),
@@ -8674,6 +8821,8 @@ class TransactionPresetsCompanion
     this.iconCodePoint = const Value.absent(),
     this.orderIndex = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.toAccountId = const Value.absent(),
+    this.toAmount = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   TransactionPresetsCompanion.insert({
@@ -8689,6 +8838,8 @@ class TransactionPresetsCompanion
     this.iconCodePoint = const Value.absent(),
     this.orderIndex = const Value.absent(),
     required String createdAt,
+    this.toAccountId = const Value.absent(),
+    this.toAmount = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         title = Value(title),
@@ -8711,6 +8862,8 @@ class TransactionPresetsCompanion
     Expression<int>? iconCodePoint,
     Expression<int>? orderIndex,
     Expression<String>? createdAt,
+    Expression<String>? toAccountId,
+    Expression<double>? toAmount,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -8726,6 +8879,8 @@ class TransactionPresetsCompanion
       if (iconCodePoint != null) 'icon_code_point': iconCodePoint,
       if (orderIndex != null) 'order_index': orderIndex,
       if (createdAt != null) 'created_at': createdAt,
+      if (toAccountId != null) 'to_account_id': toAccountId,
+      if (toAmount != null) 'to_amount': toAmount,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -8743,6 +8898,8 @@ class TransactionPresetsCompanion
       Value<int>? iconCodePoint,
       Value<int>? orderIndex,
       Value<String>? createdAt,
+      Value<String?>? toAccountId,
+      Value<double?>? toAmount,
       Value<int>? rowid}) {
     return TransactionPresetsCompanion(
       id: id ?? this.id,
@@ -8757,6 +8914,8 @@ class TransactionPresetsCompanion
       iconCodePoint: iconCodePoint ?? this.iconCodePoint,
       orderIndex: orderIndex ?? this.orderIndex,
       createdAt: createdAt ?? this.createdAt,
+      toAccountId: toAccountId ?? this.toAccountId,
+      toAmount: toAmount ?? this.toAmount,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -8800,6 +8959,12 @@ class TransactionPresetsCompanion
     if (createdAt.present) {
       map['created_at'] = Variable<String>(createdAt.value);
     }
+    if (toAccountId.present) {
+      map['to_account_id'] = Variable<String>(toAccountId.value);
+    }
+    if (toAmount.present) {
+      map['to_amount'] = Variable<double>(toAmount.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -8821,6 +8986,8 @@ class TransactionPresetsCompanion
           ..write('iconCodePoint: $iconCodePoint, ')
           ..write('orderIndex: $orderIndex, ')
           ..write('createdAt: $createdAt, ')
+          ..write('toAccountId: $toAccountId, ')
+          ..write('toAmount: $toAmount, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -11110,6 +11277,8 @@ typedef $$RecurringPaymentsTableCreateCompanionBuilder
   Value<String> recurringType,
   Value<int> autoPayEnabled,
   Value<String> autoPayTime,
+  Value<String?> toAccountId,
+  Value<double?> toAmount,
   Value<int> rowid,
 });
 typedef $$RecurringPaymentsTableUpdateCompanionBuilder
@@ -11133,6 +11302,8 @@ typedef $$RecurringPaymentsTableUpdateCompanionBuilder
   Value<String> recurringType,
   Value<int> autoPayEnabled,
   Value<String> autoPayTime,
+  Value<String?> toAccountId,
+  Value<double?> toAmount,
   Value<int> rowid,
 });
 
@@ -11204,6 +11375,12 @@ class $$RecurringPaymentsTableFilterComposer
 
   ColumnFilters<String> get autoPayTime => $composableBuilder(
       column: $table.autoPayTime, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get toAccountId => $composableBuilder(
+      column: $table.toAccountId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get toAmount => $composableBuilder(
+      column: $table.toAmount, builder: (column) => ColumnFilters(column));
 }
 
 class $$RecurringPaymentsTableOrderingComposer
@@ -11277,6 +11454,12 @@ class $$RecurringPaymentsTableOrderingComposer
 
   ColumnOrderings<String> get autoPayTime => $composableBuilder(
       column: $table.autoPayTime, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get toAccountId => $composableBuilder(
+      column: $table.toAccountId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get toAmount => $composableBuilder(
+      column: $table.toAmount, builder: (column) => ColumnOrderings(column));
 }
 
 class $$RecurringPaymentsTableAnnotationComposer
@@ -11344,6 +11527,12 @@ class $$RecurringPaymentsTableAnnotationComposer
 
   GeneratedColumn<String> get autoPayTime => $composableBuilder(
       column: $table.autoPayTime, builder: (column) => column);
+
+  GeneratedColumn<String> get toAccountId => $composableBuilder(
+      column: $table.toAccountId, builder: (column) => column);
+
+  GeneratedColumn<double> get toAmount =>
+      $composableBuilder(column: $table.toAmount, builder: (column) => column);
 }
 
 class $$RecurringPaymentsTableTableManager extends RootTableManager<
@@ -11394,6 +11583,8 @@ class $$RecurringPaymentsTableTableManager extends RootTableManager<
             Value<String> recurringType = const Value.absent(),
             Value<int> autoPayEnabled = const Value.absent(),
             Value<String> autoPayTime = const Value.absent(),
+            Value<String?> toAccountId = const Value.absent(),
+            Value<double?> toAmount = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               RecurringPaymentsCompanion(
@@ -11416,6 +11607,8 @@ class $$RecurringPaymentsTableTableManager extends RootTableManager<
             recurringType: recurringType,
             autoPayEnabled: autoPayEnabled,
             autoPayTime: autoPayTime,
+            toAccountId: toAccountId,
+            toAmount: toAmount,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -11438,6 +11631,8 @@ class $$RecurringPaymentsTableTableManager extends RootTableManager<
             Value<String> recurringType = const Value.absent(),
             Value<int> autoPayEnabled = const Value.absent(),
             Value<String> autoPayTime = const Value.absent(),
+            Value<String?> toAccountId = const Value.absent(),
+            Value<double?> toAmount = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               RecurringPaymentsCompanion.insert(
@@ -11460,6 +11655,8 @@ class $$RecurringPaymentsTableTableManager extends RootTableManager<
             recurringType: recurringType,
             autoPayEnabled: autoPayEnabled,
             autoPayTime: autoPayTime,
+            toAccountId: toAccountId,
+            toAmount: toAmount,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -14155,6 +14352,8 @@ typedef $$TransactionPresetsTableCreateCompanionBuilder
   Value<int> iconCodePoint,
   Value<int> orderIndex,
   required String createdAt,
+  Value<String?> toAccountId,
+  Value<double?> toAmount,
   Value<int> rowid,
 });
 typedef $$TransactionPresetsTableUpdateCompanionBuilder
@@ -14171,6 +14370,8 @@ typedef $$TransactionPresetsTableUpdateCompanionBuilder
   Value<int> iconCodePoint,
   Value<int> orderIndex,
   Value<String> createdAt,
+  Value<String?> toAccountId,
+  Value<double?> toAmount,
   Value<int> rowid,
 });
 
@@ -14218,6 +14419,12 @@ class $$TransactionPresetsTableFilterComposer
 
   ColumnFilters<String> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get toAccountId => $composableBuilder(
+      column: $table.toAccountId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get toAmount => $composableBuilder(
+      column: $table.toAmount, builder: (column) => ColumnFilters(column));
 }
 
 class $$TransactionPresetsTableOrderingComposer
@@ -14265,6 +14472,12 @@ class $$TransactionPresetsTableOrderingComposer
 
   ColumnOrderings<String> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get toAccountId => $composableBuilder(
+      column: $table.toAccountId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get toAmount => $composableBuilder(
+      column: $table.toAmount, builder: (column) => ColumnOrderings(column));
 }
 
 class $$TransactionPresetsTableAnnotationComposer
@@ -14311,6 +14524,12 @@ class $$TransactionPresetsTableAnnotationComposer
 
   GeneratedColumn<String> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get toAccountId => $composableBuilder(
+      column: $table.toAccountId, builder: (column) => column);
+
+  GeneratedColumn<double> get toAmount =>
+      $composableBuilder(column: $table.toAmount, builder: (column) => column);
 }
 
 class $$TransactionPresetsTableTableManager extends RootTableManager<
@@ -14354,6 +14573,8 @@ class $$TransactionPresetsTableTableManager extends RootTableManager<
             Value<int> iconCodePoint = const Value.absent(),
             Value<int> orderIndex = const Value.absent(),
             Value<String> createdAt = const Value.absent(),
+            Value<String?> toAccountId = const Value.absent(),
+            Value<double?> toAmount = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               TransactionPresetsCompanion(
@@ -14369,6 +14590,8 @@ class $$TransactionPresetsTableTableManager extends RootTableManager<
             iconCodePoint: iconCodePoint,
             orderIndex: orderIndex,
             createdAt: createdAt,
+            toAccountId: toAccountId,
+            toAmount: toAmount,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -14384,6 +14607,8 @@ class $$TransactionPresetsTableTableManager extends RootTableManager<
             Value<int> iconCodePoint = const Value.absent(),
             Value<int> orderIndex = const Value.absent(),
             required String createdAt,
+            Value<String?> toAccountId = const Value.absent(),
+            Value<double?> toAmount = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               TransactionPresetsCompanion.insert(
@@ -14399,6 +14624,8 @@ class $$TransactionPresetsTableTableManager extends RootTableManager<
             iconCodePoint: iconCodePoint,
             orderIndex: orderIndex,
             createdAt: createdAt,
+            toAccountId: toAccountId,
+            toAmount: toAmount,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0

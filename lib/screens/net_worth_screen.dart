@@ -1,26 +1,6 @@
 // note: Net worth dashboard aggregating liquid accounts, certificates, physical assets, lent/borrowed balances, and historical trend charts.
 // All state mutations and queries route through AppProvider to preserve UI-DB decoupling.
 // Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
 // lib/screens/net_worth_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -184,7 +164,7 @@ class _NetWorthScreenState extends State<NetWorthScreen> {
                       ),
                       child: Text(
                         totalLiabilities == 0
-                            ? 'Debt-free'
+                            ? l10n.netWorth_debtFree
                             : '${l10n.netWorth_debtRatio}: ${debtRatio.toStringAsFixed(0)}%',
                         style: TextStyle(
                           fontSize: 11,
@@ -499,7 +479,7 @@ class _NetWorthScreenState extends State<NetWorthScreen> {
                 children: [
                   _QuickNavButton(
                     icon: Icons.account_balance_wallet_outlined,
-                    label: 'Accounts',
+                    label: l10n.backup_accounts,
                     onTap: () => Navigator.push(
                       context,
                       ExpensyRoute(builder: (_) => const AccountsScreen()),
@@ -507,7 +487,7 @@ class _NetWorthScreenState extends State<NetWorthScreen> {
                   ),
                   _QuickNavButton(
                     icon: Icons.inventory_2_outlined,
-                    label: 'Assets',
+                    label: l10n.backup_assets,
                     onTap: () => Navigator.push(
                       context,
                       ExpensyRoute(builder: (_) => const AssetsScreen()),
@@ -515,7 +495,7 @@ class _NetWorthScreenState extends State<NetWorthScreen> {
                   ),
                   _QuickNavButton(
                     icon: Icons.account_balance_outlined,
-                    label: 'Loans',
+                    label: l10n.backup_loans,
                     onTap: () => Navigator.push(
                       context,
                       ExpensyRoute(builder: (_) => const LoansScreen()),
@@ -523,7 +503,7 @@ class _NetWorthScreenState extends State<NetWorthScreen> {
                   ),
                   _QuickNavButton(
                     icon: Icons.handshake_outlined,
-                    label: 'Lent/Debts',
+                    label: l10n.netWorth_lentDebts,
                     onTap: () => Navigator.push(
                       context,
                       ExpensyRoute(builder: (_) => const LendedScreen()),
@@ -685,7 +665,9 @@ class _NetWorthScreenState extends State<NetWorthScreen> {
                               setState(() => _showAllHistory = !_showAllHistory);
                             },
                             child: Text(
-                              _showAllHistory ? 'Show Less' : 'Show All (${snapshots.length})',
+                              _showAllHistory
+                                  ? l10n.netWorth_showLess
+                                  : l10n.netWorth_showAll(snapshots.length),
                               style: const TextStyle(fontSize: 12),
                             ),
                           ),
@@ -748,7 +730,10 @@ class _NetWorthScreenState extends State<NetWorthScreen> {
                     ),
                   ),
                   Text(
-                    'Assets: ${fmt(snap.totalAssets)} · Accounts: ${fmt(snap.totalAccounts)}',
+                    AppLocalizations.of(context)!.netWorth_snapBreakdown(
+                      fmt(snap.totalAssets),
+                      fmt(snap.totalAccounts),
+                    ),
                     style: TextStyle(
                       fontSize: 10,
                       color: cs.onSurface.withValues(alpha: 0.55),
@@ -893,6 +878,7 @@ class _SectionBreakdownCard extends StatelessWidget {
   @override
   // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryColor = isAsset
@@ -945,7 +931,7 @@ class _SectionBreakdownCard extends StatelessWidget {
                           size: 18, color: Colors.green),
                       const SizedBox(width: 8),
                       Text(
-                        'Zero liabilities recorded! Outstanding debt is \$0.00.',
+                        l10n.netWorth_zeroLiabilities,
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,

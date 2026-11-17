@@ -1,10 +1,6 @@
 // lib/screens/certificates_screen.dart
 // note: Overview screen listing active and matured investment certificates with total principal and upcoming interest summary.
 // Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
 // All state mutations and queries route through AppProvider to preserve UI-DB decoupling.
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -79,7 +75,7 @@ class CertificatesScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Active Principal',
+                            l10n.certificates_activePrincipal,
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
@@ -113,7 +109,7 @@ class CertificatesScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Active Count',
+                            l10n.certificates_activeCount,
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
@@ -192,6 +188,7 @@ class _CertificateCard extends StatelessWidget {
   @override
   // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     final app = context.watch<AppProvider>();
     final progress = cert.progress.clamp(0.0, 1.0);
@@ -254,7 +251,7 @@ class _CertificateCard extends StatelessWidget {
                               ),
                               if (bank != null)
                                 Text(
-                                  'Linked: ${bank.name}',
+                                  l10n.certificates_linkedBank(bank.name),
                                   style: TextStyle(
                                     fontSize: 11,
                                     color: cs.onSurface.withValues(alpha: 0.55),
@@ -318,7 +315,14 @@ class _CertificateCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Yield: ${formatAmount(cert.periodicPayout, cert.currency)} (${cert.collectionType})',
+                    l10n.certificates_yieldSummary(
+                      formatAmount(cert.periodicPayout, cert.currency),
+                      switch (cert.collectionType) {
+                        'daily' => l10n.freq_daily,
+                        'yearly' => l10n.freq_yearly,
+                        _ => l10n.recurring_monthly,
+                      },
+                    ),
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -326,7 +330,9 @@ class _CertificateCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'Matures: ${DateFormat('dd MMM yyyy').format(cert.endDate)}',
+                    l10n.certificates_maturesOn(
+                      DateFormat('dd MMM yyyy').format(cert.endDate),
+                    ),
                     style: TextStyle(
                       fontSize: 11,
                       color: cs.onSurface.withValues(alpha: 0.5),

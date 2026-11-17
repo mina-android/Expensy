@@ -88,7 +88,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
           // ── Transparent Edge-to-Edge Header ────────────────────────
           FintechHeader(
             title: l10n.accounts_accounts,
-            subtitle: '${app.accounts.length} ${app.accounts.length == 1 ? "account" : "accounts"}',
+            subtitle: l10n.accounts_subtitleCount(app.accounts.length),
             actions: [
               if (hasMultiCurrency)
                 FintechCircleButton(
@@ -186,13 +186,13 @@ class _AccountsScreenState extends State<AccountsScreen> {
               items: [
                 FintechSegmentItem<int>(
                   value: 0,
-                  label: 'Accounts',
+                  label: l10n.accounts_tabAccounts,
                   icon: Icons.account_balance_wallet_outlined,
                   badge: '${regularAccounts.length}',
                 ),
                 FintechSegmentItem<int>(
                   value: 1,
-                  label: 'Cards',
+                  label: l10n.accounts_tabCards,
                   icon: Icons.credit_card_outlined,
                   badge: '${cardAccounts.length}',
                 ),
@@ -243,13 +243,13 @@ class _AccountsScreenState extends State<AccountsScreen> {
         color: tabOrange,
         items: [
           ExpandableFabItem(
-            label: 'Add Account',
+            label: l10n.accounts_addAccount,
             icon: Icons.account_balance_wallet_rounded,
             color: tabOrange,
             onTap: () => AccountsScreen.openSheet(context, isCard: false),
           ),
           ExpandableFabItem(
-            label: 'Add Card',
+            label: l10n.accounts_addCardBtn,
             icon: Icons.credit_card_rounded,
             color: tabOrange,
             onTap: () => AccountsScreen.openSheet(context, isCard: true),
@@ -460,13 +460,15 @@ class _AccountCard extends StatelessWidget {
                       isPinned ? Icons.push_pin : Icons.push_pin_outlined,
                       size: 20),
                   color: isPinned ? cs.primary : color,
-                  tooltip: isPinned ? 'Unpin from Widget' : 'Pin to Widget',
+                  tooltip: isPinned
+                      ? l10n.accounts_unpinFromWidget
+                      : l10n.accounts_pinToWidget,
                   onPressed: () {
                     final success = ap.toggleWidgetPin(acc.id);
                     if (!success && context.mounted) {
                       showAppSnackbar(
                         context,
-                        'You cannot pin more than 3 accounts',
+                        l10n.accounts_maxPinnedWarning,
                       );
                     }
                   },
@@ -482,7 +484,8 @@ class _AccountCard extends StatelessWidget {
                 icon: const Icon(Icons.delete_outline_rounded, size: 20),
                 color: cs.error,
                 onPressed: () async {
-                  final blockReason = app.getAccountDeletionBlockReason(acc.id);
+                  final blockReason =
+                      app.getAccountDeletionBlockReason(acc.id, l10n);
                   if (blockReason != null) {
                     showDialog(
                       context: context,
@@ -1009,8 +1012,8 @@ class _AccountSheetState extends State<_AccountSheet> {
           children: [
           Text(
               isEdit
-                  ? (isCard ? 'Edit Card' : l10n.accounts_editAccount)
-                  : (isCard ? 'Add Card' : l10n.accounts_addAccount),
+                  ? (isCard ? l10n.accounts_editCard : l10n.accounts_editAccount)
+                  : (isCard ? l10n.accounts_addCardBtn : l10n.accounts_addAccount),
               style: Theme.of(context)
                   .textTheme
                   .titleLarge
@@ -1022,7 +1025,7 @@ class _AccountSheetState extends State<_AccountSheet> {
             controller: _nameCtrl,
             decoration: InputDecoration(
               labelText: isCard
-                  ? 'Card Name (e.g. Visa Platinum)'
+                  ? l10n.accounts_cardNameHint
                   : l10n.accounts_accountName,
               prefixIcon: const Icon(Icons.label_outline),
               errorText: _submitted && _nameCtrl.text.trim().isEmpty
@@ -1219,10 +1222,12 @@ class _AccountSheetState extends State<_AccountSheet> {
                   const TextInputType.numberWithOptions(decimal: true),
               decoration: InputDecoration(
                   labelText: isCredit
-                      ? (isEdit ? 'Amount Currently Owed' : 'Initial Amount Owed')
+                      ? (isEdit
+                          ? l10n.accounts_amountCurrentlyOwed
+                          : l10n.accounts_initialAmountOwed)
                       : (isEdit ? l10n.accounts_balance : l10n.accounts_initialBalance),
                   helperText: isCredit
-                      ? 'Enter amount currently owed on this card (saved as debt)'
+                      ? l10n.accounts_cardDebtHint
                       : null,
                   prefixText: '${currencyInfo(_currency).symbol} '),
             ),
@@ -1676,7 +1681,7 @@ class _CardSheetState extends State<_CardSheet> {
     } else {
       if (isDebit) {
         if (_linkedAccountId == null) {
-          showAppSnackbar(context, 'Please select a linked bank account for this debit card.');
+          showAppSnackbar(context, l10n.accounts_selectLinkedBank);
           return;
         }
       }
@@ -1774,9 +1779,9 @@ class _CardSheetState extends State<_CardSheet> {
     final preview = isGold ? _previewGoldValue(app) : null;
 
     final typeOptions = [
-      ['credit', 'Credit Card'],
-      ['debit', 'Debit Card'],
-      ['prepaid', 'Prepaid Card'],
+      ['credit', l10n.accounts_creditCard],
+      ['debit', l10n.accounts_debitCard],
+      ['prepaid', l10n.accounts_prepaidCard],
     ];
 
     return Padding(
@@ -1796,8 +1801,8 @@ class _CardSheetState extends State<_CardSheet> {
           children: [
           Text(
               isEdit
-                  ? (isCard ? 'Edit Card' : l10n.accounts_editAccount)
-                  : (isCard ? 'Add Card' : l10n.accounts_addAccount),
+                  ? (isCard ? l10n.accounts_editCard : l10n.accounts_editAccount)
+                  : (isCard ? l10n.accounts_addCardBtn : l10n.accounts_addAccount),
               style: Theme.of(context)
                   .textTheme
                   .titleLarge
@@ -1808,7 +1813,7 @@ class _CardSheetState extends State<_CardSheet> {
             controller: _nameCtrl,
             decoration: InputDecoration(
               labelText: isCard
-                  ? 'Card Name (e.g. Visa Platinum)'
+                  ? l10n.accounts_cardNameHint
                   : l10n.accounts_accountName,
               prefixIcon: const Icon(Icons.label_outline),
               errorText: _submitted && _nameCtrl.text.trim().isEmpty
@@ -2012,7 +2017,7 @@ class _CardSheetState extends State<_CardSheet> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'Debit cards share balance with their linked bank account.',
+                      l10n.accounts_debitSharesBalance,
                       style: TextStyle(fontSize: 13, color: cs.onSurface),
                     ),
                   ),
@@ -2027,10 +2032,12 @@ class _CardSheetState extends State<_CardSheet> {
                   const TextInputType.numberWithOptions(decimal: true),
               decoration: InputDecoration(
                   labelText: isCredit
-                      ? (isEdit ? 'Amount Currently Owed' : 'Initial Amount Owed')
+                      ? (isEdit
+                          ? l10n.accounts_amountCurrentlyOwed
+                          : l10n.accounts_initialAmountOwed)
                       : (isEdit ? l10n.accounts_balance : l10n.accounts_initialBalance),
                   helperText: isCredit
-                      ? 'Enter amount currently owed on this card (saved as debt)'
+                      ? l10n.accounts_cardDebtHint
                       : null,
                   prefixText: '${currencyInfo(_currency).symbol} '),
             ),
@@ -2142,7 +2149,10 @@ class _CardSheetState extends State<_CardSheet> {
 
           if (!isPrepaid) ...[
             const SizedBox(height: 16),
-            Text(isDebit ? 'Linked Bank Account (Required)' : l10n.accounts_linkedAccountOptional,
+            Text(
+                isDebit
+                    ? l10n.accounts_linkedBankRequired
+                    : l10n.accounts_linkedAccountOptional,
                 style: Theme.of(context)
                     .textTheme
                     .labelMedium
@@ -2294,7 +2304,7 @@ class _CardSheetState extends State<_CardSheet> {
                 AppHaptics.tap(context, HapticStrength.light);
                 _submit();
               },
-              child: Text(isEdit ? l10n.accounts_saveChanges : 'Add New Card'),
+              child: Text(isEdit ? l10n.accounts_saveChanges : l10n.accounts_addNewCardBtn),
             )),
           ]),
         ],
@@ -2377,7 +2387,8 @@ class _RealWorldCard extends StatelessWidget {
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
                 onPressed: () async {
-                  final blockReason = app.getAccountDeletionBlockReason(acc.id);
+                  final blockReason =
+                      app.getAccountDeletionBlockReason(acc.id, l10n);
                   if (blockReason != null) {
                     showDialog(
                       context: context,
@@ -2825,7 +2836,8 @@ class _RealWorldCard extends StatelessWidget {
                             ),
                             if (statement.statementDate != null)
                               Text(
-                                'Next cycle closes around day ${acc.statementDay ?? 1}',
+                                l10n.accounts_nextCycleCloses(
+                                    acc.statementDay ?? 1),
                                 style: TextStyle(
                                   fontSize: 11,
                                   color: cs.onSurfaceVariant,
@@ -2916,13 +2928,13 @@ class _GoldPreviewCard extends StatelessWidget {
           const SizedBox(height: 6),
           Divider(color: goldColor.withValues(alpha: 0.2), height: 12),
           _InfoRow(
-            label: 'Spot price (${karat}k gold/g)',
+            label: l10n.accounts_spotPriceLabel(karat),
             value: formatAmount(pricePerGramKarat, currency),
             color: goldColor,
           ),
           if (grams != null && grams! > 0) ...[
             _InfoRow(
-              label: 'Weight × purity',
+              label: l10n.accounts_weightTimesPurity,
               value:
                   '${grams!.toStringAsFixed(2)} g × ${(karat / 24 * 100).toStringAsFixed(1)}%',
               color: cs.onSurface.withValues(alpha: 0.6),

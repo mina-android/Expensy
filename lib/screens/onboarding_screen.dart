@@ -8,6 +8,7 @@ import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
 import '../widgets/app_numeric_keypad.dart';
 import '../utils/haptics.dart';
+import '../utils/service_localizations.dart';
 import '../services/notification_service.dart';
 import 'main_shell.dart';
 
@@ -251,7 +252,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   String _currency = 'USD';
 
   // Step 4 — First account
-  final _accNameCtrl = TextEditingController(text: 'Main Bank');
+  String _defaultBankNameSeed =
+      ServiceLocalizations.current.onboarding_defaultBankName;
+  late final _accNameCtrl =
+      TextEditingController(text: _defaultBankNameSeed);
   final _accBalCtrl = TextEditingController(text: '0');
   String _accType = 'bank';
   String _accCur = 'USD';
@@ -259,7 +263,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   bool _accExcludeFromTotal = false;
 
   // Step 5 — Debit Card
-  final _cardNameCtrl = TextEditingController(text: 'Debit Card');
+  String _defaultCardNameSeed =
+      ServiceLocalizations.current.accounts_debitCard;
+  String _defaultCardholderSeed =
+      ServiceLocalizations.current.onboarding_defaultCardholder;
+  late final _cardNameCtrl =
+      TextEditingController(text: _defaultCardNameSeed);
   final _cardHolderCtrl = TextEditingController();
   final _cardDigitsCtrl = TextEditingController(text: '1234');
   int _cardColor = kAssetsColorValue;
@@ -271,10 +280,30 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       if (_nameError != null && _nameCtrl.text.trim().isNotEmpty) {
         setState(() => _nameError = null);
       }
-      if (_cardHolderCtrl.text.isEmpty || _cardHolderCtrl.text == 'EXPENSY MEMBER') {
+      if (_cardHolderCtrl.text.isEmpty ||
+          _cardHolderCtrl.text == 'EXPENSY MEMBER' ||
+          _cardHolderCtrl.text == _defaultCardholderSeed) {
         _cardHolderCtrl.text = _nameCtrl.text.trim().toUpperCase();
       }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final l10n = AppLocalizations.of(context);
+    if (l10n == null) return;
+    if (_accNameCtrl.text == _defaultBankNameSeed ||
+        _accNameCtrl.text == 'Main Bank') {
+      _defaultBankNameSeed = l10n.onboarding_defaultBankName;
+      _accNameCtrl.text = _defaultBankNameSeed;
+    }
+    if (_cardNameCtrl.text == _defaultCardNameSeed ||
+        _cardNameCtrl.text == 'Debit Card') {
+      _defaultCardNameSeed = l10n.accounts_debitCard;
+      _cardNameCtrl.text = _defaultCardNameSeed;
+    }
+    _defaultCardholderSeed = l10n.onboarding_defaultCardholder;
   }
 
   @override
@@ -302,7 +331,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     AppHaptics.tap(context, HapticStrength.light);
     if (_page == 2) {
       if (_nameCtrl.text.trim().isEmpty) {
-        setState(() => _nameError = 'Name is required');
+        setState(() => _nameError = AppLocalizations.of(context)!.onboarding_nameRequired);
         return;
       }
     }
@@ -344,59 +373,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
-  Future<String?> _promptForBackupPassword() async {
-    final ctrl = TextEditingController();
-    bool obscure = true;
-    final result = await showDialog<String>(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          title: const Text('Encrypted Backup'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Enter the password used to encrypt this backup file:',
-                style: TextStyle(fontSize: 13),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: ctrl,
-                obscureText: obscure,
-                autofocus: true,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      obscure
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                    ),
-                    onPressed: () => setDialogState(() => obscure = !obscure),
-                  ),
-                ),
-                onSubmitted: (v) => Navigator.pop(ctx, v.trim()),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, null),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
-              child: const Text('Decrypt & Continue'),
-            ),
-          ],
-        ),
-      ),
-    );
-    ctrl.dispose();
-    return result;
-  }
-
   Future<void> _restoreFromWelcome() async {
     final l10n = AppLocalizations.of(context)!;
     setState(() {
@@ -406,7 +382,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     try {
       final app = context.read<AppProvider>();
       final originalVersion = await app.restoreBackup(
-        onPasswordRequired: _promptForBackupPassword,
+        onPasswordRequired: () => showBackupPasswordDialog(context),
       );
       if (originalVersion == 0) {
         if (mounted) setState(() => _restoring = false);
@@ -483,10 +459,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Future<void> _finish() async {
+    final l10n = AppLocalizations.of(context)!;
     final app = context.read<AppProvider>();
     if (!app.settings.onboarded) {
       await app.completeOnboarding(
-        name: _nameCtrl.text.trim().isEmpty ? 'User' : _nameCtrl.text.trim(),
+        name: _nameCtrl.text.trim().isEmpty
+            ? l10n.onboarding_defaultUser
+            : _nameCtrl.text.trim(),
         currency: _currency,
       );
     }
@@ -1189,7 +1168,7 @@ class _PageCurrency extends StatelessWidget {
 
         // Popular Currency quick-select chips
         Text(
-          'Popular Currencies',
+          l10n.onboarding_popularCurrencies,
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w700,
@@ -1437,7 +1416,7 @@ class _PageAccountState extends State<_PageAccount> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'You can add a debit card for this bank account in the next step',
+                    l10n.onboarding_debitCardNextStep,
                     style: TextStyle(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w600,
@@ -1672,14 +1651,15 @@ class _PageDebitCard extends StatefulWidget {
 class _PageDebitCardState extends State<_PageDebitCard> {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final cardName = widget.nameCtrl.text.trim().isEmpty
-        ? 'Debit Card'
+        ? l10n.accounts_debitCard
         : widget.nameCtrl.text.trim();
     final holderName = widget.holderCtrl.text.trim().isEmpty
-        ? 'EXPENSY MEMBER'
+        ? l10n.onboarding_defaultCardholder
         : widget.holderCtrl.text.trim().toUpperCase();
     final digits = widget.digitsCtrl.text.trim().isEmpty
         ? '1234'
@@ -1698,7 +1678,7 @@ class _PageDebitCardState extends State<_PageDebitCard> {
             color: Color(widget.color)),
         const SizedBox(height: 20),
         Text(
-          'Add a Debit Card',
+          l10n.onboarding_addDebitCardTitle,
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.w800,
                 letterSpacing: -0.4,
@@ -1706,7 +1686,7 @@ class _PageDebitCardState extends State<_PageDebitCard> {
         ),
         const SizedBox(height: 6),
         Text(
-          'Link a debit card to your new bank account for effortless expense tracking.',
+          l10n.onboarding_addDebitCardDesc,
           style: TextStyle(
             fontSize: 14,
             color: cs.onSurface.withValues(alpha: 0.6),
@@ -1804,9 +1784,9 @@ class _PageDebitCardState extends State<_PageDebitCard> {
                               width: 0.5,
                             ),
                           ),
-                          child: const Text(
-                            'DEBIT',
-                            style: TextStyle(
+                          child: Text(
+                            l10n.accounts_debitCard.toUpperCase(),
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 10.5,
                               fontWeight: FontWeight.w800,
@@ -1891,7 +1871,7 @@ class _PageDebitCardState extends State<_PageDebitCard> {
           controller: widget.nameCtrl,
           onChanged: (_) => setState(() {}),
           decoration: InputDecoration(
-            labelText: 'Card Name',
+            labelText: l10n.onboarding_cardName,
             prefixIcon: const Icon(Icons.credit_card_outlined),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
@@ -1913,7 +1893,7 @@ class _PageDebitCardState extends State<_PageDebitCard> {
           controller: widget.holderCtrl,
           onChanged: (_) => setState(() {}),
           decoration: InputDecoration(
-            labelText: 'Cardholder Name',
+            labelText: l10n.onboarding_cardholderName,
             prefixIcon: const Icon(Icons.person_outline_rounded),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
@@ -1939,7 +1919,7 @@ class _PageDebitCardState extends State<_PageDebitCard> {
           onChanged: (_) => setState(() {}),
           decoration: InputDecoration(
             counterText: '',
-            labelText: 'Last 4 Digits',
+            labelText: l10n.onboarding_last4Digits,
             prefixIcon: const Icon(Icons.numbers_rounded),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
@@ -1959,7 +1939,7 @@ class _PageDebitCardState extends State<_PageDebitCard> {
 
         // Color Picker
         Text(
-          'Card Color',
+          l10n.onboarding_cardColor,
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w700,

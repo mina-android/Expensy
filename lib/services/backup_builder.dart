@@ -25,7 +25,7 @@ class BackupBuilder {
     DateTime? now,
   }) async {
     final dt = now ?? DateTime.now();
-    final timestamp = DateFormat('yyyyMMdd_HHmmss').format(dt);
+    final timestamp = DateFormat('yyyyMMdd_HHmmss', 'en_US').format(dt);
     final data = await DBHelper.exportAll();
     data['settings'] = settingsJson;
     data['exported_at'] = dt.toIso8601String();

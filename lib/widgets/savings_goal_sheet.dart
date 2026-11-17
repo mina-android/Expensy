@@ -1,11 +1,6 @@
 // lib/widgets/savings_goal_sheet.dart
 // note: Bottom-sheet form for creating and editing savings goals with target amount, deadline, icon, and accent color.
 // Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
 // All state mutations and queries route through AppProvider to preserve UI-DB decoupling.
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
@@ -162,7 +157,7 @@ class _SavingsGoalSheetState extends State<SavingsGoalSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(isNew ? 'New Savings Goal' : 'Edit Savings Goal',
+              Text(isNew ? l10n.savings_newGoal : l10n.savings_editGoal,
                   style: const TextStyle(
                       fontSize: 20, fontWeight: FontWeight.w800)),
               if (widget.wishlistItemId != null ||

@@ -126,7 +126,7 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
                               if (context.mounted) {
                                 showAppSnackbar(
                                   context,
-                                  'Deleted ${_loan.name}',
+                                  l10n.common_itemDeleted(_loan.name),
                                   onUndo: undo,
                                 );
                               }
@@ -241,10 +241,10 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
                   children: [
                     Row(
                       children: [
-                        Expanded(child: _DetailStat('Principal', formatAmount(_loan.principal, cur))),
+                        Expanded(child: _DetailStat(l10n.loans_principal, formatAmount(_loan.principal, cur))),
                         Expanded(
                           child: _DetailStat(
-                            'Interest Rate',
+                            l10n.loans_interestRate,
                             _loan.interestRate != null && _loan.interestRate! > 0
                                 ? '${_loan.interestRate}%'
                                 : '0%',
@@ -255,8 +255,8 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
                     const Divider(height: 16, thickness: 0.5),
                     Row(
                       children: [
-                        Expanded(child: _DetailStat('Duration', l10n.loans_durationMonths(_loan.durationMonths))),
-                        Expanded(child: _DetailStat('Total Payable', formatAmount(_loan.totalPayable, cur))),
+                        Expanded(child: _DetailStat(l10n.loans_duration, l10n.loans_durationMonths(_loan.durationMonths))),
+                        Expanded(child: _DetailStat(l10n.loans_totalPayable, formatAmount(_loan.totalPayable, cur))),
                       ],
                     ),
                     if (_loan.accountId != null) ...[
@@ -265,8 +265,8 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
                         children: [
                           Expanded(
                             child: _DetailStat(
-                              'Linked Account',
-                              app.accountById(_loan.accountId!)?.name ?? 'Deleted Account',
+                              l10n.recurring_linkedAccount,
+                              app.accountById(_loan.accountId!)?.name ?? l10n.recurring_deletedAccount,
                             ),
                           ),
                         ],
@@ -435,7 +435,7 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
                             if (context.mounted) {
                               showAppSnackbar(
                                 context,
-                                'Payment deleted',
+                                l10n.loans_paymentDeleted,
                                 onUndo: undo,
                               );
                             }
@@ -618,7 +618,8 @@ class _LogPaymentSheetState extends State<_LogPaymentSheet> {
                   if (!_formKey.currentState!.validate()) return;
                   final nav = Navigator.of(context);
                   final messenger = ScaffoldMessenger.of(context);
-                  final msg = 'Logged payment of ${formatAmount(_amount, widget.loan.currency)}';
+                  final msg = l10n.loans_loggedPayment(
+                      formatAmount(_amount, widget.loan.currency));
 
                   await app.payLoanInstallment(
                     widget.loan,

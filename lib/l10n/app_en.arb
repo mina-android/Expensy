@@ -1193,5 +1193,901 @@
   "transfer_categoryLocked": "Transfer (Default & Only Category)",
   "loans_noLoans": "No loans tracked yet",
   "loans_noLoansSub": "Tap + to track mortgages, personal loans, or installments",
-  "certificates_noCertificatesSub": "Tap + to track bank certificates and fixed deposits"
+  "certificates_noCertificatesSub": "Tap + to track bank certificates and fixed deposits",
+  "common_undo": "Undo",
+  "common_close": "Close",
+  "common_required": "Required",
+  "common_invalid": "Invalid",
+  "common_none": "None",
+  "common_enabledAt": "Enabled ({time})",
+  "@common_enabledAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "common_disabled": "Disabled",
+  "freq_daily": "Daily",
+  "freq_yearly": "Yearly",
+  "recurring_transfers": "Transfers ({count})",
+  "@recurring_transfers": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "recurring_transfer": "Transfer",
+  "recurring_transferCaps": "TRANSFER",
+  "recurring_noRecurringTransfers": "No recurring transfers",
+  "recurring_subtitleCount": "{count} subscriptions & recurring",
+  "@recurring_subtitleCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recurring_perWeek": "{amount} / week",
+  "@recurring_perWeek": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "recurring_perMonth": "/ month",
+  "recurring_fromAccount": "From Account",
+  "recurring_toAccount": "To Account",
+  "recurring_targetAmount": "Target Amount ({currency})",
+  "@recurring_targetAmount": {
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "recurring_autoPayAt": "Auto Pay at",
+  "recurring_autoPayOnDueDate": "Auto pay on Due date",
+  "recurring_autoPayEnabledSub": "Automatically recorded on due date",
+  "recurring_autoPayDisabledSub": "Automatically record this payment when due",
+  "recurring_autoPayTime": "Auto pay time",
+  "recurring_reminderEnabledSub": "You'll be notified on the due date",
+  "recurring_reminderDisabledSub": "Get notified when a payment is due",
+  "recurring_earlyReminderEnabledSub": "Extra heads-up 2 days early at the same time",
+  "recurring_earlyReminderDisabledSub": "Also get notified 2 days before the due date",
+  "recurring_addRecurringBtn": "Add Recurring",
+  "recurring_paymentDetails": "Payment Details",
+  "recurring_linkedAccount": "Linked Account",
+  "recurring_deletedAccount": "Deleted Account",
+  "recurring_frequency": "Frequency",
+  "recurring_type": "Type",
+  "recurring_startDate": "Start Date",
+  "recurring_nextDueDate": "Next Due Date",
+  "recurring_autoPay": "Auto Pay",
+  "recurring_reminder": "Reminder",
+  "recurring_endDate": "End Date",
+  "recurring_totalValue": "Total Value",
+  "recurring_notes": "Notes",
+  "recurring_upcomingPayments": "Upcoming Payments",
+  "recurring_remainingCount": "{count} remaining",
+  "@recurring_remainingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recurring_allInstallmentsCompleted": "All installments completed",
+  "recurring_installmentOf": "#{num} of {total}",
+  "@recurring_installmentOf": {
+    "placeholders": {
+      "num": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "recurring_paymentPaid": "Payment Paid",
+  "recurring_paymentSkipped": "Payment Skipped",
+  "presets_transfer": "Transfer",
+  "presets_selectDifferentAccounts": "Please select different source and destination accounts.",
+  "presets_targetAmountOptional": "Target Amount in {currency} (Optional)",
+  "@presets_targetAmountOptional": {
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "transactions_transfers": "Transfers",
+  "transactions_selectedItemsCount": "{count, plural, =1{1 item selected} other{{count} items selected}}",
+  "@transactions_selectedItemsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "transactions_entriesCount": "{count, plural, =1{1 entry} other{{count} entries}}",
+  "@transactions_entriesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "transactions_clearSelection": "Clear selection",
+  "transactions_transferTitle": "Transfer Transaction",
+  "transactions_transferBody": "This transaction is part of an account transfer. Individual legs cannot be modified directly to preserve balance integrity. Would you like to delete this transfer?",
+  "transactions_deleteTransfer": "Delete Transfer",
+  "transactions_transferDeleted": "Transfer deleted",
+  "transactions_certTitle": "Certificate Transaction",
+  "transactions_certBody": "This transaction is linked to a time deposit / certificate. To keep principal and yield ledgers in sync, manage it from the Certificates screen.",
+  "transactions_viewCertificate": "View Certificate",
+  "transactions_openCertificates": "Open Certificates",
+  "transactions_loanFallback": "Loan",
+  "transactions_loanPayment": "Loan Payment",
+  "transactions_goalContribution": "Goal Contribution",
+  "transactions_goalWithdrawal": "Goal Withdrawal",
+  "calendar_repayment": "Repayment",
+  "calendar_transfersDue": "Recurring Transfers Due",
+  "accounts_subtitleCount": "{count, plural, =1{1 account} other{{count} accounts}}",
+  "@accounts_subtitleCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "accounts_tabAccounts": "Accounts",
+  "accounts_tabCards": "Cards",
+  "accounts_addCardBtn": "Add Card",
+  "accounts_addNewCardBtn": "Add New Card",
+  "accounts_editCard": "Edit Card",
+  "accounts_cardNameHint": "Card Name (e.g. Visa Platinum)",
+  "accounts_debitCard": "Debit Card",
+  "accounts_prepaidCard": "Prepaid Card",
+  "accounts_pinToWidget": "Pin to Widget",
+  "accounts_unpinFromWidget": "Unpin from Widget",
+  "accounts_maxPinnedWarning": "You cannot pin more than 3 accounts",
+  "accounts_selectLinkedBank": "Please select a linked bank account for this debit card.",
+  "accounts_debitSharesBalance": "Debit cards share balance with their linked bank account.",
+  "accounts_linkedBankRequired": "Linked Bank Account (Required)",
+  "accounts_amountCurrentlyOwed": "Amount Currently Owed",
+  "accounts_initialAmountOwed": "Initial Amount Owed",
+  "accounts_cardDebtHint": "Enter amount currently owed on this card (saved as debt)",
+  "accounts_nextCycleCloses": "Next cycle closes around day {day}",
+  "@accounts_nextCycleCloses": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "accounts_spotPriceLabel": "Spot price ({karat}k gold/g)",
+  "@accounts_spotPriceLabel": {
+    "placeholders": {
+      "karat": {
+        "type": "int"
+      }
+    }
+  },
+  "accounts_weightTimesPurity": "Weight × purity",
+  "accounts_blockDeleteRecurring": "Account has {count} active recurring payments. Please reassign or delete them first.",
+  "@accounts_blockDeleteRecurring": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "accounts_blockDeleteLoans": "Account has {count} active loans. Please reassign or delete them first.",
+  "@accounts_blockDeleteLoans": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "accounts_blockDeleteCertificates": "Account has {count} active certificates. Please redeem or delete them first.",
+  "@accounts_blockDeleteCertificates": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "accounts_blockDeleteLended": "Account has {count} unsettled lend/borrow records. Please settle them first.",
+  "@accounts_blockDeleteLended": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "accounts_blockDeleteSavings": "Account is referenced by {count} savings contributions. Please reassign or delete them first.",
+  "@accounts_blockDeleteSavings": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "accounts_blockDeletePresets": "Account is used by {count} transaction presets. Please reassign or delete them first.",
+  "@accounts_blockDeletePresets": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "accounts_blockDeleteCards": "Account is linked to {count} cards. Please unlink or delete them first.",
+  "@accounts_blockDeleteCards": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "add_transaction_selectAccountOrCard": "Please select an account or card.",
+  "add_transaction_balanced": "Balanced",
+  "add_transaction_similarExists": "{count, plural, =1{A similar transaction already exists:} other{{count} similar transactions already exist:}}",
+  "@add_transaction_similarExists": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "budget_goalsCountSubtitle": "{budgets} budgets · {goals} goals",
+  "@budget_goalsCountSubtitle": {
+    "placeholders": {
+      "budgets": {
+        "type": "int"
+      },
+      "goals": {
+        "type": "int"
+      }
+    }
+  },
+  "budget_savingsGoalsCaps": "SAVINGS GOALS",
+  "budget_percentSaved": "{percent}% saved",
+  "@budget_percentSaved": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "budget_ofTarget": "of {amount} target",
+  "@budget_ofTarget": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "budget_goalsTab": "Goals",
+  "budget_completed": "Completed",
+  "savings_newGoal": "New Savings Goal",
+  "savings_editGoal": "Edit Savings Goal",
+  "certificates_activePrincipal": "Active Principal",
+  "certificates_activeCount": "Active Count",
+  "certificates_linkedBank": "Linked: {name}",
+  "@certificates_linkedBank": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "certificates_yieldSummary": "Yield: {amount} ({type})",
+  "@certificates_yieldSummary": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "certificates_maturesOn": "Matures: {date}",
+  "@certificates_maturesOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "certificates_settledCaps": "SETTLED",
+  "certificates_activeCaps": "ACTIVE",
+  "certificates_annualRate": "Annual Rate",
+  "certificates_periodicYieldLabel": "Periodic Yield",
+  "certificates_maturedAndSettled": "Certificate Matured & Settled",
+  "certificates_payoutOverride": "Payout (override)",
+  "certificates_dayRange": "Day (1-31)",
+  "certificates_noBankAccounts": "No Bank Accounts available. Please create a bank account to receive payouts.",
+  "certificates_selectLinkedBank": "Please select a linked Bank Account.",
+  "creditCard_noFundingAccounts": "No bank or cash accounts available to fund payment.",
+  "creditCard_processing": "Processing...",
+  "creditCard_payAmountBtn": "Pay {amount}",
+  "@creditCard_payAmountBtn": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "insights_loanPaymentsThisMonth": "Debt / Loan Payments This Month",
+  "insights_spendingForecast": "Spending Forecast",
+  "insights_forecastPrefix": "At this rate, you'll spend ",
+  "insights_forecastSuffix": " by the end of {month} — {days} days left.",
+  "@insights_forecastSuffix": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "insights_forecastDisclaimer": "Projection based on spending so far, doesn't include upcoming recurring bills.",
+  "insights_forecastAccuracy": "Based on the first {days} days — accuracy improves as the month goes on.",
+  "@insights_forecastAccuracy": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "insights_projAmount": "Proj: {amount}",
+  "@insights_projAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "insights_projOfBudget": " ({percent}% of budget)",
+  "@insights_projOfBudget": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "insights_outstanding": "Outstanding",
+  "insights_monthlyObligation": "Monthly Obligation",
+  "loans_principal": "Principal",
+  "loans_interestRate": "Interest Rate",
+  "loans_duration": "Duration",
+  "loans_transferTo": "Transfer Loan Amount To",
+  "loans_payFrom": "Pay Installments From",
+  "loans_dueDayTime": "Due: Day {day} @ {time}",
+  "@loans_dueDayTime": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "more_activeCount": "{count} active",
+  "@more_activeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "more_toolsSubtitle": "{count} financial tools & preferences",
+  "@more_toolsSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "more_totalWealthCaps": "TOTAL WEALTH",
+  "more_liveNetWorthSub": "Live aggregated net worth across all holdings",
+  "more_assetsAmount": "Assets: {amount}",
+  "@more_assetsAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "more_liabilitiesAmount": "Liabilities: {amount}",
+  "@more_liabilitiesAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "netWorth_debtFree": "Debt-free",
+  "netWorth_showLess": "Show Less",
+  "netWorth_showAll": "Show All ({count})",
+  "@netWorth_showAll": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "netWorth_zeroLiabilities": "Zero liabilities recorded! Outstanding debt is $0.00.",
+  "netWorth_lentDebts": "Lent/Debts",
+  "netWorth_snapBreakdown": "Assets: {assets} · Accounts: {accounts}",
+  "@netWorth_snapBreakdown": {
+    "placeholders": {
+      "assets": {
+        "type": "String"
+      },
+      "accounts": {
+        "type": "String"
+      }
+    }
+  },
+  "onboarding_nameRequired": "Name is required",
+  "onboarding_popularCurrencies": "Popular Currencies",
+  "onboarding_debitCardNextStep": "You can add a debit card for this bank account in the next step",
+  "onboarding_addDebitCardTitle": "Add a Debit Card",
+  "onboarding_addDebitCardDesc": "Link a debit card to your new bank account for effortless expense tracking.",
+  "onboarding_cardName": "Card Name",
+  "onboarding_cardholderName": "Cardholder Name",
+  "onboarding_last4Digits": "Last 4 Digits",
+  "onboarding_cardColor": "Card Color",
+  "wrapped_zeroSpendOfDays": "of {total} days with zero spend",
+  "@wrapped_zeroSpendOfDays": {
+    "placeholders": {
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "wrapped_savingsRateLabel": "Savings Rate",
+  "wrapped_topCategoryLabel": "Top Category",
+  "wrapped_zeroSpendDaysLabel": "Zero-Spend Days",
+  "wrapped_footerTag": "★ Private & Offline Financial Mastery ★",
+  "yearly_tapToExpand": "Tap to expand",
+  "yearly_noDataBadge": "No Data",
+  "export_formatHeader": "EXPORT FORMAT",
+  "export_pdfPeriod": "Period: {range}",
+  "@export_pdfPeriod": {
+    "placeholders": {
+      "range": {
+        "type": "String"
+      }
+    }
+  },
+  "export_pdfCurrency": "Currency: {currency}",
+  "@export_pdfCurrency": {
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "export_pdfGenerated": "Generated: {date}",
+  "@export_pdfGenerated": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "export_pdfPageOf": "Page {page} of {total}",
+  "@export_pdfPageOf": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "export_pdfTotalAssets": "Total Assets",
+  "export_pdfTotalLiabilities": "Total Liabilities",
+  "export_pdfCurrentNetWorth": "Current Net Worth",
+  "export_pdfCategory": "Category",
+  "export_pdfAmountHeader": "Amount ({currency})",
+  "@export_pdfAmountHeader": {
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "export_pdfPercentOfExpenses": "% of Total Expenses",
+  "backup_encryptedTitle": "Encrypted Backup",
+  "backup_encryptedPrompt": "Enter the password used to encrypt this backup file:",
+  "backup_password": "Password",
+  "backup_confirmPassword": "Confirm Password",
+  "backup_decryptContinue": "Decrypt & Continue",
+  "backup_chooseRestoreMode": "Choose Restore Mode",
+  "backup_chooseRestoreModeDesc": "Select whether you want to restore the entire backup or only specific financial data.",
+  "backup_selectiveRestore": "Selective Restore",
+  "backup_selectiveRestoreDesc": "Choose specific entities without erasing your other data or settings.",
+  "backup_fullRestore": "Full Restore",
+  "backup_fullRestoreDesc": "Completely replaces all current database tables and settings with backup data.",
+  "backup_selectiveBackup": "Selective Backup",
+  "backup_selectiveBackupBtn": "Selective Backup...",
+  "backup_selectiveBackupDesc": "Choose the financial data entities you want to export into JSON.",
+  "backup_selectedRestoredSuccess": "Selected data restored successfully!",
+  "backup_savingsGoals": "Savings Goals",
+  "backup_savingsContributions": "Savings Contributions",
+  "backup_encryptionDisabled": "Backup encryption disabled",
+  "backup_encryptionEnabled": "Backup encryption enabled",
+  "backup_encryptionFailed": "Failed to enable encryption: {error}",
+  "@backup_encryptionFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backup_encryptAutoTitle": "Encrypt Auto Backups",
+  "backup_encryptAutoDesc": "Protect your auto-backups with AES-GCM-256 encryption. If you forget this password, your backups cannot be restored.",
+  "backup_passwordEmpty": "Password cannot be empty",
+  "backup_passwordsMismatch": "Passwords do not match",
+  "backup_setPassword": "Set Password",
+  "backup_autoCreated": "Auto backup created: {file}",
+  "@backup_autoCreated": {
+    "placeholders": {
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "backup_autoFailed": "Auto backup failed: {error}",
+  "@backup_autoFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backup_nightlySchedule": "Nightly at ~2:00 AM to a chosen folder",
+  "backup_noFolderSelected": "No folder selected",
+  "backup_keepCopies": "Keep copies:",
+  "backup_encryptAes": "Encrypt backup (AES-GCM)",
+  "backup_failedError": "Failed: {error}",
+  "@backup_failedError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backup_lastSuccess": "Last: {date} ({kb} KB)",
+  "@backup_lastSuccess": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "kb": {
+        "type": "String"
+      }
+    }
+  },
+  "backup_backingUp": "Backing up...",
+  "backup_backUpNow": "Back Up Now",
+  "backup_androidIdleNote": "Runs at ~2:00 AM. Android may delay it while the phone is idle.",
+  "backup_selectAll": "Select All",
+  "backup_deselectAll": "Deselect All",
+  "backup_selectiveSaved": "Selective backup saved successfully!",
+  "backup_exportFailed": "Export failed: {error}",
+  "@backup_exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "backup_exportSelected": "Export Selected ({count}) Entities",
+  "@backup_exportSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backup_restoreSelected": "Restore Selected ({count}) Entities",
+  "@backup_restoreSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backup_selectiveRestoreNote": "Only the selected items will be restored. Your other accounts, transactions, and settings remain untouched.",
+  "backup_countInBackup": "{count} in backup",
+  "@backup_countInBackup": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backup_entityTxSplitsPresets": "Transactions, Splits & Presets",
+  "backup_entityRecurringHistory": "Recurring Payments & History",
+  "backup_entityLoansPayments": "Loans & Payments",
+  "backup_entityLentContacts": "Lent Money & Contacts",
+  "backup_entityAssetsValuables": "Assets & Valuables",
+  "backup_entityWishlistGoals": "Wishlist & Savings Goals",
+  "common_perDay": "/ day",
+  "common_daysShort": "{count} d",
+  "@common_daysShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "common_splitCaps": "SPLIT",
+  "budget_deletedCategory": "Deleted {name}",
+  "@budget_deletedCategory": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "loans_paymentDeleted": "Payment deleted",
+  "certificates_collectionDayLabel": "{frequency} (Day {day})",
+  "@certificates_collectionDayLabel": {
+    "placeholders": {
+      "frequency": {
+        "type": "String"
+      },
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "add_transaction_duplicateItem": "• {amount} on {date}{desc}",
+  "@add_transaction_duplicateItem": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      },
+      "desc": {
+        "type": "String"
+      }
+    }
+  },
+  "creditCard_billPaymentDesc": "Credit Card Bill Payment — {name}",
+  "@creditCard_billPaymentDesc": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "onboarding_defaultBankName": "Main Bank",
+  "onboarding_defaultCardholder": "EXPENSY MEMBER",
+  "onboarding_defaultUser": "User",
+  "export_excelSheetName": "Transactions",
+  "export_headerDate": "Date",
+  "export_headerDescription": "Description",
+  "export_headerType": "Type",
+  "export_headerAmount": "Amount",
+  "export_headerCurrency": "Currency",
+  "export_headerAccount": "Account",
+  "export_headerCategory": "Category",
+  "export_headerSubcategory": "Subcategory",
+  "export_headerNote": "Note",
+  "cat_food_exp": "Food & Dining",
+  "cat_transport": "Transport",
+  "cat_shopping": "Shopping",
+  "cat_bills": "Bills & Utilities",
+  "cat_health": "Health",
+  "cat_entertainment": "Entertainment",
+  "cat_education": "Education",
+  "cat_personal": "Personal Care",
+  "cat_salary": "Salary",
+  "cat_freelance": "Freelance",
+  "cat_investments": "Investments",
+  "cat_gifts": "Gifts",
+  "cat_other_inc": "Other Income",
+  "cat_other_exp": "Other Expense",
+  "cat_sys_transfer": "Transfer",
+  "cat_sys_investment": "Investment",
+  "sub_groceries": "Groceries",
+  "sub_restaurants": "Restaurants",
+  "sub_delivery": "Delivery",
+  "sub_coffee_tea": "Coffee & Tea",
+  "sub_fuel": "Fuel",
+  "sub_public_transit": "Public Transit",
+  "sub_taxi_ride": "Taxi & Ride",
+  "sub_maintenance": "Maintenance",
+  "sub_parking_tolls": "Parking & Tolls",
+  "sub_clothing": "Clothing",
+  "sub_electronics": "Electronics",
+  "sub_home_furniture": "Home & Furniture",
+  "sub_gifts": "Gifts",
+  "sub_electricity": "Electricity",
+  "sub_internet": "Internet",
+  "sub_water": "Water",
+  "sub_phone": "Phone",
+  "sub_medicine": "Medicine",
+  "sub_doctor": "Doctor",
+  "sub_movies": "Movies",
+  "sub_games": "Games",
+  "sub_subscriptions": "Subscriptions",
+  "notif_overBudgetTitle": "🚨 Over Budget",
+  "notif_overBudgetBody": "{category} — {amount} over your {period} limit",
+  "@notif_overBudgetBody": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "period": {
+        "type": "String"
+      }
+    }
+  },
+  "notif_goalReachedTitle": "🎉 Goal Reached",
+  "notif_goalReachedBody": "You reached your goal of {amount} for {name}!",
+  "@notif_goalReachedBody": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notif_certPayoutDueTitle": "📈 Certificate Payout Due",
+  "notif_certPayoutUpcomingTitle": "📈 Upcoming Certificate Payout",
+  "notif_certPayoutBody": "{name} interest return is due today.",
+  "@notif_certPayoutBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notif_certPayoutSoonBody": "{name} interest return is due in 2 days.",
+  "@notif_certPayoutSoonBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notif_creditBillDueTodayTitle": "💳 Bill Due Today",
+  "notif_creditBillDueSoonTitle": "💳 Bill Due Soon",
+  "notif_dailyReminderTitle": "📝 Daily Reminder",
+  "notif_dailyReminderBody": "Don't forget to log today's spending.",
+  "notif_lendedDueTitle": "{emoji} Due: {name}",
+  "@notif_lendedDueTitle": {
+    "placeholders": {
+      "emoji": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notif_loanPaymentDueTitle": "🏦 Loan Payment Due",
+  "notif_loanPaymentDueBody": "{name} installment is due today.",
+  "@notif_loanPaymentDueBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notif_autoBackupFailedTitle": "Auto Backup Failed",
+  "notif_autoBackupFailedBody": "Expensy was unable to create your scheduled backup: {error}",
+  "@notif_autoBackupFailedBody": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "notif_recurringTransferBody": "{amount} transfer is due",
+  "@notif_recurringTransferBody": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "notif_recurringIncomeBody": "{amount} income is due",
+  "@notif_recurringIncomeBody": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "notif_recurringExpenseBody": "{amount} payment is due",
+  "@notif_recurringExpenseBody": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "notif_creditBillDueTodayBody": "Your {name} bill is due today.",
+  "@notif_creditBillDueTodayBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notif_creditBillDueSoonBody": "Your {name} bill is due in 2 days.",
+  "@notif_creditBillDueSoonBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notif_lendedLentDueBody": "{amount} you lent to {name} is due today",
+  "@notif_lendedLentDueBody": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notif_lendedBorrowedDueBody": "{amount} you borrowed from {name} is due today",
+  "@notif_lendedBorrowedDueBody": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notif_recurringTransferDueSoonBody": "{amount} transfer due in 2 days",
+  "@notif_recurringTransferDueSoonBody": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "notif_recurringIncomeDueSoonBody": "{amount} expected in 2 days",
+  "@notif_recurringIncomeDueSoonBody": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "notif_recurringExpenseDueSoonBody": "{amount} due in 2 days",
+  "@notif_recurringExpenseDueSoonBody": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  }
 }

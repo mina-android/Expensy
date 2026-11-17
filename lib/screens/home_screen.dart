@@ -1,54 +1,6 @@
 // note: Primary dashboard screen displaying net balance hero card, period cashflow summary, quick presets, and recent transactions.
 // All state mutations and queries route through AppProvider to preserve UI-DB decoupling.
 // Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
 // lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
 import '../utils/snackbar.dart';
@@ -67,9 +19,8 @@ import 'insights_screen.dart';
 import 'yearly_analysis_screen.dart';
 import 'financial_calendar_screen.dart';
 import '../utils/haptics.dart';
+import '../utils/nav_metrics.dart';
 import 'accounts_screen.dart';
-import 'certificate_detail_screen.dart';
-import 'certificates_screen.dart';
 import '../widgets/presets_carousel.dart';
 import '../widgets/split_transaction_sheet.dart';
 
@@ -1238,78 +1189,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                       app: app,
                                     );
                                   } else if (t.isTransfer) {
-                                    showDialog(
-                                      context: context,
-                                      builder: (ctx) => AlertDialog(
-                                        title: const Text('Transfer Transaction'),
-                                        content: const Text(
-                                          'This transaction is part of an account transfer. Individual legs cannot be modified directly to preserve balance integrity. Would you like to delete this transfer?',
-                                        ),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () => Navigator.pop(ctx),
-                                            child: const Text('Cancel'),
-                                          ),
-                                          FilledButton(
-                                            style: FilledButton.styleFrom(
-                                              backgroundColor: cs.error,
-                                            ),
-                                            onPressed: () async {
-                                              Navigator.pop(ctx);
-                                              await app.deleteTransaction(t.id);
-                                              if (context.mounted) {
-                                                showAppSnackbar(
-                                                  context,
-                                                  'Transfer deleted',
-                                                );
-                                              }
-                                            },
-                                            child: const Text('Delete Transfer'),
-                                          ),
-                                        ],
-                                      ),
-                                    );
+                                    showTransferTransactionDialog(context, t);
                                   } else if (t.isInvestment) {
-                                    final cert = t.certificateId != null
-                                        ? app.certificates
-                                            .where((c) => c.id == t.certificateId)
-                                            .firstOrNull
-                                        : null;
-                                    showDialog(
-                                      context: context,
-                                      builder: (ctx) => AlertDialog(
-                                        title: const Text('Certificate Transaction'),
-                                        content: const Text(
-                                          'This transaction is linked to a time deposit / certificate. To keep principal and yield ledgers in sync, manage it from the Certificates screen.',
-                                        ),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () => Navigator.pop(ctx),
-                                            child: const Text('Close'),
-                                          ),
-                                          FilledButton(
-                                            onPressed: () {
-                                              Navigator.pop(ctx);
-                                              Navigator.push(
-                                                context,
-                                                ExpensyRoute(
-                                                  builder: (_) => cert != null
-                                                      ? CertificateDetailScreen(
-                                                          certificate: cert,
-                                                        )
-                                                      : const CertificatesScreen(),
-                                                ),
-                                              );
-                                            },
-                                            child: Text(
-                                              cert != null
-                                                  ? 'View Certificate'
-                                                  : 'Open Certificates',
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
+                                    showCertificateTransactionDialog(context, t);
                                   } else {
                                     Navigator.push(
                                       context,
@@ -1421,25 +1303,30 @@ class _HomeScreenState extends State<HomeScreen> {
   ],
 ),
 ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 75, right: 4),
-        child: ExpandableFab(
-          label: l10n.home_add,
-          color: tabBlue,
-          alignment: CrossAxisAlignment.end,
-          onIncome: () => Navigator.push(
-            context,
-            ExpensySlideUpRoute(
-              builder: (_) => const AddTransactionScreen(initialType: 'income'),
-            ),
+      floatingActionButtonLocation: NavAwareFabLocation(
+        bottomOffset: NavMetrics.fabBottomOffset(context),
+      ),
+      floatingActionButton: ExpandableFab(
+        label: l10n.home_add,
+        color: tabBlue,
+        alignment: CrossAxisAlignment.end,
+        onIncome: () => Navigator.push(
+          context,
+          ExpensySlideUpRoute(
+            builder: (_) => const AddTransactionScreen(initialType: 'income'),
           ),
-          onExpense: () => Navigator.push(
-            context,
-            ExpensySlideUpRoute(
-              builder: (_) =>
-                  const AddTransactionScreen(initialType: 'expense'),
-            ),
+        ),
+        onExpense: () => Navigator.push(
+          context,
+          ExpensySlideUpRoute(
+            builder: (_) =>
+                const AddTransactionScreen(initialType: 'expense'),
+          ),
+        ),
+        onTransfer: () => Navigator.push(
+          context,
+          ExpensySlideUpRoute(
+            builder: (_) => const TransferScreen(),
           ),
         ),
       ),
@@ -1546,7 +1433,7 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              '${fmt(pacing.safeDailyAllowance)} / day',
+              l10n.pacing_perDay(fmt(pacing.safeDailyAllowance)),
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w800,
@@ -1609,7 +1496,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         Text(
-          '${fmt(dailyAvg)} / day',
+          l10n.pacing_perDay(fmt(dailyAvg)),
           style: const TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w800,

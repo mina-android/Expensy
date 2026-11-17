@@ -182,7 +182,7 @@ class SplitTransactionSheet extends StatelessWidget {
                             Text(
                               app.categoryDisplayName(
                                 split.categoryId,
-                                fallback: cat?.name ?? 'Category',
+                                fallback: cat?.name ?? l10n.recurring_category,
                               ),
                               style: const TextStyle(
                                   fontWeight: FontWeight.w600, fontSize: 14),

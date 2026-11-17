@@ -85,9 +85,13 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
         ? _selectedMonth.weekday % 7
         : (_selectedMonth.weekday - 1) % 7;
 
-    final weekdayNames = app.settings.weekStart == 'sunday'
-        ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-        : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    final localeName = Localizations.localeOf(context).toString();
+    final weekdayBase =
+        app.settings.weekStart == 'sunday' ? DateTime(2024, 1, 7) : DateTime(2024, 1, 1);
+    final weekdayNames = List.generate(
+      7,
+      (i) => DateFormat.E(localeName).format(weekdayBase.add(Duration(days: i))),
+    );
 
     // Selected day calculations
     final selectedDayExpense = app.dayExpense(_selectedDay);
@@ -172,7 +176,7 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
                 Expanded(
                   child: _SummaryPill(
                     label: l10n.calendar_zeroSpendDays(zeroSpendDays.toString()),
-                    amount: '$zeroSpendDays d',
+                    amount: l10n.common_daysShort(zeroSpendDays),
                     color: kCertificateColor,
                     icon: Icons.star_rounded,
                   ),
@@ -459,17 +463,45 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
                         style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: kAssetsColor),
                       ),
                       const SizedBox(height: 6),
-                      ...selectedDayRecurring.map((r) => ListTile(
-                            dense: true,
-                            contentPadding: EdgeInsets.zero,
-                            leading: const CircleAvatar(
-                              radius: 14,
-                              backgroundColor: kAssetsColor,
-                              child: Icon(Icons.repeat_rounded, size: 14, color: Colors.white),
+                      ...selectedDayRecurring.map((r) {
+                        final rAcc = app.accountById(r.accountId);
+                        final rToAcc = r.toAccountId != null
+                            ? app.accountById(r.toAccountId!)
+                            : null;
+                        final rCur = rAcc?.currency ?? cur;
+                        return ListTile(
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                          leading: CircleAvatar(
+                            radius: 14,
+                            backgroundColor:
+                                r.isTransfer ? cs.primary : kAssetsColor,
+                            child: Icon(
+                              r.isTransfer
+                                  ? Icons.swap_horiz_rounded
+                                  : Icons.repeat_rounded,
+                              size: 14,
+                              color: Colors.white,
                             ),
-                            title: Text(r.name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-                            trailing: Text(formatAmount(r.amount, cur), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
-                          )),
+                          ),
+                          title: Text(r.name,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w700, fontSize: 13)),
+                          subtitle: r.isTransfer && rAcc != null && rToAcc != null
+                              ? Text(
+                                  '${rAcc.name} → ${rToAcc.name}',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: cs.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                )
+                              : null,
+                          trailing: Text(formatAmount(r.amount, rCur),
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w800, fontSize: 13)),
+                        );
+                      }),
                       const SizedBox(height: 10),
                     ],
 
@@ -511,7 +543,7 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
                             backgroundColor: kCertificateColor,
                             child: Icon(Icons.handshake_outlined, size: 14, color: Colors.white),
                           ),
-                          title: Text(person?.name ?? 'Repayment', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                          title: Text(person?.name ?? l10n.calendar_repayment, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
                           trailing: Text(formatAmount(m.amount, cur), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
                         );
                       }),
@@ -540,47 +572,9 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
                                   app: app,
                                 );
                               } else if (t.isTransfer) {
-                                showDialog(
-                                  context: context,
-                                  builder: (ctx) => AlertDialog(
-                                    title: const Text('Transfer Transaction'),
-                                    content: const Text(
-                                      'This transaction is part of an account transfer. Individual legs cannot be modified directly to preserve balance integrity. Would you like to delete this transfer?',
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(ctx),
-                                        child: Text(l10n.shared_widgets_cancel),
-                                      ),
-                                      FilledButton(
-                                        style: FilledButton.styleFrom(
-                                          backgroundColor: cs.error,
-                                        ),
-                                        onPressed: () async {
-                                          Navigator.pop(ctx);
-                                          await app.deleteTransaction(t.id);
-                                        },
-                                        child: const Text('Delete Transfer'),
-                                      ),
-                                    ],
-                                  ),
-                                );
+                                showTransferTransactionDialog(context, t);
                               } else if (t.isInvestment) {
-                                showDialog(
-                                  context: context,
-                                  builder: (ctx) => AlertDialog(
-                                    title: const Text('Certificate Transaction'),
-                                    content: const Text(
-                                      'This transaction is linked to a time deposit / certificate. Manage it from the Certificates screen.',
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(ctx),
-                                        child: Text(l10n.shared_widgets_cancel),
-                                      ),
-                                    ],
-                                  ),
-                                );
+                                showCertificateTransactionDialog(context, t);
                               } else {
                                 Navigator.push(
                                   context,
@@ -595,7 +589,11 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    t.description.isNotEmpty ? t.description : (cat?.name ?? 'Transaction'),
+                                    t.description.isNotEmpty
+                                        ? t.description
+                                        : (cat != null
+                                            ? app.localizedCategoryName(cat, l10n)
+                                            : l10n.transactions_transactions),
                                     style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
                                   ),
                                 ),
@@ -608,7 +606,7 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: Text(
-                                      'SPLIT',
+                                      l10n.common_splitCaps,
                                       style: TextStyle(
                                         fontSize: 9,
                                         fontWeight: FontWeight.w700,

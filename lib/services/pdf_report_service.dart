@@ -137,15 +137,15 @@ class PdfReportService {
                 crossAxisAlignment: pw.CrossAxisAlignment.end,
                 children: [
                   pw.Text(
-                    'Period: $dateRangeStr',
+                    l10n.export_pdfPeriod(dateRangeStr),
                     style: const pw.TextStyle(fontSize: 10),
                   ),
                   pw.Text(
-                    'Currency: $baseCurrency',
+                    l10n.export_pdfCurrency(baseCurrency),
                     style: const pw.TextStyle(fontSize: 10),
                   ),
                   pw.Text(
-                    'Generated: $generatedOnStr',
+                    l10n.export_pdfGenerated(generatedOnStr),
                     style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700),
                   ),
                 ],
@@ -167,7 +167,7 @@ class PdfReportService {
                 style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
               ),
               pw.Text(
-                'Page ${context.pageNumber} of ${context.pagesCount}',
+                l10n.export_pdfPageOf(context.pageNumber, context.pagesCount),
                 style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
               ),
             ],
@@ -233,9 +233,9 @@ class PdfReportService {
               pw.TableRow(
                 decoration: pw.BoxDecoration(color: grayLight),
                 children: [
-                  _tableCell('Total Assets', isHeader: true),
-                  _tableCell('Total Liabilities', isHeader: true),
-                  _tableCell('Current Net Worth', isHeader: true),
+                  _tableCell(l10n.export_pdfTotalAssets, isHeader: true),
+                  _tableCell(l10n.export_pdfTotalLiabilities, isHeader: true),
+                  _tableCell(l10n.export_pdfCurrentNetWorth, isHeader: true),
                 ],
               ),
               pw.TableRow(
@@ -274,9 +274,9 @@ class PdfReportService {
                 pw.TableRow(
                   decoration: pw.BoxDecoration(color: grayLight),
                   children: [
-                    _tableCell('Category', isHeader: true),
-                    _tableCell('Amount ($baseCurrency)', isHeader: true),
-                    _tableCell('% of Total Expenses', isHeader: true),
+                    _tableCell(l10n.export_pdfCategory, isHeader: true),
+                    _tableCell(l10n.export_pdfAmountHeader(baseCurrency), isHeader: true),
+                    _tableCell(l10n.export_pdfPercentOfExpenses, isHeader: true),
                   ],
                 ),
                 ...sortedCategories.expand((entry) {
@@ -430,8 +430,8 @@ class PdfReportService {
       l10n: l10n,
     );
 
-    final fromStr = DateFormat('yyyy-MM-dd').format(from);
-    final toStr = DateFormat('yyyy-MM-dd').format(to);
+    final fromStr = DateFormat('yyyy-MM-dd', 'en_US').format(from);
+    final toStr = DateFormat('yyyy-MM-dd', 'en_US').format(to);
     final fileName = 'expensy_report_${fromStr}_to_$toStr.pdf';
 
     final saveUri = await FilePickerPlatform.instance.saveFile(
@@ -450,8 +450,8 @@ class PdfReportService {
     required DateTime to,
     required AppLocalizations l10n,
   }) async {
-    final fromStr = DateFormat('yyyy-MM-dd').format(from);
-    final toStr = DateFormat('yyyy-MM-dd').format(to);
+    final fromStr = DateFormat('yyyy-MM-dd', 'en_US').format(from);
+    final toStr = DateFormat('yyyy-MM-dd', 'en_US').format(to);
     final fileName = 'expensy_report_${fromStr}_to_$toStr.pdf';
 
     await Printing.layoutPdf(
@@ -478,8 +478,8 @@ class PdfReportService {
       to: to,
       l10n: l10n,
     );
-    final fromStr = DateFormat('yyyy-MM-dd').format(from);
-    final toStr = DateFormat('yyyy-MM-dd').format(to);
+    final fromStr = DateFormat('yyyy-MM-dd', 'en_US').format(from);
+    final toStr = DateFormat('yyyy-MM-dd', 'en_US').format(to);
     final fileName = 'expensy_report_${fromStr}_to_$toStr.pdf';
 
     await Printing.sharePdf(bytes: bytes, filename: fileName);

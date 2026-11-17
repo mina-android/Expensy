@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import '../models/models.dart';
+import '../utils/service_localizations.dart';
 import 'date_scheduling.dart';
 
 class CertificateReminderService {
@@ -83,6 +84,8 @@ class CertificateReminderService {
     final hour = int.tryParse(parts[0]) ?? 9;
     final minute = parts.length > 1 ? (int.tryParse(parts[1]) ?? 0) : 0;
 
+    final loc = ServiceLocalizations.current;
+
     // Day of payout
     final tzDate = nextMonthlyReminderTzDate(
       dueDay: c.collectionDay,
@@ -93,8 +96,8 @@ class CertificateReminderService {
     if (tzDate != null) {
       await _plugin.zonedSchedule(
         id: _notifId(c.id, early: false),
-        title: '📈 Certificate Payout Due',
-        body: '${c.name} interest return is due today.',
+        title: loc.notif_certPayoutDueTitle,
+        body: loc.notif_certPayoutBody(c.name),
         scheduledDate: tzDate,
         notificationDetails: _buildDetails(),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
@@ -113,8 +116,8 @@ class CertificateReminderService {
       if (earlyDate != null) {
         await _plugin.zonedSchedule(
           id: _notifId(c.id, early: true),
-          title: '📈 Upcoming Certificate Payout',
-          body: '${c.name} interest return is due in 2 days.',
+          title: loc.notif_certPayoutUpcomingTitle,
+          body: loc.notif_certPayoutSoonBody(c.name),
           scheduledDate: earlyDate,
           notificationDetails: _buildDetails(),
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,

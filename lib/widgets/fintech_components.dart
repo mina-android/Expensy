@@ -354,23 +354,26 @@ class FintechContainedLedger extends StatelessWidget {
         children: [
           if (header != null) header!,
           if (children.isNotEmpty)
-            ListView.separated(
+            Padding(
               padding: padding ??
                   const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: children.length,
-              separatorBuilder: (_, __) => showDividers
-                  ? Divider(
-                      height: 1,
-                      indent: dividerIndent,
-                      endIndent: 16,
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.06)
-                          : Colors.black.withValues(alpha: 0.04),
-                    )
-                  : const SizedBox.shrink(),
-              itemBuilder: (_, index) => children[index],
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (int i = 0; i < children.length; i++) ...[
+                    children[i],
+                    if (showDividers && i < children.length - 1)
+                      Divider(
+                        height: 1,
+                        indent: dividerIndent,
+                        endIndent: 16,
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.06)
+                            : Colors.black.withValues(alpha: 0.04),
+                      ),
+                  ],
+                ],
+              ),
             ),
         ],
       ),

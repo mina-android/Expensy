@@ -87,6 +87,8 @@ class RecurringPayments extends Table {
   TextColumn get recurringType => text().named('recurring_type').withDefault(const Constant('subscription'))();
   IntColumn get autoPayEnabled => integer().named('auto_pay_enabled').withDefault(const Constant(0))();
   TextColumn get autoPayTime => text().named('auto_pay_time').withDefault(const Constant('09:00'))();
+  TextColumn get toAccountId => text().named('to_account_id').nullable()();
+  RealColumn get toAmount => real().named('to_amount').nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -289,6 +291,8 @@ class TransactionPresets extends Table {
   IntColumn get iconCodePoint => integer().named('icon_code_point').withDefault(const Constant(0))();
   IntColumn get orderIndex => integer().named('order_index').withDefault(const Constant(0))();
   TextColumn get createdAt => text().named('created_at')();
+  TextColumn get toAccountId => text().named('to_account_id').nullable()();
+  RealColumn get toAmount => real().named('to_amount').nullable()();
 
   @override
   Set<Column> get primaryKey => {id};

@@ -368,14 +368,18 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                  '${dupes.length == 1 ? "A similar transaction" : "${dupes.length} similar transactions"} already exist${dupes.length == 1 ? "s" : ""}:'),
+              Text(l10n.add_transaction_similarExists(dupes.length)),
               const SizedBox(height: 8),
               ...dupes.take(3).map((d) => Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Text(
-                        '• ${formatAmount(d.amount, d.currency.isNotEmpty ? d.currency : "")} on ${DateFormat('d MMM').format(d.date)}${d.description.isNotEmpty ? " — ${d.description}" : ""}',
-                        style: const TextStyle(fontSize: 13)),
+                      child: Text(
+                        l10n.add_transaction_duplicateItem(
+                          formatAmount(d.amount, d.currency.isNotEmpty ? d.currency : ''),
+                          DateFormat('d MMM').format(d.date),
+                          d.description.isNotEmpty ? ' — ${d.description}' : '',
+                        ),
+                        style: const TextStyle(fontSize: 13),
+                      ),
                   )),
             ]),
         actions: [
@@ -419,7 +423,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       return;
     }
     if (_accountId == null) {
-      showAppSnackbar(context, 'Please select an account or card.');
+      showAppSnackbar(context, l10n.add_transaction_selectAccountOrCard);
       return;
     }
 
@@ -933,7 +937,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       const SizedBox(width: 4),
                       Text(
                         isBalanced
-                            ? 'Balanced'
+                            ? l10n.add_transaction_balanced
                             : '${l10n.split_transactions_remaining}: $sym${remaining.toStringAsFixed(2)}',
                         style: TextStyle(
                           fontSize: 13,
@@ -1032,7 +1036,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                                   child: Text(
                                     app.categoryDisplayName(
                                       split.categoryId,
-                                      fallback: cat?.name ?? 'Category',
+                                      fallback: cat?.name ?? l10n.recurring_category,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,

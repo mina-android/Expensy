@@ -20,6 +20,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import '../models/models.dart';
 import '../theme/app_theme.dart';
+import '../utils/service_localizations.dart';
 
 class LendedNotificationService {
   // ── Singleton ────────────────────────────────────────────────────────────
@@ -133,13 +134,14 @@ class LendedNotificationService {
     final tzDate = _toUtcTZDate(l.dueDate!, hour, minute);
     if (tzDate == null) return;
 
+    final loc = ServiceLocalizations.current;
     final body = l.type == 'lent'
-        ? '$amount you lent to $personName is due today'
-        : '$amount you borrowed from $personName is due today';
+        ? loc.notif_lendedLentDueBody(amount, personName)
+        : loc.notif_lendedBorrowedDueBody(amount, personName);
 
     await _plugin.zonedSchedule(
       id: _notifId(l.id),
-      title: '$emoji Due: $personName',
+      title: loc.notif_lendedDueTitle(emoji, personName),
       body: body,
       scheduledDate: tzDate,
       notificationDetails: details,

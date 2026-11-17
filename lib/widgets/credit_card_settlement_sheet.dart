@@ -124,7 +124,7 @@ class _CreditCardSettlementSheetState extends State<CreditCardSettlementSheet> {
     try {
       final note = _noteCtrl.text.trim().isNotEmpty
           ? _noteCtrl.text.trim()
-          : 'Credit Card Bill Payment — ${widget.cardAccount.name}';
+          : l10n.creditCard_billPaymentDesc(widget.cardAccount.name);
 
       await app.settleCreditCard(
         cardAccount: widget.cardAccount,
@@ -406,7 +406,7 @@ class _CreditCardSettlementSheetState extends State<CreditCardSettlementSheet> {
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Text(
-                  'No bank or cash accounts available to fund payment.',
+                  l10n.creditCard_noFundingAccounts,
                   style: TextStyle(color: cs.error, fontSize: 13),
                 ),
               )
@@ -498,9 +498,12 @@ class _CreditCardSettlementSheetState extends State<CreditCardSettlementSheet> {
                     : const Icon(Icons.check_circle_rounded),
                 label: Text(
                   _isProcessing
-                      ? 'Processing...'
+                      ? l10n.creditCard_processing
                       : payAmount > 0
-                          ? 'Pay ${formatAmount(payAmount, widget.cardAccount.currency)}'
+                          ? l10n.creditCard_payAmountBtn(
+                              formatAmount(
+                                  payAmount, widget.cardAccount.currency),
+                            )
                           : l10n.creditCard_payBill,
                   style: const TextStyle(
                     fontSize: 16,

@@ -97,24 +97,61 @@ class BackupValidator {
       }
     }
 
-    // Check account references in transactions
-    if (data.containsKey('transactions') && data.containsKey('accounts')) {
+    // Check account references in transactions, recurring_payments, and transaction_presets
+    if (data.containsKey('accounts')) {
       final accIds = (data['accounts'] as List?)
               ?.whereType<Map<String, dynamic>>()
               .map((a) => a['id'] as String?)
               .whereType<String>()
               .toSet() ??
           <String>{};
-      final txs = (data['transactions'] as List?)?.whereType<Map<String, dynamic>>() ?? [];
-      int missingAccTxs = 0;
-      for (final t in txs) {
-        final accId = t['account_id'] as String?;
-        if (accId != null && !accIds.contains(accId)) {
-          missingAccTxs++;
+      if (data.containsKey('transactions')) {
+        final txs = (data['transactions'] as List?)
+                ?.whereType<Map<String, dynamic>>() ??
+            [];
+        int missingAccTxs = 0;
+        for (final t in txs) {
+          final accId = t['account_id'] as String?;
+          if (accId != null && !accIds.contains(accId)) {
+            missingAccTxs++;
+          }
+        }
+        if (missingAccTxs > 0) {
+          warnings.add(
+              '$missingAccTxs transactions reference accounts not in this backup.');
         }
       }
-      if (missingAccTxs > 0) {
-        warnings.add('$missingAccTxs transactions reference accounts not in this backup.');
+
+      if (data.containsKey('recurring_payments')) {
+        final recs = (data['recurring_payments'] as List?)?.whereType<Map<String, dynamic>>() ?? [];
+        int missingRecAcc = 0;
+        for (final r in recs) {
+          final accId = r['account_id'] as String?;
+          final toAccId = r['to_account_id'] as String?;
+          if ((accId != null && accId.isNotEmpty && !accIds.contains(accId)) ||
+              (toAccId != null && toAccId.isNotEmpty && !accIds.contains(toAccId))) {
+            missingRecAcc++;
+          }
+        }
+        if (missingRecAcc > 0) {
+          warnings.add('$missingRecAcc recurring rules reference accounts not in this backup.');
+        }
+      }
+
+      if (data.containsKey('transaction_presets')) {
+        final presets = (data['transaction_presets'] as List?)?.whereType<Map<String, dynamic>>() ?? [];
+        int missingPresetAcc = 0;
+        for (final p in presets) {
+          final accId = p['account_id'] as String?;
+          final toAccId = p['to_account_id'] as String?;
+          if ((accId != null && accId.isNotEmpty && !accIds.contains(accId)) ||
+              (toAccId != null && toAccId.isNotEmpty && !accIds.contains(toAccId))) {
+            missingPresetAcc++;
+          }
+        }
+        if (missingPresetAcc > 0) {
+          warnings.add('$missingPresetAcc presets reference accounts not in this backup.');
+        }
       }
     }
 

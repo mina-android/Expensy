@@ -260,7 +260,10 @@ class _LoanCard extends StatelessWidget {
                           Icon(Icons.notifications_active_outlined, size: 12, color: cs.primary),
                           const SizedBox(width: 4),
                           Text(
-                            'Due: Day ${loan.reminderDay} @ ${loan.reminderTime}',
+                            l10n.loans_dueDayTime(
+                              loan.reminderDay,
+                              loan.reminderTime,
+                            ),
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
@@ -454,7 +457,8 @@ class _LoanSheetState extends State<LoanSheet> {
                   prefixIcon: const Icon(Icons.label_outline),
                 ),
                 textInputAction: TextInputAction.next,
-                validator: (val) => val == null || val.trim().isEmpty ? 'Required' : null,
+                validator: (val) =>
+                    val == null || val.trim().isEmpty ? l10n.error_required : null,
                 onChanged: (val) => setState(() => _name = val),
               ),
               const SizedBox(height: 12),
@@ -569,7 +573,7 @@ class _LoanSheetState extends State<LoanSheet> {
               Padding(
                 padding: const EdgeInsets.only(top: 4, left: 4),
                 child: Text(
-                  'Duration: ${l10n.loans_durationMonths(_durationMonths)}',
+                  '${l10n.loans_duration}: ${l10n.loans_durationMonths(_durationMonths)}',
                   style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.6)),
                 ),
               ),
@@ -599,9 +603,9 @@ class _LoanSheetState extends State<LoanSheet> {
 
               // Account Card Picker
               // Transfer Account Card Picker
-              const Text(
-                'Transfer Loan Amount To',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+              Text(
+                l10n.loans_transferTo,
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 6),
               AccountCardPicker(
@@ -613,9 +617,9 @@ class _LoanSheetState extends State<LoanSheet> {
               const SizedBox(height: 16),
 
               // Installment Account Card Picker
-              const Text(
-                'Pay Installments From',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+              Text(
+                l10n.loans_payFrom,
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 6),
               AccountCardPicker(

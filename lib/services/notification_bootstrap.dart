@@ -1,12 +1,18 @@
 // lib/services/notification_bootstrap.dart
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
+import 'budget_notification_service.dart';
+import 'credit_reminder_service.dart';
+import 'daily_reminder_service.dart';
+import 'lended_notification_service.dart';
+import 'loan_reminder_service.dart';
+import 'notification_service.dart';
 
 class NotificationBootstrap {
   static bool _initialized = false;
 
-  /// Consolidates notification plugin and timezone initialization into a single
-  /// unified pass during app boot, avoiding redundant serial initializations.
+  /// Consolidates notification plugin, timezone, and service initialization into
+  /// a single unified pass during app boot, avoiding redundant serial initializations.
   static Future<void> init() async {
     if (_initialized) return;
 
@@ -69,6 +75,15 @@ class NotificationBootstrap {
         )),
       ]);
     }
+
+    await Future.wait([
+      NotificationService().initialize(),
+      LendedNotificationService().initialize(),
+      BudgetNotificationService().initialize(),
+      DailyReminderService().initialize(),
+      LoanReminderService().initialize(),
+      CreditReminderService().initialize(),
+    ]);
 
     _initialized = true;
   }

@@ -1,23 +1,6 @@
 // note: Smart financial insights screen computing month-over-month category anomalies, budget forecasts, and debt outflow summaries.
 // All state mutations and queries route through AppProvider to preserve UI-DB decoupling.
 // Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
 // lib/screens/insights_screen.dart
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
@@ -479,7 +462,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'Debt / Loan Payments This Month',
+                      l10n.insights_loanPaymentsThisMonth,
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -538,7 +521,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
 
           // ── Spending Forecast ───────────────────────────────────────
           if (daysElapsed >= 3) ...[
-            const _SectionLabel(label: 'Spending Forecast'),
+            _SectionLabel(label: l10n.insights_spendingForecast),
             Container(
               decoration: BoxDecoration(
                 color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
@@ -572,22 +555,24 @@ class _InsightsScreenState extends State<InsightsScreen> {
                                 fontWeight: FontWeight.w500,
                                 color: cs.onSurface),
                             children: [
-                              const TextSpan(
-                                  text: 'At this rate, you\'ll spend '),
+                              TextSpan(
+                                  text: l10n.insights_forecastPrefix),
                               TextSpan(
                                   text: fmt(projectedTotal),
                                   style: TextStyle(
                                       fontWeight: FontWeight.w800,
                                       color: forecastColor)),
                               TextSpan(
-                                  text:
-                                      ' by the end of ${DateFormat('MMMM').format(now)} — $remainingDays days left.'),
+                                  text: l10n.insights_forecastSuffix(
+                                    DateFormat('MMMM').format(now),
+                                    remainingDays,
+                                  )),
                             ],
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Projection based on spending so far, doesn\'t include upcoming recurring bills.',
+                          l10n.insights_forecastDisclaimer,
                           style: TextStyle(
                               fontSize: 11,
                               color: cs.onSurface.withValues(alpha: 0.5)),
@@ -598,7 +583,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
             ),
             const SizedBox(height: 12),
           ] else ...[
-            const _SectionLabel(label: 'Spending Forecast'),
+            _SectionLabel(label: l10n.insights_spendingForecast),
             Container(
               decoration: BoxDecoration(
                 color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
@@ -615,7 +600,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Based on the first $daysElapsed days — accuracy improves as the month goes on.',
+                      l10n.insights_forecastAccuracy(daysElapsed),
                       style: TextStyle(
                           fontSize: 12,
                           color: cs.onSurface.withValues(alpha: 0.6)),
@@ -852,7 +837,8 @@ class _InsightsScreenState extends State<InsightsScreen> {
                                                             ?.amount ??
                                                         0;
                                                     String txt =
-                                                        'Proj: ${fmt(catProj)}';
+                                                        l10n.insights_projAmount(
+                                                            fmt(catProj));
                                                     if (catBudget > 0) {
                                                       final projPct =
                                                           (catProj /
@@ -860,8 +846,9 @@ class _InsightsScreenState extends State<InsightsScreen> {
                                                                   100)
                                                               .toStringAsFixed(
                                                                   0);
-                                                      txt +=
-                                                          ' ($projPct% of budget)';
+                                                      txt += l10n
+                                                          .insights_projOfBudget(
+                                                              projPct);
                                                     }
                                                     final cColor = catBudget > 0
                                                         ? (catProj >= catBudget
@@ -1237,7 +1224,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
 
           // ── Loans ────────────────────────────────────────────────────
           if (app.loans.isNotEmpty) ...[
-            const _SectionLabel(label: 'Loans'),
+            _SectionLabel(label: l10n.more_loans),
             Container(
               decoration: BoxDecoration(
                 color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
@@ -1258,7 +1245,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Outstanding',
+                                l10n.insights_outstanding,
                                 style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w600,
@@ -1283,7 +1270,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Monthly Obligation',
+                                l10n.insights_monthlyObligation,
                                 style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w600,

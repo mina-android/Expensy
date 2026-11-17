@@ -27,7 +27,7 @@ flowchart TD
     subgraph Database ["Persistence Layer (Drift / SQLite Isolate)"]
         AppDB["AppDatabase (Drift NativeDatabase via Dart FFI)"]
         Facade["DBHelper (Static Backward-Compatible Facade)"]
-        Tables["18 Drift Relational Tables (Schema v30 with categories.parent_id, paid_via_account_id, certificate_id, lended_money.currency)"]
+        Tables["18 Drift Relational Tables (Schema v31 with recurring_payments/transaction_presets to_account_id & to_amount, categories.parent_id, paid_via_account_id, certificate_id, lended_money.currency)"]
     end
 
     subgraph Background ["Native & Asynchronous Services"]
@@ -149,9 +149,11 @@ erDiagram
         TEXT id PK
         TEXT name
         TEXT account_id FK
+        TEXT to_account_id "Nullable FK -> ACCOUNTS"
+        REAL to_amount "Nullable cross-currency override"
         TEXT category_id FK
         REAL amount
-        TEXT payment_type "expense | income"
+        TEXT payment_type "expense | income | transfer"
         INTEGER freq_val
         TEXT freq_unit "days | weeks | months | years"
         TEXT start_date "ISO8601"
@@ -188,9 +190,11 @@ erDiagram
     TRANSACTION_PRESETS {
         TEXT id PK
         TEXT title
-        TEXT type "expense | income"
+        TEXT type "expense | income | transfer"
         REAL amount
         TEXT account_id FK
+        TEXT to_account_id "Nullable FK -> ACCOUNTS"
+        REAL to_amount "Nullable cross-currency override"
         TEXT category_id FK
         TEXT currency
         TEXT note

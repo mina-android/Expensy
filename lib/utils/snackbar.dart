@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 
 void showAppSnackbar(BuildContext context, String message,
     {VoidCallback? onUndo}) {
   final scaffold = ScaffoldMessenger.of(context);
+  final undoLabel = AppLocalizations.of(context)?.common_undo ?? 'Undo';
   scaffold.hideCurrentSnackBar();
 
   final controller = scaffold.showSnackBar(
     SnackBar(
       content: Text(message),
       action: onUndo != null
-          ? SnackBarAction(label: 'Undo', onPressed: onUndo)
+          ? SnackBarAction(label: undoLabel, onPressed: onUndo)
           : null,
       behavior: SnackBarBehavior.floating,
       duration: const Duration(seconds: 3),

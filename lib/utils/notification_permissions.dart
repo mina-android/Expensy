@@ -1,6 +1,8 @@
 // lib/utils/notification_permissions.dart
+import 'package:expensy/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'service_localizations.dart';
 import 'snackbar.dart';
 
 class NotificationPermissions {
@@ -18,7 +20,8 @@ class NotificationPermissions {
       showAppSnackbar(
         context,
         customDeniedMessage ??
-            'Notification permission is required for reminders.',
+            AppLocalizations.of(context)?.recurring_notificationPermissionDenied ??
+            ServiceLocalizations.current.recurring_notificationPermissionDenied,
       );
     }
     return granted;

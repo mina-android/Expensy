@@ -1,37 +1,6 @@
 // note: Full ledger screen with multi-criteria search, category/account/tag filtering, date grouping, and swipe actions.
 // All state mutations and queries route through AppProvider to preserve UI-DB decoupling.
 // Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
 // lib/screens/transactions_screen.dart
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
@@ -44,11 +13,10 @@ import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
 import '../widgets/fintech_components.dart';
 import 'add_transaction_screen.dart';
+import 'transfer_screen.dart';
 import 'lended_person_screen.dart';
 import 'savings_goal_detail_screen.dart';
 import 'loan_detail_screen.dart';
-import 'certificate_detail_screen.dart';
-import 'certificates_screen.dart';
 import '../widgets/split_transaction_sheet.dart';
 import '../widgets/app_numeric_keypad.dart';
 import '../utils/haptics.dart';
@@ -118,9 +86,16 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     final List<_TxItem> allItems = [];
 
     // 1. Add matching regular transactions
-    if (_filter == 'all' || _filter == 'income' || _filter == 'expense') {
+    if (_filter == 'all' ||
+        _filter == 'income' ||
+        _filter == 'expense' ||
+        _filter == 'transfer') {
       for (final t in app.transactions) {
-        if (_filter != 'all' && t.type != _filter) continue;
+        if (_filter == 'transfer') {
+          if (!t.isTransfer) continue;
+        } else if (_filter != 'all') {
+          if (t.isTransfer || t.type != _filter) continue;
+        }
         if (_accFilter != null && t.accountId != _accFilter) continue;
         if (_minAmount != null && t.amount < _minAmount!) continue;
         if (_maxAmount != null && t.amount > _maxAmount!) continue;
@@ -262,10 +237,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             if (_selectedIds.isNotEmpty)
               FintechHeader(
                 title: l10n.transactions_selectedCount(_selectedIds.length),
-                subtitle: '${_selectedIds.length} ${_selectedIds.length == 1 ? "item" : "items"} selected',
+                subtitle: l10n.transactions_selectedItemsCount(_selectedIds.length),
                 leading: FintechCircleButton(
                   icon: Icons.close_rounded,
-                  tooltip: 'Clear selection',
+                  tooltip: l10n.transactions_clearSelection,
                   onTap: _clearSelection,
                 ),
                 actions: [
@@ -291,7 +266,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             else
               FintechHeader(
                 title: l10n.transactions_transactions,
-                subtitle: '${allItems.length} ${allItems.length == 1 ? "entry" : "entries"}',
+                subtitle: l10n.transactions_entriesCount(allItems.length),
                 actions: [
                   FintechCircleButton(
                     icon: Icons.filter_alt_outlined,
@@ -372,6 +347,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     ('all',      l10n.transactions_all,              kSuccessColorValue),
                     ('income',   l10n.transactions_income,           kSuccessColorValue),
                     ('expense',  l10n.transactions_expenses,         kDangerColorValue),
+                    ('transfer', l10n.transactions_transfers,        cs.primary.toARGB32()),
                     ('lent',     l10n.transactions_lent,             kAssetsColorValue),
                     ('borrowed', l10n.transactions_borrowed,         0xFFE65140),
                   ])
@@ -574,6 +550,33 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                   );
                 },
               ),
+              const SizedBox(height: 8),
+              ListTile(
+                leading: Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: cs.primary.withValues(alpha: isDark ? 0.2 : 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(Icons.swap_horiz_rounded, color: cs.primary),
+                ),
+                title: Text(
+                  l10n.presets_transfer,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  Navigator.push(
+                    context,
+                    ExpensySlideUpRoute(
+                      builder: (_) => const TransferScreen(),
+                    ),
+                  );
+                },
+              ),
             ],
           ),
         ),
@@ -601,68 +604,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               app: app,
             );
           } else if (item.tx!.isTransfer) {
-            showDialog(
-              context: context,
-              builder: (ctx) => AlertDialog(
-                title: const Text('Transfer Transaction'),
-                content: const Text(
-                    'This transaction is part of an account transfer. Individual legs cannot be modified directly to preserve balance integrity. Would you like to delete this transfer?'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    child: const Text('Cancel'),
-                  ),
-                  FilledButton(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.error,
-                    ),
-                    onPressed: () async {
-                      Navigator.pop(ctx);
-                      await app.deleteTransaction(item.tx!.id);
-                      if (context.mounted) {
-                        showAppSnackbar(context, 'Transfer deleted');
-                      }
-                    },
-                    child: const Text('Delete Transfer'),
-                  ),
-                ],
-              ),
-            );
+            showTransferTransactionDialog(context, item.tx!);
           } else if (item.tx!.isInvestment) {
-            final cert = item.tx!.certificateId != null
-                ? app.certificates
-                    .where((c) => c.id == item.tx!.certificateId)
-                    .firstOrNull
-                : null;
-            showDialog(
-              context: context,
-              builder: (ctx) => AlertDialog(
-                title: const Text('Certificate Transaction'),
-                content: const Text(
-                  'This transaction is linked to a time deposit / certificate. To keep principal and yield ledgers in sync, manage it from the Certificates screen.',
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    child: const Text('Close'),
-                  ),
-                  FilledButton(
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                      Navigator.push(
-                        context,
-                        ExpensyRoute(
-                          builder: (_) => cert != null
-                              ? CertificateDetailScreen(certificate: cert)
-                              : const CertificatesScreen(),
-                        ),
-                      );
-                    },
-                    child: Text(cert != null ? 'View Certificate' : 'Open Certificates'),
-                  ),
-                ],
-              ),
-            );
+            showCertificateTransactionDialog(context, item.tx!);
           } else {
             Navigator.push(
               context,
@@ -766,35 +710,50 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (_) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 24, right: 24, top: 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.transactions_changeCategory, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            Flexible(
-              child: SingleChildScrollView(
-                child: CategoryChipPicker(
-                  categories: app.userCategories,
-                  selectedId: null,
-                  onSelected: (catId) {
-                    Navigator.pop(context);
-                    for (final id in _selectedIds.toList()) {
-                      final tx = app.transactions.where((t) => t.id == id).firstOrNull;
-                      if (tx == null || tx.isTransfer || tx.isInvestment) continue;
-                      final updated = tx.copyWith(categoryId: catId);
-                      app.updateTransaction(updated, tx);
-                    }
-                    _clearSelection();
-                  },
-                ),
-              ),
+      backgroundColor: Colors.transparent,
+      builder: (_) => SheetShell(
+        children: [
+          Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+              left: 24,
+              right: 24,
+              top: 8,
             ),
-            const SizedBox(height: 24),
-          ],
-        ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l10n.transactions_changeCategory,
+                    style: const TextStyle(
+                        fontSize: 20, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 16),
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: CategoryChipPicker(
+                      categories: app.userCategories,
+                      selectedId: null,
+                      onSelected: (catId) {
+                        Navigator.pop(context);
+                        for (final id in _selectedIds.toList()) {
+                          final tx = app.transactions
+                              .where((t) => t.id == id)
+                              .firstOrNull;
+                          if (tx == null || tx.isTransfer || tx.isInvestment) {
+                            continue;
+                          }
+                          final updated = tx.copyWith(categoryId: catId);
+                          app.updateTransaction(updated, tx);
+                        }
+                        _clearSelection();
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1185,6 +1144,7 @@ class _LoanPaymentTile extends StatelessWidget {
     const loanColor = Color(0xFF4A148C);
 
     final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Material(
       color: isSelected ? cs.primaryContainer.withValues(alpha: 0.28) : Colors.transparent,
@@ -1202,9 +1162,10 @@ class _LoanPaymentTile extends StatelessWidget {
                     borderRadius: BorderRadius.circular(14)),
                 child: const Icon(Icons.account_balance_outlined, color: loanColor, size: 20),
               ),
-        title: Text(loan?.name ?? 'Loan', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+        title: Text(loan?.name ?? l10n.transactions_loanFallback,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
         subtitle: Text(
-          [if (acc != null) acc.name, 'Loan Payment'].join('  ·  '),
+          [if (acc != null) acc.name, l10n.transactions_loanPayment].join('  ·  '),
           style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.5)),
         ),
         trailing: Text('-${formatAmount(p.amount, displayCurrency)}',
@@ -1226,6 +1187,7 @@ class _ContributionTile extends StatelessWidget {
   @override
   // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     final isContrib = c.type == 'contribution';
     final goal = app.savingsGoals.where((g) => g.id == c.goalId).firstOrNull;
@@ -1252,7 +1214,9 @@ class _ContributionTile extends StatelessWidget {
           ),
         ),
         title: Text(
-          isContrib ? 'Goal Contribution' : 'Goal Withdrawal',
+          isContrib
+              ? l10n.transactions_goalContribution
+              : l10n.transactions_goalWithdrawal,
           style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
         ),
         subtitle: Text(

@@ -173,12 +173,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String recurring_paidPayments(Object paid, Object total) {
-    return '$paid/$total paid';
+    return '$paid из $total оплачено';
   }
 
   @override
   String recurring_totalAmount(Object amount) {
-    return 'Total: $amount';
+    return 'Итого: $amount';
   }
 
   @override
@@ -189,7 +189,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String recurring_dueInDays(Object days) {
-    return 'Due in ${days}d';
+    return 'Через $days д.';
   }
 
   @override
@@ -200,7 +200,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String recurring_nextDate(Object date) {
-    return 'Next: $date';
+    return 'След.: $date';
   }
 
   @override
@@ -238,7 +238,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String recurring_firstDate(Object date) {
-    return 'First: $date';
+    return 'Первая: $date';
   }
 
   @override
@@ -298,7 +298,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String accounts_pure(Object percentage) {
-    return '$percentage% pure';
+    return 'Чистота $percentage%';
   }
 
   @override
@@ -364,7 +364,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String lended_person_youOwe(Object name) {
-    return 'You owe $name';
+    return 'Вы должны $name';
   }
 
   @override
@@ -394,12 +394,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String lended_person_due(Object date) {
-    return 'Due $date';
+    return 'Срок $date';
   }
 
   @override
   String lended_person_reminderAt(Object time) {
-    return 'Reminder at $time';
+    return 'Напоминание в $time';
   }
 
   @override
@@ -420,7 +420,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String lended_person_dueColon(Object date) {
-    return 'Due: $date';
+    return 'Срок: $date';
   }
 
   @override
@@ -483,12 +483,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String transactions_lentTo(Object name) {
-    return 'Lent to $name';
+    return 'Одолжено $name';
   }
 
   @override
   String transactions_borrowedFrom(Object name) {
-    return 'Borrowed from $name';
+    return 'Занято у $name';
   }
 
   @override
@@ -496,7 +496,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String transactions_due(Object date) {
-    return 'Due $date';
+    return 'Срок $date';
   }
 
   @override
@@ -619,7 +619,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String backup_backupFailed(Object error) {
-    return 'Backup failed: $error';
+    return 'Ошибка резервного копирования: $error';
   }
 
   @override
@@ -634,7 +634,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String backup_restoreFailed(Object error) {
-    return 'Restore failed: $error';
+    return 'Ошибка восстановления: $error';
   }
 
   @override
@@ -671,12 +671,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String budget_overAmount(Object amount) {
-    return '$amount over';
+    return 'Превышение $amount';
   }
 
   @override
   String budget_leftAmount(Object amount) {
-    return '$amount left';
+    return 'Осталось $amount';
   }
 
   @override
@@ -700,12 +700,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String budget_spentAmount(Object amount) {
-    return 'Spent: $amount';
+    return 'Потрачено: $amount';
   }
 
   @override
   String budget_ofAmount(Object amount) {
-    return 'of $amount';
+    return 'из $amount';
   }
 
   @override
@@ -833,7 +833,7 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get wrapped_title => 'Expensy Wrapped';
+  String get wrapped_title => 'Итоги Expensy';
 
   @override
   String wrapped_bannerTitle(Object month) {
@@ -941,12 +941,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String insights_incomeAmount(Object amount) {
-    return 'Income $amount';
+    return 'Доходы $amount';
   }
 
   @override
   String insights_expensesAmount(Object amount) {
-    return 'Expenses $amount';
+    return 'Расходы $amount';
   }
 
   @override
@@ -1040,7 +1040,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String add_transaction_conversionPreview(Object accountName, Object amount) {
-    return '≈ $amount will be deducted from $accountName';
+    return '≈ $amount будет списано со счёта $accountName';
   }
 
   @override
@@ -1083,8 +1083,8 @@ class AppLocalizationsRu extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count items',
-      one: '1 item',
+      other: '$count пунктов',
+      one: '1 пункт',
     );
     return '$_temp0';
   }
@@ -1105,8 +1105,8 @@ class AppLocalizationsRu extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count items',
-      one: '1 item',
+      other: '$count активов',
+      one: '1 актив',
     );
     return '$_temp0';
   }
@@ -1119,8 +1119,8 @@ class AppLocalizationsRu extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count categories',
-      one: '1 category',
+      other: '$count категорий',
+      one: '1 категория',
     );
     return '$_temp0';
   }
@@ -1154,7 +1154,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String home_greeting(Object name) {
-    return 'Hi, $name 👋';
+    return 'Привет, $name 👋';
   }
 
   @override
@@ -1279,8 +1279,8 @@ class AppLocalizationsRu extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count active records',
-      one: '1 active record',
+      other: '$count активных записей',
+      one: '1 активная запись',
     );
     return '$_temp0';
   }
@@ -1343,12 +1343,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String currency_converter_rateAgeMins(Object minutes) {
-    return '${minutes}m ago';
+    return '$minutes мин назад';
   }
 
   @override
   String currency_converter_rateAgeHours(Object hours) {
-    return '${hours}h ago';
+    return '$hours ч назад';
   }
 
   @override
@@ -1363,12 +1363,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String transfer_fromAcc(Object currency) {
-    return 'From ($currency)';
+    return 'Откуда ($currency)';
   }
 
   @override
   String transfer_toAcc(Object currency) {
-    return 'To ($currency)';
+    return 'Куда ($currency)';
   }
 
   @override
@@ -1392,15 +1392,15 @@ class AppLocalizationsRu extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count transactions in range',
-      one: '1 transaction in range',
+      other: '$count операций за период',
+      one: '1 операция за период',
     );
     return '$_temp0';
   }
 
   @override
   String export_saved(Object path) {
-    return 'Saved: $path';
+    return 'Сохранено: $path';
   }
 
   @override
@@ -1972,17 +1972,17 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String backup_runsDailyAt(String time) {
-    return 'Runs daily at $time';
+    return 'Ежедневно в $time';
   }
 
   @override
   String backup_lastBackup(String time) {
-    return 'Last backup: $time';
+    return 'Последняя копия: $time';
   }
 
   @override
   String backup_savingTo(String path) {
-    return 'Saving to: $path';
+    return 'Сохранение в: $path';
   }
 
   @override
@@ -2009,7 +2009,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String savings_targetDate(String date) {
-    return 'Target Date: $date';
+    return 'Целевая дата: $date';
   }
 
   @override
@@ -2690,7 +2690,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get accounts_cannotDeleteAccount => 'Невозможно удалить счет';
 
   @override
-  String get common_ok => 'OK';
+  String get common_ok => 'ОК';
 
   @override
   String get certificates_title => 'Срочные вклады и сертификаты';
@@ -2811,57 +2811,1212 @@ class AppLocalizationsRu extends AppLocalizations {
   String get onboarding_maybeLater => 'Возможно позже';
 
   @override
-  String get categories_subcategories => 'Subcategories';
+  String get categories_subcategories => 'Подкатегории';
 
   @override
-  String get categories_addSubcategory => 'Add Subcategory';
+  String get categories_addSubcategory => 'Добавить подкатегорию';
 
   @override
-  String get categories_parentCategory => 'Parent Category';
+  String get categories_parentCategory => 'Родительская категория';
 
   @override
-  String get categories_noneRoot => 'None (Top-Level Category)';
+  String get categories_noneRoot => 'Нет (Основная категория)';
 
   @override
-  String get categories_loadDefaults => 'Load Default Subcategories';
+  String get categories_loadDefaults => 'Загрузить стандартные подкатегории';
 
   @override
   String categories_defaultsLoaded(int count) {
-    return 'Loaded $count default subcategories';
+    return 'Загружено $count стандартных подкатегорий';
   }
 
   @override
   String get categories_defaultsAlreadyLoaded =>
-      'Default subcategories are already loaded';
+      'Стандартные подкатегории уже загружены';
 
   @override
-  String get statistics_byCategory => 'By Category';
+  String get statistics_byCategory => 'По категориям';
 
   @override
-  String get statistics_bySubcategory => 'By Subcategory';
+  String get statistics_bySubcategory => 'По подкатегориям';
 
   @override
-  String get backup_importFromTrackWallet => 'Import from TrackWallet (.csv)';
+  String get backup_importFromTrackWallet => 'Импорт из TrackWallet (.csv)';
 
   @override
   String backup_importedTransactions(int count) {
-    return 'Imported $count transactions successfully!';
+    return 'Успешно импортировано операций: $count!';
   }
 
   @override
-  String get onboarding_restoreTrackWallet => 'Import from TrackWallet (.csv)';
+  String get onboarding_restoreTrackWallet => 'Импорт из TrackWallet (.csv)';
 
   @override
-  String get transfer_categoryLocked => 'Transfer (Default & Only Category)';
+  String get transfer_categoryLocked => 'Перевод (Категория по умолчанию)';
 
   @override
-  String get loans_noLoans => 'No loans tracked yet';
+  String get loans_noLoans => 'Кредитов пока нет';
 
   @override
   String get loans_noLoansSub =>
-      'Tap + to track mortgages, personal loans, or installments';
+      'Нажмите +, чтобы добавить ипотеку, кредит или рассрочку';
 
   @override
   String get certificates_noCertificatesSub =>
-      'Tap + to track bank certificates and fixed deposits';
+      'Нажмите +, чтобы добавить вклады и сертификаты';
+
+  @override
+  String get common_undo => 'Отменить';
+
+  @override
+  String get common_close => 'Закрыть';
+
+  @override
+  String get common_required => 'Обязательно';
+
+  @override
+  String get common_invalid => 'Неверно';
+
+  @override
+  String get common_none => 'Нет';
+
+  @override
+  String common_enabledAt(String time) {
+    return 'Вкл ($time)';
+  }
+
+  @override
+  String get common_disabled => 'Выкл';
+
+  @override
+  String get freq_daily => 'Ежедневно';
+
+  @override
+  String get freq_yearly => 'Ежегодно';
+
+  @override
+  String recurring_transfers(Object count) {
+    return 'Переводы ($count)';
+  }
+
+  @override
+  String get recurring_transfer => 'Перевод';
+
+  @override
+  String get recurring_transferCaps => 'ПЕРЕВОД';
+
+  @override
+  String get recurring_noRecurringTransfers => 'Нет регулярных переводов';
+
+  @override
+  String recurring_subtitleCount(int count) {
+    return '$count подписок и регулярных платежей';
+  }
+
+  @override
+  String recurring_perWeek(String amount) {
+    return '$amount / нед.';
+  }
+
+  @override
+  String get recurring_perMonth => '/ мес.';
+
+  @override
+  String get recurring_fromAccount => 'Со счёта';
+
+  @override
+  String get recurring_toAccount => 'На счёт';
+
+  @override
+  String recurring_targetAmount(String currency) {
+    return 'Целевая сумма ($currency)';
+  }
+
+  @override
+  String get recurring_autoPayAt => 'Автоплатёж в';
+
+  @override
+  String get recurring_autoPayOnDueDate => 'Автооплата в дату платежа';
+
+  @override
+  String get recurring_autoPayEnabledSub =>
+      'Будет автоматически проведено в срок';
+
+  @override
+  String get recurring_autoPayDisabledSub =>
+      'Автоматически проводить платёж при наступлении срока';
+
+  @override
+  String get recurring_autoPayTime => 'Время автооплаты';
+
+  @override
+  String get recurring_reminderEnabledSub =>
+      'Вы получите уведомление в день платежа';
+
+  @override
+  String get recurring_reminderDisabledSub =>
+      'Получать напоминание о сроке платежа';
+
+  @override
+  String get recurring_earlyReminderEnabledSub =>
+      'Дополнительное напоминание за 2 дня в то же время';
+
+  @override
+  String get recurring_earlyReminderDisabledSub =>
+      'Напоминать также за 2 дня до срока';
+
+  @override
+  String get recurring_addRecurringBtn => 'Добавить платёж';
+
+  @override
+  String get recurring_paymentDetails => 'Детали платежа';
+
+  @override
+  String get recurring_linkedAccount => 'Привязанный счёт';
+
+  @override
+  String get recurring_deletedAccount => 'Удалённый счёт';
+
+  @override
+  String get recurring_frequency => 'Периодичность';
+
+  @override
+  String get recurring_type => 'Тип';
+
+  @override
+  String get recurring_startDate => 'Дата начала';
+
+  @override
+  String get recurring_nextDueDate => 'Следующий платёж';
+
+  @override
+  String get recurring_autoPay => 'Автооплата';
+
+  @override
+  String get recurring_reminder => 'Напоминание';
+
+  @override
+  String get recurring_endDate => 'Дата окончания';
+
+  @override
+  String get recurring_totalValue => 'Общая сумма';
+
+  @override
+  String get recurring_notes => 'Заметки';
+
+  @override
+  String get recurring_upcomingPayments => 'Предстоящие платежи';
+
+  @override
+  String recurring_remainingCount(int count) {
+    return 'Осталось: $count';
+  }
+
+  @override
+  String get recurring_allInstallmentsCompleted => 'Все платежи завершены';
+
+  @override
+  String recurring_installmentOf(int num, int total) {
+    return '№$num из $total';
+  }
+
+  @override
+  String get recurring_paymentPaid => 'Платёж выполнен';
+
+  @override
+  String get recurring_paymentSkipped => 'Платёж пропущен';
+
+  @override
+  String get presets_transfer => 'Перевод';
+
+  @override
+  String get presets_selectDifferentAccounts =>
+      'Выберите разные счета списания и зачисления.';
+
+  @override
+  String presets_targetAmountOptional(String currency) {
+    return 'Сумма в $currency (Необязательно)';
+  }
+
+  @override
+  String get transactions_transfers => 'Переводы';
+
+  @override
+  String transactions_selectedItemsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Выбрано элементов: $count',
+      one: 'Выбран 1 элемент',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String transactions_entriesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count записей',
+      one: '1 запись',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get transactions_clearSelection => 'Снять выделение';
+
+  @override
+  String get transactions_transferTitle => 'Операция перевода';
+
+  @override
+  String get transactions_transferBody =>
+      'Эта операция является частью перевода между счетами и не редактируется по отдельности. Удалить весь перевод?';
+
+  @override
+  String get transactions_deleteTransfer => 'Удалить перевод';
+
+  @override
+  String get transactions_transferDeleted => 'Перевод удалён';
+
+  @override
+  String get transactions_certTitle => 'Операция по сертификату';
+
+  @override
+  String get transactions_certBody =>
+      'Эта операция связана со вкладом / сертификатом. Управляйте ею в разделе «Сертификаты» для точности балансов.';
+
+  @override
+  String get transactions_viewCertificate => 'Открыть сертификат';
+
+  @override
+  String get transactions_openCertificates => 'Перейти к сертификатам';
+
+  @override
+  String get transactions_loanFallback => 'Кредит';
+
+  @override
+  String get transactions_loanPayment => 'Платёж по кредиту';
+
+  @override
+  String get transactions_goalContribution => 'Пополнение цели';
+
+  @override
+  String get transactions_goalWithdrawal => 'Снятие с цели';
+
+  @override
+  String get calendar_repayment => 'Возврат';
+
+  @override
+  String get calendar_transfersDue => 'Ожидаемые регулярные переводы';
+
+  @override
+  String accounts_subtitleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count счетов',
+      one: '1 счёт',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get accounts_tabAccounts => 'Счета';
+
+  @override
+  String get accounts_tabCards => 'Карты';
+
+  @override
+  String get accounts_addCardBtn => 'Добавить карту';
+
+  @override
+  String get accounts_addNewCardBtn => 'Добавить новую карту';
+
+  @override
+  String get accounts_editCard => 'Редактировать карту';
+
+  @override
+  String get accounts_cardNameHint => 'Название карты (напр. Visa Platinum)';
+
+  @override
+  String get accounts_debitCard => 'Дебетовая карта';
+
+  @override
+  String get accounts_prepaidCard => 'Предоплаченная карта';
+
+  @override
+  String get accounts_pinToWidget => 'Закрепить в виджете';
+
+  @override
+  String get accounts_unpinFromWidget => 'Открепить от виджета';
+
+  @override
+  String get accounts_maxPinnedWarning => 'Нельзя закрепить больше 3 счетов';
+
+  @override
+  String get accounts_selectLinkedBank =>
+      'Выберите привязанный банковский счёт для этой карты.';
+
+  @override
+  String get accounts_debitSharesBalance =>
+      'Дебетовые карты используют баланс привязанного счёта.';
+
+  @override
+  String get accounts_linkedBankRequired => 'Привязанный счёт (Обязательно)';
+
+  @override
+  String get accounts_amountCurrentlyOwed => 'Текущая задолженность';
+
+  @override
+  String get accounts_initialAmountOwed => 'Начальная задолженность';
+
+  @override
+  String get accounts_cardDebtHint =>
+      'Введите текущий долг по карте (сохранится как задолженность)';
+
+  @override
+  String accounts_nextCycleCloses(int day) {
+    return 'Следующая выписка закрывается около $day числа';
+  }
+
+  @override
+  String accounts_spotPriceLabel(int karat) {
+    return 'Спотовая цена ($karatк золото/г)';
+  }
+
+  @override
+  String get accounts_weightTimesPurity => 'Вес × проба';
+
+  @override
+  String accounts_blockDeleteRecurring(int count) {
+    return 'На счёте $count активных регулярных платежей. Сначала перенесите или удалите их.';
+  }
+
+  @override
+  String accounts_blockDeleteLoans(int count) {
+    return 'К счёту привязано $count активных кредитов. Сначала перенесите или удалите их.';
+  }
+
+  @override
+  String accounts_blockDeleteCertificates(int count) {
+    return 'К счёту привязано $count активных сертификатов. Сначала погасите или удалите их.';
+  }
+
+  @override
+  String accounts_blockDeleteLended(int count) {
+    return 'На счёте $count непогашенных долгов. Сначала закройте их.';
+  }
+
+  @override
+  String accounts_blockDeleteSavings(int count) {
+    return 'Счёт используется в $count взносах в цели. Сначала измените или удалите их.';
+  }
+
+  @override
+  String accounts_blockDeletePresets(int count) {
+    return 'Счёт используется в $count шаблонах операций. Сначала измените или удалите их.';
+  }
+
+  @override
+  String accounts_blockDeleteCards(int count) {
+    return 'К счёту привязано $count карт. Сначала отвяжите или удалите их.';
+  }
+
+  @override
+  String get add_transaction_selectAccountOrCard => 'Выберите счёт или карту.';
+
+  @override
+  String get add_transaction_balanced => 'Сбалансировано';
+
+  @override
+  String add_transaction_similarExists(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Уже найдено похожих операций: $count:',
+      one: 'Похожая операция уже существует:',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String budget_goalsCountSubtitle(int budgets, int goals) {
+    return '$budgets бюджетов · $goals целей';
+  }
+
+  @override
+  String get budget_savingsGoalsCaps => 'ЦЕЛИ НАКОПЛЕНИЙ';
+
+  @override
+  String budget_percentSaved(String percent) {
+    return 'Накоплено $percent%';
+  }
+
+  @override
+  String budget_ofTarget(String amount) {
+    return 'из $amount';
+  }
+
+  @override
+  String get budget_goalsTab => 'Цели';
+
+  @override
+  String get budget_completed => 'Выполнено';
+
+  @override
+  String get savings_newGoal => 'Новая цель накопления';
+
+  @override
+  String get savings_editGoal => 'Редактировать цель';
+
+  @override
+  String get certificates_activePrincipal => 'Активный капитал';
+
+  @override
+  String get certificates_activeCount => 'Активные';
+
+  @override
+  String certificates_linkedBank(String name) {
+    return 'Привязан: $name';
+  }
+
+  @override
+  String certificates_yieldSummary(String amount, String type) {
+    return 'Доход: $amount ($type)';
+  }
+
+  @override
+  String certificates_maturesOn(String date) {
+    return 'Погашение: $date';
+  }
+
+  @override
+  String get certificates_settledCaps => 'ПОГАШЕН';
+
+  @override
+  String get certificates_activeCaps => 'АКТИВЕН';
+
+  @override
+  String get certificates_annualRate => 'Годовая ставка';
+
+  @override
+  String get certificates_periodicYieldLabel => 'Периодический доход';
+
+  @override
+  String get certificates_maturedAndSettled => 'Погашен и закрыт';
+
+  @override
+  String get certificates_payoutOverride => 'Выплата (вручную)';
+
+  @override
+  String get certificates_dayRange => 'День (1–31)';
+
+  @override
+  String get certificates_noBankAccounts =>
+      'Нет банковских счетов. Создайте счёт для получения выплат.';
+
+  @override
+  String get certificates_selectLinkedBank =>
+      'Выберите привязанный банковский счёт.';
+
+  @override
+  String get creditCard_noFundingAccounts =>
+      'Нет счетов для оплаты счёта по карте.';
+
+  @override
+  String get creditCard_processing => 'Обработка...';
+
+  @override
+  String creditCard_payAmountBtn(String amount) {
+    return 'Оплатить $amount';
+  }
+
+  @override
+  String get insights_loanPaymentsThisMonth =>
+      'Выплаты по кредитам в этом месяце';
+
+  @override
+  String get insights_spendingForecast => 'Прогноз расходов';
+
+  @override
+  String get insights_forecastPrefix =>
+      'При таком темпе к концу месяца расходы составят ';
+
+  @override
+  String insights_forecastSuffix(String month, int days) {
+    return ' за $month — осталось $days дн.';
+  }
+
+  @override
+  String get insights_forecastDisclaimer =>
+      'Прогноз по текущим тратам без учёта будущих регулярных платежей.';
+
+  @override
+  String insights_forecastAccuracy(int days) {
+    return 'На основе первых $days дн. — точность растёт в течение месяца.';
+  }
+
+  @override
+  String insights_projAmount(String amount) {
+    return 'Прогноз: $amount';
+  }
+
+  @override
+  String insights_projOfBudget(String percent) {
+    return ' ($percent% от бюджета)';
+  }
+
+  @override
+  String get insights_outstanding => 'Остаток долга';
+
+  @override
+  String get insights_monthlyObligation => 'Ежемесячный платёж';
+
+  @override
+  String get loans_principal => 'Основной долг';
+
+  @override
+  String get loans_interestRate => 'Процентная ставка';
+
+  @override
+  String get loans_duration => 'Срок';
+
+  @override
+  String get loans_transferTo => 'Зачислить сумму кредита на';
+
+  @override
+  String get loans_payFrom => 'Списывать платежи с';
+
+  @override
+  String loans_dueDayTime(int day, String time) {
+    return 'Платёж: $day числа в $time';
+  }
+
+  @override
+  String more_activeCount(int count) {
+    return '$count активных';
+  }
+
+  @override
+  String more_toolsSubtitle(int count) {
+    return '$count финансовых инструментов и настроек';
+  }
+
+  @override
+  String get more_totalWealthCaps => 'ОБЩЕЕ СОСТОЯНИЕ';
+
+  @override
+  String get more_liveNetWorthSub => 'Совокупный чистый капитал по всем счетам';
+
+  @override
+  String more_assetsAmount(String amount) {
+    return 'Активы: $amount';
+  }
+
+  @override
+  String more_liabilitiesAmount(String amount) {
+    return 'Обязательства: $amount';
+  }
+
+  @override
+  String get netWorth_debtFree => 'Без долгов';
+
+  @override
+  String get netWorth_showLess => 'Свернуть';
+
+  @override
+  String netWorth_showAll(int count) {
+    return 'Показать все ($count)';
+  }
+
+  @override
+  String get netWorth_zeroLiabilities =>
+      'Обязательств нет! Текущий долг равен 0,00.';
+
+  @override
+  String get netWorth_lentDebts => 'Долги и займы';
+
+  @override
+  String netWorth_snapBreakdown(String assets, String accounts) {
+    return 'Активы: $assets · Счета: $accounts';
+  }
+
+  @override
+  String get onboarding_nameRequired => 'Укажите имя';
+
+  @override
+  String get onboarding_popularCurrencies => 'Популярные валюты';
+
+  @override
+  String get onboarding_debitCardNextStep =>
+      'Вы сможете добавить дебетовую карту к этому счёту на следующем шаге';
+
+  @override
+  String get onboarding_addDebitCardTitle => 'Добавить дебетовую карту';
+
+  @override
+  String get onboarding_addDebitCardDesc =>
+      'Привяжите дебетовую карту к новому счёту для удобного учёта расходов.';
+
+  @override
+  String get onboarding_cardName => 'Название карты';
+
+  @override
+  String get onboarding_cardholderName => 'Владелец карты';
+
+  @override
+  String get onboarding_last4Digits => 'Последние 4 цифры';
+
+  @override
+  String get onboarding_cardColor => 'Цвет карты';
+
+  @override
+  String wrapped_zeroSpendOfDays(int total) {
+    return 'из $total дн. без трат';
+  }
+
+  @override
+  String get wrapped_savingsRateLabel => 'Норма сбережений';
+
+  @override
+  String get wrapped_topCategoryLabel => 'Топ-категория';
+
+  @override
+  String get wrapped_zeroSpendDaysLabel => 'Дни без трат';
+
+  @override
+  String get wrapped_footerTag => '★ Приватный и офлайн-контроль финансов ★';
+
+  @override
+  String get yearly_tapToExpand => 'Нажмите, чтобы раскрыть';
+
+  @override
+  String get yearly_noDataBadge => 'Нет данных';
+
+  @override
+  String get export_formatHeader => 'ФОРМАТ ЭКСПОРТА';
+
+  @override
+  String export_pdfPeriod(String range) {
+    return 'Период: $range';
+  }
+
+  @override
+  String export_pdfCurrency(String currency) {
+    return 'Валюта: $currency';
+  }
+
+  @override
+  String export_pdfGenerated(String date) {
+    return 'Создано: $date';
+  }
+
+  @override
+  String export_pdfPageOf(int page, int total) {
+    return 'Стр. $page из $total';
+  }
+
+  @override
+  String get export_pdfTotalAssets => 'Всего активов';
+
+  @override
+  String get export_pdfTotalLiabilities => 'Всего обязательств';
+
+  @override
+  String get export_pdfCurrentNetWorth => 'Текущий капитал';
+
+  @override
+  String get export_pdfCategory => 'Категория';
+
+  @override
+  String export_pdfAmountHeader(String currency) {
+    return 'Сумма ($currency)';
+  }
+
+  @override
+  String get export_pdfPercentOfExpenses => '% от общих трат';
+
+  @override
+  String get backup_encryptedTitle => 'Зашифрованная копия';
+
+  @override
+  String get backup_encryptedPrompt =>
+      'Введите пароль, которым зашифрован этот файл:';
+
+  @override
+  String get backup_password => 'Пароль';
+
+  @override
+  String get backup_confirmPassword => 'Подтвердите пароль';
+
+  @override
+  String get backup_decryptContinue => 'Расшифровать и продолжить';
+
+  @override
+  String get backup_chooseRestoreMode => 'Выберите режим восстановления';
+
+  @override
+  String get backup_chooseRestoreModeDesc =>
+      'Выберите полное восстановление или только отдельные разделы.';
+
+  @override
+  String get backup_selectiveRestore => 'Выборочное восстановление';
+
+  @override
+  String get backup_selectiveRestoreDesc =>
+      'Восстановите выбранные данные без удаления остальной базы.';
+
+  @override
+  String get backup_fullRestore => 'Полное восстановление';
+
+  @override
+  String get backup_fullRestoreDesc =>
+      'Полностью заменяет текущую базу данных и настройки из копии.';
+
+  @override
+  String get backup_selectiveBackup => 'Выборочная копия';
+
+  @override
+  String get backup_selectiveBackupBtn => 'Выборочная копия...';
+
+  @override
+  String get backup_selectiveBackupDesc =>
+      'Выберите разделы данных для экспорта в JSON.';
+
+  @override
+  String get backup_selectedRestoredSuccess =>
+      'Выбранные данные успешно восстановлены!';
+
+  @override
+  String get backup_savingsGoals => 'Цели накоплений';
+
+  @override
+  String get backup_savingsContributions => 'Взносы в цели';
+
+  @override
+  String get backup_encryptionDisabled => 'Шифрование копий отключено';
+
+  @override
+  String get backup_encryptionEnabled => 'Шифрование копий включено';
+
+  @override
+  String backup_encryptionFailed(String error) {
+    return 'Ошибка шифрования: $error';
+  }
+
+  @override
+  String get backup_encryptAutoTitle => 'Шифровать автокопии';
+
+  @override
+  String get backup_encryptAutoDesc =>
+      'Защита автокопий AES-GCM-256. При утере пароля восстановление невозможно.';
+
+  @override
+  String get backup_passwordEmpty => 'Пароль не может быть пустым';
+
+  @override
+  String get backup_passwordsMismatch => 'Пароли не совпадают';
+
+  @override
+  String get backup_setPassword => 'Задать пароль';
+
+  @override
+  String backup_autoCreated(String file) {
+    return 'Автокопия создана: $file';
+  }
+
+  @override
+  String backup_autoFailed(String error) {
+    return 'Ошибка автокопии: $error';
+  }
+
+  @override
+  String get backup_nightlySchedule =>
+      'Каждую ночь около 2:00 в выбранную папку';
+
+  @override
+  String get backup_noFolderSelected => 'Папка не выбрана';
+
+  @override
+  String get backup_keepCopies => 'Хранить копий:';
+
+  @override
+  String get backup_encryptAes => 'Шифровать (AES-GCM)';
+
+  @override
+  String backup_failedError(String error) {
+    return 'Ошибка: $error';
+  }
+
+  @override
+  String backup_lastSuccess(String date, String kb) {
+    return 'Последний: $date ($kb КБ)';
+  }
+
+  @override
+  String get backup_backingUp => 'Создание копии...';
+
+  @override
+  String get backup_backUpNow => 'Создать сейчас';
+
+  @override
+  String get backup_androidIdleNote =>
+      'Запускается около 2:00. Android может отложить задачу в режиме сна.';
+
+  @override
+  String get backup_selectAll => 'Выбрать все';
+
+  @override
+  String get backup_deselectAll => 'Снять все';
+
+  @override
+  String get backup_selectiveSaved => 'Выборочная копия сохранена!';
+
+  @override
+  String backup_exportFailed(String error) {
+    return 'Ошибка экспорта: $error';
+  }
+
+  @override
+  String backup_exportSelected(int count) {
+    return 'Экспортировать ($count)';
+  }
+
+  @override
+  String backup_restoreSelected(int count) {
+    return 'Восстановить ($count)';
+  }
+
+  @override
+  String get backup_selectiveRestoreNote =>
+      'Будут восстановлены только выбранные разделы. Остальные данные не изменятся.';
+
+  @override
+  String backup_countInBackup(int count) {
+    return '$count в копии';
+  }
+
+  @override
+  String get backup_entityTxSplitsPresets => 'Операции, сплиты и шаблоны';
+
+  @override
+  String get backup_entityRecurringHistory => 'Регулярные платежи и история';
+
+  @override
+  String get backup_entityLoansPayments => 'Кредиты и платежи';
+
+  @override
+  String get backup_entityLentContacts => 'Долги и контакты';
+
+  @override
+  String get backup_entityAssetsValuables => 'Активы и имущество';
+
+  @override
+  String get backup_entityWishlistGoals => 'Список желаний и цели';
+
+  @override
+  String get common_perDay => '/ день';
+
+  @override
+  String common_daysShort(int count) {
+    return '$count д';
+  }
+
+  @override
+  String get common_splitCaps => 'РАЗД.';
+
+  @override
+  String budget_deletedCategory(String name) {
+    return 'Удалено: $name';
+  }
+
+  @override
+  String get loans_paymentDeleted => 'Платёж удалён';
+
+  @override
+  String certificates_collectionDayLabel(String frequency, int day) {
+    return '$frequency (День $day)';
+  }
+
+  @override
+  String add_transaction_duplicateItem(
+      String amount, String date, String desc) {
+    return '• $amount ($date)$desc';
+  }
+
+  @override
+  String creditCard_billPaymentDesc(String name) {
+    return 'Оплата кредитной карты — $name';
+  }
+
+  @override
+  String get onboarding_defaultBankName => 'Основной банк';
+
+  @override
+  String get onboarding_defaultCardholder => 'УЧАСТНИК EXPENSY';
+
+  @override
+  String get onboarding_defaultUser => 'Пользователь';
+
+  @override
+  String get export_excelSheetName => 'Транзакции';
+
+  @override
+  String get export_headerDate => 'Дата';
+
+  @override
+  String get export_headerDescription => 'Описание';
+
+  @override
+  String get export_headerType => 'Тип';
+
+  @override
+  String get export_headerAmount => 'Сумма';
+
+  @override
+  String get export_headerCurrency => 'Валюта';
+
+  @override
+  String get export_headerAccount => 'Счёт';
+
+  @override
+  String get export_headerCategory => 'Категория';
+
+  @override
+  String get export_headerSubcategory => 'Подкатегория';
+
+  @override
+  String get export_headerNote => 'Заметка';
+
+  @override
+  String get cat_food_exp => 'Еда и кафе';
+
+  @override
+  String get cat_transport => 'Транспорт';
+
+  @override
+  String get cat_shopping => 'Покупки';
+
+  @override
+  String get cat_bills => 'Счета и ЖКХ';
+
+  @override
+  String get cat_health => 'Здоровье';
+
+  @override
+  String get cat_entertainment => 'Развлечения';
+
+  @override
+  String get cat_education => 'Образование';
+
+  @override
+  String get cat_personal => 'Уход за собой';
+
+  @override
+  String get cat_salary => 'Зарплата';
+
+  @override
+  String get cat_freelance => 'Фриланс';
+
+  @override
+  String get cat_investments => 'Инвестиции';
+
+  @override
+  String get cat_gifts => 'Подарки';
+
+  @override
+  String get cat_other_inc => 'Прочие доходы';
+
+  @override
+  String get cat_other_exp => 'Прочие расходы';
+
+  @override
+  String get cat_sys_transfer => 'Перевод';
+
+  @override
+  String get cat_sys_investment => 'Инвестиция';
+
+  @override
+  String get sub_groceries => 'Продукты';
+
+  @override
+  String get sub_restaurants => 'Рестораны';
+
+  @override
+  String get sub_delivery => 'Доставка';
+
+  @override
+  String get sub_coffee_tea => 'Кофе и чай';
+
+  @override
+  String get sub_fuel => 'Топливо';
+
+  @override
+  String get sub_public_transit => 'Общественный транспорт';
+
+  @override
+  String get sub_taxi_ride => 'Такси';
+
+  @override
+  String get sub_maintenance => 'Обслуживание';
+
+  @override
+  String get sub_parking_tolls => 'Парковка и сборы';
+
+  @override
+  String get sub_clothing => 'Одежда';
+
+  @override
+  String get sub_electronics => 'Электроника';
+
+  @override
+  String get sub_home_furniture => 'Дом и мебель';
+
+  @override
+  String get sub_gifts => 'Подарки';
+
+  @override
+  String get sub_electricity => 'Электричество';
+
+  @override
+  String get sub_internet => 'Интернет';
+
+  @override
+  String get sub_water => 'Вода';
+
+  @override
+  String get sub_phone => 'Телефон';
+
+  @override
+  String get sub_medicine => 'Лекарства';
+
+  @override
+  String get sub_doctor => 'Врач';
+
+  @override
+  String get sub_movies => 'Кино';
+
+  @override
+  String get sub_games => 'Игры';
+
+  @override
+  String get sub_subscriptions => 'Подписки';
+
+  @override
+  String get notif_overBudgetTitle => '🚨 Превышение бюджета';
+
+  @override
+  String notif_overBudgetBody(String category, String amount, String period) {
+    return '$category — превышение лимита ($period) на $amount';
+  }
+
+  @override
+  String get notif_goalReachedTitle => '🎉 Цель достигнута';
+
+  @override
+  String notif_goalReachedBody(String amount, String name) {
+    return 'Вы достигли цели $amount для «$name»!';
+  }
+
+  @override
+  String get notif_certPayoutDueTitle => '📈 Выплата по сертификату';
+
+  @override
+  String get notif_certPayoutUpcomingTitle =>
+      '📈 Скорая выплата по сертификату';
+
+  @override
+  String notif_certPayoutBody(String name) {
+    return 'Выплата процентов по «$name» сегодня.';
+  }
+
+  @override
+  String notif_certPayoutSoonBody(String name) {
+    return 'Выплата процентов по «$name» через 2 дня.';
+  }
+
+  @override
+  String get notif_creditBillDueTodayTitle => '💳 Счёт к оплате сегодня';
+
+  @override
+  String get notif_creditBillDueSoonTitle => '💳 Скоро оплата счёта';
+
+  @override
+  String get notif_dailyReminderTitle => '📝 Ежедневное напоминание';
+
+  @override
+  String get notif_dailyReminderBody =>
+      'Не забудьте записать сегодняшние расходы.';
+
+  @override
+  String notif_lendedDueTitle(String emoji, String name) {
+    return '$emoji Срок: $name';
+  }
+
+  @override
+  String get notif_loanPaymentDueTitle => '🏦 Платёж по кредиту';
+
+  @override
+  String notif_loanPaymentDueBody(String name) {
+    return 'Платёж по кредиту «$name» сегодня.';
+  }
+
+  @override
+  String get notif_autoBackupFailedTitle => 'Ошибка автокопирования';
+
+  @override
+  String notif_autoBackupFailedBody(String error) {
+    return 'Expensy не удалось создать резервную копию: $error';
+  }
+
+  @override
+  String notif_recurringTransferBody(String amount) {
+    return 'Ожидается перевод $amount';
+  }
+
+  @override
+  String notif_recurringIncomeBody(String amount) {
+    return 'Ожидается доход $amount';
+  }
+
+  @override
+  String notif_recurringExpenseBody(String amount) {
+    return 'Ожидается платёж $amount';
+  }
+
+  @override
+  String notif_creditBillDueTodayBody(String name) {
+    return 'Счёт $name должен быть оплачен сегодня.';
+  }
+
+  @override
+  String notif_creditBillDueSoonBody(String name) {
+    return 'Счёт $name должен быть оплачен через 2 дня.';
+  }
+
+  @override
+  String notif_lendedLentDueBody(String amount, String name) {
+    return '$amount, которые вы одолжили $name, подлежат возврату сегодня';
+  }
+
+  @override
+  String notif_lendedBorrowedDueBody(String amount, String name) {
+    return '$amount, которые вы заняли у $name, подлежат возврату сегодня';
+  }
+
+  @override
+  String notif_recurringTransferDueSoonBody(String amount) {
+    return 'Перевод $amount через 2 дня';
+  }
+
+  @override
+  String notif_recurringIncomeDueSoonBody(String amount) {
+    return 'Поступление $amount ожидается через 2 дня';
+  }
+
+  @override
+  String notif_recurringExpenseDueSoonBody(String amount) {
+    return 'Платёж $amount через 2 дня';
+  }
 }

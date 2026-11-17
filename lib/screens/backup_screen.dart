@@ -1,22 +1,6 @@
 // note: Backup & restore center supporting encrypted (.enc) archives, selective table restore, SAF scheduled auto-backup, and third-party CSV imports.
 // All state mutations and queries route through AppProvider to preserve UI-DB decoupling.
 // Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
 // lib/screens/backup_screen.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -27,6 +11,7 @@ import 'package:provider/provider.dart';
 import '../utils/snackbar.dart';
 import '../utils/haptics.dart';
 import '../theme/app_theme.dart';
+import '../widgets/shared_widgets.dart';
 
 // ── class BackupScreen ──────────────────────────────────────────────────────────
 // Encapsulates UI state and rendering logic for BackupScreen.
@@ -98,61 +83,6 @@ class _BackupScreenState extends State<BackupScreen> {
     );
   }
 
-  // Helper method `_promptForBackupPassword`: handles user action or computes derived UI state.
-  Future<String?> _promptForBackupPassword(BuildContext context) async {
-    final ctrl = TextEditingController();
-    bool obscure = true;
-    final result = await showDialog<String>(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          title: const Text('Encrypted Backup'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Enter the password used to encrypt this backup file:',
-                style: TextStyle(fontSize: 13),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: ctrl,
-                obscureText: obscure,
-                autofocus: true,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      obscure
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                    ),
-                    onPressed: () => setDialogState(() => obscure = !obscure),
-                  ),
-                ),
-                onSubmitted: (v) => Navigator.pop(ctx, v.trim()),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, null),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
-              child: const Text('Decrypt & Continue'),
-            ),
-          ],
-        ),
-      ),
-    );
-    ctrl.dispose();
-    return result;
-  }
-
-  // Helper method `_restore`: handles user action or computes derived UI state.
   Future<void> _restore() async {
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
@@ -166,7 +96,7 @@ class _BackupScreenState extends State<BackupScreen> {
     Map<String, dynamic>? data;
     try {
       data = await app.pickAndParseBackupFile(
-        onPasswordRequired: () => _promptForBackupPassword(context),
+        onPasswordRequired: () => showBackupPasswordDialog(context),
       );
     } on FormatException catch (e) {
       if (mounted) _setMsg(l10n.backup_restoreFailed(e.message), ok: false);
@@ -187,7 +117,7 @@ class _BackupScreenState extends State<BackupScreen> {
         backgroundColor: Colors.transparent,
         builder: (_) => _SelectiveRestoreSheet(
           data: backupData,
-          onRestored: () => _setMsg('Selected data restored successfully!'),
+          onRestored: () => _setMsg(l10n.backup_selectedRestoredSuccess),
         ),
       );
       return;
@@ -225,12 +155,12 @@ class _BackupScreenState extends State<BackupScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Choose Restore Mode',
+              l10n.backup_chooseRestoreMode,
               style: Theme.of(ctx).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 6),
             Text(
-              'Select whether you want to restore the entire backup or only specific financial data.',
+              l10n.backup_chooseRestoreModeDesc,
               style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.6)),
             ),
             const SizedBox(height: 16),
@@ -241,8 +171,8 @@ class _BackupScreenState extends State<BackupScreen> {
               ),
               tileColor: cs.primaryContainer.withValues(alpha: 0.25),
               leading: Icon(Icons.checklist_rounded, color: cs.primary, size: 28),
-              title: const Text('Selective Restore', style: TextStyle(fontWeight: FontWeight.w700)),
-              subtitle: const Text('Choose specific entities without erasing your other data or settings.'),
+              title: Text(l10n.backup_selectiveRestore, style: const TextStyle(fontWeight: FontWeight.w700)),
+              subtitle: Text(l10n.backup_selectiveRestoreDesc),
               trailing: const Icon(Icons.chevron_right_rounded),
               onTap: () {
                 Navigator.pop(ctx);
@@ -252,7 +182,7 @@ class _BackupScreenState extends State<BackupScreen> {
                   backgroundColor: Colors.transparent,
                   builder: (_) => _SelectiveRestoreSheet(
                     data: data,
-                    onRestored: () => _setMsg('Selected data restored successfully!'),
+                    onRestored: () => _setMsg(l10n.backup_selectedRestoredSuccess),
                   ),
                 );
               },
@@ -265,8 +195,8 @@ class _BackupScreenState extends State<BackupScreen> {
               ),
               tileColor: cs.errorContainer.withValues(alpha: 0.2),
               leading: Icon(Icons.restore_outlined, color: cs.error, size: 28),
-              title: const Text('Full Restore', style: TextStyle(fontWeight: FontWeight.w700)),
-              subtitle: const Text('Completely replaces all current database tables and settings with backup data.'),
+              title: Text(l10n.backup_fullRestore, style: const TextStyle(fontWeight: FontWeight.w700)),
+              subtitle: Text(l10n.backup_fullRestoreDesc),
               trailing: const Icon(Icons.chevron_right_rounded),
               onTap: () async {
                 Navigator.pop(ctx);
@@ -356,13 +286,14 @@ class _BackupScreenState extends State<BackupScreen> {
           app.transactions.length),
       _CountRow(Icons.repeat_rounded, l10n.backup_recurringPayments,
           app.recurring.length),
+      _CountRow(Icons.bolt_rounded, l10n.presets_quickLog, app.presets.length),
       _CountRow(Icons.history_rounded, l10n.backup_recurringHistory,
           app.recurringHistoryCount),
       _CountRow(Icons.pie_chart_outline_rounded, l10n.backup_budgets,
           app.budgets.length),
       _CountRow(
-          Icons.savings_outlined, 'Savings Goals', app.savingsGoals.length),
-      _CountRow(Icons.payments_outlined, 'Savings Contributions',
+          Icons.savings_outlined, l10n.backup_savingsGoals, app.savingsGoals.length),
+      _CountRow(Icons.payments_outlined, l10n.backup_savingsContributions,
           app.savingsContributions.length),
       _CountRow(Icons.star_outline_rounded, l10n.backup_wishlist,
           app.wishlist.length),
@@ -455,7 +386,7 @@ class _BackupScreenState extends State<BackupScreen> {
                 OutlinedButton.icon(
                   onPressed: _backingUp ? null : _showSelectiveBackupSheet,
                   icon: const Icon(Icons.checklist_rounded),
-                  label: const Text('Selective Backup...'),
+                  label: Text(l10n.backup_selectiveBackupBtn),
                   style: OutlinedButton.styleFrom(
                       minimumSize: const Size.fromHeight(44),
                       shape: RoundedRectangleBorder(
@@ -779,7 +710,7 @@ class _AutoBackupSectionState extends State<_AutoBackupSection> {
     final currentEnc = app.autoBackup.encrypted;
     if (currentEnc) {
       await app.setAutoBackupEncryption(on: false);
-      if (mounted) showAppSnackbar(this.context, 'Backup encryption disabled');
+      if (mounted) showAppSnackbar(this.context, l10n.backup_encryptionDisabled);
       return;
     }
 
@@ -791,21 +722,21 @@ class _AutoBackupSectionState extends State<_AutoBackupSection> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDlgState) => AlertDialog(
-          title: const Text('Encrypt Auto Backups'),
+          title: Text(l10n.backup_encryptAutoTitle),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Protect your auto-backups with AES-GCM-256 encryption. If you forget this password, your backups cannot be restored.',
-                style: TextStyle(fontSize: 13),
+              Text(
+                l10n.backup_encryptAutoDesc,
+                style: const TextStyle(fontSize: 13),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: passCtrl,
                 obscureText: true,
                 decoration: InputDecoration(
-                  labelText: 'Password',
+                  labelText: l10n.backup_password,
                   errorText: errorText,
                 ),
               ),
@@ -813,7 +744,7 @@ class _AutoBackupSectionState extends State<_AutoBackupSection> {
               TextField(
                 controller: confirmCtrl,
                 obscureText: true,
-                decoration: const InputDecoration(labelText: 'Confirm Password'),
+                decoration: InputDecoration(labelText: l10n.backup_confirmPassword),
               ),
             ],
           ),
@@ -825,16 +756,16 @@ class _AutoBackupSectionState extends State<_AutoBackupSection> {
             FilledButton(
               onPressed: () {
                 if (passCtrl.text.isEmpty) {
-                  setDlgState(() => errorText = 'Password cannot be empty');
+                  setDlgState(() => errorText = l10n.backup_passwordEmpty);
                   return;
                 }
                 if (passCtrl.text != confirmCtrl.text) {
-                  setDlgState(() => errorText = 'Passwords do not match');
+                  setDlgState(() => errorText = l10n.backup_passwordsMismatch);
                   return;
                 }
                 Navigator.pop(ctx, true);
               },
-              child: const Text('Set Password'),
+              child: Text(l10n.backup_setPassword),
             ),
           ],
         ),
@@ -844,27 +775,31 @@ class _AutoBackupSectionState extends State<_AutoBackupSection> {
     if (set == true && mounted) {
       try {
         await app.setAutoBackupEncryption(on: true, password: passCtrl.text);
-        if (mounted) showAppSnackbar(this.context, 'Backup encryption enabled');
+        if (mounted) showAppSnackbar(this.context, l10n.backup_encryptionEnabled);
       } catch (e) {
-        if (mounted) showAppSnackbar(this.context, 'Failed to enable encryption: $e');
+        if (mounted) {
+          showAppSnackbar(
+              this.context, l10n.backup_encryptionFailed(e.toString()));
+        }
       }
     }
   }
 
   // Helper method `_runNow`: handles user action or computes derived UI state.
   Future<void> _runNow(BuildContext context, AppProvider app) async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _runningNow = true);
     AppHaptics.tap(context, HapticStrength.medium);
     try {
       final res = await app.runAutoBackupNow();
       if (!mounted) return;
       if (res.success) {
-        showAppSnackbar(this.context, 'Auto backup created: ${res.fileName}');
+        showAppSnackbar(this.context, l10n.backup_autoCreated(res.fileName ?? ''));
       } else {
-        showAppSnackbar(this.context, 'Auto backup failed: ${res.error}');
+        showAppSnackbar(this.context, l10n.backup_autoFailed(res.error ?? ''));
       }
     } catch (e) {
-      if (mounted) showAppSnackbar(this.context, 'Error: $e');
+      if (mounted) showAppSnackbar(this.context, l10n.backup_failedError(e.toString()));
     } finally {
       if (mounted) setState(() => _runningNow = false);
     }
@@ -929,9 +864,9 @@ class _AutoBackupSectionState extends State<_AutoBackupSection> {
                               fontSize: 15,
                             ),
                           ),
-                          const Text(
-                            'Nightly at ~2:00 AM to a chosen folder',
-                            style: TextStyle(fontSize: 12),
+                          Text(
+                            l10n.backup_nightlySchedule,
+                            style: const TextStyle(fontSize: 12),
                           ),
                         ],
                       ),
@@ -954,7 +889,9 @@ class _AutoBackupSectionState extends State<_AutoBackupSection> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          auto.folderName.isNotEmpty ? auto.folderName : 'No folder selected',
+                          auto.folderName.isNotEmpty
+                              ? auto.folderName
+                              : l10n.backup_noFolderSelected,
                           style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -969,9 +906,9 @@ class _AutoBackupSectionState extends State<_AutoBackupSection> {
                   // Retention
                   Row(
                     children: [
-                      const Text(
-                        'Keep copies:',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                      Text(
+                        l10n.backup_keepCopies,
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                       ),
                       const SizedBox(width: 12),
                       ...[3, 7, 14, 30].map((count) {
@@ -1018,9 +955,9 @@ class _AutoBackupSectionState extends State<_AutoBackupSection> {
                             color: auto.encrypted ? cs.primary : cs.onSurfaceVariant,
                           ),
                           const SizedBox(width: 8),
-                          const Text(
-                            'Encrypt backup (AES-GCM)',
-                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                          Text(
+                            l10n.backup_encryptAes,
+                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                           ),
                         ],
                       ),
@@ -1045,7 +982,7 @@ class _AutoBackupSectionState extends State<_AutoBackupSection> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'Failed: ${auto.lastError}',
+                              l10n.backup_failedError(auto.lastError),
                               style: TextStyle(fontSize: 11, color: cs.onErrorContainer),
                             ),
                           ),
@@ -1055,7 +992,12 @@ class _AutoBackupSectionState extends State<_AutoBackupSection> {
                   ] else if (auto.lastSuccessMs > 0) ...[
                     const SizedBox(height: 8),
                     Text(
-                      'Last: ${DateFormat('yyyy-MM-dd HH:mm').format(DateTime.fromMillisecondsSinceEpoch(auto.lastSuccessMs))} (${(auto.lastSize / 1024).toStringAsFixed(1)} KB)',
+                      l10n.backup_lastSuccess(
+                        DateFormat('yyyy-MM-dd HH:mm').format(
+                          DateTime.fromMillisecondsSinceEpoch(auto.lastSuccessMs),
+                        ),
+                        (auto.lastSize / 1024).toStringAsFixed(1),
+                      ),
                       style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
                     ),
                   ],
@@ -1069,7 +1011,8 @@ class _AutoBackupSectionState extends State<_AutoBackupSection> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.play_arrow_rounded, size: 18),
-                    label: Text(_runningNow ? 'Backing up...' : 'Back Up Now'),
+                    label: Text(
+                        _runningNow ? l10n.backup_backingUp : l10n.backup_backUpNow),
                     style: FilledButton.styleFrom(
                       minimumSize: const Size.fromHeight(40),
                       shape: RoundedRectangleBorder(
@@ -1079,7 +1022,7 @@ class _AutoBackupSectionState extends State<_AutoBackupSection> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Runs at ~2:00 AM. Android may delay it while the phone is idle.',
+                    l10n.backup_androidIdleNote,
                     style: TextStyle(
                       fontSize: 11,
                       color: cs.onSurface.withValues(alpha: 0.5),
@@ -1125,20 +1068,21 @@ class _SelectiveBackupSheetState extends State<_SelectiveBackupSheet> {
   @override
   // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
     final cs = Theme.of(context).colorScheme;
 
     final entities = [
-      ('accounts', 'Accounts', Icons.account_balance_wallet_outlined, app.accounts.length),
-      ('transactions', 'Transactions & Splits', Icons.receipt_long_outlined, app.transactions.length),
-      ('categories', 'Categories', Icons.label_outline_rounded, app.userCategories.length),
-      ('recurring', 'Recurring Payments & History', Icons.repeat_rounded, app.recurring.length),
-      ('loans', 'Loans & Payments', Icons.account_balance_outlined, app.loans.length),
-      ('lent_money', 'Lent Money & Contacts', Icons.handshake_outlined, app.lended.length),
-      ('certificates', 'Time Deposits & Certificates', Icons.card_membership_rounded, app.certificates.length),
-      ('budgets', 'Budgets', Icons.pie_chart_outline_rounded, app.budgets.length),
-      ('assets', 'Assets & Valuables', Icons.inventory_2_outlined, app.assets.length),
-      ('wishlist_goals', 'Wishlist & Savings Goals', Icons.star_outline_rounded, app.wishlist.length + app.savingsGoals.length),
+      ('accounts', l10n.backup_accounts, Icons.account_balance_wallet_outlined, app.accounts.length),
+      ('transactions', l10n.backup_entityTxSplitsPresets, Icons.receipt_long_outlined, app.transactions.length + app.presets.length),
+      ('categories', l10n.backup_categories, Icons.label_outline_rounded, app.userCategories.length),
+      ('recurring', l10n.backup_entityRecurringHistory, Icons.repeat_rounded, app.recurring.length),
+      ('loans', l10n.backup_entityLoansPayments, Icons.account_balance_outlined, app.loans.length),
+      ('lent_money', l10n.backup_entityLentContacts, Icons.handshake_outlined, app.lended.length),
+      ('certificates', l10n.certificates_title, Icons.card_membership_rounded, app.certificates.length),
+      ('budgets', l10n.backup_budgets, Icons.pie_chart_outline_rounded, app.budgets.length),
+      ('assets', l10n.backup_entityAssetsValuables, Icons.inventory_2_outlined, app.assets.length),
+      ('wishlist_goals', l10n.backup_entityWishlistGoals, Icons.star_outline_rounded, app.wishlist.length + app.savingsGoals.length),
     ];
 
     // Render Container layout container.
@@ -1168,7 +1112,7 @@ class _SelectiveBackupSheetState extends State<_SelectiveBackupSheet> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Selective Backup',
+                l10n.backup_selectiveBackup,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
               ),
               TextButton(
@@ -1181,12 +1125,14 @@ class _SelectiveBackupSheetState extends State<_SelectiveBackupSheet> {
                     }
                   });
                 },
-                child: Text(_selected.length == entities.length ? 'Deselect All' : 'Select All'),
+                child: Text(_selected.length == entities.length
+                    ? l10n.backup_deselectAll
+                    : l10n.backup_selectAll),
               ),
             ],
           ),
           Text(
-            'Choose the financial data entities you want to export into JSON.',
+            l10n.backup_selectiveBackupDesc,
             style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.6)),
           ),
           const SizedBox(height: 14),
@@ -1267,15 +1213,16 @@ class _SelectiveBackupSheetState extends State<_SelectiveBackupSheet> {
                 : () async {
                     setState(() => _exporting = true);
                     try {
-                      final path = await app.createSelectiveBackup(_selected, dialogTitle: 'Export Selected Financial Data');
+                      final path = await app.createSelectiveBackup(_selected,
+                          dialogTitle: l10n.backup_selectiveBackup);
                       if (!context.mounted) return;
                       Navigator.pop(context);
                       if (path != null) {
-                        showAppSnackbar(context, 'Selective backup saved successfully!');
+                        showAppSnackbar(context, l10n.backup_selectiveSaved);
                       }
                     } catch (e) {
                       if (!context.mounted) return;
-                      showAppSnackbar(context, 'Export failed: $e');
+                      showAppSnackbar(context, l10n.backup_exportFailed(e.toString()));
                     } finally {
                       if (mounted) setState(() => _exporting = false);
                     }
@@ -1283,7 +1230,7 @@ class _SelectiveBackupSheetState extends State<_SelectiveBackupSheet> {
             icon: _exporting
                 ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                 : const Icon(Icons.file_upload_outlined),
-            label: Text('Export Selected (${_selected.length}) Entities'),
+            label: Text(l10n.backup_exportSelected(_selected.length)),
             style: FilledButton.styleFrom(
               minimumSize: const Size.fromHeight(50),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -1367,19 +1314,20 @@ class _SelectiveRestoreSheetState extends State<_SelectiveRestoreSheet> {
   @override
   // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
 
     final availableEntities = [
-      ('accounts', 'Accounts', Icons.account_balance_wallet_outlined),
-      ('transactions', 'Transactions & Splits', Icons.receipt_long_outlined),
-      ('categories', 'Categories', Icons.label_outline_rounded),
-      ('recurring', 'Recurring Payments & History', Icons.repeat_rounded),
-      ('loans', 'Loans & Payments', Icons.account_balance_outlined),
-      ('lent_money', 'Lent Money & Contacts', Icons.handshake_outlined),
-      ('certificates', 'Time Deposits & Certificates', Icons.card_membership_rounded),
-      ('budgets', 'Budgets', Icons.pie_chart_outline_rounded),
-      ('assets', 'Assets & Valuables', Icons.inventory_2_outlined),
-      ('wishlist_goals', 'Wishlist & Savings Goals', Icons.star_outline_rounded),
+      ('accounts', l10n.backup_accounts, Icons.account_balance_wallet_outlined),
+      ('transactions', l10n.backup_entityTxSplitsPresets, Icons.receipt_long_outlined),
+      ('categories', l10n.backup_categories, Icons.label_outline_rounded),
+      ('recurring', l10n.backup_entityRecurringHistory, Icons.repeat_rounded),
+      ('loans', l10n.backup_entityLoansPayments, Icons.account_balance_outlined),
+      ('lent_money', l10n.backup_entityLentContacts, Icons.handshake_outlined),
+      ('certificates', l10n.certificates_title, Icons.card_membership_rounded),
+      ('budgets', l10n.backup_budgets, Icons.pie_chart_outline_rounded),
+      ('assets', l10n.backup_entityAssetsValuables, Icons.inventory_2_outlined),
+      ('wishlist_goals', l10n.backup_entityWishlistGoals, Icons.star_outline_rounded),
     ].where((e) => _countForGroup(e.$1) > 0).toList();
 
     // Render Container layout container.
@@ -1409,7 +1357,7 @@ class _SelectiveRestoreSheetState extends State<_SelectiveRestoreSheet> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Selective Restore',
+                l10n.backup_selectiveRestore,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
               ),
               TextButton(
@@ -1422,7 +1370,9 @@ class _SelectiveRestoreSheetState extends State<_SelectiveRestoreSheet> {
                     }
                   });
                 },
-                child: Text(_selected.length == availableEntities.length ? 'Deselect All' : 'Select All'),
+                child: Text(_selected.length == availableEntities.length
+                    ? l10n.backup_deselectAll
+                    : l10n.backup_selectAll),
               ),
             ],
           ),
@@ -1440,7 +1390,7 @@ class _SelectiveRestoreSheetState extends State<_SelectiveRestoreSheet> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Only the selected items will be restored. Your other accounts, transactions, and settings remain untouched.',
+                    l10n.backup_selectiveRestoreNote,
                     style: TextStyle(fontSize: 12, color: cs.onSurface),
                   ),
                 ),
@@ -1487,7 +1437,7 @@ class _SelectiveRestoreSheetState extends State<_SelectiveRestoreSheet> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
-                            '$count in backup',
+                            l10n.backup_countInBackup(count),
                             style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: cs.onSurface.withValues(alpha: 0.7)),
                           ),
                         ),
@@ -1518,7 +1468,8 @@ class _SelectiveRestoreSheetState extends State<_SelectiveRestoreSheet> {
                       widget.onRestored();
                     } catch (e) {
                       if (!context.mounted) return;
-                      showAppSnackbar(context, 'Restore failed: $e');
+                      showAppSnackbar(
+                          context, l10n.backup_restoreFailed(e.toString()));
                     } finally {
                       if (mounted) setState(() => _restoring = false);
                     }
@@ -1526,7 +1477,7 @@ class _SelectiveRestoreSheetState extends State<_SelectiveRestoreSheet> {
             icon: _restoring
                 ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                 : const Icon(Icons.restore_page_outlined),
-            label: Text('Restore Selected (${_selected.length}) Entities'),
+            label: Text(l10n.backup_restoreSelected(_selected.length)),
             style: FilledButton.styleFrom(
               minimumSize: const Size.fromHeight(50),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

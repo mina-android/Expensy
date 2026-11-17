@@ -52,7 +52,7 @@ class AppDatabase extends _$AppDatabase {
     _instance = db;
   }
 
-  static const int currentSchemaVersion = 30;
+  static const int currentSchemaVersion = 31;
 
   @override
   int get schemaVersion => currentSchemaVersion;
@@ -133,6 +133,12 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 30) {
             await _syncRecurringProgressFromHistory();
+          }
+          if (from < 31) {
+            await m.addColumn(recurringPayments, recurringPayments.toAccountId);
+            await m.addColumn(recurringPayments, recurringPayments.toAmount);
+            await m.addColumn(transactionPresets, transactionPresets.toAccountId);
+            await m.addColumn(transactionPresets, transactionPresets.toAmount);
           }
         },
         beforeOpen: (details) async {
@@ -799,7 +805,7 @@ class AppDatabase extends _$AppDatabase {
   Future<List<NetWorthSnapshot>> getNetWorthSnapshots(
       {DateTime? since, int? limit}) async {
     final dateStr =
-        since != null ? DateFormat('yyyy-MM-dd').format(since) : null;
+        since != null ? DateFormat('yyyy-MM-dd', 'en_US').format(since) : null;
     String query;
     List<Variable> vars = [];
     if (dateStr != null) {
@@ -974,6 +980,8 @@ class AppDatabase extends _$AppDatabase {
         OR type = 'transfer'
         OR description = 'Transfer out'
         OR description = 'Transfer in'
+        OR description LIKE '%(Transfer out)'
+        OR description LIKE '%(Transfer in)'
         OR description LIKE 'Credit card bill payment%'
       )
       AND category_id != 'sys_transfer'
@@ -987,6 +995,8 @@ class AppDatabase extends _$AppDatabase {
           OR type = 'transfer'
           OR description = 'Transfer out'
           OR description = 'Transfer in'
+          OR description LIKE '%(Transfer out)'
+          OR description LIKE '%(Transfer in)'
           OR description LIKE 'Credit card bill payment%'
         )
     ''');
@@ -1106,6 +1116,8 @@ class AppDatabase extends _$AppDatabase {
       row.putIfAbsent('note', () => '');
       row.putIfAbsent('icon_code_point', () => 0);
       row.putIfAbsent('order_index', () => 0);
+      row.putIfAbsent('to_account_id', () => null);
+      row.putIfAbsent('to_amount', () => null);
     }
 
     for (final row in _rows(data, 'transaction_splits')) {
@@ -1152,6 +1164,8 @@ class AppDatabase extends _$AppDatabase {
       row.putIfAbsent('notes', () => '');
       row.putIfAbsent('paid_payments', () => 0);
       row.putIfAbsent('recurring_type', () => 'subscription');
+      row.putIfAbsent('to_account_id', () => null);
+      row.putIfAbsent('to_amount', () => null);
       if (row.containsKey('freq_unit')) {
         final u = row['freq_unit'] as String? ?? 'months';
         const map = {

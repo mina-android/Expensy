@@ -1,15 +1,6 @@
 // note: Story-style multi-slide financial review ("Expensy Wrapped") summarizing period income, top categories, and savings habits.
 // All state mutations and queries route through AppProvider to preserve UI-DB decoupling.
 // Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
 // lib/screens/wrapped_screen.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -812,7 +803,7 @@ class _HeroHabitSlide extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'of ${data.totalDaysInMonth} days with zero spend',
+                  l10n.wrapped_zeroSpendOfDays(data.totalDaysInMonth),
                   style: TextStyle(
                     fontSize: 13,
                     color: cs.onSurface.withValues(alpha: 0.6),
@@ -957,17 +948,17 @@ class _ReceiptSummarySlide extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 _ReceiptRow(
-                  label: 'Savings Rate',
+                  label: l10n.wrapped_savingsRateLabel,
                   value: '${data.savingsRate.toStringAsFixed(1)}%',
                 ),
                 const SizedBox(height: 10),
                 _ReceiptRow(
-                  label: 'Top Category',
+                  label: l10n.wrapped_topCategoryLabel,
                   value: '$catName (${formatAmount(data.topCategoryAmount)})',
                 ),
                 const SizedBox(height: 10),
                 _ReceiptRow(
-                  label: 'Zero-Spend Days',
+                  label: l10n.wrapped_zeroSpendDaysLabel,
                   value: '${data.zeroSpendDays} / ${data.totalDaysInMonth}',
                 ),
                 const SizedBox(height: 14),
@@ -975,7 +966,7 @@ class _ReceiptSummarySlide extends StatelessWidget {
                 const SizedBox(height: 8),
                 Center(
                   child: Text(
-                    '★ Private & Offline Financial Mastery ★',
+                    l10n.wrapped_footerTag,
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,

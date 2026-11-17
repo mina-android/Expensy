@@ -1,9 +1,6 @@
 // lib/screens/savings_goal_detail_screen.dart
 // note: Detail view for an individual savings goal showing contribution history, progress ring, and deposit/withdraw actions.
 // Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
 // All state mutations and queries route through AppProvider to preserve UI-DB decoupling.
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';

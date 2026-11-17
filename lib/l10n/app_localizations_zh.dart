@@ -164,17 +164,17 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String recurring_fromOngoing(Object date) {
-    return 'From $date · Ongoing';
+    return '自 $date 起 · 持续中';
   }
 
   @override
   String recurring_paidPayments(Object paid, Object total) {
-    return '$paid/$total paid';
+    return '已付 $paid/$total 期';
   }
 
   @override
   String recurring_totalAmount(Object amount) {
-    return 'Total: $amount';
+    return '总计：$amount';
   }
 
   @override
@@ -196,7 +196,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String recurring_nextDate(Object date) {
-    return 'Next: $date';
+    return '下次：$date';
   }
 
   @override
@@ -234,12 +234,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String recurring_firstDate(Object date) {
-    return 'First: $date';
+    return '首次：$date';
   }
 
   @override
   String recurring_lastDate(Object date) {
-    return 'Last: $date';
+    return '末次：$date';
   }
 
   @override
@@ -291,7 +291,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String accounts_pure(Object percentage) {
-    return '$percentage% pure';
+    return '纯度 $percentage%';
   }
 
   @override
@@ -384,12 +384,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String lended_person_due(Object date) {
-    return 'Due $date';
+    return '到期日 $date';
   }
 
   @override
   String lended_person_reminderAt(Object time) {
-    return 'Reminder at $time';
+    return '$time 发送提醒';
   }
 
   @override
@@ -410,7 +410,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String lended_person_dueColon(Object date) {
-    return 'Due: $date';
+    return '到期日：$date';
   }
 
   @override
@@ -484,7 +484,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String transactions_due(Object date) {
-    return 'Due $date';
+    return '到期 $date';
   }
 
   @override
@@ -599,12 +599,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String backup_backupSavedSuccessfully(Object savedPath) {
-    return 'Backup saved successfully:\n$savedPath';
+    return '备份保存成功：\n$savedPath';
   }
 
   @override
   String backup_backupFailed(Object error) {
-    return 'Backup failed: $error';
+    return '备份失败：$error';
   }
 
   @override
@@ -619,7 +619,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String backup_restoreFailed(Object error) {
-    return 'Restore failed: $error';
+    return '恢复失败：$error';
   }
 
   @override
@@ -654,12 +654,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String budget_overAmount(Object amount) {
-    return '$amount over';
+    return '超出 $amount';
   }
 
   @override
   String budget_leftAmount(Object amount) {
-    return '$amount left';
+    return '剩余 $amount';
   }
 
   @override
@@ -683,12 +683,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String budget_spentAmount(Object amount) {
-    return 'Spent: $amount';
+    return '已支出：$amount';
   }
 
   @override
   String budget_ofAmount(Object amount) {
-    return 'of $amount';
+    return '共 $amount';
   }
 
   @override
@@ -811,7 +811,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get wrapped_title => 'Expensy Wrapped';
+  String get wrapped_title => 'Expensy 年度总结';
 
   @override
   String wrapped_bannerTitle(Object month) {
@@ -915,12 +915,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String insights_incomeAmount(Object amount) {
-    return 'Income $amount';
+    return '收入 $amount';
   }
 
   @override
   String insights_expensesAmount(Object amount) {
-    return 'Expenses $amount';
+    return '支出 $amount';
   }
 
   @override
@@ -1052,8 +1052,7 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count items',
-      one: '1 item',
+      other: '$count 个项目',
     );
     return '$_temp0';
   }
@@ -1074,8 +1073,7 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count items',
-      one: '1 item',
+      other: '$count 项资产',
     );
     return '$_temp0';
   }
@@ -1088,8 +1086,7 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count categories',
-      one: '1 category',
+      other: '$count 个分类',
     );
     return '$_temp0';
   }
@@ -1245,8 +1242,7 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count active records',
-      one: '1 active record',
+      other: '$count 条未结清记录',
     );
     return '$_temp0';
   }
@@ -1307,17 +1303,17 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String currency_converter_rateAgeMins(Object minutes) {
-    return '${minutes}m ago';
+    return '$minutes 分钟前';
   }
 
   @override
   String currency_converter_rateAgeHours(Object hours) {
-    return '${hours}h ago';
+    return '$hours 小时前';
   }
 
   @override
   String currency_converter_rateAgeDays(Object days) {
-    return '${days}d ago';
+    return '$days 天前';
   }
 
   @override
@@ -1327,12 +1323,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String transfer_fromAcc(Object currency) {
-    return 'From ($currency)';
+    return '转出 ($currency)';
   }
 
   @override
   String transfer_toAcc(Object currency) {
-    return 'To ($currency)';
+    return '转入 ($currency)';
   }
 
   @override
@@ -1355,15 +1351,14 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count transactions in range',
-      one: '1 transaction in range',
+      other: '范围内共有 $count 笔交易',
     );
     return '$_temp0';
   }
 
   @override
   String export_saved(Object path) {
-    return 'Saved: $path';
+    return '已保存：$path';
   }
 
   @override
@@ -1922,12 +1917,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String backup_lastBackup(String time) {
-    return 'Last backup: $time';
+    return '上次备份：$time';
   }
 
   @override
   String backup_savingTo(String path) {
-    return 'Saving to: $path';
+    return '保存至：$path';
   }
 
   @override
@@ -1953,7 +1948,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String savings_targetDate(String date) {
-    return 'Target Date: $date';
+    return '目标日期：$date';
   }
 
   @override
@@ -2710,57 +2705,1173 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboarding_maybeLater => '稍后再说';
 
   @override
-  String get categories_subcategories => 'Subcategories';
+  String get categories_subcategories => '子分类';
 
   @override
-  String get categories_addSubcategory => 'Add Subcategory';
+  String get categories_addSubcategory => '添加子分类';
 
   @override
-  String get categories_parentCategory => 'Parent Category';
+  String get categories_parentCategory => '父级分类';
 
   @override
-  String get categories_noneRoot => 'None (Top-Level Category)';
+  String get categories_noneRoot => '无（顶级分类）';
 
   @override
-  String get categories_loadDefaults => 'Load Default Subcategories';
+  String get categories_loadDefaults => '加载默认子分类';
 
   @override
   String categories_defaultsLoaded(int count) {
-    return 'Loaded $count default subcategories';
+    return '已加载 $count 个默认子分类';
   }
 
   @override
-  String get categories_defaultsAlreadyLoaded =>
-      'Default subcategories are already loaded';
+  String get categories_defaultsAlreadyLoaded => '默认子分类已加载';
 
   @override
-  String get statistics_byCategory => 'By Category';
+  String get statistics_byCategory => '按分类';
 
   @override
-  String get statistics_bySubcategory => 'By Subcategory';
+  String get statistics_bySubcategory => '按子分类';
 
   @override
-  String get backup_importFromTrackWallet => 'Import from TrackWallet (.csv)';
+  String get backup_importFromTrackWallet => '从 TrackWallet 导入 (.csv)';
 
   @override
   String backup_importedTransactions(int count) {
-    return 'Imported $count transactions successfully!';
+    return '成功导入 $count 笔交易！';
   }
 
   @override
-  String get onboarding_restoreTrackWallet => 'Import from TrackWallet (.csv)';
+  String get onboarding_restoreTrackWallet => '从 TrackWallet 导入 (.csv)';
 
   @override
-  String get transfer_categoryLocked => 'Transfer (Default & Only Category)';
+  String get transfer_categoryLocked => '转账（唯一默认分类）';
 
   @override
-  String get loans_noLoans => 'No loans tracked yet';
+  String get loans_noLoans => '暂无贷款记录';
 
   @override
-  String get loans_noLoansSub =>
-      'Tap + to track mortgages, personal loans, or installments';
+  String get loans_noLoansSub => '点击 + 记录房贷、个人贷款或分期付款';
 
   @override
-  String get certificates_noCertificatesSub =>
-      'Tap + to track bank certificates and fixed deposits';
+  String get certificates_noCertificatesSub => '点击 + 追踪定期存款和存单';
+
+  @override
+  String get common_undo => '撤销';
+
+  @override
+  String get common_close => '关闭';
+
+  @override
+  String get common_required => '必填';
+
+  @override
+  String get common_invalid => '无效';
+
+  @override
+  String get common_none => '无';
+
+  @override
+  String common_enabledAt(String time) {
+    return '已启用 ($time)';
+  }
+
+  @override
+  String get common_disabled => '已禁用';
+
+  @override
+  String get freq_daily => '每日';
+
+  @override
+  String get freq_yearly => '每年';
+
+  @override
+  String recurring_transfers(Object count) {
+    return '转账 ($count)';
+  }
+
+  @override
+  String get recurring_transfer => '转账';
+
+  @override
+  String get recurring_transferCaps => '转账';
+
+  @override
+  String get recurring_noRecurringTransfers => '暂无定期转账';
+
+  @override
+  String recurring_subtitleCount(int count) {
+    return '$count 项订阅与定期收支';
+  }
+
+  @override
+  String recurring_perWeek(String amount) {
+    return '$amount / 周';
+  }
+
+  @override
+  String get recurring_perMonth => '/ 月';
+
+  @override
+  String get recurring_fromAccount => '转出账户';
+
+  @override
+  String get recurring_toAccount => '转入账户';
+
+  @override
+  String recurring_targetAmount(String currency) {
+    return '目标金额 ($currency)';
+  }
+
+  @override
+  String get recurring_autoPayAt => '自动支付时间';
+
+  @override
+  String get recurring_autoPayOnDueDate => '到期自动入账';
+
+  @override
+  String get recurring_autoPayEnabledSub => '到期时自动记账';
+
+  @override
+  String get recurring_autoPayDisabledSub => '到期时自动记录此笔收支';
+
+  @override
+  String get recurring_autoPayTime => '自动入账时间';
+
+  @override
+  String get recurring_reminderEnabledSub => '将在到期当天提醒您';
+
+  @override
+  String get recurring_reminderDisabledSub => '在付款到期时接收提醒';
+
+  @override
+  String get recurring_earlyReminderEnabledSub => '提前 2 天在同一时间发送额外提醒';
+
+  @override
+  String get recurring_earlyReminderDisabledSub => '在到期前 2 天也发送提醒';
+
+  @override
+  String get recurring_addRecurringBtn => '添加定期项目';
+
+  @override
+  String get recurring_paymentDetails => '付款详情';
+
+  @override
+  String get recurring_linkedAccount => '关联账户';
+
+  @override
+  String get recurring_deletedAccount => '已删除的账户';
+
+  @override
+  String get recurring_frequency => '频率';
+
+  @override
+  String get recurring_type => '类型';
+
+  @override
+  String get recurring_startDate => '开始日期';
+
+  @override
+  String get recurring_nextDueDate => '下次到期日';
+
+  @override
+  String get recurring_autoPay => '自动支付';
+
+  @override
+  String get recurring_reminder => '提醒';
+
+  @override
+  String get recurring_endDate => '结束日期';
+
+  @override
+  String get recurring_totalValue => '总价值';
+
+  @override
+  String get recurring_notes => '备注';
+
+  @override
+  String get recurring_upcomingPayments => '待付期次';
+
+  @override
+  String recurring_remainingCount(int count) {
+    return '剩余 $count 期';
+  }
+
+  @override
+  String get recurring_allInstallmentsCompleted => '全部分期已完成';
+
+  @override
+  String recurring_installmentOf(int num, int total) {
+    return '第 $num/$total 期';
+  }
+
+  @override
+  String get recurring_paymentPaid => '已付款';
+
+  @override
+  String get recurring_paymentSkipped => '已跳过';
+
+  @override
+  String get presets_transfer => '转账';
+
+  @override
+  String get presets_selectDifferentAccounts => '请选择不同的转出和转入账户。';
+
+  @override
+  String presets_targetAmountOptional(String currency) {
+    return '$currency 目标金额（可选）';
+  }
+
+  @override
+  String get transactions_transfers => '转账';
+
+  @override
+  String transactions_selectedItemsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已选择 $count 项',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String transactions_entriesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 笔记录',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get transactions_clearSelection => '取消选择';
+
+  @override
+  String get transactions_transferTitle => '转账交易';
+
+  @override
+  String get transactions_transferBody =>
+      '此交易属于账户互转，为保持余额一致，不支持单独修改单边记录。是否删除整笔转账？';
+
+  @override
+  String get transactions_deleteTransfer => '删除转账';
+
+  @override
+  String get transactions_transferDeleted => '转账已删除';
+
+  @override
+  String get transactions_certTitle => '存单交易';
+
+  @override
+  String get transactions_certBody => '此交易关联了定期存款/存单。为保持本金和收益账目同步，请前往存单页面进行管理。';
+
+  @override
+  String get transactions_viewCertificate => '查看存单';
+
+  @override
+  String get transactions_openCertificates => '打开存单';
+
+  @override
+  String get transactions_loanFallback => '贷款';
+
+  @override
+  String get transactions_loanPayment => '贷款还款';
+
+  @override
+  String get transactions_goalContribution => '目标存入';
+
+  @override
+  String get transactions_goalWithdrawal => '目标取出';
+
+  @override
+  String get calendar_repayment => '还款';
+
+  @override
+  String get calendar_transfersDue => '待执行的定期转账';
+
+  @override
+  String accounts_subtitleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 个账户',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get accounts_tabAccounts => '账户';
+
+  @override
+  String get accounts_tabCards => '银行卡';
+
+  @override
+  String get accounts_addCardBtn => '添加银行卡';
+
+  @override
+  String get accounts_addNewCardBtn => '添加新银行卡';
+
+  @override
+  String get accounts_editCard => '编辑银行卡';
+
+  @override
+  String get accounts_cardNameHint => '卡片名称（如 Visa 白金卡）';
+
+  @override
+  String get accounts_debitCard => '借记卡';
+
+  @override
+  String get accounts_prepaidCard => '预付卡';
+
+  @override
+  String get accounts_pinToWidget => '固定到小组件';
+
+  @override
+  String get accounts_unpinFromWidget => '从小组件取消固定';
+
+  @override
+  String get accounts_maxPinnedWarning => '最多只能固定 3 个账户';
+
+  @override
+  String get accounts_selectLinkedBank => '请为此借记卡选择关联的银行账户。';
+
+  @override
+  String get accounts_debitSharesBalance => '借记卡与其关联的银行账户共享余额。';
+
+  @override
+  String get accounts_linkedBankRequired => '关联银行账户（必填）';
+
+  @override
+  String get accounts_amountCurrentlyOwed => '当前待还金额';
+
+  @override
+  String get accounts_initialAmountOwed => '初始待还金额';
+
+  @override
+  String get accounts_cardDebtHint => '输入此卡当前欠款金额（将记录为负债）';
+
+  @override
+  String accounts_nextCycleCloses(int day) {
+    return '下个账单周期约在每月 $day 日结算';
+  }
+
+  @override
+  String accounts_spotPriceLabel(int karat) {
+    return '现货金价（${karat}K黄金/克）';
+  }
+
+  @override
+  String get accounts_weightTimesPurity => '重量 × 纯度';
+
+  @override
+  String accounts_blockDeleteRecurring(int count) {
+    return '此账户有 $count 个活跃的定期收支，请先重新分配或删除。';
+  }
+
+  @override
+  String accounts_blockDeleteLoans(int count) {
+    return '此账户有 $count 个活跃贷款，请先重新分配或删除。';
+  }
+
+  @override
+  String accounts_blockDeleteCertificates(int count) {
+    return '此账户有 $count 份未结存单，请先赎回或删除。';
+  }
+
+  @override
+  String accounts_blockDeleteLended(int count) {
+    return '此账户有 $count 条未结清借贷记录，请先结清。';
+  }
+
+  @override
+  String accounts_blockDeleteSavings(int count) {
+    return '此账户被 $count 笔储蓄供款引用，请先重新分配或删除。';
+  }
+
+  @override
+  String accounts_blockDeletePresets(int count) {
+    return '此账户被 $count 个快捷预设使用，请先重新分配或删除。';
+  }
+
+  @override
+  String accounts_blockDeleteCards(int count) {
+    return '此账户关联了 $count 张银行卡，请先取消关联或删除。';
+  }
+
+  @override
+  String get add_transaction_selectAccountOrCard => '请选择账户或银行卡。';
+
+  @override
+  String get add_transaction_balanced => '已平衡';
+
+  @override
+  String add_transaction_similarExists(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已存在 $count 笔相似交易：',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String budget_goalsCountSubtitle(int budgets, int goals) {
+    return '$budgets 个预算 · $goals 个目标';
+  }
+
+  @override
+  String get budget_savingsGoalsCaps => '储蓄目标';
+
+  @override
+  String budget_percentSaved(String percent) {
+    return '已存 $percent%';
+  }
+
+  @override
+  String budget_ofTarget(String amount) {
+    return '目标 $amount';
+  }
+
+  @override
+  String get budget_goalsTab => '目标';
+
+  @override
+  String get budget_completed => '已完成';
+
+  @override
+  String get savings_newGoal => '新建储蓄目标';
+
+  @override
+  String get savings_editGoal => '编辑储蓄目标';
+
+  @override
+  String get certificates_activePrincipal => '在投本金';
+
+  @override
+  String get certificates_activeCount => '持有数量';
+
+  @override
+  String certificates_linkedBank(String name) {
+    return '关联账户：$name';
+  }
+
+  @override
+  String certificates_yieldSummary(String amount, String type) {
+    return '收益：$amount ($type)';
+  }
+
+  @override
+  String certificates_maturesOn(String date) {
+    return '到期日：$date';
+  }
+
+  @override
+  String get certificates_settledCaps => '已结清';
+
+  @override
+  String get certificates_activeCaps => '持有中';
+
+  @override
+  String get certificates_annualRate => '年利率';
+
+  @override
+  String get certificates_periodicYieldLabel => '每期收益';
+
+  @override
+  String get certificates_maturedAndSettled => '已到期并结清';
+
+  @override
+  String get certificates_payoutOverride => '收益（手动覆盖）';
+
+  @override
+  String get certificates_dayRange => '日期（1-31日）';
+
+  @override
+  String get certificates_noBankAccounts => '没有可用的银行账户，请先创建一个银行账户以接收收益。';
+
+  @override
+  String get certificates_selectLinkedBank => '请选择关联的银行账户。';
+
+  @override
+  String get creditCard_noFundingAccounts => '没有可用于还款的银行或现金账户。';
+
+  @override
+  String get creditCard_processing => '处理中...';
+
+  @override
+  String creditCard_payAmountBtn(String amount) {
+    return '还款 $amount';
+  }
+
+  @override
+  String get insights_loanPaymentsThisMonth => '本月贷款/债务还款';
+
+  @override
+  String get insights_spendingForecast => '支出预测';
+
+  @override
+  String get insights_forecastPrefix => '按此速度，您还将支出 ';
+
+  @override
+  String insights_forecastSuffix(String month, int days) {
+    return '，至$month月底（剩余 $days 天）。';
+  }
+
+  @override
+  String get insights_forecastDisclaimer => '基于当前已发生的支出估算，不含未到期的定期账单。';
+
+  @override
+  String insights_forecastAccuracy(int days) {
+    return '基于本月前 $days 天数据 — 越到月末越准确。';
+  }
+
+  @override
+  String insights_projAmount(String amount) {
+    return '预计：$amount';
+  }
+
+  @override
+  String insights_projOfBudget(String percent) {
+    return '（占预算的 $percent%）';
+  }
+
+  @override
+  String get insights_outstanding => '待还本息';
+
+  @override
+  String get insights_monthlyObligation => '每月还款';
+
+  @override
+  String get loans_principal => '贷款本金';
+
+  @override
+  String get loans_interestRate => '利率';
+
+  @override
+  String get loans_duration => '期限';
+
+  @override
+  String get loans_transferTo => '放款入账账户';
+
+  @override
+  String get loans_payFrom => '还款扣款账户';
+
+  @override
+  String loans_dueDayTime(int day, String time) {
+    return '到期：每月 $day 日 $time';
+  }
+
+  @override
+  String more_activeCount(int count) {
+    return '$count 个活跃';
+  }
+
+  @override
+  String more_toolsSubtitle(int count) {
+    return '$count 项实用工具与偏好设置';
+  }
+
+  @override
+  String get more_totalWealthCaps => '总资产净值';
+
+  @override
+  String get more_liveNetWorthSub => '汇总所有账户与资产的实时净资产';
+
+  @override
+  String more_assetsAmount(String amount) {
+    return '资产：$amount';
+  }
+
+  @override
+  String more_liabilitiesAmount(String amount) {
+    return '负债：$amount';
+  }
+
+  @override
+  String get netWorth_debtFree => '无负债';
+
+  @override
+  String get netWorth_showLess => '收起';
+
+  @override
+  String netWorth_showAll(int count) {
+    return '查看全部 ($count)';
+  }
+
+  @override
+  String get netWorth_zeroLiabilities => '暂无负债记录！当前总欠款为 0.00。';
+
+  @override
+  String get netWorth_lentDebts => '借出 / 借款';
+
+  @override
+  String netWorth_snapBreakdown(String assets, String accounts) {
+    return '资产：$assets · 账户：$accounts';
+  }
+
+  @override
+  String get onboarding_nameRequired => '请输入名称';
+
+  @override
+  String get onboarding_popularCurrencies => '常用货币';
+
+  @override
+  String get onboarding_debitCardNextStep => '您可以在下一步为此银行账户添加一张借记卡';
+
+  @override
+  String get onboarding_addDebitCardTitle => '添加借记卡';
+
+  @override
+  String get onboarding_addDebitCardDesc => '将借记卡关联到您的新银行账户，轻松记录日常消费。';
+
+  @override
+  String get onboarding_cardName => '卡片名称';
+
+  @override
+  String get onboarding_cardholderName => '持卡人姓名';
+
+  @override
+  String get onboarding_last4Digits => '卡号后四位';
+
+  @override
+  String get onboarding_cardColor => '卡片颜色';
+
+  @override
+  String wrapped_zeroSpendOfDays(int total) {
+    return '共 $total 天中零消费天数';
+  }
+
+  @override
+  String get wrapped_savingsRateLabel => '储蓄率';
+
+  @override
+  String get wrapped_topCategoryLabel => '最高支出分类';
+
+  @override
+  String get wrapped_zeroSpendDaysLabel => '零消费日';
+
+  @override
+  String get wrapped_footerTag => '★ 私密离线 · 财务尽在掌握 ★';
+
+  @override
+  String get yearly_tapToExpand => '点击展开';
+
+  @override
+  String get yearly_noDataBadge => '暂无数据';
+
+  @override
+  String get export_formatHeader => '导出格式';
+
+  @override
+  String export_pdfPeriod(String range) {
+    return '周期：$range';
+  }
+
+  @override
+  String export_pdfCurrency(String currency) {
+    return '货币：$currency';
+  }
+
+  @override
+  String export_pdfGenerated(String date) {
+    return '生成日期：$date';
+  }
+
+  @override
+  String export_pdfPageOf(int page, int total) {
+    return '第 $page 页，共 $total 页';
+  }
+
+  @override
+  String get export_pdfTotalAssets => '总资产';
+
+  @override
+  String get export_pdfTotalLiabilities => '总负债';
+
+  @override
+  String get export_pdfCurrentNetWorth => '当前净资产';
+
+  @override
+  String get export_pdfCategory => '分类';
+
+  @override
+  String export_pdfAmountHeader(String currency) {
+    return '金额 ($currency)';
+  }
+
+  @override
+  String get export_pdfPercentOfExpenses => '占总支出比例';
+
+  @override
+  String get backup_encryptedTitle => '加密备份';
+
+  @override
+  String get backup_encryptedPrompt => '请输入加密此备份文件所用的密码：';
+
+  @override
+  String get backup_password => '密码';
+
+  @override
+  String get backup_confirmPassword => '确认密码';
+
+  @override
+  String get backup_decryptContinue => '解密并继续';
+
+  @override
+  String get backup_chooseRestoreMode => '选择恢复模式';
+
+  @override
+  String get backup_chooseRestoreModeDesc => '选择恢复全部备份数据，还是仅恢复指定的财务数据。';
+
+  @override
+  String get backup_selectiveRestore => '选择性恢复';
+
+  @override
+  String get backup_selectiveRestoreDesc => '仅恢复所选数据项，保留您现有的其他账户和设置不变。';
+
+  @override
+  String get backup_fullRestore => '完整恢复';
+
+  @override
+  String get backup_fullRestoreDesc => '用备份文件完全替换当前所有数据库表与设置。';
+
+  @override
+  String get backup_selectiveBackup => '选择性备份';
+
+  @override
+  String get backup_selectiveBackupBtn => '选择性备份...';
+
+  @override
+  String get backup_selectiveBackupDesc => '选择要导出为 JSON 文件的财务数据类别。';
+
+  @override
+  String get backup_selectedRestoredSuccess => '所选数据恢复成功！';
+
+  @override
+  String get backup_savingsGoals => '储蓄目标';
+
+  @override
+  String get backup_savingsContributions => '储蓄供款';
+
+  @override
+  String get backup_encryptionDisabled => '备份加密已禁用';
+
+  @override
+  String get backup_encryptionEnabled => '备份加密已启用';
+
+  @override
+  String backup_encryptionFailed(String error) {
+    return '启用加密失败：$error';
+  }
+
+  @override
+  String get backup_encryptAutoTitle => '加密自动备份';
+
+  @override
+  String get backup_encryptAutoDesc => '使用 AES-GCM-256 加密自动备份。若忘记密码，备份将无法恢复。';
+
+  @override
+  String get backup_passwordEmpty => '密码不能为空';
+
+  @override
+  String get backup_passwordsMismatch => '两次输入的密码不一致';
+
+  @override
+  String get backup_setPassword => '设置密码';
+
+  @override
+  String backup_autoCreated(String file) {
+    return '自动备份已创建：$file';
+  }
+
+  @override
+  String backup_autoFailed(String error) {
+    return '自动备份失败：$error';
+  }
+
+  @override
+  String get backup_nightlySchedule => '每晚约凌晨 2:00 备份至所选文件夹';
+
+  @override
+  String get backup_noFolderSelected => '未选择文件夹';
+
+  @override
+  String get backup_keepCopies => '保留备份数：';
+
+  @override
+  String get backup_encryptAes => '加密备份 (AES-GCM)';
+
+  @override
+  String backup_failedError(String error) {
+    return '失败：$error';
+  }
+
+  @override
+  String backup_lastSuccess(String date, String kb) {
+    return '上次：$date ($kb KB)';
+  }
+
+  @override
+  String get backup_backingUp => '正在备份...';
+
+  @override
+  String get backup_backUpNow => '立即备份';
+
+  @override
+  String get backup_androidIdleNote => '约于凌晨 2:00 运行。设备休眠时 Android 可能会延迟执行。';
+
+  @override
+  String get backup_selectAll => '全选';
+
+  @override
+  String get backup_deselectAll => '取消全选';
+
+  @override
+  String get backup_selectiveSaved => '选择性备份已保存！';
+
+  @override
+  String backup_exportFailed(String error) {
+    return '导出失败：$error';
+  }
+
+  @override
+  String backup_exportSelected(int count) {
+    return '导出已选 ($count) 项';
+  }
+
+  @override
+  String backup_restoreSelected(int count) {
+    return '恢复已选 ($count) 项';
+  }
+
+  @override
+  String get backup_selectiveRestoreNote => '仅恢复选定项目，其余账户、交易与设置保持不变。';
+
+  @override
+  String backup_countInBackup(int count) {
+    return '备份中含 $count 条';
+  }
+
+  @override
+  String get backup_entityTxSplitsPresets => '交易、拆分与快捷预设';
+
+  @override
+  String get backup_entityRecurringHistory => '定期收支与历史记录';
+
+  @override
+  String get backup_entityLoansPayments => '贷款与还款记录';
+
+  @override
+  String get backup_entityLentContacts => '借贷记录与联系人';
+
+  @override
+  String get backup_entityAssetsValuables => '资产与贵重物品';
+
+  @override
+  String get backup_entityWishlistGoals => '愿望清单与储蓄目标';
+
+  @override
+  String get common_perDay => '/ 天';
+
+  @override
+  String common_daysShort(int count) {
+    return '$count天';
+  }
+
+  @override
+  String get common_splitCaps => '拆分';
+
+  @override
+  String budget_deletedCategory(String name) {
+    return '已删除 $name';
+  }
+
+  @override
+  String get loans_paymentDeleted => '已删除付款';
+
+  @override
+  String certificates_collectionDayLabel(String frequency, int day) {
+    return '$frequency (第$day天)';
+  }
+
+  @override
+  String add_transaction_duplicateItem(
+      String amount, String date, String desc) {
+    return '• $date $amount$desc';
+  }
+
+  @override
+  String creditCard_billPaymentDesc(String name) {
+    return '信用卡账单还款 — $name';
+  }
+
+  @override
+  String get onboarding_defaultBankName => '主银行卡';
+
+  @override
+  String get onboarding_defaultCardholder => 'EXPENSY 会员';
+
+  @override
+  String get onboarding_defaultUser => '用户';
+
+  @override
+  String get export_excelSheetName => '交易记录';
+
+  @override
+  String get export_headerDate => '日期';
+
+  @override
+  String get export_headerDescription => '描述';
+
+  @override
+  String get export_headerType => '类型';
+
+  @override
+  String get export_headerAmount => '金额';
+
+  @override
+  String get export_headerCurrency => '货币';
+
+  @override
+  String get export_headerAccount => '账户';
+
+  @override
+  String get export_headerCategory => '类别';
+
+  @override
+  String get export_headerSubcategory => '子类别';
+
+  @override
+  String get export_headerNote => '备注';
+
+  @override
+  String get cat_food_exp => '餐饮美食';
+
+  @override
+  String get cat_transport => '交通出行';
+
+  @override
+  String get cat_shopping => '购物消费';
+
+  @override
+  String get cat_bills => '账单水电';
+
+  @override
+  String get cat_health => '医疗健康';
+
+  @override
+  String get cat_entertainment => '休闲娱乐';
+
+  @override
+  String get cat_education => '教育学习';
+
+  @override
+  String get cat_personal => '个人护理';
+
+  @override
+  String get cat_salary => '工资收入';
+
+  @override
+  String get cat_freelance => '自由职业';
+
+  @override
+  String get cat_investments => '投资收益';
+
+  @override
+  String get cat_gifts => '礼金礼品';
+
+  @override
+  String get cat_other_inc => '其他收入';
+
+  @override
+  String get cat_other_exp => '其他支出';
+
+  @override
+  String get cat_sys_transfer => '转账';
+
+  @override
+  String get cat_sys_investment => '理财投资';
+
+  @override
+  String get sub_groceries => '生鲜杂货';
+
+  @override
+  String get sub_restaurants => '餐厅堂食';
+
+  @override
+  String get sub_delivery => '外卖配送';
+
+  @override
+  String get sub_coffee_tea => '咖啡茶饮';
+
+  @override
+  String get sub_fuel => '燃油充电';
+
+  @override
+  String get sub_public_transit => '公共交通';
+
+  @override
+  String get sub_taxi_ride => '打车出行';
+
+  @override
+  String get sub_maintenance => '车辆保养';
+
+  @override
+  String get sub_parking_tolls => '停车过路费';
+
+  @override
+  String get sub_clothing => '服饰鞋包';
+
+  @override
+  String get sub_electronics => '数码电子';
+
+  @override
+  String get sub_home_furniture => '家居家具';
+
+  @override
+  String get sub_gifts => '礼品礼物';
+
+  @override
+  String get sub_electricity => '电费';
+
+  @override
+  String get sub_internet => '宽带网络';
+
+  @override
+  String get sub_water => '水费';
+
+  @override
+  String get sub_phone => '话费通讯';
+
+  @override
+  String get sub_medicine => '药品';
+
+  @override
+  String get sub_doctor => '诊疗挂号';
+
+  @override
+  String get sub_movies => '电影';
+
+  @override
+  String get sub_games => '游戏';
+
+  @override
+  String get sub_subscriptions => '会员订阅';
+
+  @override
+  String get notif_overBudgetTitle => '🚨 超出预算';
+
+  @override
+  String notif_overBudgetBody(String category, String amount, String period) {
+    return '$category — 超出您的$period限额 $amount';
+  }
+
+  @override
+  String get notif_goalReachedTitle => '🎉 目标已达成';
+
+  @override
+  String notif_goalReachedBody(String amount, String name) {
+    return '您已达成「$name」的目标 $amount！';
+  }
+
+  @override
+  String get notif_certPayoutDueTitle => '📈 存单收益到期';
+
+  @override
+  String get notif_certPayoutUpcomingTitle => '📈 即将到期的存单收益';
+
+  @override
+  String notif_certPayoutBody(String name) {
+    return '$name 的利息收益今日到期。';
+  }
+
+  @override
+  String notif_certPayoutSoonBody(String name) {
+    return '$name 的利息收益将于 2 天后到期。';
+  }
+
+  @override
+  String get notif_creditBillDueTodayTitle => '💳 账单今日到期';
+
+  @override
+  String get notif_creditBillDueSoonTitle => '💳 账单即将到期';
+
+  @override
+  String get notif_dailyReminderTitle => '📝 每日记账提醒';
+
+  @override
+  String get notif_dailyReminderBody => '别忘了记录今天的消费。';
+
+  @override
+  String notif_lendedDueTitle(String emoji, String name) {
+    return '$emoji 到期: $name';
+  }
+
+  @override
+  String get notif_loanPaymentDueTitle => '🏦 贷款还款到期';
+
+  @override
+  String notif_loanPaymentDueBody(String name) {
+    return '$name 的分期付款今日到期。';
+  }
+
+  @override
+  String get notif_autoBackupFailedTitle => '自动备份失败';
+
+  @override
+  String notif_autoBackupFailedBody(String error) {
+    return 'Expensy 无法创建计划备份: $error';
+  }
+
+  @override
+  String notif_recurringTransferBody(String amount) {
+    return '有 $amount 转账到期';
+  }
+
+  @override
+  String notif_recurringIncomeBody(String amount) {
+    return '有 $amount 收入到期';
+  }
+
+  @override
+  String notif_recurringExpenseBody(String amount) {
+    return '有 $amount 付款到期';
+  }
+
+  @override
+  String notif_creditBillDueTodayBody(String name) {
+    return '您的 $name 账单今日到期。';
+  }
+
+  @override
+  String notif_creditBillDueSoonBody(String name) {
+    return '您的 $name 账单将在 2 天后到期。';
+  }
+
+  @override
+  String notif_lendedLentDueBody(String amount, String name) {
+    return '您借给 $name 的 $amount 今日到期';
+  }
+
+  @override
+  String notif_lendedBorrowedDueBody(String amount, String name) {
+    return '您向 $name 借入的 $amount 今日到期';
+  }
+
+  @override
+  String notif_recurringTransferDueSoonBody(String amount) {
+    return '$amount 转账将在 2 天后到期';
+  }
+
+  @override
+  String notif_recurringIncomeDueSoonBody(String amount) {
+    return '预计 2 天后收入 $amount';
+  }
+
+  @override
+  String notif_recurringExpenseDueSoonBody(String amount) {
+    return '$amount 将在 2 天后到期';
+  }
 }

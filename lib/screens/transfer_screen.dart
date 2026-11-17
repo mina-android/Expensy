@@ -2,8 +2,10 @@
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
+import '../models/models.dart';
 import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/presets_carousel.dart';
 import '../widgets/shared_widgets.dart';
 import '../widgets/app_numeric_keypad.dart';
 import '../utils/haptics.dart';
@@ -28,7 +30,7 @@ class _TransferScreenState extends State<TransferScreen> {
     super.initState();
     final app = context.read<AppProvider>();
     // Accounts only (not cards, and exclude gold accounts with synthetic balances)
-    final transferable = app.accounts.where((a) => !a.isCard && !a.isGold).toList();
+    final transferable = app.transferableAccounts;
     if (transferable.length >= 2) {
       _fromId = transferable[0].id;
       _toId = transferable[1].id;
@@ -43,6 +45,16 @@ class _TransferScreenState extends State<TransferScreen> {
     _toAmtCtrl.dispose();
     _noteCtrl.dispose();
     super.dispose();
+  }
+
+  void _applyTransferPreset(TransactionPreset preset) {
+    setState(() {
+      _fromId = preset.accountId;
+      _toId = preset.toAccountId;
+      _amtCtrl.text = preset.amount.toString();
+      _toAmtCtrl.text = preset.toAmount?.toString() ?? '';
+      _noteCtrl.text = preset.note;
+    });
   }
 
   Future<void> _submit() async {
@@ -98,7 +110,7 @@ class _TransferScreenState extends State<TransferScreen> {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
     // Accounts only (not cards, and exclude gold accounts with synthetic balances)
-    final transferable = app.accounts.where((a) => !a.isCard && !a.isGold).toList();
+    final transferable = app.transferableAccounts;
     final from = app.accountById(_fromId ?? '');
     final to = app.accountById(_toId ?? '');
 
@@ -132,6 +144,12 @@ class _TransferScreenState extends State<TransferScreen> {
               child:
                   Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 // ── FROM row ──────────────────────────────────────────────────
+                PresetsCarousel(
+                  allowedTypes: const ['transfer'],
+                  defaultNewType: 'transfer',
+                  onPresetSelected: _applyTransferPreset,
+                ),
+                const SizedBox(height: 12),
                 Text(l10n.transfer_from,
                   style: Theme.of(context)
                       .textTheme
@@ -160,85 +178,14 @@ class _TransferScreenState extends State<TransferScreen> {
                 Icon(Icons.arrow_downward_rounded, size: 16, color: cs.primary),
               ]),
               const SizedBox(height: 8),
-              SizedBox(
-                height: 76,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: transferable.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 8),
-                  itemBuilder: (_, i) {
-                    final acc = transferable[i];
-                    final isSame = acc.id == _fromId;
-                    final sel = _toId == acc.id;
-                    final color = Color(acc.colorValue);
-                    return GestureDetector(
-                      onTap: isSame
-                          ? null
-                          : () => setState(() {
-                                _toId = acc.id;
-                                _amtCtrl.clear();
-                              }),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 100),
-                        width: 125,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: isSame
-                              ? cs.surfaceContainerHigh
-                              : sel
-                                  ? color
-                                  : color.withValues(alpha: 0.10),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                              color: isSame
-                                  ? Colors.transparent
-                                  : sel
-                                      ? color
-                                      : color.withValues(alpha: 0.35),
-                              width: sel ? 2 : 1),
-                        ),
-                        child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              AccountTypeIcon(
-                                  type: acc.type,
-                                  size: 14,
-                                  color: isSame
-                                      ? cs.onSurface.withValues(alpha: 0.3)
-                                      : sel
-                                          ? Colors.white
-                                          : color),
-                              const SizedBox(height: 3),
-                              Text(acc.name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700,
-                                      color: isSame
-                                          ? cs.onSurface.withValues(alpha: 0.3)
-                                          : sel
-                                              ? Colors.white
-                                              : color)),
-                              Text(formatAmount(acc.balance, acc.currency),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                      fontSize: 9,
-                                      color: isSame
-                                          ? cs.onSurface.withValues(alpha: 0.2)
-                                          : sel
-                                              ? Colors.white
-                                                  .withValues(alpha: 0.8)
-                                              : cs.onSurface
-                                                  .withValues(alpha: 0.5))),
-                            ]),
-                      ),
-                    );
-                  },
-                ),
+              AccountCardPicker(
+                accounts: transferable,
+                selectedId: _toId,
+                disabledId: _fromId,
+                onSelected: (id) => setState(() {
+                  _toId = id;
+                  _amtCtrl.clear();
+                }),
               ),
               const SizedBox(height: 16),
 

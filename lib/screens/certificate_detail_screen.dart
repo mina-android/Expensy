@@ -1,10 +1,6 @@
 // lib/screens/certificate_detail_screen.dart
 // note: Detailed breakdown of a single certificate of deposit including yield schedule, linked accounts, and early redemption.
 // Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
 // All state mutations and queries route through AppProvider to preserve UI-DB decoupling.
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -146,7 +142,9 @@ class _CertificateDetailScreenState extends State<CertificateDetailScreen> {
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            (_cert.isSettled ? 'SETTLED' : 'ACTIVE')
+                            (_cert.isSettled
+                                    ? l10n.certificates_settledCaps
+                                    : l10n.certificates_activeCaps)
                                 .toUpperCase(),
                             style: TextStyle(
                               fontSize: 9,
@@ -222,13 +220,13 @@ class _CertificateDetailScreenState extends State<CertificateDetailScreen> {
                       children: [
                         Expanded(
                           child: _CertStat(
-                            'Annual Rate',
+                            l10n.certificates_annualRate,
                             '${_cert.interestRate.toStringAsFixed(1)}%',
                           ),
                         ),
                         Expanded(
                           child: _CertStat(
-                            'Periodic Yield',
+                            l10n.certificates_periodicYieldLabel,
                             formatAmount(_cert.periodicPayout, cur),
                           ),
                         ),
@@ -240,7 +238,14 @@ class _CertificateDetailScreenState extends State<CertificateDetailScreen> {
                         Expanded(
                           child: _CertStat(
                             l10n.certificates_collectionType,
-                            '${_cert.collectionType[0].toUpperCase()}${_cert.collectionType.substring(1)} (Day ${_cert.collectionDay})',
+                            l10n.certificates_collectionDayLabel(
+                              switch (_cert.collectionType) {
+                                'daily' => l10n.freq_daily,
+                                'yearly' => l10n.freq_yearly,
+                                _ => l10n.recurring_monthly,
+                              },
+                              _cert.collectionDay,
+                            ),
                           ),
                         ),
                         Expanded(
@@ -336,7 +341,7 @@ class _CertificateDetailScreenState extends State<CertificateDetailScreen> {
                             color: cs.primary, size: 20),
                         const SizedBox(width: 8),
                         Text(
-                          'Certificate Matured & Settled',
+                          l10n.certificates_maturedAndSettled,
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,

@@ -1,5 +1,6 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
+import '../utils/service_localizations.dart';
 
 class DailyReminderService {
   static final DailyReminderService _instance =
@@ -75,10 +76,11 @@ class DailyReminderService {
     );
     const details = NotificationDetails(android: androidDetails);
 
+    final loc = ServiceLocalizations.current;
     await _plugin.zonedSchedule(
       id: dailyReminderId,
-      title: '📝 Daily Reminder',
-      body: "Don't forget to log today's spending.",
+      title: loc.notif_dailyReminderTitle,
+      body: loc.notif_dailyReminderBody,
       scheduledDate: scheduledDate,
       notificationDetails: details,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,

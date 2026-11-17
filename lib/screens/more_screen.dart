@@ -1,16 +1,6 @@
 // note: Secondary navigation hub providing quick access to financial tools, analytics, debt trackers, and app settings.
 // All state mutations and queries route through AppProvider to preserve UI-DB decoupling.
 // Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
 // lib/screens/more_screen.dart
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
@@ -100,7 +90,9 @@ class MoreScreen extends StatelessWidget {
           _Item(
             icon: Icons.card_membership_rounded,
             label: l10n.certificates_title,
-            sub: '${app.certificates.where((c) => !c.isSettled).length} active',
+            sub: l10n.more_activeCount(
+              app.certificates.where((c) => !c.isSettled).length,
+            ),
             color: kCertificateColor,
             screen: const CertificatesScreen(),
           ),
@@ -195,7 +187,7 @@ class MoreScreen extends StatelessWidget {
           children: [
             FintechHeader(
               title: l10n.more_more,
-              subtitle: '$totalTools financial tools & preferences',
+              subtitle: l10n.more_toolsSubtitle(totalTools),
               padding: const EdgeInsets.only(
                 top: 8,
                 left: 20,
@@ -301,7 +293,7 @@ class MoreScreen extends StatelessWidget {
                     Icon(Icons.account_balance_rounded, size: 12, color: tabTeal),
                     const SizedBox(width: 5),
                     Text(
-                      'TOTAL WEALTH',
+                      l10n.more_totalWealthCaps,
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
@@ -339,7 +331,7 @@ class MoreScreen extends StatelessWidget {
           ),
           const SizedBox(height: 3),
           Text(
-            'Live aggregated net worth across all holdings',
+            l10n.more_liveNetWorthSub,
             style: TextStyle(fontSize: 11.5, color: cs.onSurface.withValues(alpha: 0.55)),
           ),
           const SizedBox(height: 14),
@@ -365,7 +357,7 @@ class MoreScreen extends StatelessWidget {
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          'Assets: ${formatAmount(assets, cur)}',
+                          l10n.more_assetsAmount(formatAmount(assets, cur)),
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
@@ -398,7 +390,7 @@ class MoreScreen extends StatelessWidget {
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          'Liabilities: ${formatAmount(liabilities, cur)}',
+                          l10n.more_liabilitiesAmount(formatAmount(liabilities, cur)),
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,

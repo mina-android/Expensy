@@ -11,15 +11,20 @@ import 'app_numeric_keypad.dart';
 
 class PresetSheet extends StatefulWidget {
   final TransactionPreset? existing;
+  final String? initialType;
 
-  const PresetSheet({super.key, this.existing});
+  const PresetSheet({super.key, this.existing, this.initialType});
 
-  static Future<void> show(BuildContext context, {TransactionPreset? existing}) {
+  static Future<void> show(
+    BuildContext context, {
+    TransactionPreset? existing,
+    String? initialType,
+  }) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => PresetSheet(existing: existing),
+      builder: (_) => PresetSheet(existing: existing, initialType: initialType),
     );
   }
 
@@ -30,14 +35,17 @@ class PresetSheet extends StatefulWidget {
 class _PresetSheetState extends State<PresetSheet> {
   final _titleCtrl = TextEditingController();
   final _amountCtrl = TextEditingController();
+  final _toAmtCtrl = TextEditingController();
   final _noteCtrl = TextEditingController();
 
   String _type = 'expense';
   String? _accountId;
+  String? _toAccountId;
   String? _categoryId;
   int _colorValue = 0xFF2196F3;
   bool _submitted = false;
   bool _showAmountKeypad = false;
+  bool _showToAmountKeypad = false;
 
   bool get isEdit => widget.existing != null;
 
@@ -49,20 +57,32 @@ class _PresetSheetState extends State<PresetSheet> {
       final p = widget.existing!;
       _titleCtrl.text = p.title;
       _amountCtrl.text = p.amount.toString();
+      if (p.toAmount != null) _toAmtCtrl.text = p.toAmount.toString();
       _noteCtrl.text = p.note;
       _type = p.type;
       _accountId = p.accountId;
+      _toAccountId = p.toAccountId;
       _categoryId = p.categoryId;
       _colorValue = p.colorValue;
     } else {
-      final accounts = app.nonBankAccounts.where((a) => !a.isGold).toList();
+      _type = widget.initialType ?? 'expense';
+      final accounts = _type == 'transfer'
+          ? app.transferableAccounts
+          : app.nonBankAccounts.where((a) => !a.isGold).toList();
       if (accounts.isNotEmpty) {
         _accountId = accounts.first.id;
       }
-      final cats = app.userCategories.where((c) => c.type == _type).toList();
-      if (cats.isNotEmpty) {
-        _categoryId = cats.first.id;
-        _colorValue = cats.first.colorValue;
+      if (_type == 'transfer') {
+        _categoryId = 'sys_transfer';
+        if (accounts.length > 1) {
+          _toAccountId = accounts[1].id;
+        }
+      } else {
+        final cats = app.userCategories.where((c) => c.type == _type).toList();
+        if (cats.isNotEmpty) {
+          _categoryId = cats.first.id;
+          _colorValue = cats.first.colorValue;
+        }
       }
     }
   }
@@ -71,6 +91,7 @@ class _PresetSheetState extends State<PresetSheet> {
   void dispose() {
     _titleCtrl.dispose();
     _amountCtrl.dispose();
+    _toAmtCtrl.dispose();
     _noteCtrl.dispose();
     super.dispose();
   }
@@ -78,9 +99,36 @@ class _PresetSheetState extends State<PresetSheet> {
   void _onTypeChanged(String newType) {
     if (_type == newType) return;
     final app = context.read<AppProvider>();
-    final cats = app.categories.where((c) => c.type == newType).toList();
+    if (newType == 'transfer') {
+      final transferable = app.transferableAccounts;
+      final nextFrom = transferable.any((a) => a.id == _accountId)
+          ? _accountId
+          : transferable.firstOrNull?.id;
+      final fallbackTo =
+          transferable.where((a) => a.id != nextFrom).firstOrNull?.id;
+      final nextTo = (_toAccountId != null &&
+              _toAccountId != nextFrom &&
+              transferable.any((a) => a.id == _toAccountId))
+          ? _toAccountId
+          : fallbackTo;
+      setState(() {
+        _type = newType;
+        _accountId = nextFrom;
+        _toAccountId = nextTo;
+        _categoryId = 'sys_transfer';
+        _colorValue = Theme.of(context).colorScheme.primary.toARGB32();
+      });
+      return;
+    }
+    final transactable = app.nonBankAccounts.where((a) => !a.isGold).toList();
+    final nextAcc = transactable.any((a) => a.id == _accountId)
+        ? _accountId
+        : transactable.firstOrNull?.id;
+    final cats = app.userCategories.where((c) => c.type == newType).toList();
     setState(() {
       _type = newType;
+      _accountId = nextAcc;
+      _showToAmountKeypad = false;
       _categoryId = cats.isNotEmpty ? cats.first.id : null;
       if (cats.isNotEmpty) _colorValue = cats.first.colorValue;
     });
@@ -88,15 +136,41 @@ class _PresetSheetState extends State<PresetSheet> {
 
   Future<void> _submit() async {
     setState(() => _submitted = true);
+    final l10n = AppLocalizations.of(context)!;
     final title = _titleCtrl.text.trim();
     final amount = double.tryParse(_amountCtrl.text);
 
     if (title.isEmpty || amount == null || amount <= 0) return;
-    if (_accountId == null || _categoryId == null) return;
+    if (_accountId == null) return;
 
     final app = context.read<AppProvider>();
     final acc = app.accountById(_accountId!);
     final currency = acc?.currency ?? app.settings.currency;
+
+    String? toAccId;
+    double? toAmt;
+    String catId;
+    if (_type == 'transfer') {
+      if (_toAccountId == null || _toAccountId == _accountId) {
+        showAppSnackbar(
+          context,
+          l10n.presets_selectDifferentAccounts,
+        );
+        return;
+      }
+      toAccId = _toAccountId;
+      final toAcc = app.accountById(toAccId!);
+      final isCrossCurrency =
+          acc != null && toAcc != null && acc.currency != toAcc.currency;
+      final parsedTo = double.tryParse(_toAmtCtrl.text.trim());
+      if (isCrossCurrency && parsedTo != null && parsedTo > 0) {
+        toAmt = parsedTo;
+      }
+      catId = 'sys_transfer';
+    } else {
+      if (_categoryId == null) return;
+      catId = _categoryId!;
+    }
 
     if (isEdit) {
       final updated = widget.existing!.copyWith(
@@ -104,14 +178,17 @@ class _PresetSheetState extends State<PresetSheet> {
         type: _type,
         amount: amount,
         accountId: _accountId!,
-        categoryId: _categoryId!,
+        toAccountId: toAccId,
+        clearToAccountId: _type != 'transfer',
+        toAmount: toAmt,
+        clearToAmount: toAmt == null,
+        categoryId: catId,
         currency: currency,
         note: _noteCtrl.text.trim(),
         colorValue: _colorValue,
       );
       await app.updatePreset(updated);
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
         showAppSnackbar(context, l10n.presets_presetUpdated);
         Navigator.pop(context);
       }
@@ -122,14 +199,15 @@ class _PresetSheetState extends State<PresetSheet> {
         type: _type,
         amount: amount,
         accountId: _accountId!,
-        categoryId: _categoryId!,
+        toAccountId: toAccId,
+        toAmount: toAmt,
+        categoryId: catId,
         currency: currency,
         note: _noteCtrl.text.trim(),
         colorValue: _colorValue,
       );
       await app.addPreset(preset);
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
         showAppSnackbar(context, l10n.presets_presetAdded);
         Navigator.pop(context);
       }
@@ -153,7 +231,9 @@ class _PresetSheetState extends State<PresetSheet> {
     final cs = Theme.of(context).colorScheme;
     final app = context.watch<AppProvider>();
     final cats = app.userCategories.where((c) => c.type == _type).toList();
-    final transferable = app.nonBankAccounts.where((a) => !a.isGold).toList();
+    final transferable = _type == 'transfer'
+        ? app.transferableAccounts
+        : app.nonBankAccounts.where((a) => !a.isGold).toList();
 
     return Container(
       decoration: BoxDecoration(
@@ -198,58 +278,18 @@ class _PresetSheetState extends State<PresetSheet> {
             const SizedBox(height: 16),
 
             // Type Toggle
-            Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _onTypeChanged('expense'),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 150),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      decoration: BoxDecoration(
-                        color: _type == 'expense'
-                            ? kDangerColor
-                            : cs.surfaceContainerHigh,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Center(
-                        child: Text(
-                          l10n.add_transaction_expense,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: _type == 'expense' ? Colors.white : cs.onSurface,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _onTypeChanged('income'),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 150),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      decoration: BoxDecoration(
-                        color: _type == 'income'
-                            ? kSuccessColor
-                            : cs.surfaceContainerHigh,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Center(
-                        child: Text(
-                          l10n.add_transaction_income,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: _type == 'income' ? Colors.white : cs.onSurface,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+            TypeToggleChips(
+              selectedValue: _type,
+              firstValue: 'expense',
+              firstLabel: l10n.add_transaction_expense,
+              firstColor: kDangerColor,
+              secondValue: 'income',
+              secondLabel: l10n.add_transaction_income,
+              secondColor: kSuccessColor,
+              thirdValue: 'transfer',
+              thirdLabel: l10n.presets_transfer,
+              thirdColor: cs.primary,
+              onChanged: _onTypeChanged,
             ),
             const SizedBox(height: 14),
 
@@ -307,30 +347,134 @@ class _PresetSheetState extends State<PresetSheet> {
             ],
             const SizedBox(height: 16),
 
-            // Account
-            Text(l10n.add_transaction_account, style: Theme.of(context).textTheme.labelMedium),
+            // Account / From & To Accounts
+            Text(
+              _type == 'transfer'
+                  ? l10n.recurring_fromAccount
+                  : l10n.add_transaction_account,
+              style: Theme.of(context).textTheme.labelMedium,
+            ),
             const SizedBox(height: 8),
             AccountCardPicker(
               accounts: transferable,
               selectedId: _accountId,
-              onSelected: (id) => setState(() => _accountId = id),
-            ),
-            const SizedBox(height: 16),
-
-            // Category
-            Text(l10n.recurring_category, style: Theme.of(context).textTheme.labelMedium),
-            const SizedBox(height: 8),
-            CategoryChipPicker(
-              categories: cats,
-              selectedId: _categoryId,
               onSelected: (id) {
-                final cat = cats.where((c) => c.id == id).firstOrNull;
                 setState(() {
-                  _categoryId = id;
-                  if (cat != null) _colorValue = cat.colorValue;
+                  _accountId = id;
+                  if (_toAccountId == id) _toAccountId = null;
                 });
               },
             ),
+            if (_type == 'transfer') ...[
+              const SizedBox(height: 16),
+              Text(
+                l10n.recurring_toAccount,
+                style: Theme.of(context).textTheme.labelMedium,
+              ),
+              const SizedBox(height: 8),
+              AccountCardPicker(
+                accounts: transferable,
+                selectedId: _toAccountId,
+                disabledId: _accountId,
+                onSelected: (id) => setState(() => _toAccountId = id),
+              ),
+              if (_accountId != null && _toAccountId != null) ...[
+                Builder(
+                  builder: (context) {
+                    final fromAcc = app.accountById(_accountId!);
+                    final toAcc = app.accountById(_toAccountId!);
+                    if (fromAcc == null ||
+                        toAcc == null ||
+                        fromAcc.currency == toAcc.currency) {
+                      return const SizedBox.shrink();
+                    }
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 14),
+                        TextField(
+                          controller: _toAmtCtrl,
+                          readOnly: true,
+                          showCursor: true,
+                          onTap: () {
+                            FocusScope.of(context).unfocus();
+                            setState(() {
+                              _showAmountKeypad = false;
+                              _showToAmountKeypad = true;
+                            });
+                          },
+                          decoration: InputDecoration(
+                            labelText:
+                                l10n.presets_targetAmountOptional(toAcc.currency),
+                            prefixIcon: const Icon(Icons.currency_exchange),
+                            suffixIcon: _showToAmountKeypad
+                                ? IconButton(
+                                    icon: const Icon(Icons.keyboard_hide_outlined),
+                                    onPressed: () => setState(
+                                        () => _showToAmountKeypad = false),
+                                  )
+                                : null,
+                          ),
+                        ),
+                        if (_showToAmountKeypad &&
+                            MediaQuery.of(context).viewInsets.bottom < 100) ...[
+                          const SizedBox(height: 8),
+                          AppNumericKeypad(
+                            compact: true,
+                            controller: _toAmtCtrl,
+                            onChanged: (_) => setState(() {}),
+                            onDone: () =>
+                                setState(() => _showToAmountKeypad = false),
+                          ),
+                        ],
+                      ],
+                    );
+                  },
+                ),
+              ],
+              const SizedBox(height: 16),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: cs.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: cs.primary.withValues(alpha: 0.2)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.swap_horiz_rounded,
+                        size: 18, color: cs.primary),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${l10n.recurring_category}: ${l10n.presets_transfer}',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: cs.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ] else ...[
+              const SizedBox(height: 16),
+              // Category
+              Text(l10n.recurring_category,
+                  style: Theme.of(context).textTheme.labelMedium),
+              const SizedBox(height: 8),
+              CategoryChipPicker(
+                categories: cats,
+                selectedId: _categoryId,
+                onSelected: (id) {
+                  final cat = cats.where((c) => c.id == id).firstOrNull;
+                  setState(() {
+                    _categoryId = id;
+                    if (cat != null) _colorValue = cat.colorValue;
+                  });
+                },
+              ),
+            ],
             const SizedBox(height: 20),
 
             FilledButton(

@@ -121,7 +121,7 @@ class _CatTile extends StatelessWidget {
         children: [
           ListTile(
             leading: CategoryDot(category: cat, size: 36),
-            title: Text(cat.name,
+            title: Text(AppProvider.localizeCategoryName(cat, l10n),
                 style: const TextStyle(fontWeight: FontWeight.w600)),
             subtitle: Text(
               subcategories.isEmpty
@@ -156,7 +156,9 @@ class _CatTile extends StatelessWidget {
                         .deleteCategoryWithUndo(cat.id);
                     if (context.mounted) {
                       showAppSnackbar(
-                          context, l10n.common_itemDeleted(cat.name),
+                          context,
+                          l10n.common_itemDeleted(
+                              AppProvider.localizeCategoryName(cat, l10n)),
                           onUndo: undo);
                     }
                   }),
@@ -185,7 +187,7 @@ class _CatTile extends StatelessWidget {
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Text(
-                                    sub.name,
+                                    AppProvider.localizeCategoryName(sub, l10n),
                                     style: const TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w500,
@@ -211,7 +213,9 @@ class _CatTile extends StatelessWidget {
                                     if (context.mounted) {
                                       showAppSnackbar(
                                         context,
-                                        l10n.common_itemDeleted(sub.name),
+                                        l10n.common_itemDeleted(
+                                            AppProvider.localizeCategoryName(
+                                                sub, l10n)),
                                         onUndo: undo,
                                       );
                                     }

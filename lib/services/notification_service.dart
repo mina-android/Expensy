@@ -17,6 +17,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import '../models/models.dart';
 import '../theme/app_theme.dart';
+import '../utils/service_localizations.dart';
 
 class NotificationService {
   // Singleton
@@ -118,16 +119,22 @@ class NotificationService {
     final hour = int.tryParse(parts[0]) ?? 9;
     final minute = parts.length > 1 ? (int.tryParse(parts[1]) ?? 0) : 0;
 
-    final emoji = r.paymentType == 'expense' ? '\u{1F4B8}' : '\u{1F4B0}';
+    final emoji = r.isTransfer
+        ? '\u{1F504}'
+        : (r.paymentType == 'expense' ? '\u{1F4B8}' : '\u{1F4B0}');
     final amount = formatAmount(r.amount, mainCurrency);
     final details = _buildDetails();
+
+    final loc = ServiceLocalizations.current;
 
     // ── 1. On-due-date notification ──────────────────────────────────────
     final tzDate = _toUtcTZDate(r.nextDate, hour, minute);
     if (tzDate != null) {
-      final body = r.paymentType == 'expense'
-          ? '$amount due today'
-          : '$amount expected today';
+      final body = r.isTransfer
+          ? loc.notif_recurringTransferBody(amount)
+          : (r.paymentType == 'expense'
+              ? loc.notif_recurringExpenseBody(amount)
+              : loc.notif_recurringIncomeBody(amount));
       await _plugin.zonedSchedule(
         id: _notifId(r.id),
         title: '$emoji ${r.name}',
@@ -144,9 +151,11 @@ class NotificationService {
       final advanceDay = r.nextDate.subtract(const Duration(days: 2));
       final advTzDate = _toUtcTZDate(advanceDay, hour, minute);
       if (advTzDate != null) {
-        final body = r.paymentType == 'expense'
-            ? '$amount due in 2 days'
-            : '$amount expected in 2 days';
+        final body = r.isTransfer
+            ? loc.notif_recurringTransferDueSoonBody(amount)
+            : (r.paymentType == 'expense'
+                ? loc.notif_recurringExpenseDueSoonBody(amount)
+                : loc.notif_recurringIncomeDueSoonBody(amount));
         await _plugin.zonedSchedule(
           id: _advanceId(r.id),
           title: '$emoji ${r.name}',

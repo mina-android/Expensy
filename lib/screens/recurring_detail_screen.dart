@@ -1,24 +1,6 @@
 // lib/screens/recurring_detail_screen.dart
 // note: Detail screen for a recurring payment or subscription displaying schedule metadata, payment history, and manual pay/skip controls.
 // Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
-// Follows Material 3 and AMOLED surface conventions via popupSurfaceColor(cs) and semantic constants.
 // All state mutations and queries route through AppProvider to preserve UI-DB decoupling.
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -74,7 +56,13 @@ class _RecurringDetailScreenState extends State<RecurringDetailScreen> {
     );
 
     final cat = app.categoryById(r.categoryId);
-    final catColor = cat != null ? Color(cat.colorValue) : cs.primary;
+    final acc = app.accountById(r.accountId);
+    final toAcc =
+        r.toAccountId != null ? app.accountById(r.toAccountId!) : null;
+    final nativeCur = acc?.currency ?? app.settings.currency;
+    String nativeFmt(double v) => formatAmount(v, nativeCur);
+    final catColor =
+        r.isTransfer ? cs.primary : (cat != null ? Color(cat.colorValue) : cs.primary);
     final total = r.totalPayments;
     final progress = (total != null && total > 0)
         ? (r.paidPayments / total).clamp(0.0, 1.0)
@@ -192,7 +180,7 @@ class _RecurringDetailScreenState extends State<RecurringDetailScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Payment Details',
+                        l10n.recurring_paymentDetails,
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
@@ -232,7 +220,7 @@ class _RecurringDetailScreenState extends State<RecurringDetailScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    '${widget.fmt(r.amount)} · ${r.frequencyLabel}',
+                    '${nativeFmt(r.amount)} · ${r.localizedFrequencyLabel(l10n)}',
                     style: TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.w900,
@@ -291,40 +279,132 @@ class _RecurringDetailScreenState extends State<RecurringDetailScreen> {
                   children: [
                     Row(
                       children: [
-                        Expanded(child: _DetailStat('Linked Account', app.accountById(r.accountId)?.name ?? 'Deleted Account')),
+                        if (r.isTransfer) ...[
+                          Expanded(
+                            child: DetailStatCell(
+                              l10n.recurring_fromAccount,
+                              acc?.name ?? l10n.recurring_deletedAccount,
+                            ),
+                          ),
+                          Expanded(
+                            child: DetailStatCell(
+                              l10n.recurring_toAccount,
+                              toAcc?.name ?? l10n.recurring_deletedAccount,
+                            ),
+                          ),
+                        ] else ...[
+                          Expanded(
+                            child: DetailStatCell(
+                              l10n.recurring_linkedAccount,
+                              acc?.name ?? l10n.recurring_deletedAccount,
+                            ),
+                          ),
+                          Expanded(
+                            child: DetailStatCell(
+                              l10n.recurring_category,
+                              app.categoryDisplayName(
+                                r.categoryId,
+                                fallback: l10n.common_none,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    if (r.isTransfer && r.toAmount != null && toAcc != null) ...[
+                      const Divider(height: 16, thickness: 0.5),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: DetailStatCell(
+                              l10n.recurring_targetAmount(toAcc.currency),
+                              formatAmount(r.toAmount!, toAcc.currency),
+                            ),
+                          ),
+                          Expanded(
+                            child: DetailStatCell(
+                              l10n.recurring_category,
+                              l10n.recurring_transfer,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    const Divider(height: 16, thickness: 0.5),
+                    Row(
+                      children: [
                         Expanded(
-                child: _DetailStat(
-                    'Category',
-                    app.categoryDisplayName(r.categoryId, fallback: 'None'))),
+                          child: DetailStatCell(
+                            l10n.recurring_frequency,
+                            r.localizedFrequencyLabel(l10n),
+                          ),
+                        ),
+                        Expanded(
+                          child: DetailStatCell(
+                            l10n.recurring_type,
+                            r.isTransfer
+                                ? l10n.recurring_transferCaps
+                                : (r.paymentType == 'income'
+                                    ? l10n.recurring_income
+                                    : l10n.recurring_expense.toUpperCase()),
+                          ),
+                        ),
                       ],
                     ),
                     const Divider(height: 16, thickness: 0.5),
                     Row(
                       children: [
-                        Expanded(child: _DetailStat('Frequency', '${r.freqVal} ${r.freqUnit}')),
-                        Expanded(child: _DetailStat('Type', r.paymentType.toUpperCase())),
+                        Expanded(
+                          child: DetailStatCell(
+                            l10n.recurring_startDate,
+                            DateFormat('MMM dd, yyyy').format(r.startDate),
+                          ),
+                        ),
+                        Expanded(
+                          child: DetailStatCell(
+                            l10n.recurring_nextDueDate,
+                            DateFormat('MMM dd, yyyy').format(r.nextDate),
+                          ),
+                        ),
                       ],
                     ),
                     const Divider(height: 16, thickness: 0.5),
                     Row(
                       children: [
-                        Expanded(child: _DetailStat('Start Date', DateFormat('MMM dd, yyyy').format(r.startDate))),
-                        Expanded(child: _DetailStat('Next Due Date', DateFormat('MMM dd, yyyy').format(r.nextDate))),
-                      ],
-                    ),
-                    const Divider(height: 16, thickness: 0.5),
-                    Row(
-                      children: [
-                        Expanded(child: _DetailStat('Auto Pay', r.autoPayEnabled ? 'Enabled (${r.autoPayTime})' : 'Disabled')),
-                        Expanded(child: _DetailStat('Reminder', r.reminderEnabled ? 'Enabled (${r.reminderTime})' : 'Disabled')),
+                        Expanded(
+                          child: DetailStatCell(
+                            l10n.recurring_autoPay,
+                            r.autoPayEnabled
+                                ? l10n.common_enabledAt(r.autoPayTime)
+                                : l10n.common_disabled,
+                          ),
+                        ),
+                        Expanded(
+                          child: DetailStatCell(
+                            l10n.recurring_reminder,
+                            r.reminderEnabled
+                                ? l10n.common_enabledAt(r.reminderTime)
+                                : l10n.common_disabled,
+                          ),
+                        ),
                       ],
                     ),
                     if (r.endDate != null) ...[
                       const Divider(height: 16, thickness: 0.5),
                       Row(
                         children: [
-                          Expanded(child: _DetailStat('End Date', DateFormat('MMM dd, yyyy').format(r.endDate!))),
-                          Expanded(child: _DetailStat('Total Value', widget.fmt(r.totalAmount))),
+                          Expanded(
+                            child: DetailStatCell(
+                              l10n.recurring_endDate,
+                              DateFormat('MMM dd, yyyy').format(r.endDate!),
+                            ),
+                          ),
+                          Expanded(
+                            child: DetailStatCell(
+                              l10n.recurring_totalValue,
+                              nativeFmt(r.totalAmount),
+                            ),
+                          ),
                         ],
                       ),
                     ],
@@ -338,7 +418,7 @@ class _RecurringDetailScreenState extends State<RecurringDetailScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Notes',
+                                  l10n.recurring_notes,
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w600,
@@ -370,7 +450,7 @@ class _RecurringDetailScreenState extends State<RecurringDetailScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Upcoming Payments',
+                    l10n.recurring_upcomingPayments,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
@@ -386,7 +466,7 @@ class _RecurringDetailScreenState extends State<RecurringDetailScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
-                        '${upcoming.length} remaining',
+                        l10n.recurring_remainingCount(upcoming.length),
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
@@ -417,7 +497,7 @@ class _RecurringDetailScreenState extends State<RecurringDetailScreen> {
                             size: 18, color: kSuccessColor),
                         const SizedBox(width: 8),
                         Text(
-                          'All installments completed',
+                          l10n.recurring_allInstallmentsCompleted,
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -516,7 +596,7 @@ class _RecurringDetailScreenState extends State<RecurringDetailScreen> {
             child: Row(
               children: [
                 Text(
-                  'Payment History',
+                  l10n.recurring_paymentHistory,
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -586,14 +666,14 @@ class _UpcomingRow extends StatelessWidget {
   @override
   // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final l10n = AppLocalizations.of(context)!;
 
     final installmentNum = recurring.paidPayments + index + 1;
     final total = recurring.totalPayments;
     final installmentLabel = total != null && total > 0
-        ? '#$installmentNum of $total'
+        ? l10n.recurring_installmentOf(installmentNum, total)
         : '#$installmentNum';
 
     final days = dueDate.difference(DateTime.now()).inDays;
@@ -777,42 +857,6 @@ class _UpcomingRow extends StatelessWidget {
   }
 }
 
-// ── class _DetailStat ──────────────────────────────────────────────────────────
-// Encapsulates UI state and rendering logic for _DetailStat.
-class _DetailStat extends StatelessWidget {
-  final String label;
-  final String value;
-  const _DetailStat(this.label, this.value);
-
-  @override
-  // Builds the widget subtree using theme-adaptive colors and localization.
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    // Render Column layout container.
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: cs.onSurface.withValues(alpha: 0.5),
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 // ── class _HistoryRow ──────────────────────────────────────────────────────────
 // Encapsulates UI state and rendering logic for _HistoryRow.
 class _HistoryRow extends StatelessWidget {
@@ -823,6 +867,7 @@ class _HistoryRow extends StatelessWidget {
   @override
   // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isPaid = entry.action == 'paid';
@@ -854,7 +899,7 @@ class _HistoryRow extends StatelessWidget {
           ),
         ),
         title: Text(
-          isPaid ? 'Payment Paid' : 'Payment Skipped',
+          isPaid ? l10n.recurring_paymentPaid : l10n.recurring_paymentSkipped,
           style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
         ),
         subtitle: Text(
