@@ -54,6 +54,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   late String _type = widget.existing?.type ?? widget.initialType;
   String? _accountId;
+  String? _fromId;
+  String? _toId;
   String? _categoryId;
   DateTime _date = DateTime.now();
 
@@ -67,26 +69,24 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   late final FocusNode _amtFocusNode;
 
   bool get isEdit => widget.existing != null;
-
-  List<Account> _getSpendableAccounts(AppProvider app) {
-    // Pay with cards, cash, and wallets
-    final primary = app.accounts
-        .where((a) => (a.isCard || a.type == 'cash' || a.type == 'wallet') && !a.isGold)
-        .toList();
-    if (primary.isNotEmpty) return primary;
-    // Fallback if no cards/cash exist yet so user can still transact
-    return app.accounts.where((a) => !a.isGold).toList();
-  }
+  bool get _isTransferMode => !isEdit && _type == 'transfer';
 
   @override
   void initState() {
     super.initState();
     _amtFocusNode = FocusNode();
     final app = context.read<AppProvider>();
-    final transactableAccounts = _getSpendableAccounts(app);
+    final transactableAccounts = app.spendableAccounts;
     if (transactableAccounts.isNotEmpty) {
       _accountId = transactableAccounts.first.id;
       _currency = transactableAccounts.first.currency;
+    }
+    final transferable = app.transferableAccounts;
+    if (transferable.length >= 2) {
+      _fromId = transferable[0].id;
+      _toId = transferable[1].id;
+    } else if (transferable.length == 1) {
+      _fromId = transferable[0].id;
     }
     final cats = app.userCategories.where((c) => c.type == _type).toList();
     if (cats.isNotEmpty) _categoryId = cats.first.id;
@@ -151,26 +151,27 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     final cats = app.userCategories.where((c) => c.type == t).toList();
     setState(() {
       _type = t;
-      _categoryId = cats.isNotEmpty ? cats.first.id : null;
+      _submitted = false;
+      if (t != 'transfer') {
+        _categoryId = cats.isNotEmpty ? cats.first.id : null;
+      }
       if (t != 'expense' && _isSplit) {
         _isSplit = false;
+        _activeAmountController = _amtCtrl;
+      }
+      if (t == 'transfer') {
         _activeAmountController = _amtCtrl;
       }
     });
   }
 
-  void _applyPreset(TransactionPreset p) {
+  void _swapTransferAccounts() {
+    if (_fromId == null || _toId == null) return;
     AppHaptics.tap(context, HapticStrength.light);
     setState(() {
-      _isSplit = false;
-      _activeAmountController = _amtCtrl;
-      _amtCtrl.text = ExpressionEvaluator.formatResult(p.amount);
-      _descCtrl.text = p.title;
-      _type = p.type;
-      _accountId = p.accountId;
-      _categoryId = p.categoryId;
-      _currency = p.currency;
-      if (p.note.isNotEmpty) _noteCtrl.text = p.note;
+      final tmp = _fromId;
+      _fromId = _toId;
+      _toId = tmp;
     });
   }
 
@@ -281,62 +282,37 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     String? tempSelected = _splits[index].categoryId;
     final picked = await showModalBottomSheet<String>(
       context: context,
+      isScrollControlled: true,
       builder: (ctx) {
         final l10n = AppLocalizations.of(ctx)!;
         return StatefulBuilder(
-          builder: (ctx, setSheetState) => Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 36,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
+          builder: (ctx, setSheetState) => SheetShell(
+            showHandle: true,
+            title: l10n.add_transaction_category,
+            children: [
+              CategoryChipPicker(
+                categories: cats,
+                selectedId: tempSelected,
+                onSelected: (id) {
+                  setSheetState(() => tempSelected = id);
+                  final hasChildren = cats.any((c) => c.parentId == id);
+                  if (!hasChildren ||
+                      cats.any((c) => c.id == id && c.isSubcategory)) {
+                    Navigator.pop(ctx, id);
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: tempSelected == null
+                      ? null
+                      : () => Navigator.pop(ctx, tempSelected),
+                  child: Text(l10n.categories_saveChanges),
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  l10n.add_transaction_category,
-                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
-                ),
-                const SizedBox(height: 12),
-                ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxHeight: MediaQuery.of(ctx).size.height * 0.5,
-                  ),
-                  child: SingleChildScrollView(
-                    child: CategoryChipPicker(
-                      categories: cats,
-                      selectedId: tempSelected,
-                      onSelected: (id) {
-                        setSheetState(() => tempSelected = id);
-                        final hasChildren = cats.any((c) => c.parentId == id);
-                        if (!hasChildren ||
-                            cats.any((c) => c.id == id && c.isSubcategory)) {
-                          Navigator.pop(ctx, id);
-                        }
-                      },
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: tempSelected == null
-                        ? null
-                        : () => Navigator.pop(ctx, tempSelected),
-                    child: Text(l10n.categories_saveChanges),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       },
@@ -422,12 +398,53 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       showAppSnackbar(context, l10n.error_required);
       return;
     }
+    final app = context.read<AppProvider>();
+
+    if (_isTransferMode) {
+      if (_fromId == null || _toId == null || _fromId == _toId) {
+        showAppSnackbar(context, l10n.add_transaction_selectAccountOrCard);
+        return;
+      }
+      final from = app.accountById(_fromId!);
+      final to = app.accountById(_toId!);
+      final fromCur = from?.currency ?? app.settings.currency;
+      final toCur = to?.currency ?? app.settings.currency;
+      final isCrossCurrency = from != null && to != null && fromCur != toCur;
+
+      double? convertedToAmount;
+      if (isCrossCurrency) {
+        if (app.exchangeRates.isEmpty) {
+          showAppSnackbar(context, l10n.transfer_exchangeRatesNotLoaded);
+          return;
+        }
+        convertedToAmount = app.convertBetween(amount, fromCur, toCur);
+        if (convertedToAmount == null) {
+          showAppSnackbar(context, l10n.transfer_exchangeRatesNotLoaded);
+          return;
+        }
+      }
+
+      try {
+        await app.addTransfer(
+          fromId: _fromId!,
+          toId: _toId!,
+          fromAmount: amount,
+          toAmount: convertedToAmount,
+          title: _descCtrl.text.trim(),
+          note: _noteCtrl.text.trim(),
+          date: _date,
+        );
+        if (mounted) Navigator.pop(context);
+      } on RatesUnavailableException catch (e) {
+        if (mounted) showAppSnackbar(context, e.message);
+      }
+      return;
+    }
+
     if (_accountId == null) {
       showAppSnackbar(context, l10n.add_transaction_selectAccountOrCard);
       return;
     }
-
-    final app = context.read<AppProvider>();
 
     if (_isSplit) {
       if (_splits.length < 2) {
@@ -520,22 +537,36 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     final app = context.watch<AppProvider>();
     final cs = Theme.of(context).colorScheme;
     final cats = app.userCategories.where((c) => c.type == _type).toList();
-    final sym = currencyInfo(_currency.isNotEmpty
-            ? _currency
-            : (app.accountById(_accountId ?? '')?.currency ??
-                app.settings.currency))
-        .symbol;
+    final transferable = app.transferableAccounts;
+    final fromAcc = app.accountById(_fromId ?? '');
+    final toAcc = app.accountById(_toId ?? '');
+    final fromCurrency = fromAcc?.currency ?? app.settings.currency;
+    final toCurrency = toAcc?.currency ?? app.settings.currency;
+    final isTransferCrossCurrency =
+        fromAcc != null && toAcc != null && fromCurrency != toCurrency;
 
     // Show converted amount preview when transaction currency != account currency
     final acc = app.accountById(_accountId ?? '');
     final accCurrency = acc?.currency ?? app.settings.currency;
-    final showConversion = _currency.isNotEmpty &&
+    final displayCurrency = _isTransferMode
+        ? fromCurrency
+        : (_currency.isNotEmpty ? _currency : accCurrency);
+    final sym = currencyInfo(displayCurrency).symbol;
+
+    final showConversion = !_isTransferMode &&
+        _currency.isNotEmpty &&
         _currency != accCurrency &&
         app.exchangeRates.isNotEmpty;
     final evalAmount = ExpressionEvaluator.evaluate(_amtCtrl.text);
     final inputAmount = evalAmount ?? double.tryParse(_amtCtrl.text);
     final convertedPreview = showConversion && inputAmount != null
         ? app.convertBetween(inputAmount, _currency, accCurrency)
+        : null;
+    final transferConverted = (_isTransferMode &&
+            isTransferCrossCurrency &&
+            inputAmount != null &&
+            app.exchangeRates.isNotEmpty)
+        ? app.convertBetween(inputAmount, fromCurrency, toCurrency)
         : null;
 
     final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
@@ -555,36 +586,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               padding: const EdgeInsets.all(20),
               child:
                   Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              // ── Quick Presets ─────────────────────────────────────────────
-              if (!isEdit && app.presets.isNotEmpty) ...[
-                SizedBox(
-                  height: 34,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: app.presets.length,
-                    itemBuilder: (context, i) {
-                      final p = app.presets[i];
-                      final color = Color(p.colorValue);
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: ActionChip(
-                          avatar: Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-                          ),
-                          label: Text(p.title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                          onPressed: () => _applyPreset(p),
-                          backgroundColor: cs.surfaceContainerHigh.withValues(alpha: 0.5),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(height: 12),
-              ],
-
               // ── Type toggle ───────────────────────────────────────────────
               TypeToggleChips(
                 selectedValue: _type,
@@ -594,6 +595,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 secondValue: 'income',
                 secondLabel: l10n.add_transaction_income,
                 secondLightTint: const Color(0xFFE8F5E9),
+                thirdValue: isEdit ? null : 'transfer',
+                thirdLabel: isEdit ? null : l10n.transfer_transfer,
+                thirdColor: cs.primary,
                 verticalPadding: 12,
                 onChanged: _setType,
               ),
@@ -646,7 +650,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                                   _amtCtrl.text.contains('×') ||
                                   _amtCtrl.text.contains('÷')) &&
                               evalAmount != null
-                          ? '= ${formatAmount(evalAmount, _currency.isNotEmpty ? _currency : accCurrency)}'
+                          ? '= ${formatAmount(evalAmount, displayCurrency)}'
                           : ' ',
                     ),
                     style: const TextStyle(
@@ -656,37 +660,70 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                   flex: 2,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(12),
-                    onTap: () async {
-                      final picked = await showCurrencyPicker(context,
-                          current:
-                              _currency.isNotEmpty ? _currency : accCurrency);
-                      if (picked != null) setState(() => _currency = picked);
-                    },
-                    child: Container(
-                      height: 56,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                            color: cs.outline.withValues(alpha: 0.4)),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Expanded(
-                                child: Text(
-                              _currency.isNotEmpty ? _currency : accCurrency,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w700, fontSize: 15),
-                            )),
-                            const Icon(Icons.arrow_drop_down, size: 20),
-                          ]),
-                    ), // Container
-                  ), // InkWell
-                ), // Expanded
-              ]), // Row
+                  child: _isTransferMode
+                      ? Container(
+                          height: 56,
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: cs.surfaceContainerHighest
+                                .withValues(alpha: 0.35),
+                            border: Border.all(
+                                color: cs.outline.withValues(alpha: 0.3)),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                    child: Text(
+                                  displayCurrency,
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 15,
+                                      color: cs.onSurface
+                                          .withValues(alpha: 0.75)),
+                                )),
+                                Icon(Icons.lock_outline_rounded,
+                                    size: 16,
+                                    color:
+                                        cs.onSurface.withValues(alpha: 0.45)),
+                              ]),
+                        )
+                      : InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () async {
+                            final picked = await showCurrencyPicker(context,
+                                current: _currency.isNotEmpty
+                                    ? _currency
+                                    : accCurrency);
+                            if (picked != null) {
+                              setState(() => _currency = picked);
+                            }
+                          },
+                          child: Container(
+                            height: 56,
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                  color: cs.outline.withValues(alpha: 0.4)),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Expanded(
+                                      child: Text(
+                                    displayCurrency,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 15),
+                                  )),
+                                  const Icon(Icons.arrow_drop_down, size: 20),
+                                ]),
+                          ),
+                        ),
+                ),
+              ]),
 
               // Conversion preview banner
               if (convertedPreview != null) ...[
@@ -712,6 +749,45 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     ),
                   ]),
                 ),
+              ] else if (_isTransferMode && isTransferCrossCurrency) ...[
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: cs.primaryContainer.withValues(alpha: 0.6),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: transferConverted != null
+                      ? Row(children: [
+                          Icon(Icons.currency_exchange_rounded,
+                              size: 16, color: cs.primary),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              '${formatAmount(inputAmount!, fromCurrency)} '
+                              '→ ${formatAmount(transferConverted, toCurrency)}',
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  color: cs.onPrimaryContainer,
+                                  fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ])
+                      : Text(
+                          app.exchangeRates.isEmpty
+                              ? l10n.transfer_exchangeRatesNotLoaded
+                              : l10n.transfer_enterAnAmountToSeeTh,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: app.exchangeRates.isEmpty
+                                ? cs.error
+                                : cs.onPrimaryContainer.withValues(alpha: 0.75),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                ),
               ],
               const SizedBox(height: 12),
 
@@ -719,7 +795,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               TextField(
                 controller: _descCtrl,
                 textInputAction: TextInputAction.next,
-               
                 textCapitalization: TextCapitalization.sentences,
                 decoration: InputDecoration(
                     labelText: l10n.add_transaction_descriptionOptional,
@@ -727,19 +802,88 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               ),
               const SizedBox(height: 16),
 
-              // ── Account ───────────────────────────────────────────────────
-              Text(l10n.add_transaction_account,
-                  style: Theme.of(context)
-                      .textTheme
-                      .labelMedium
-                      ?.copyWith(letterSpacing: 1)),
-              const SizedBox(height: 8),
-              AccountCardPicker(
-                accounts: _getSpendableAccounts(app),
-                selectedId: _accountId,
-                onSelected: _onAccountSelected,
-              ),
-              const SizedBox(height: 16),
+              // ── Account(s) ────────────────────────────────────────────────
+              if (_isTransferMode) ...[
+                Text(l10n.transfer_from,
+                    style: Theme.of(context)
+                        .textTheme
+                        .labelMedium
+                        ?.copyWith(letterSpacing: 1)),
+                const SizedBox(height: 8),
+                AccountCardPicker(
+                  accounts: transferable,
+                  selectedId: _fromId,
+                  onSelected: (id) => setState(() {
+                    _fromId = id;
+                    if (_toId == id) _toId = null;
+                  }),
+                ),
+                const SizedBox(height: 14),
+                Row(children: [
+                  Text(l10n.transfer_to,
+                      style: Theme.of(context)
+                          .textTheme
+                          .labelMedium
+                          ?.copyWith(letterSpacing: 1)),
+                  const Spacer(),
+                  IconButton(
+                    visualDensity: VisualDensity.compact,
+                    icon: Icon(Icons.swap_vert_rounded,
+                        size: 20, color: cs.primary),
+                    onPressed: (_fromId != null && _toId != null)
+                        ? _swapTransferAccounts
+                        : null,
+                    tooltip: l10n.transfer_transfer,
+                  ),
+                ]),
+                const SizedBox(height: 4),
+                AccountCardPicker(
+                  accounts: transferable,
+                  selectedId: _toId,
+                  disabledId: _fromId,
+                  onSelected: (id) => setState(() => _toId = id),
+                ),
+                if (fromAcc != null && toAcc != null) ...[
+                  const SizedBox(height: 14),
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: cs.primaryContainer,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Row(children: [
+                      Expanded(
+                          child: _TransferBalanceCol(
+                              name: fromAcc.name,
+                              balance: formatAmount(
+                                  fromAcc.balance, fromAcc.currency),
+                              label: l10n.transfer_fromAcc(fromAcc.currency))),
+                      Icon(Icons.arrow_forward_rounded, color: cs.primary),
+                      Expanded(
+                          child: _TransferBalanceCol(
+                              name: toAcc.name,
+                              balance:
+                                  formatAmount(toAcc.balance, toAcc.currency),
+                              label: l10n.transfer_toAcc(toAcc.currency),
+                              align: CrossAxisAlignment.end)),
+                    ]),
+                  ),
+                ],
+                const SizedBox(height: 16),
+              ] else ...[
+                Text(l10n.add_transaction_account,
+                    style: Theme.of(context)
+                        .textTheme
+                        .labelMedium
+                        ?.copyWith(letterSpacing: 1)),
+                const SizedBox(height: 8),
+                AccountCardPicker(
+                  accounts: app.spendableAccounts,
+                  selectedId: _accountId,
+                  onSelected: _onAccountSelected,
+                ),
+                const SizedBox(height: 16),
+              ],
 
               // ── Category ──────────────────────────────────────────────────
               Row(
@@ -770,7 +914,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 ],
               ),
               const SizedBox(height: 8),
-              if (isEdit && widget.existing!.isTransfer)
+              if (_isTransferMode || (isEdit && widget.existing!.isTransfer))
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -856,10 +1000,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   AppHaptics.tap(context, HapticStrength.light);
                   _submit();
                 },
-                icon: Icon(isEdit ? Icons.save_outlined : Icons.add),
-                label: Text(isEdit
-                    ? l10n.add_transaction_saveChanges
-                    : l10n.add_transaction_addTransaction),
+                icon: Icon(_isTransferMode
+                    ? Icons.swap_horiz_rounded
+                    : (isEdit ? Icons.save_outlined : Icons.add)),
+                label: Text(_isTransferMode
+                    ? l10n.transfer_transfer
+                    : (isEdit
+                        ? l10n.add_transaction_saveChanges
+                        : l10n.add_transaction_addTransaction)),
                 style: FilledButton.styleFrom(
                     minimumSize: const Size.fromHeight(50),
                     shape: RoundedRectangleBorder(
@@ -1174,5 +1322,31 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         ),
       ],
     );
+  }
+}
+
+class _TransferBalanceCol extends StatelessWidget {
+  final String name, balance, label;
+  final CrossAxisAlignment align;
+  const _TransferBalanceCol({
+    required this.name,
+    required this.balance,
+    required this.label,
+    this.align = CrossAxisAlignment.start,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Column(crossAxisAlignment: align, children: [
+      Text(label,
+          style: TextStyle(
+              fontSize: 10,
+              color: cs.onPrimaryContainer.withValues(alpha: 0.6))),
+      Text(name, style: const TextStyle(fontWeight: FontWeight.w700)),
+      Text(balance,
+          style: TextStyle(
+              fontSize: 12, color: cs.primary, fontWeight: FontWeight.w600)),
+    ]);
   }
 }

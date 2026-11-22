@@ -1665,6 +1665,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get home_transferAction => 'Transférer';
 
   @override
+  String get home_converterAction => 'Convertisseur';
+
+  @override
   String get home_insightsAction => 'Aperçus';
 
   @override

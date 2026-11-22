@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.2.5] - 2026-11-22
+
+### Unified Enter Transaction & Transfer, Home Quick Actions, Issues #32 & #33, Sheet Cleanup & Lent Money Expandable FAB
+- **Issues #32 & #33, Bottom Sheet Container Fixes & Lent Money Expandable FAB**:
+  - **Issue #32 (Compact Horizontal Subcategories)**: Updated `CategoryChipPicker` (`lib/widgets/shared_widgets.dart`) to render subcategories in a single horizontally scrollable `Row` (`SingleChildScrollView(scrollDirection: Axis.horizontal)`) instead of a multi-row `Wrap`, updated `TransactionsScreen._bulkChangeCategory` to expand subcategories before applying, and standardized `AddTransactionScreen._pickCategoryForSplit` onto `SheetShell`.
+  - **Issue #33 (Unlinked Bank Accounts in Expense/Income)**: Added `AppProvider.spendableAccounts` and updated `AppProvider.nonBankAccounts` to automatically include Bank accounts that have no linked **Debit Card** (`a.isDebit`) or have `dontLinkToCard == true` — linking a Credit Card no longer hides the Bank account (and Credit Card creation now defaults its optional linked account to `None`, auto-selecting the first bank only when switching to Debit Card). Wired `app.spendableAccounts` across `AddTransactionScreen`, `RecurringScreen`, `PresetSheet`, `LendedPersonScreen`, `LoansScreen`, and `LoanDetailScreen`.
+  - **Bottom Sheet Container Cleanup**: Replaced nested transparent/floating containers with `SheetShell` in `TransactionsScreen._showAddActionSheet`, `TransactionsScreen._bulkChangeCategory`, `BackupScreen._showRestoreModeSheet`, and `LendedPersonScreen._EditPersonInlineSheet`.
+  - **Lent Money Expandable FAB**: Replaced `FintechFab` in `LendedPersonScreen` with `ExpandableFab` (**Lent** / **Borrowed**), opening `_EntrySheet` pre-selected to the chosen direction while keeping `TypeToggleChips` editable.
+  - **Add Account Default Type Fix**: Fixed `_AccountSheetState.initState()` in `AccountsScreen` overwriting `_type` to `'credit'` instead of `'bank'` when adding a new non-card account.
+  - **Available Credit in Form Card Pickers**: Added `Account.availableCredit` and `AppProvider.getPickerDisplayBalance(acc)` so Credit Cards with `creditLimit > 0` display their Available Credit (`creditLimit - debt`) inside `AccountCardPicker` across all forms (`AddTransactionScreen`, `RecurringScreen`, `PresetSheet`, `LoansScreen`, `LoanDetailScreen`, `LendedPersonScreen`) and `WishlistScreen`'s purchase dialog.
+- **Unified Add Transaction & Transfer Screen + Home Quick Actions**:
+  - Merged standalone `TransferScreen` into `AddTransactionScreen` with a unified 3-way `TypeToggleChips` (**Expense** | **Income** | **Transfer**), identical AppBar (`Add Transaction`), unified 3:2 Amount + Currency row (read-only locked currency box in Transfer mode), shared Description field (`title:` on `AppProvider.addTransfer`), From/To `AccountCardPicker` with quick swap button and balance preview, locked Transfer category card in the Category slot, shared Date & Note fields, and pinned `AppNumericKeypad` + submit button. Removed Quick Presets strip from all 3 modes of `AddTransactionScreen` (keeping Quick Log on `HomeScreen`).
+  - Removed `lib/screens/transfer_screen.dart` and routed `HomeScreen` `ExpandableFab`, `TransactionsScreen` add sheet, and Android app shortcut (`QuickAddService.routeTransfer`) to `AddTransactionScreen(initialType: 'transfer')`.
+  - Updated `HomeScreen` Quick Actions under Total Balance to **Converter** (`CurrencyConverterScreen`, localized `home_converterAction` across all 12 `.arb` locales), **Lent Money** (`LendedScreen`), **Calendar**, and **Forecast** (replacing Transfer and Insights).
+
 ## [1.2.4] - 2026-11-17
 
 ### Recurring Transfers, 1-Tap Transfer Presets, App-Wide Localization & UI/Performance Polish

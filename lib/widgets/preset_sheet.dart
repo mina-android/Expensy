@@ -68,7 +68,7 @@ class _PresetSheetState extends State<PresetSheet> {
       _type = widget.initialType ?? 'expense';
       final accounts = _type == 'transfer'
           ? app.transferableAccounts
-          : app.nonBankAccounts.where((a) => !a.isGold).toList();
+          : app.spendableAccounts;
       if (accounts.isNotEmpty) {
         _accountId = accounts.first.id;
       }
@@ -120,7 +120,7 @@ class _PresetSheetState extends State<PresetSheet> {
       });
       return;
     }
-    final transactable = app.nonBankAccounts.where((a) => !a.isGold).toList();
+    final transactable = app.spendableAccounts;
     final nextAcc = transactable.any((a) => a.id == _accountId)
         ? _accountId
         : transactable.firstOrNull?.id;
@@ -233,7 +233,7 @@ class _PresetSheetState extends State<PresetSheet> {
     final cats = app.userCategories.where((c) => c.type == _type).toList();
     final transferable = _type == 'transfer'
         ? app.transferableAccounts
-        : app.nonBankAccounts.where((a) => !a.isGold).toList();
+        : app.spendableAccounts;
 
     return Container(
       decoration: BoxDecoration(

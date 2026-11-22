@@ -466,6 +466,7 @@
   "home_goodAfternoon": "こんにちは",
   "home_goodEvening": "こんばんは",
   "home_transferAction": "送金",
+  "home_converterAction": "換算",
   "home_insightsAction": "インサイト",
   "home_calendarAction": "カレンダー",
   "home_forecastAction": "予測",

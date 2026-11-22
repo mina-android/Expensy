@@ -427,7 +427,7 @@ void _showPurchaseDialog(
   final l10n = AppLocalizations.of(context)!;
   final cs = Theme.of(context).colorScheme;
 
-  final spendingAccounts = app.accounts.where((a) => !a.isGold).toList();
+  final spendingAccounts = app.spendableAccounts;
   String? selectedAccountId = spendingAccounts.isNotEmpty
       ? (spendingAccounts
               .where((a) => a.type == 'bank' || a.type == 'cash')
@@ -437,7 +437,7 @@ void _showPurchaseDialog(
       : null;
 
   final expenseCategories =
-      app.categories.where((c) => c.type == 'expense').toList();
+      app.userCategories.where((c) => c.type == 'expense').toList();
   String? selectedCategoryId = expenseCategories.isNotEmpty
       ? (expenseCategories
               .where((c) => c.name.toLowerCase().contains('shop'))
@@ -503,7 +503,7 @@ void _showPurchaseDialog(
                         return DropdownMenuItem(
                           value: a.id,
                           child: Text(
-                            '${a.name} (${formatAmount(a.balance, a.currency)})',
+                            '${a.name} (${formatAmount(app.getPickerDisplayBalance(a), a.currency)})',
                             style: const TextStyle(fontSize: 13),
                             overflow: TextOverflow.ellipsis,
                           ),

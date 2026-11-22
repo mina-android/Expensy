@@ -1655,6 +1655,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get home_transferAction => 'स्थानांतरण';
 
   @override
+  String get home_converterAction => 'कनवर्टर';
+
+  @override
   String get home_insightsAction => 'इनसाइट्स';
 
   @override

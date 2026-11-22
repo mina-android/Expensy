@@ -798,11 +798,8 @@ class _AccountSheetState extends State<_AccountSheet> {
         }
       }
     } else {
-      _type = 'credit';
-      final banks = app.accounts.where((a) => a.type == 'bank').toList();
-      if (banks.isNotEmpty) {
-        _linkedAccountId = banks.first.id;
-      }
+      _type = 'bank';
+      _linkedAccountId = null;
     }
     // (Live preview now updated via ValueListenableBuilder)
   }
@@ -1055,6 +1052,13 @@ class _AccountSheetState extends State<_AccountSheet> {
                     // When switching to gold, default currency to main currency.
                     if (val == 'gold') {
                       _currency = app.settings.currency;
+                    } else if (val == 'debit' && _linkedAccountId == null) {
+                      final banks = app.accounts
+                          .where((a) => a.type == 'bank')
+                          .toList();
+                      if (banks.isNotEmpty) {
+                        _linkedAccountId = banks.first.id;
+                      }
                     }
                   }),
                   child: AnimatedContainer(
@@ -1588,10 +1592,7 @@ class _CardSheetState extends State<_CardSheet> {
       }
     } else {
       _type = 'credit';
-      final banks = app.accounts.where((a) => a.type == 'bank').toList();
-      if (banks.isNotEmpty) {
-        _linkedAccountId = banks.first.id;
-      }
+      _linkedAccountId = null;
     }
     // (Live preview now updated via ValueListenableBuilder)
   }
@@ -1843,6 +1844,13 @@ class _CardSheetState extends State<_CardSheet> {
                     // When switching to gold, default currency to main currency.
                     if (val == 'gold') {
                       _currency = app.settings.currency;
+                    } else if (val == 'debit' && _linkedAccountId == null) {
+                      final banks = app.accounts
+                          .where((a) => a.type == 'bank')
+                          .toList();
+                      if (banks.isNotEmpty) {
+                        _linkedAccountId = banks.first.id;
+                      }
                     }
                   }),
                   child: AnimatedContainer(

@@ -1610,6 +1610,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get home_transferAction => '转账';
 
   @override
+  String get home_converterAction => '换算';
+
+  @override
   String get home_insightsAction => '洞察';
 
   @override

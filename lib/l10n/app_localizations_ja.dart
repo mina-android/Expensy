@@ -1619,6 +1619,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get home_transferAction => '送金';
 
   @override
+  String get home_converterAction => '換算';
+
+  @override
   String get home_insightsAction => 'インサイト';
 
   @override

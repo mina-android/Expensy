@@ -1660,6 +1660,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get home_transferAction => 'Перевод';
 
   @override
+  String get home_converterAction => 'Конвертер';
+
+  @override
   String get home_insightsAction => 'Аналитика';
 
   @override

@@ -864,7 +864,7 @@ class _RecurringSheetState extends State<_RecurringSheet> {
     final app = context.read<AppProvider>();
     final transactable = _payType == 'transfer'
         ? app.transferableAccounts
-        : app.nonBankAccounts.where((a) => !a.isGold).toList();
+        : app.spendableAccounts;
     if (transactable.isNotEmpty) _accountId = transactable.first.id;
     if (_payType == 'transfer') {
       _categoryId = 'sys_transfer';
@@ -931,7 +931,7 @@ class _RecurringSheetState extends State<_RecurringSheet> {
       });
       return;
     }
-    final transactable = app.nonBankAccounts.where((a) => !a.isGold).toList();
+    final transactable = app.spendableAccounts;
     final nextAcc = transactable.any((a) => a.id == _accountId)
         ? _accountId
         : transactable.firstOrNull?.id;
@@ -1366,7 +1366,7 @@ class _RecurringSheetState extends State<_RecurringSheet> {
             AccountCardPicker(
                 accounts: _payType == 'transfer'
                     ? app.transferableAccounts
-                    : app.nonBankAccounts.where((a) => !a.isGold).toList(),
+                    : app.spendableAccounts,
                 selectedId: _accountId,
                 onSelected: (id) => setState(() {
                       _accountId = id;

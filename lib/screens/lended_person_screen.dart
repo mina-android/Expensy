@@ -8,7 +8,6 @@ import '../providers/app_provider.dart';
 import '../models/models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
-import '../widgets/fintech_components.dart';
 import '../widgets/app_numeric_keypad.dart';
 import '../services/lended_notification_service.dart';
 import 'lended_screen.dart' show kLendedPersonColors;
@@ -158,9 +157,25 @@ class LendedPersonScreen extends StatelessWidget {
                     ],
                   )),
       ]),
-      floatingActionButton: FintechFab(
-        tooltip: l10n.home_add,
-        onPressed: () => _openEntrySheet(context, current),
+      floatingActionButton: ExpandableFab(
+        label: l10n.home_add,
+        color: color,
+        alignment: CrossAxisAlignment.end,
+        items: [
+          ExpandableFabItem(
+            label: l10n.lended_person_lent,
+            icon: Icons.arrow_upward_rounded,
+            color: kSuccessColor,
+            onTap: () => _openEntrySheet(context, current, initialType: 'lent'),
+          ),
+          ExpandableFabItem(
+            label: l10n.lended_person_borrowed,
+            icon: Icons.arrow_downward_rounded,
+            color: kDangerColor,
+            onTap: () =>
+                _openEntrySheet(context, current, initialType: 'borrowed'),
+          ),
+        ],
       ),
     );
   }
@@ -182,11 +197,15 @@ class LendedPersonScreen extends StatelessWidget {
   }
 
   static void _openEntrySheet(BuildContext ctx, LendedPerson person,
-      {LendedMoney? existing}) {
+      {LendedMoney? existing, String initialType = 'lent'}) {
     showModalBottomSheet(
       context: ctx,
       isScrollControlled: true,
-      builder: (_) => _EntrySheet(person: person, existing: existing),
+      builder: (_) => _EntrySheet(
+        person: person,
+        existing: existing,
+        initialType: initialType,
+      ),
     );
   }
 }
@@ -231,89 +250,73 @@ class _EditPersonInlineSheetState extends State<_EditPersonInlineSheet> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
-    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
-    return Padding(
-      padding: EdgeInsets.only(
-          bottom: bottomInset + 16,
-          left: 20,
-          right: 20,
-          top: 20),
-      child: SingleChildScrollView(
-          child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(l10n.lended_person_editPerson,
-              style: Theme.of(context)
-                  .textTheme
-                  .titleLarge
-                  ?.copyWith(fontWeight: FontWeight.w800)),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _nameCtrl,
-            textInputAction: TextInputAction.next,
-            decoration: InputDecoration(
-              labelText: l10n.lended_person_name,
-              prefixIcon: const Icon(Icons.person_outline_rounded),
-              errorText: _submitted && _nameCtrl.text.trim().isEmpty
-                  ? l10n.error_required
-                  : null,
-            ),
+    return SheetShell(
+      title: l10n.lended_person_editPerson,
+      children: [
+        TextField(
+          controller: _nameCtrl,
+          textInputAction: TextInputAction.next,
+          decoration: InputDecoration(
+            labelText: l10n.lended_person_name,
+            prefixIcon: const Icon(Icons.person_outline_rounded),
+            errorText: _submitted && _nameCtrl.text.trim().isEmpty
+                ? l10n.error_required
+                : null,
           ),
-          const SizedBox(height: 14),
-          Text(l10n.lended_person_color,
-              style: Theme.of(context)
-                  .textTheme
-                  .labelMedium
-                  ?.copyWith(letterSpacing: 1)),
-          const SizedBox(height: 8),
-          Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: kLendedPersonColors.map((col) {
-                final sel = _color == col;
-                return GestureDetector(
-                  onTap: () => setState(() => _color = col),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 100),
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: Color(col),
-                      shape: BoxShape.circle,
-                      border: sel
-                          ? Border.all(color: cs.onSurface, width: 2.5)
-                          : null,
-                    ),
-                    child: sel
-                        ? const Icon(Icons.check, color: Colors.white, size: 18)
+        ),
+        const SizedBox(height: 14),
+        Text(l10n.lended_person_color,
+            style: Theme.of(context)
+                .textTheme
+                .labelMedium
+                ?.copyWith(letterSpacing: 1)),
+        const SizedBox(height: 8),
+        Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: kLendedPersonColors.map((col) {
+              final sel = _color == col;
+              return GestureDetector(
+                onTap: () => setState(() => _color = col),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 100),
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: Color(col),
+                    shape: BoxShape.circle,
+                    border: sel
+                        ? Border.all(color: cs.onSurface, width: 2.5)
                         : null,
                   ),
-                );
-              }).toList()),
-          const SizedBox(height: 14),
-          TextField(
-              controller: _notesCtrl,
-              maxLines: 2,
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) => _submit(),
-              decoration: InputDecoration(
-                  labelText: l10n.lended_person_notesOptional,
-                  prefixIcon: const Icon(Icons.sticky_note_2_outlined))),
-          const SizedBox(height: 20),
-          FilledButton(
-            onPressed: () {
-              AppHaptics.tap(context, HapticStrength.light);
-              _submit();
-            },
-            style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(50),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(28))),
-            child: Text(l10n.lended_person_saveChanges),
-          ),
-        ],
-      )),
+                  child: sel
+                      ? const Icon(Icons.check, color: Colors.white, size: 18)
+                      : null,
+                ),
+              );
+            }).toList()),
+        const SizedBox(height: 14),
+        TextField(
+            controller: _notesCtrl,
+            maxLines: 2,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _submit(),
+            decoration: InputDecoration(
+                labelText: l10n.lended_person_notesOptional,
+                prefixIcon: const Icon(Icons.sticky_note_2_outlined))),
+        const SizedBox(height: 20),
+        FilledButton(
+          onPressed: () {
+            AppHaptics.tap(context, HapticStrength.light);
+            _submit();
+          },
+          style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(50),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28))),
+          child: Text(l10n.lended_person_saveChanges),
+        ),
+      ],
     );
   }
 }
@@ -471,7 +474,12 @@ class _EntryCard extends StatelessWidget {
 class _EntrySheet extends StatefulWidget {
   final LendedPerson person;
   final LendedMoney? existing;
-  const _EntrySheet({required this.person, this.existing});
+  final String initialType;
+  const _EntrySheet({
+    required this.person,
+    this.existing,
+    this.initialType = 'lent',
+  });
   @override
   State<_EntrySheet> createState() => _EntrySheetState();
 }
@@ -480,7 +488,7 @@ class _EntrySheetState extends State<_EntrySheet> {
   final _amtCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
 
-  String _type = 'lent';
+  late String _type = widget.existing?.type ?? widget.initialType;
   String? _accountId;
   DateTime? _dueDate;
   bool _reminderEnabled = false;
@@ -680,7 +688,7 @@ class _EntrySheetState extends State<_EntrySheet> {
                   ?.copyWith(letterSpacing: 1)),
           const SizedBox(height: 8),
           AccountCardPicker(
-            accounts: app.accounts.where((a) => !a.isGold).toList(),
+            accounts: app.spendableAccounts,
             selectedId: _accountId,
             allowNone: true,
             onSelected: (id) => setState(() => _accountId = id),

@@ -1658,6 +1658,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get home_transferAction => 'Transferir';
 
   @override
+  String get home_converterAction => 'Conversor';
+
+  @override
   String get home_insightsAction => 'Análises';
 
   @override

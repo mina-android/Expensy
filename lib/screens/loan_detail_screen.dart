@@ -544,7 +544,7 @@ class _LogPaymentSheetState extends State<_LogPaymentSheet> {
     final cs = Theme.of(context).colorScheme;
     final viewInsets = MediaQuery.of(context).viewInsets;
 
-    final accountsList = app.accounts.where((a) => !a.isGold).toList();
+    final accountsList = app.spendableAccounts;
 
     return Container(
       decoration: BoxDecoration(

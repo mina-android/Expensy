@@ -4,7 +4,7 @@
 
 # Expensy
 
-[![Platform](https://img.shields.io/badge/Platform-Android-grey.svg?style=flat-square)](https://android.com) [![Release](https://img.shields.io/badge/Release-v1.2.4-blue.svg?style=flat-square)](https://github.com/mina-android/Expensy/releases) [![License](https://img.shields.io/badge/License-GPL--3.0-black.svg?style=flat-square)](LICENSE) [![Build](https://img.shields.io/badge/Build-Passing-brightgreen.svg?style=flat-square)](https://github.com/mina-android/Expensy/actions)
+[![Platform](https://img.shields.io/badge/Platform-Android-grey.svg?style=flat)](https://android.com) [![Flutter](https://img.shields.io/badge/Flutter-3.47.6-02569B.svg?style=flat&logo=flutter&logoColor=white)](https://flutter.dev) [![Release](https://img.shields.io/badge/Release-v1.2.5-blue.svg?style=flat)](https://github.com/mina-android/Expensy/releases) [![License](https://img.shields.io/badge/License-GPL--3.0-black.svg?style=flat)](LICENSE)
 
 <p align="center">
   A local-first personal finance tracker and budget manager for Android that keeps all financial records, accounts, and transaction history strictly on your physical device.
@@ -88,10 +88,10 @@ Official release packages are published under the [GitHub Releases](https://gith
 
 | Platform | Architecture | Package Type | Download Link | Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| **Android** | arm64-v8a | `.apk` | [Download (v1.2.4)](https://github.com/mina-android/Expensy/releases/latest) | Modern 64-bit devices (recommended) |
-| **Android** | armeabi-v7a | `.apk` | [Download (v1.2.4)](https://github.com/mina-android/Expensy/releases/latest) | Legacy 32-bit devices |
-| **Android** | x86_64 | `.apk` | [Download (v1.2.4)](https://github.com/mina-android/Expensy/releases/latest) | Android emulators and Intel-based tablets |
-| **Android** | Universal | `.apk` | [Download (v1.2.4)](https://github.com/mina-android/Expensy/releases/latest) | Combined installer supporting all architectures |
+| **Android** | arm64-v8a | `.apk` | [Download (v1.2.5)](https://github.com/mina-android/Expensy/releases/latest) | Modern 64-bit devices (recommended) |
+| **Android** | armeabi-v7a | `.apk` | [Download (v1.2.5)](https://github.com/mina-android/Expensy/releases/latest) | Legacy 32-bit devices |
+| **Android** | x86_64 | `.apk` | [Download (v1.2.5)](https://github.com/mina-android/Expensy/releases/latest) | Android emulators and Intel-based tablets |
+| **Android** | Universal | `.apk` | [Download (v1.2.5)](https://github.com/mina-android/Expensy/releases/latest) | Combined installer supporting all architectures |
 
 ---
 

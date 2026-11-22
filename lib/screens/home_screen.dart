@@ -14,8 +14,8 @@ import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
 import '../widgets/fintech_components.dart';
 import 'add_transaction_screen.dart';
-import 'transfer_screen.dart';
-import 'insights_screen.dart';
+import 'currency_converter_screen.dart';
+import 'lended_screen.dart';
 import 'yearly_analysis_screen.dart';
 import 'financial_calendar_screen.dart';
 import '../utils/haptics.dart';
@@ -270,19 +270,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   _QuickActionButton(
-                    icon: Icons.swap_horiz_rounded,
-                    label: l10n.home_transferAction,
+                    icon: Icons.currency_exchange_rounded,
+                    label: l10n.home_converterAction,
                     onTap: () => Navigator.push(
                       context,
-                      ExpensySlideUpRoute(builder: (_) => const TransferScreen()),
+                      ExpensyRoute(
+                          builder: (_) => const CurrencyConverterScreen()),
                     ),
                   ),
                   _QuickActionButton(
-                    icon: Icons.insights_rounded,
-                    label: l10n.home_insightsAction,
+                    icon: Icons.handshake_outlined,
+                    label: l10n.more_lentMoney,
                     onTap: () => Navigator.push(
                       context,
-                      ExpensyRoute(builder: (_) => const InsightsScreen()),
+                      ExpensyRoute(builder: (_) => const LendedScreen()),
                     ),
                   ),
                   _QuickActionButton(
@@ -1326,7 +1327,8 @@ class _HomeScreenState extends State<HomeScreen> {
         onTransfer: () => Navigator.push(
           context,
           ExpensySlideUpRoute(
-            builder: (_) => const TransferScreen(),
+            builder: (_) =>
+                const AddTransactionScreen(initialType: 'transfer'),
           ),
         ),
       ),

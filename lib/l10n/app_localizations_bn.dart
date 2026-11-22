@@ -1647,6 +1647,9 @@ class AppLocalizationsBn extends AppLocalizations {
   String get home_transferAction => 'স্থানান্তর';
 
   @override
+  String get home_converterAction => 'কনভার্টার';
+
+  @override
   String get home_insightsAction => 'বিশ্লেষণ';
 
   @override

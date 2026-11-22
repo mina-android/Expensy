@@ -1641,6 +1641,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get home_transferAction => 'تحويل';
 
   @override
+  String get home_converterAction => 'محول';
+
+  @override
   String get home_insightsAction => 'تحليلات';
 
   @override

@@ -1658,6 +1658,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get home_transferAction => 'Überweisen';
 
   @override
+  String get home_converterAction => 'Umrechner';
+
+  @override
   String get home_insightsAction => 'Einblicke';
 
   @override

@@ -645,6 +645,17 @@ class AppProvider extends ChangeNotifier {
     return acc.balance;
   }
 
+  /// Display balance for account/card pickers in forms:
+  /// - Credit cards with a positive [creditLimit] return [Account.availableCredit].
+  /// - Debit cards mirror their parent linked bank account balance.
+  /// - All other accounts return their stored [Account.balance].
+  double getPickerDisplayBalance(Account acc) {
+    if (acc.isCredit && (acc.creditLimit ?? 0) > 0) {
+      return acc.availableCredit;
+    }
+    return getEffectiveBalance(acc);
+  }
+
   /// Signed net total balance across all active accounts (liquid assets minus credit debt).
   /// Debit cards are excluded to prevent double-counting their linked bank account funds.
   double get totalBalance {
@@ -4274,8 +4285,39 @@ class AppProvider extends ChangeNotifier {
   final ValueNotifier<int> tabIndexNotifier = ValueNotifier<int>(0);
   final ValueNotifier<int> accountsTabNotifier = ValueNotifier<int>(0);
 
-  List<Account> get nonBankAccounts =>
-      accounts.where((a) => a.type != 'bank' || a.dontLinkToCard).toList();
+  Set<String> get _linkedBankAccountIds => accounts
+      .where((a) =>
+          a.isDebit &&
+          a.linkedAccountId != null &&
+          a.linkedAccountId!.isNotEmpty)
+      .map((a) => a.linkedAccountId!)
+      .toSet();
+
+  List<Account> get nonBankAccounts {
+    final linkedBankIds = _linkedBankAccountIds;
+    return accounts
+        .where((a) =>
+            a.type != 'bank' ||
+            a.dontLinkToCard ||
+            !linkedBankIds.contains(a.id))
+        .toList();
+  }
+
+  /// Accounts directly usable for expense/income/loan/lended transactions:
+  /// Cards, Cash, Wallets, Savings, plus Bank accounts with no linked Debit Card
+  /// (or [dontLinkToCard] enabled). Excludes Gold accounts.
+  List<Account> get spendableAccounts {
+    final linkedBankIds = _linkedBankAccountIds;
+    final primary = accounts.where((a) {
+      if (a.isGold) return false;
+      if (a.type == 'bank') {
+        return a.dontLinkToCard || !linkedBankIds.contains(a.id);
+      }
+      return true;
+    }).toList();
+    if (primary.isNotEmpty) return primary;
+    return accounts.where((a) => !a.isGold).toList();
+  }
 
   /// Accounts eligible for internal transfers (Bank, Cash, Savings — excludes Cards & Gold).
   List<Account> get transferableAccounts =>

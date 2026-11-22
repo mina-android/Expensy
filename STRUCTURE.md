@@ -511,7 +511,7 @@ Accounts and cards are presented cleanly across dedicated views:
 ### 5.6 Transaction Relogic & Transfer Flow
 Modern banking separates store-of-value accounts from payment instruments:
 - **Card Balance Display in Transactions:** In `AddTransactionScreen` and `AccountCardPicker`, debit cards dynamically display their linked bank account's live balance (`app.getEffectiveBalance(acc)`). When an expense is paid using a card, the transaction records `accountId = card.id`, and `applyAddTransactionWithBalance` redirects the deduction to the linked bank account (`linkedAccountId`).
-- **Transfer Isolation:** `TransferScreen` strictly filters transferable accounts to `!a.isCard && !a.isGold`. Cards and physical commodities are excluded from both source and destination pickers, enforcing transfers to take place solely between liquid accounts (Bank, Cash, Digital Wallet, Savings).
+- **Transfer Isolation:** `AddTransactionScreen` Transfer mode strictly filters transferable accounts to `!a.isCard && !a.isGold`. Cards and physical commodities are excluded from both source and destination pickers, enforcing transfers to take place solely between liquid accounts (Bank, Cash, Digital Wallet, Savings).
 - **Soft Keyboard Collision Prevention:** Transaction and transfer amount fields enforce `keyboardType: TextInputType.none` and trigger `FocusScope.of(context).unfocus()` on tap, ensuring the custom `AppNumericKeypad` is always visible without keyboard popups.
 
 ### 5.7 Fault-Tolerant Backup & Restore Architecture

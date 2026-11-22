@@ -131,111 +131,93 @@ class _BackupScreenState extends State<BackupScreen> {
     final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-        decoration: BoxDecoration(
-          color: popupSurfaceColor(cs),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          border: Border.fromBorderSide(popupBorderSide(cs)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: cs.onSurface.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(2),
+      isScrollControlled: true,
+      builder: (ctx) => SheetShell(
+        showHandle: true,
+        title: l10n.backup_chooseRestoreMode,
+        subtitle: l10n.backup_chooseRestoreModeDesc,
+        children: [
+          const SizedBox(height: 4),
+          ListTile(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: cs.primary.withValues(alpha: 0.4)),
+            ),
+            tileColor: cs.primaryContainer.withValues(alpha: 0.25),
+            leading: Icon(Icons.checklist_rounded, color: cs.primary, size: 28),
+            title: Text(l10n.backup_selectiveRestore,
+                style: const TextStyle(fontWeight: FontWeight.w700)),
+            subtitle: Text(l10n.backup_selectiveRestoreDesc),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () {
+              Navigator.pop(ctx);
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (_) => _SelectiveRestoreSheet(
+                  data: data,
+                  onRestored: () =>
+                      _setMsg(l10n.backup_selectedRestoredSuccess),
                 ),
-              ),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          ListTile(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: cs.error.withValues(alpha: 0.3)),
             ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.backup_chooseRestoreMode,
-              style: Theme.of(ctx).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              l10n.backup_chooseRestoreModeDesc,
-              style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.6)),
-            ),
-            const SizedBox(height: 16),
-            ListTile(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: cs.primary.withValues(alpha: 0.4)),
-              ),
-              tileColor: cs.primaryContainer.withValues(alpha: 0.25),
-              leading: Icon(Icons.checklist_rounded, color: cs.primary, size: 28),
-              title: Text(l10n.backup_selectiveRestore, style: const TextStyle(fontWeight: FontWeight.w700)),
-              subtitle: Text(l10n.backup_selectiveRestoreDesc),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: () {
-                Navigator.pop(ctx);
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (_) => _SelectiveRestoreSheet(
-                    data: data,
-                    onRestored: () => _setMsg(l10n.backup_selectedRestoredSuccess),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 12),
-            ListTile(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: cs.error.withValues(alpha: 0.3)),
-              ),
-              tileColor: cs.errorContainer.withValues(alpha: 0.2),
-              leading: Icon(Icons.restore_outlined, color: cs.error, size: 28),
-              title: Text(l10n.backup_fullRestore, style: const TextStyle(fontWeight: FontWeight.w700)),
-              subtitle: Text(l10n.backup_fullRestoreDesc),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: () async {
-                Navigator.pop(ctx);
-                final app = context.read<AppProvider>();
-                final confirmed = await showDialog<bool>(
-                  context: context,
-                  builder: (dlgCtx) => AlertDialog(
-                    title: Text(l10n.backup_restoreBackup),
-                    content: Text(l10n.backup_replaceDataWarning),
-                    actions: [
-                      TextButton(onPressed: () => Navigator.pop(dlgCtx, false), child: Text(l10n.backup_cancel)),
-                      FilledButton(
-                        style: FilledButton.styleFrom(backgroundColor: cs.error),
-                        onPressed: () => Navigator.pop(dlgCtx, true),
-                        child: Text(l10n.backup_replaceData),
-                      ),
-                    ],
-                  ),
-                );
-                if (confirmed == true && mounted) {
-                  setState(() => _restoring = true);
-                  try {
-                    final originalVersion = await app.restoreBackupData(data);
-                    if (mounted) {
-                      final vLabel = originalVersion < app.schemaVersion
-                          ? l10n.backup_upgradedFrom(originalVersion.toString(), app.schemaVersion.toString())
-                          : '';
-                      _setMsg(l10n.backup_dataRestoredSuccessfully(vLabel));
-                    }
-                  } catch (e) {
-                    if (mounted) _setMsg(l10n.backup_restoreFailed(e.toString()), ok: false);
-                  } finally {
-                    if (mounted) setState(() => _restoring = false);
+            tileColor: cs.errorContainer.withValues(alpha: 0.2),
+            leading: Icon(Icons.restore_outlined, color: cs.error, size: 28),
+            title: Text(l10n.backup_fullRestore,
+                style: const TextStyle(fontWeight: FontWeight.w700)),
+            subtitle: Text(l10n.backup_fullRestoreDesc),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () async {
+              Navigator.pop(ctx);
+              final app = context.read<AppProvider>();
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (dlgCtx) => AlertDialog(
+                  title: Text(l10n.backup_restoreBackup),
+                  content: Text(l10n.backup_replaceDataWarning),
+                  actions: [
+                    TextButton(
+                        onPressed: () => Navigator.pop(dlgCtx, false),
+                        child: Text(l10n.backup_cancel)),
+                    FilledButton(
+                      style: FilledButton.styleFrom(backgroundColor: cs.error),
+                      onPressed: () => Navigator.pop(dlgCtx, true),
+                      child: Text(l10n.backup_replaceData),
+                    ),
+                  ],
+                ),
+              );
+              if (confirmed == true && mounted) {
+                setState(() => _restoring = true);
+                try {
+                  final originalVersion = await app.restoreBackupData(data);
+                  if (mounted) {
+                    final vLabel = originalVersion < app.schemaVersion
+                        ? l10n.backup_upgradedFrom(
+                            originalVersion.toString(),
+                            app.schemaVersion.toString())
+                        : '';
+                    _setMsg(l10n.backup_dataRestoredSuccessfully(vLabel));
                   }
+                } catch (e) {
+                  if (mounted) {
+                    _setMsg(l10n.backup_restoreFailed(e.toString()), ok: false);
+                  }
+                } finally {
+                  if (mounted) setState(() => _restoring = false);
                 }
-              },
-            ),
-          ],
-        ),
+              }
+            },
+          ),
+        ],
       ),
     );
   }

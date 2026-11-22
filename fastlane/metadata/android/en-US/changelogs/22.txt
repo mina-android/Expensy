@@ -1,0 +1,6 @@
+- Unified Enter Transaction & Transfer screen with a 3-way Expense / Income / Transfer toggle
+- Updated Home quick actions with Currency Converter and Lent Money
+- Compact horizontally scrollable subcategory row (#32)
+- Direct spending support for unlinked bank accounts without requiring a card (#33)
+- Cleaned up bottom sheet menus across Transactions, Backup, and Lent Money
+- Added Lent / Borrowed expandable FAB on the Lent Money person ledger

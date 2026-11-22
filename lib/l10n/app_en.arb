@@ -716,6 +716,7 @@
   "home_goodAfternoon": "Good afternoon",
   "home_goodEvening": "Good evening",
   "home_transferAction": "Transfer",
+  "home_converterAction": "Converter",
   "home_insightsAction": "Insights",
   "home_calendarAction": "Calendar",
   "home_forecastAction": "Forecast",

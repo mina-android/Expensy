@@ -2962,6 +2962,12 @@ abstract class AppLocalizations {
   /// **'Transfer'**
   String get home_transferAction;
 
+  /// No description provided for @home_converterAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Converter'**
+  String get home_converterAction;
+
   /// No description provided for @home_insightsAction.
   ///
   /// In en, this message translates to:

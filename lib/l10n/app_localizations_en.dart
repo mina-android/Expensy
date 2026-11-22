@@ -1648,6 +1648,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get home_transferAction => 'Transfer';
 
   @override
+  String get home_converterAction => 'Converter';
+
+  @override
   String get home_insightsAction => 'Insights';
 
   @override

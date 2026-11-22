@@ -13,7 +13,6 @@ import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
 import '../widgets/fintech_components.dart';
 import 'add_transaction_screen.dart';
-import 'transfer_screen.dart';
 import 'lended_person_screen.dart';
 import 'savings_goal_detail_screen.dart';
 import 'loan_detail_screen.dart';
@@ -468,118 +467,98 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => SafeArea(
-        child: Container(
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: popupSurfaceColor(cs),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.fromBorderSide(popupBorderSide(cs)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.12),
-                blurRadius: 24,
-                offset: const Offset(0, 8),
+      isScrollControlled: true,
+      builder: (ctx) => SheetShell(
+        showHandle: true,
+        children: [
+          ListTile(
+            leading: Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: kDangerColor.withValues(alpha: isDark ? 0.2 : 0.12),
+                borderRadius: BorderRadius.circular(12),
               ),
-            ],
+              child: const Icon(Icons.arrow_upward_rounded, color: kDangerColor),
+            ),
+            title: Text(
+              l10n.add_transaction_expense,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            onTap: () {
+              Navigator.pop(ctx);
+              Navigator.push(
+                context,
+                ExpensySlideUpRoute(
+                  builder: (_) =>
+                      const AddTransactionScreen(initialType: 'expense'),
+                ),
+              );
+            },
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 36,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: cs.onSurface.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(2),
-                ),
+          const SizedBox(height: 8),
+          ListTile(
+            leading: Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: kSuccessColor.withValues(alpha: isDark ? 0.2 : 0.12),
+                borderRadius: BorderRadius.circular(12),
               ),
-              ListTile(
-                leading: Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE53935).withValues(alpha: isDark ? 0.2 : 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(Icons.arrow_upward_rounded, color: Color(0xFFE53935)),
+              child: const Icon(Icons.arrow_downward_rounded,
+                  color: kSuccessColor),
+            ),
+            title: Text(
+              l10n.add_transaction_income,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            onTap: () {
+              Navigator.pop(ctx);
+              Navigator.push(
+                context,
+                ExpensySlideUpRoute(
+                  builder: (_) =>
+                      const AddTransactionScreen(initialType: 'income'),
                 ),
-                title: Text(
-                  l10n.add_transaction_expense,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-                trailing: const Icon(Icons.chevron_right_rounded),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  Navigator.push(
-                    context,
-                    ExpensySlideUpRoute(
-                      builder: (_) => const AddTransactionScreen(initialType: 'expense'),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 8),
-              ListTile(
-                leading: Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: kSuccessColor.withValues(alpha: isDark ? 0.2 : 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(Icons.arrow_downward_rounded, color: kSuccessColor),
-                ),
-                title: Text(
-                  l10n.add_transaction_income,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-                trailing: const Icon(Icons.chevron_right_rounded),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  Navigator.push(
-                    context,
-                    ExpensySlideUpRoute(
-                      builder: (_) => const AddTransactionScreen(initialType: 'income'),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 8),
-              ListTile(
-                leading: Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: cs.primary.withValues(alpha: isDark ? 0.2 : 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(Icons.swap_horiz_rounded, color: cs.primary),
-                ),
-                title: Text(
-                  l10n.presets_transfer,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-                trailing: const Icon(Icons.chevron_right_rounded),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  Navigator.push(
-                    context,
-                    ExpensySlideUpRoute(
-                      builder: (_) => const TransferScreen(),
-                    ),
-                  );
-                },
-              ),
-            ],
+              );
+            },
           ),
-        ),
+          const SizedBox(height: 8),
+          ListTile(
+            leading: Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: cs.primary.withValues(alpha: isDark ? 0.2 : 0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Icons.swap_horiz_rounded, color: cs.primary),
+            ),
+            title: Text(
+              l10n.presets_transfer,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            onTap: () {
+              Navigator.pop(ctx);
+              Navigator.push(
+                context,
+                ExpensySlideUpRoute(
+                  builder: (_) =>
+                      const AddTransactionScreen(initialType: 'transfer'),
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -707,53 +686,56 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   // Helper method `_bulkChangeCategory`: handles user action or computes derived UI state.
   void _bulkChangeCategory(BuildContext context, AppProvider app) {
     final l10n = AppLocalizations.of(context)!;
+    final cats = app.userCategories;
+    String? tempSelected;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => SheetShell(
-        children: [
-          Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-              left: 24,
-              right: 24,
-              top: 8,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(l10n.transactions_changeCategory,
-                    style: const TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 16),
-                Flexible(
-                  child: SingleChildScrollView(
-                    child: CategoryChipPicker(
-                      categories: app.userCategories,
-                      selectedId: null,
-                      onSelected: (catId) {
-                        Navigator.pop(context);
-                        for (final id in _selectedIds.toList()) {
-                          final tx = app.transactions
-                              .where((t) => t.id == id)
-                              .firstOrNull;
-                          if (tx == null || tx.isTransfer || tx.isInvestment) {
-                            continue;
-                          }
-                          final updated = tx.copyWith(categoryId: catId);
-                          app.updateTransaction(updated, tx);
-                        }
-                        _clearSelection();
-                      },
-                    ),
-                  ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) {
+          void applyCategory(String catId) {
+            Navigator.pop(ctx);
+            for (final id in _selectedIds.toList()) {
+              final tx =
+                  app.transactions.where((t) => t.id == id).firstOrNull;
+              if (tx == null || tx.isTransfer || tx.isInvestment) {
+                continue;
+              }
+              final updated = tx.copyWith(categoryId: catId);
+              app.updateTransaction(updated, tx);
+            }
+            _clearSelection();
+          }
+
+          return SheetShell(
+            showHandle: true,
+            title: l10n.transactions_changeCategory,
+            children: [
+              CategoryChipPicker(
+                categories: cats,
+                selectedId: tempSelected,
+                onSelected: (catId) {
+                  setSheetState(() => tempSelected = catId);
+                  final hasChildren = cats.any((c) => c.parentId == catId);
+                  if (!hasChildren ||
+                      cats.any((c) => c.id == catId && c.isSubcategory)) {
+                    applyCategory(catId);
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: tempSelected == null
+                      ? null
+                      : () => applyCategory(tempSelected!),
+                  child: Text(l10n.categories_saveChanges),
                 ),
-              ],
-            ),
-          ),
-        ],
+              ),
+            ],
+          );
+        },
       ),
     );
   }

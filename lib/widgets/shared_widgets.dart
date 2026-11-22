@@ -303,8 +303,11 @@ class AccountCardPicker extends StatelessWidget {
           final isDisabled = disabledId != null && acc.id == disabledId;
           final sel = !isDisabled && selectedId == acc.id;
           final color = Color(acc.colorValue);
-          final balance =
-              app != null ? app.getEffectiveBalance(acc) : acc.balance;
+          final balance = app != null
+              ? app.getPickerDisplayBalance(acc)
+              : ((acc.isCredit && (acc.creditLimit ?? 0) > 0)
+                  ? acc.availableCredit
+                  : acc.balance);
           return GestureDetector(
             onTap: isDisabled ? null : () => onSelected(acc.id),
             child: AnimatedContainer(
@@ -506,19 +509,23 @@ class CategoryChipPicker extends StatelessWidget {
                 ),
               ),
             ),
-            child: Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                _buildChip(
-                  activeRoot,
-                  selectedId == activeRoot.id,
-                  l10n,
-                  labelOverride:
-                      '${l10n.transactions_all} ${AppProvider.localizeCategoryName(activeRoot, l10n)}',
-                ),
-                ...subs.map((sub) => _buildChip(sub, selectedId == sub.id, l10n)),
-              ],
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildChip(
+                    activeRoot,
+                    selectedId == activeRoot.id,
+                    l10n,
+                    labelOverride:
+                        '${l10n.transactions_all} ${AppProvider.localizeCategoryName(activeRoot, l10n)}',
+                  ),
+                  for (final sub in subs) ...[
+                    const SizedBox(width: 6),
+                    _buildChip(sub, selectedId == sub.id, l10n),
+                  ],
+                ],
+              ),
             ),
           ),
         ],

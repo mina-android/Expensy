@@ -65,6 +65,15 @@ class Account {
   bool get isPrepaid => type == 'prepaid';
   bool get isCard => isDebit || isCredit || isPrepaid;
 
+  /// Available credit for a credit card with a configured [creditLimit] (> 0).
+  /// Falls back to [balance] if no credit limit is set.
+  double get availableCredit {
+    final limit = creditLimit ?? 0.0;
+    if (limit <= 0) return balance;
+    final debt = balance < 0 ? -balance : 0.0;
+    return (limit - debt).clamp(0.0, double.infinity);
+  }
+
   Map<String, dynamic> toMap() => {
         'id': id,
         'name': name,

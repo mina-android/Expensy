@@ -421,7 +421,7 @@ class _LoanSheetState extends State<LoanSheet> {
     final cs = Theme.of(context).colorScheme;
     final viewInsets = MediaQuery.of(context).viewInsets;
 
-    final accountsList = app.accounts.where((a) => !a.isGold).toList();
+    final accountsList = app.spendableAccounts;
 
     return Container(
       decoration: BoxDecoration(

@@ -10,7 +10,6 @@ import 'theme/app_theme.dart';
 import 'screens/main_shell.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/add_transaction_screen.dart';
-import 'screens/transfer_screen.dart';
 import 'widgets/preset_sheet.dart';
 import 'services/notification_bootstrap.dart';
 import 'services/quick_add_service.dart';
@@ -114,7 +113,8 @@ class _ExpensyAppState extends State<ExpensyApp> {
       case QuickAddService.routeTransfer:
         nav.push(
           ExpensySlideUpRoute(
-            builder: (_) => const TransferScreen(),
+            builder: (_) =>
+                const AddTransactionScreen(initialType: 'transfer'),
           ),
         );
         break;
