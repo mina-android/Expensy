@@ -197,6 +197,14 @@ class AppProvider extends ChangeNotifier {
   List<TransactionSplit>      splits       = [];
   Map<String, List<TransactionSplit>> _splitsByTxId = {};
 
+  void rebuildSplitsCache() {
+    final map = <String, List<TransactionSplit>>{};
+    for (final s in splits) {
+      map.putIfAbsent(s.transactionId, () => []).add(s);
+    }
+    _splitsByTxId = map;
+  }
+
   /// Total row count in `recurring_history` — kept for display purposes
   /// (e.g. the Backup screen's "what's included" list) without needing to
   /// load every history row for every recurring payment into memory.
@@ -401,7 +409,7 @@ class AppProvider extends ChangeNotifier {
         'name': a.name,
         'balance': settings.hideBalance
             ? '••••••'
-            : formatAmount(a.balance, a.currency.isNotEmpty ? a.currency : settings.currency),
+            : formatAmount(getEffectiveBalance(a), a.currency.isNotEmpty ? a.currency : settings.currency),
       }).toList());
       await HomeWidget.saveWidgetData('accounts_widget_data', accountsJson);
       await HomeWidget.updateWidget(name: 'AccountsWidgetProvider');
@@ -695,15 +703,19 @@ class AppProvider extends ChangeNotifier {
       .where((c) => !c.isSettled)
       .fold(0.0, (sum, c) => sum + convertToMain(c.amount, c.currency));
 
+  /// Resolves the effective currency of a [LendedMoney] entry.
+  String lendedCurrency(LendedMoney l) {
+    if (l.currency.isNotEmpty) return l.currency;
+    if (l.accountId != null) {
+      return accountById(l.accountId!)?.currency ?? settings.currency;
+    }
+    return settings.currency;
+  }
+
   /// Unsettled money lent to others (receivables) converted to main currency.
   double get totalLentMoneyValue => lended
       .where((l) => !l.isSettled && l.type == 'lent')
-      .fold(0.0, (sum, l) {
-        final cur = l.accountId != null
-            ? (accountById(l.accountId!)?.currency ?? settings.currency)
-            : settings.currency;
-        return sum + convertToMain(l.amount, cur);
-      });
+      .fold(0.0, (sum, l) => sum + convertToMain(l.amount, lendedCurrency(l)));
 
   /// Total combined assets: liquid accounts + gold + fixed/investment assets + certificates + lent money.
   double get totalWealthAssets =>
@@ -721,12 +733,7 @@ class AppProvider extends ChangeNotifier {
   /// Unsettled money borrowed from others (payables) converted to main currency.
   double get totalBorrowedMoneyValue => lended
       .where((l) => !l.isSettled && l.type == 'borrowed')
-      .fold(0.0, (sum, l) {
-        final cur = l.accountId != null
-            ? (accountById(l.accountId!)?.currency ?? settings.currency)
-            : settings.currency;
-        return sum + convertToMain(l.amount, cur);
-      });
+      .fold(0.0, (sum, l) => sum + convertToMain(l.amount, lendedCurrency(l)));
 
   /// Total combined liabilities: credit/overdraft debt + outstanding loan debt + borrowed money.
   double get totalWealthLiabilities =>
@@ -1327,21 +1334,27 @@ class AppProvider extends ChangeNotifier {
 
   // ── Categories ────────────────────────────────────────────────────────
   Future<void> addCategory(AppCategory c) async {
-    await DBHelper.insertCategory(c);
-    categories = await DBHelper.getCategories();
-    notifyListeners();
+    await _serializeMutation(() async {
+      await DBHelper.insertCategory(c);
+      categories = await DBHelper.getCategories();
+      notifyListeners();
+    });
   }
 
   Future<void> updateCategory(AppCategory c) async {
-    await DBHelper.updateCategory(c);
-    categories = await DBHelper.getCategories();
-    notifyListeners();
+    await _serializeMutation(() async {
+      await DBHelper.updateCategory(c);
+      categories = await DBHelper.getCategories();
+      notifyListeners();
+    });
   }
 
   Future<void> deleteCategory(String id) async {
-    await DBHelper.deleteCategory(id);
-    categories = await DBHelper.getCategories();
-    notifyListeners();
+    await _serializeMutation(() async {
+      await DBHelper.deleteCategory(id);
+      categories = await DBHelper.getCategories();
+      notifyListeners();
+    });
   }
 
   // ── Transactions ──────────────────────────────────────────────────────
@@ -1570,9 +1583,10 @@ class AppProvider extends ChangeNotifier {
             await DBHelper.applyDeleteTransactionWithBalance(
                 member.id, balAccId, delta);
             _patchAccountBalance(balAccId, delta);
-            splits.removeWhere((s) => s.transactionId == member.id);
             _splitsByTxId.remove(member.id);
           }
+          final pairIds = pair.map((m) => m.id).toSet();
+          splits = splits.where((s) => !pairIds.contains(s.transactionId)).toList();
           transactions = transactions
               .where((tx) => tx.transferGroupId != t.transferGroupId)
               .toList();
@@ -1591,7 +1605,7 @@ class AppProvider extends ChangeNotifier {
         await DBHelper.deleteTransaction(id);
       }
 
-      splits.removeWhere((s) => s.transactionId == id);
+      splits = splits.where((s) => s.transactionId != id).toList();
       _splitsByTxId.remove(id);
       transactions = transactions.where((tx) => tx.id != id).toList();
       notifyListeners();
@@ -1695,28 +1709,35 @@ class AppProvider extends ChangeNotifier {
 
   // ── Presets ───────────────────────────────────────────────────────────
   Future<void> addPreset(TransactionPreset p) async {
-    await DBHelper.insertPreset(p);
-    presets = await DBHelper.getPresets();
-    notifyListeners();
+    await _serializeMutation(() async {
+      await DBHelper.insertPreset(p);
+      presets = await DBHelper.getPresets();
+      notifyListeners();
+    });
   }
 
   Future<void> updatePreset(TransactionPreset p) async {
-    await DBHelper.updatePreset(p);
-    presets = await DBHelper.getPresets();
-    notifyListeners();
+    await _serializeMutation(() async {
+      await DBHelper.updatePreset(p);
+      presets = await DBHelper.getPresets();
+      notifyListeners();
+    });
   }
 
   Future<void> deletePreset(String id) async {
-    await DBHelper.deletePreset(id);
-    presets = presets.where((p) => p.id != id).toList();
-    notifyListeners();
+    await _serializeMutation(() async {
+      await DBHelper.deletePreset(id);
+      presets = presets.where((p) => p.id != id).toList();
+      notifyListeners();
+    });
   }
 
   /// 1-Tap Log a Transaction or Transfer from a Preset for the current time.
   Future<AppTransaction> logPreset(TransactionPreset preset) async {
-    if (preset.isTransfer &&
-        preset.toAccountId != null &&
-        preset.toAccountId!.isNotEmpty) {
+    if (preset.isTransfer) {
+      if (preset.toAccountId == null || preset.toAccountId!.isEmpty) {
+        throw const FormatException('Transfer preset has no destination account.');
+      }
       final debit = await addTransfer(
         fromId: preset.accountId,
         toId: preset.toAccountId!,
@@ -1725,7 +1746,10 @@ class AppProvider extends ChangeNotifier {
         note: preset.note,
         title: preset.title,
       );
-      if (debit != null) return debit;
+      if (debit == null) {
+        throw const FormatException('Invalid transfer preset accounts or amount.');
+      }
+      return debit;
     }
 
     final acc = accountById(preset.accountId);
@@ -1756,9 +1780,6 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
-  @visibleForTesting
-  void rebuildSplitsCache() => _rebuildSplitsCache();
-
   bool isTransactionSplit(String txId) =>
       _splitsByTxId.containsKey(txId) && _splitsByTxId[txId]!.isNotEmpty;
 
@@ -1780,38 +1801,44 @@ class AppProvider extends ChangeNotifier {
 
   // ── Recurring ─────────────────────────────────────────────────────────
   Future<void> addRecurring(RecurringPayment r) async {
-    await DBHelper.insertRecurring(r);
-    recurring = await DBHelper.getRecurring();
-    notifyListeners();
-    if (r.reminderEnabled) {
-      await _notif.scheduleReminder(r, settings.currency);
-    }
-    if (r.autoPayEnabled) {
-      await checkAndProcessAutoPay();
-    }
+    await _serializeMutation(() async {
+      await DBHelper.insertRecurring(r);
+      recurring = await DBHelper.getRecurring();
+      notifyListeners();
+      if (r.reminderEnabled) {
+        await _notif.scheduleReminder(r, settings.currency);
+      }
+      if (r.autoPayEnabled) {
+        await checkAndProcessAutoPay();
+      }
+    });
   }
 
   Future<void> updateRecurring(RecurringPayment r) async {
-    await _notif.cancelReminder(r.id);
-    await DBHelper.updateRecurring(r);
-    recurring = await DBHelper.getRecurring();
-    notifyListeners();
-    if (r.reminderEnabled) {
-      await _notif.scheduleReminder(r, settings.currency);
-    }
-    if (r.autoPayEnabled) {
-      await checkAndProcessAutoPay();
-    }
+    await _serializeMutation(() async {
+      await _notif.cancelReminder(r.id);
+      await DBHelper.updateRecurring(r);
+      recurring = await DBHelper.getRecurring();
+      notifyListeners();
+      if (r.reminderEnabled) {
+        await _notif.scheduleReminder(r, settings.currency);
+      }
+      if (r.autoPayEnabled) {
+        await checkAndProcessAutoPay();
+      }
+    });
   }
 
   Future<void> deleteRecurring(String id) async {
-    await _notif.cancelReminder(id);
-    await DBHelper.deleteRecurring(id);
-    await DBHelper.deleteRecurringHistoryFor(id);
-    _historyCache.remove(id);
-    recurring = await DBHelper.getRecurring();
-    recurringHistoryCount = await DBHelper.getRecurringHistoryCount();
-    notifyListeners();
+    await _serializeMutation(() async {
+      await _notif.cancelReminder(id);
+      await DBHelper.deleteRecurring(id);
+      await DBHelper.deleteRecurringHistoryFor(id);
+      _historyCache.remove(id);
+      recurring = await DBHelper.getRecurring();
+      recurringHistoryCount = await DBHelper.getRecurringHistoryCount();
+      notifyListeners();
+    });
   }
 
   Future<void> markRecurringPaid(RecurringPayment r, {DateTime? occurrenceDate}) async {
@@ -1896,13 +1923,27 @@ class AppProvider extends ChangeNotifier {
   Future<void> checkAndProcessAutoPay() async {
     await _serializeMutation(() async {
       final processor = RecurringPaymentProcessor(AppDatabase.instance);
-      final processed = await processor.processDuePayments();
+      final processed = await processor.processDuePayments(
+        defaultCurrency: settings.currency,
+      );
       if (processed.isNotEmpty) {
         transactions = await DBHelper.getTransactions();
         accounts = await DBHelper.getAccounts();
         recurring = await DBHelper.getRecurring();
         _historyCache.clear();
         recurringHistoryCount = await DBHelper.getRecurringHistoryCount();
+        for (final id in processed) {
+          final updatedRec = recurring.where((r) => r.id == id).firstOrNull;
+          if (updatedRec != null && updatedRec.reminderEnabled) {
+            try {
+              await _notif.cancelReminder(updatedRec.id);
+              await _notif.scheduleReminder(
+                updatedRec,
+                accountById(updatedRec.accountId)?.currency ?? settings.currency,
+              );
+            } catch (_) {}
+          }
+        }
         notifyListeners();
         recordNetWorthSnapshot();
       }
@@ -1940,25 +1981,31 @@ class AppProvider extends ChangeNotifier {
 
   // ── Wishlist ──────────────────────────────────────────────────────────
   Future<void> addWishlist(WishlistItem w) async {
-    await DBHelper.insertWishlist(w);
-    wishlist = await DBHelper.getWishlist();
-    notifyListeners();
+    await _serializeMutation(() async {
+      await DBHelper.insertWishlist(w);
+      wishlist = await DBHelper.getWishlist();
+      notifyListeners();
+    });
   }
 
   Future<void> updateWishlist(WishlistItem w) async {
-    await DBHelper.updateWishlist(w);
-    wishlist = await DBHelper.getWishlist();
-    notifyListeners();
+    await _serializeMutation(() async {
+      await DBHelper.updateWishlist(w);
+      wishlist = await DBHelper.getWishlist();
+      notifyListeners();
+    });
   }
 
   Future<void> deleteWishlist(String id) async {
-    for (final g in savingsGoals.where((g) => g.wishlistItemId == id)) {
-      await DBHelper.updateSavingsGoal(g.copyWith(clearWishlistItemId: true));
-    }
-    savingsGoals = await DBHelper.getSavingsGoals();
-    await DBHelper.deleteWishlist(id);
-    wishlist = await DBHelper.getWishlist();
-    notifyListeners();
+    await _serializeMutation(() async {
+      for (final g in savingsGoals.where((g) => g.wishlistItemId == id)) {
+        await DBHelper.updateSavingsGoal(g.copyWith(clearWishlistItemId: true));
+      }
+      savingsGoals = await DBHelper.getSavingsGoals();
+      await DBHelper.deleteWishlist(id);
+      wishlist = await DBHelper.getWishlist();
+      notifyListeners();
+    });
   }
 
   SavingsGoal? goalForWishlist(WishlistItem item) {
@@ -1972,30 +2019,35 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> createGoalForWishlist(WishlistItem item, SavingsGoal goal) async {
-    final updatedGoal = goal.copyWith(wishlistItemId: item.id);
-    final updatedItem = item.copyWith(goalId: goal.id);
-    await DBHelper.insertSavingsGoal(updatedGoal);
-    await DBHelper.updateWishlist(updatedItem);
-    savingsGoals = await DBHelper.getSavingsGoals();
-    wishlist = await DBHelper.getWishlist();
-    notifyListeners();
+    await _serializeMutation(() async {
+      final updatedGoal = goal.copyWith(wishlistItemId: item.id);
+      final updatedItem = item.copyWith(goalId: goal.id);
+      await DBHelper.insertSavingsGoal(updatedGoal);
+      await DBHelper.updateWishlist(updatedItem);
+      savingsGoals = await DBHelper.getSavingsGoals();
+      wishlist = await DBHelper.getWishlist();
+      notifyListeners();
+    });
   }
 
   Future<void> unlinkWishlistAndGoal({
     required String wishlistItemId,
     required String goalId,
   }) async {
-    final w = wishlist.where((x) => x.id == wishlistItemId).firstOrNull;
-    if (w != null) {
-      await DBHelper.updateWishlist(w.copyWith(clearGoalId: true));
-    }
-    final g = savingsGoals.where((x) => x.id == goalId).firstOrNull;
-    if (g != null) {
-      await DBHelper.updateSavingsGoal(g.copyWith(clearWishlistItemId: true));
-    }
-    wishlist = await DBHelper.getWishlist();
-    savingsGoals = await DBHelper.getSavingsGoals();
-    notifyListeners();
+    await _serializeMutation(() async {
+      final item = wishlist.where((w) => w.id == wishlistItemId).firstOrNull;
+      if (item != null) {
+        await DBHelper.updateWishlist(item.copyWith(clearGoalId: true));
+      }
+      final goal = savingsGoals.where((g) => g.id == goalId).firstOrNull;
+      if (goal != null) {
+        await DBHelper.updateSavingsGoal(
+            goal.copyWith(clearWishlistItemId: true));
+      }
+      savingsGoals = await DBHelper.getSavingsGoals();
+      wishlist = await DBHelper.getWishlist();
+      notifyListeners();
+    });
   }
 
   Future<void> purchaseWishlistItem({
@@ -2005,51 +2057,57 @@ class AppProvider extends ChangeNotifier {
     double? amount,
     String? note,
   }) async {
-    if (accountId != null) {
-      final txAmount = amount ?? item.targetPrice;
-      final defaultCat =
-          categories.where((c) => c.type == 'expense').firstOrNull?.id ?? '';
-      final tx = AppTransaction(
-        id: newId(),
-        type: 'expense',
-        amount: txAmount,
-        description: item.name,
-        accountId: accountId,
-        categoryId: (categoryId != null && categoryId.isNotEmpty)
-            ? categoryId
-            : defaultCat,
-        date: DateTime.now(),
-        note: note ?? (item.notes.isNotEmpty ? item.notes : ''),
-      );
-      await addTransaction(tx);
-    }
-
-    final updatedItem = item.copyWith(isPurchased: true);
-    await updateWishlist(updatedItem);
-
-    if (item.goalId != null) {
-      final goal = savingsGoals.where((g) => g.id == item.goalId).firstOrNull;
-      if (goal != null && !goal.isCompleted) {
-        final completedGoal = goal.copyWith(
-          isCompleted: true,
-          completedAt: DateTime.now(),
+    await _serializeMutation(() async {
+      if (accountId != null) {
+        final txAmount = amount ?? item.targetPrice;
+        final defaultCat =
+            categories.where((c) => c.type == 'expense').firstOrNull?.id ?? '';
+        final tx = AppTransaction(
+          id: newId(),
+          type: 'expense',
+          amount: txAmount,
+          description: item.name,
+          accountId: accountId,
+          categoryId: (categoryId != null && categoryId.isNotEmpty)
+              ? categoryId
+              : defaultCat,
+          date: DateTime.now(),
+          note: note ?? (item.notes.isNotEmpty ? item.notes : ''),
         );
-        await updateSavingsGoal(completedGoal);
+        await addTransaction(tx);
       }
-    }
+
+      final updatedItem = item.copyWith(isPurchased: true);
+      await updateWishlist(updatedItem);
+
+      if (item.goalId != null) {
+        final goal = savingsGoals.where((g) => g.id == item.goalId).firstOrNull;
+        if (goal != null && !goal.isCompleted) {
+          final completedGoal = goal.copyWith(
+            isCompleted: true,
+            completedAt: DateTime.now(),
+          );
+          await updateSavingsGoal(completedGoal);
+        }
+      }
+    });
   }
 
   // ── Lended People (per-person ledger "accounts") ────────────────────────
   Future<void> addLendedPerson(LendedPerson p) async {
-    await DBHelper.insertLendedPerson(p);
-    lendedPeople = await DBHelper.getLendedPeople();
-    notifyListeners();
+    await _serializeMutation(() async {
+      await DBHelper.insertLendedPerson(p);
+      lendedPeople = await DBHelper.getLendedPeople();
+      notifyListeners();
+    });
   }
 
   Future<void> updateLendedPerson(LendedPerson p) async {
-    await DBHelper.updateLendedPerson(p);
-    lendedPeople = await DBHelper.getLendedPeople();
-    notifyListeners();
+    await _serializeMutation(() async {
+      await DBHelper.updateLendedPerson(p);
+      lendedPeople = await DBHelper.getLendedPeople();
+      notifyListeners();
+    });
   }
 
   /// Deletes a person along with every lended-money entry that belongs to
@@ -2081,12 +2139,15 @@ class AppProvider extends ChangeNotifier {
       lended.where((l) => l.personId == personId).toList()
         ..sort((a, b) => b.date.compareTo(a.date));
 
-  /// Net balance for a person: positive = they owe the user money,
+  /// Net balance for a person in [settings.currency]: positive = they owe the user money,
   /// negative = the user owes them. Only unsettled entries count, mirroring
   /// how an [Account.balance] only reflects committed state.
   double personBalance(String personId) => lended
       .where((l) => l.personId == personId && !l.isSettled)
-      .fold(0.0, (sum, l) => sum + (l.type == 'lent' ? l.amount : -l.amount));
+      .fold(0.0, (sum, l) {
+        final converted = convertToMain(l.amount, lendedCurrency(l));
+        return sum + (l.type == 'lent' ? converted : -converted);
+      });
 
   bool personHasOverdue(String personId) {
     final now = DateTime.now();
@@ -2099,8 +2160,15 @@ class AppProvider extends ChangeNotifier {
   }
 
   double _lendedBalanceEffect(LendedMoney entry) {
-    if (entry.isSettled) return 0.0;
-    return entry.type == 'lent' ? -entry.amount : entry.amount;
+    if (entry.isSettled || entry.accountId == null) return 0.0;
+    final targetId = balanceAccountIdFor(entry.accountId!);
+    final targetAcc = accountById(targetId);
+    final entryCur = lendedCurrency(entry);
+    final accCur = targetAcc?.currency ?? settings.currency;
+    final amt = (entryCur == accCur)
+        ? entry.amount
+        : (convertBetween(entry.amount, entryCur, accCur) ?? entry.amount);
+    return entry.type == 'lent' ? -amt : amt;
   }
 
   // ── Lended Money (ledger entries) ───────────────────────────────────────
@@ -2230,34 +2298,42 @@ class AppProvider extends ChangeNotifier {
 
   // ── Assets ────────────────────────────────────────────────────────────
   Future<void> addAsset(AssetItem a) async {
-    await DBHelper.insertAsset(a);
-    assets = await DBHelper.getAssets();
-    notifyListeners();
-    recordNetWorthSnapshot();
+    await _serializeMutation(() async {
+      await DBHelper.insertAsset(a);
+      assets = await DBHelper.getAssets();
+      notifyListeners();
+      recordNetWorthSnapshot();
+    });
   }
 
   Future<void> updateAsset(AssetItem a) async {
-    await DBHelper.updateAsset(a);
-    assets = await DBHelper.getAssets();
-    notifyListeners();
-    recordNetWorthSnapshot();
+    await _serializeMutation(() async {
+      await DBHelper.updateAsset(a);
+      assets = await DBHelper.getAssets();
+      notifyListeners();
+      recordNetWorthSnapshot();
+    });
   }
 
   Future<void> deleteAsset(String id) async {
-    await DBHelper.deleteAsset(id);
-    assets = await DBHelper.getAssets();
-    notifyListeners();
-    recordNetWorthSnapshot();
+    await _serializeMutation(() async {
+      await DBHelper.deleteAsset(id);
+      assets = await DBHelper.getAssets();
+      notifyListeners();
+      recordNetWorthSnapshot();
+    });
   }
 
   Future<VoidCallback> deleteAssetWithUndo(String id) async {
     final asset = assets.firstWhere((a) => a.id == id);
     await deleteAsset(id);
     return () async {
-      await DBHelper.insertAsset(asset);
-      assets = await DBHelper.getAssets();
-      notifyListeners();
-      recordNetWorthSnapshot();
+      await _serializeMutation(() async {
+        await DBHelper.insertAsset(asset);
+        assets = await DBHelper.getAssets();
+        notifyListeners();
+        recordNetWorthSnapshot();
+      });
     };
   }
 
@@ -2272,24 +2348,30 @@ class AppProvider extends ChangeNotifier {
 
   // ── Budgets ───────────────────────────────────────────────────────────
   Future<void> addBudget(Budget b) async {
-    await DBHelper.insertBudget(b);
-    budgets = await DBHelper.getBudgets();
-    notifyListeners();
-    updateHomeWidgets();
+    await _serializeMutation(() async {
+      await DBHelper.insertBudget(b);
+      budgets = await DBHelper.getBudgets();
+      notifyListeners();
+      updateHomeWidgets();
+    });
   }
 
   Future<void> updateBudget(Budget b) async {
-    await DBHelper.updateBudget(b);
-    budgets = await DBHelper.getBudgets();
-    notifyListeners();
-    updateHomeWidgets();
+    await _serializeMutation(() async {
+      await DBHelper.updateBudget(b);
+      budgets = await DBHelper.getBudgets();
+      notifyListeners();
+      updateHomeWidgets();
+    });
   }
 
   Future<void> deleteBudget(String id) async {
-    await DBHelper.deleteBudget(id);
-    budgets = await DBHelper.getBudgets();
-    notifyListeners();
-    updateHomeWidgets();
+    await _serializeMutation(() async {
+      await DBHelper.deleteBudget(id);
+      budgets = await DBHelper.getBudgets();
+      notifyListeners();
+      updateHomeWidgets();
+    });
   }
 
   Future<VoidCallback> deleteBudgetWithUndo(String id) async {
@@ -3374,11 +3456,11 @@ class AppProvider extends ChangeNotifier {
           await DBHelper.applyDeleteTransactionWithBalance(
               tx.id, balAccId, delta);
           _patchAccountBalance(balAccId, delta);
-          splits.removeWhere((s) => s.transactionId == tx.id);
           _splitsByTxId.remove(tx.id);
         }
         if (relatedTxs.isNotEmpty) {
           final relIds = relatedTxs.map((t) => t.id).toSet();
+          splits = splits.where((s) => !relIds.contains(s.transactionId)).toList();
           transactions = transactions.where((t) => !relIds.contains(t.id)).toList();
         }
       }
@@ -3625,6 +3707,8 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> _createSafetySnapshot() async {
     final snapshot = await DBHelper.exportAll();
+    snapshot['settings'] = settings.toJson();
+    snapshot['exported_at'] = DateTime.now().toIso8601String();
     final jsonStr = jsonEncode(snapshot);
     final ts = DateTime.now()
         .toIso8601String()
@@ -3683,8 +3767,20 @@ class AppProvider extends ChangeNotifier {
       if (!file.existsSync()) return false;
       final jsonStr = await file.readAsString();
       final data = jsonDecode(jsonStr) as Map<String, dynamic>;
+      AppSettings? restoredSettings;
+      if (data['settings'] is Map) {
+        restoredSettings = AppSettings.fromJson(
+          Map<String, dynamic>.from(data['settings'] as Map),
+        );
+      }
       await DBHelper.importAll(data);
+      if (restoredSettings != null) {
+        settings = restoredSettings;
+        await _saveSettings();
+      }
+      _historyCache.clear();
       await load();
+      lastPreRestoreSnapshotPath = null;
       return true;
     });
   }
@@ -3731,7 +3827,7 @@ class AppProvider extends ChangeNotifier {
           settings.currency,
           personNameOf: (id) => personById(id)?.name ?? '',
         );
-        await _loanNotif.rescheduleAllLoans(loans, settings.currency);
+        await _loanNotif.rescheduleAllLoans(loans);
         await CreditReminderService().rescheduleAll(accounts);
         await CertificateReminderService()
             .rescheduleAllCertificates(certificates);
@@ -3770,6 +3866,8 @@ class AppProvider extends ChangeNotifier {
     'budgets': ['budgets'],
     'assets': ['assets'],
     'wishlist_goals': ['wishlist', 'savings_goals', 'savings_contributions'],
+    'net_worth': ['net_worth_snapshots'],
+    'settings': [],
   };
 
   Future<String?> createSelectiveBackup(Set<String> selectedGroups,
@@ -3782,6 +3880,9 @@ class AppProvider extends ChangeNotifier {
     final dt = DateTime.now();
     final timestamp = DateFormat('yyyyMMdd_HHmmss', 'en_US').format(dt);
     final data = await DBHelper.exportSelective(tables);
+    if (selectedGroups.contains('settings')) {
+      data['settings'] = settings.toJson();
+    }
     data['exported_at'] = dt.toIso8601String();
 
     final jsonStr = const JsonEncoder.withIndent('  ').convert(data);
@@ -3806,6 +3907,13 @@ class AppProvider extends ChangeNotifier {
         );
       }
 
+      AppSettings? parsedSettings;
+      if (selectedGroups.contains('settings') && data['settings'] is Map) {
+        parsedSettings = AppSettings.fromJson(
+          Map<String, dynamic>.from(data['settings'] as Map),
+        );
+      }
+
       await _createSafetySnapshot();
       final tables = <String>{};
       for (final group in selectedGroups) {
@@ -3813,7 +3921,13 @@ class AppProvider extends ChangeNotifier {
         if (tList != null) tables.addAll(tList);
       }
 
-      await DBHelper.importSelective(data, tables);
+      if (tables.isNotEmpty) {
+        await DBHelper.importSelective(data, tables);
+      }
+      if (parsedSettings != null) {
+        settings = parsedSettings;
+        await _saveSettings();
+      }
       _historyCache.clear();
       await load();
 
@@ -3829,7 +3943,7 @@ class AppProvider extends ChangeNotifier {
           );
         }
         if (selectedGroups.contains('loans')) {
-          await _loanNotif.rescheduleAllLoans(loans, settings.currency);
+          await _loanNotif.rescheduleAllLoans(loans);
         }
         if (selectedGroups.contains('accounts')) {
           await CreditReminderService().rescheduleAll(accounts);

@@ -855,84 +855,92 @@ class AppDatabase extends _$AppDatabase {
     'net_worth_snapshots',
   ];
 
-  /// Executes idempotent v28 data-integrity repairs (D1, D2, D3, D5, and system categories).
-  /// Invoked both during schema migration (< 28 -> 28) and after restoring pre-v28 backups.
-  Future<void> runDataMigrationDataFixes() async {
-    // 1. D5: Move stray debit card balances into parent bank account and zero the debit card
-    final debitCards = await customSelect(
-      "SELECT id, linked_account_id, balance FROM accounts WHERE type = 'debit' AND balance != 0.0",
-    ).get();
-    for (final card in debitCards) {
-      final cardId = card.data['id'] as String;
-      final parentId = card.data['linked_account_id'] as String?;
-      final bal = (card.data['balance'] as num).toDouble();
-      if (parentId != null && parentId.isNotEmpty && bal != 0) {
+  /// Executes idempotent data-integrity repairs.
+  /// Pre-v28 repairs (D1, D3, D5) only run when [fromVersion] < 28 so that
+  /// legitimate v28+ states (e.g. positive credit card overpayments) are never
+  /// corrupted. Pre-v30 recurring progress sync only runs when [fromVersion] < 30.
+  /// Structural self-heals (D2, system categories, transfer categories, orphan
+  /// subcategories) always run safely.
+  Future<void> runDataMigrationDataFixes({int? fromVersion}) async {
+    final effectiveFrom = fromVersion ?? 27;
+
+    if (effectiveFrom < 28) {
+      // 1. D5: Move stray debit card balances into parent bank account and zero the debit card
+      final debitCards = await customSelect(
+        "SELECT id, linked_account_id, balance FROM accounts WHERE type = 'debit' AND balance != 0.0",
+      ).get();
+      for (final card in debitCards) {
+        final cardId = card.data['id'] as String;
+        final parentId = card.data['linked_account_id'] as String?;
+        final bal = (card.data['balance'] as num).toDouble();
+        if (parentId != null && parentId.isNotEmpty && bal != 0) {
+          await customUpdate(
+            "UPDATE accounts SET balance = balance + ? WHERE id = ?",
+            variables: [Variable<double>(bal), Variable<String>(parentId)],
+          );
+        }
         await customUpdate(
-          "UPDATE accounts SET balance = balance + ? WHERE id = ?",
-          variables: [Variable<double>(bal), Variable<String>(parentId)],
+          "UPDATE accounts SET balance = 0.0 WHERE id = ?",
+          variables: [Variable<String>(cardId)],
         );
       }
-      await customUpdate(
-        "UPDATE accounts SET balance = 0.0 WHERE id = ?",
-        variables: [Variable<String>(cardId)],
-      );
+
+      // 2. D5: Redirect legacy debit card transactions to parent bank account, preserving card id in paid_via_account_id
+      await customUpdate('''
+        UPDATE transactions
+        SET paid_via_account_id = account_id,
+            account_id = (SELECT linked_account_id FROM accounts WHERE accounts.id = transactions.account_id)
+        WHERE account_id IN (SELECT id FROM accounts WHERE type = 'debit' AND linked_account_id IS NOT NULL AND linked_account_id != '')
+      ''');
+
+      // 3. D1: Pair legacy "Transfer out" and "Transfer in" transactions that have an actual counterpart
+      await customUpdate('''
+        UPDATE transactions
+        SET transfer_group_id = 'tr_migrated_' || substr(date, 1, 16) || '_' || CAST(amount AS TEXT),
+            category_id = 'sys_transfer'
+        WHERE (transfer_group_id IS NULL OR transfer_group_id = '')
+          AND (
+            (description LIKE '%Transfer out%' AND EXISTS (
+              SELECT 1 FROM transactions in_tx
+              WHERE in_tx.id != transactions.id
+                AND in_tx.description LIKE '%Transfer in%'
+                AND in_tx.amount = transactions.amount
+                AND in_tx.account_id != transactions.account_id
+                AND substr(in_tx.date, 1, 16) = substr(transactions.date, 1, 16)
+            ))
+            OR
+            (description LIKE '%Transfer in%' AND EXISTS (
+              SELECT 1 FROM transactions out_tx
+              WHERE out_tx.id != transactions.id
+                AND out_tx.description LIKE '%Transfer out%'
+                AND out_tx.amount = transactions.amount
+                AND out_tx.account_id != transactions.account_id
+                AND substr(out_tx.date, 1, 16) = substr(transactions.date, 1, 16)
+            ))
+          )
+      ''');
+
+      // Also tag any remaining single-leg legacy transfer rows so they are excluded from expense/income stats
+      await customUpdate('''
+        UPDATE transactions
+        SET transfer_group_id = 'tr_migrated_single_' || id,
+            category_id = 'sys_transfer'
+        WHERE (transfer_group_id IS NULL OR transfer_group_id = '')
+          AND (description LIKE '%Transfer out%' OR description LIKE '%Transfer in%')
+      ''');
+
+      // 5. D3: Flip positive credit card balances to negative debt representation
+      await customUpdate('''
+        UPDATE accounts
+        SET balance = -balance
+        WHERE type = 'credit' AND balance > 0.0
+      ''');
     }
-
-    // 2. D5: Redirect legacy debit card transactions to parent bank account, preserving card id in paid_via_account_id
-    await customUpdate('''
-      UPDATE transactions
-      SET paid_via_account_id = account_id,
-          account_id = (SELECT linked_account_id FROM accounts WHERE accounts.id = transactions.account_id)
-      WHERE account_id IN (SELECT id FROM accounts WHERE type = 'debit' AND linked_account_id IS NOT NULL AND linked_account_id != '')
-    ''');
-
-    // 3. D1: Pair legacy "Transfer out" and "Transfer in" transactions that have an actual counterpart
-    await customUpdate('''
-      UPDATE transactions
-      SET transfer_group_id = 'tr_migrated_' || substr(date, 1, 16) || '_' || CAST(amount AS TEXT),
-          category_id = 'sys_transfer'
-      WHERE (transfer_group_id IS NULL OR transfer_group_id = '')
-        AND (
-          (description LIKE '%Transfer out%' AND EXISTS (
-            SELECT 1 FROM transactions in_tx
-            WHERE in_tx.id != transactions.id
-              AND in_tx.description LIKE '%Transfer in%'
-              AND in_tx.amount = transactions.amount
-              AND in_tx.account_id != transactions.account_id
-              AND substr(in_tx.date, 1, 16) = substr(transactions.date, 1, 16)
-          ))
-          OR
-          (description LIKE '%Transfer in%' AND EXISTS (
-            SELECT 1 FROM transactions out_tx
-            WHERE out_tx.id != transactions.id
-              AND out_tx.description LIKE '%Transfer out%'
-              AND out_tx.amount = transactions.amount
-              AND out_tx.account_id != transactions.account_id
-              AND substr(out_tx.date, 1, 16) = substr(transactions.date, 1, 16)
-          ))
-        )
-    ''');
-
-    // Also tag any remaining single-leg legacy transfer rows so they are excluded from expense/income stats
-    await customUpdate('''
-      UPDATE transactions
-      SET transfer_group_id = 'tr_migrated_single_' || id,
-          category_id = 'sys_transfer'
-      WHERE (transfer_group_id IS NULL OR transfer_group_id = '')
-        AND (description LIKE '%Transfer out%' OR description LIKE '%Transfer in%')
-    ''');
 
     // 4. D2: Remove orphan recurring_history rows whose parent recurring_payment was deleted
     await customUpdate('''
       DELETE FROM recurring_history
       WHERE recurring_id NOT IN (SELECT id FROM recurring_payments)
-    ''');
-
-    // 5. D3: Flip positive credit card balances to negative debt representation
-    await customUpdate('''
-      UPDATE accounts
-      SET balance = -balance
-      WHERE type = 'credit' AND balance > 0.0
     ''');
 
     // 6. Ensure system categories exist
@@ -944,8 +952,10 @@ class AppDatabase extends _$AppDatabase {
     // 8. Promote any orphan subcategories whose parent category is missing
     await _repairOrphanSubcategories();
 
-    // 9. Sync recurring paid_payments from paid + skipped payment history
-    await _syncRecurringProgressFromHistory();
+    // 9. Sync recurring paid_payments from paid + skipped payment history (pre-v30 backups only)
+    if (effectiveFrom < 30) {
+      await _syncRecurringProgressFromHistory();
+    }
   }
 
   /// Syncs each recurring payment's [paid_payments] counter from its recorded
@@ -1060,9 +1070,7 @@ class AppDatabase extends _$AppDatabase {
         await _insertSystemCategories();
         await _repairOrphanSubcategories();
       }
-      if (backupVersion < currentSchemaVersion) {
-        await runDataMigrationDataFixes();
-      }
+      await runDataMigrationDataFixes(fromVersion: backupVersion);
     });
   }
 
@@ -1088,10 +1096,15 @@ class AppDatabase extends _$AppDatabase {
           await _repairOrphanSubcategories();
         }
       }
-      if (backupVersion < currentSchemaVersion) {
-        await runDataMigrationDataFixes();
-      }
+      await runDataMigrationDataFixes(fromVersion: backupVersion);
     });
+  }
+
+  static void _ensureDefault(
+      Map<String, dynamic> row, String key, Object? defaultVal) {
+    if (!row.containsKey(key) || row[key] == null) {
+      row[key] = defaultVal;
+    }
   }
 
   static Map<String, dynamic> _normaliseBackup(Map<String, dynamic> rawData) {
@@ -1105,69 +1118,89 @@ class AppDatabase extends _$AppDatabase {
         data[entry.key] = entry.value;
       }
     }
+
+    final settingsMap =
+        rawData['settings'] is Map ? rawData['settings'] as Map : null;
+    final fallbackCurrency =
+        (settingsMap?['currency'] as String?)?.isNotEmpty == true
+            ? settingsMap!['currency'] as String
+            : 'EGP';
+    final nowIso = DateTime.now().toIso8601String();
+
     for (final row in _rows(data, 'categories')) {
-      row.putIfAbsent('icon_code_point', () => 0);
-      row.putIfAbsent('order_index', () => 0);
+      _ensureDefault(row, 'icon_code_point', 0);
+      _ensureDefault(row, 'order_index', 0);
       row.putIfAbsent('parent_id', () => null);
     }
 
     for (final row in _rows(data, 'transaction_presets')) {
-      row.putIfAbsent('currency', () => '');
-      row.putIfAbsent('note', () => '');
-      row.putIfAbsent('icon_code_point', () => 0);
-      row.putIfAbsent('order_index', () => 0);
+      _ensureDefault(row, 'currency', '');
+      _ensureDefault(row, 'note', '');
+      _ensureDefault(row, 'icon_code_point', 0);
+      _ensureDefault(row, 'order_index', 0);
+      _ensureDefault(row, 'created_at', nowIso);
       row.putIfAbsent('to_account_id', () => null);
       row.putIfAbsent('to_amount', () => null);
     }
 
     for (final row in _rows(data, 'transaction_splits')) {
-      row.putIfAbsent('note', () => '');
+      _ensureDefault(row, 'note', '');
     }
 
     for (final row in _rows(data, 'accounts')) {
-      row.putIfAbsent('exclude_from_total', () => 0);
-      row.putIfAbsent('currency', () => 'EGP');
+      _ensureDefault(row, 'exclude_from_total', 0);
+      _ensureDefault(row, 'exclude_from_bank_total', 0);
+      _ensureDefault(row, 'dont_link_to_card', 0);
+      _ensureDefault(row, 'currency', fallbackCurrency);
+      _ensureDefault(row, 'created_at', nowIso);
+      _ensureDefault(row, 'credit_reminder_enabled', 0);
+      _ensureDefault(row, 'credit_reminder_time', '09:00');
+      _ensureDefault(row, 'credit_early_reminder_enabled', 0);
+      _ensureDefault(row, 'order_index', 0);
       if (!row.containsKey('gold_karat')) row['gold_karat'] = null;
       if (!row.containsKey('gold_grams')) row['gold_grams'] = null;
-      row.putIfAbsent('credit_early_reminder_enabled', () => 0);
       if (!row.containsKey('linked_account_id')) {
         row['linked_account_id'] = null;
       }
-      row.putIfAbsent('exclude_from_bank_total', () => 0);
-      row.putIfAbsent('order_index', () => 0);
     }
 
     for (final row in _rows(data, 'transactions')) {
-      row.putIfAbsent('note', () => '');
-      row.putIfAbsent('currency', () => '');
+      _ensureDefault(row, 'note', '');
+      _ensureDefault(row, 'currency', '');
       row.putIfAbsent('transfer_group_id', () => null);
       row.putIfAbsent('paid_via_account_id', () => null);
       row.putIfAbsent('certificate_id', () => null);
     }
 
     for (final row in _rows(data, 'certificates')) {
-      row.putIfAbsent('currency', () => 'EGP');
-      row.putIfAbsent('collection_type', () => 'monthly');
-      row.putIfAbsent('collection_day', () => 1);
-      row.putIfAbsent('reminder_enabled', () => 0);
-      row.putIfAbsent('reminder_time', () => '09:00');
-      row.putIfAbsent('notes', () => '');
-      row.putIfAbsent('is_settled', () => 0);
-      row.putIfAbsent('total_collected_amount', () => 0.0);
+      _ensureDefault(row, 'currency', fallbackCurrency);
+      _ensureDefault(row, 'collection_type', 'monthly');
+      _ensureDefault(row, 'collection_day', 1);
+      _ensureDefault(row, 'reminder_enabled', 0);
+      _ensureDefault(row, 'reminder_time', '09:00');
+      _ensureDefault(row, 'reminder_early_enabled', 0);
+      _ensureDefault(row, 'notes', '');
+      _ensureDefault(row, 'is_settled', 0);
+      _ensureDefault(row, 'created_at', nowIso);
+      _ensureDefault(row, 'total_collected_amount', 0.0);
     }
 
     for (final row in _rows(data, 'recurring_payments')) {
-      row.putIfAbsent('payment_type', () => 'expense');
-      row.putIfAbsent('reminder_enabled', () => 0);
-      row.putIfAbsent('reminder_time', () => '09:00');
-      row.putIfAbsent('early_reminder_enabled', () => 0);
-      row.putIfAbsent('notes', () => '');
-      row.putIfAbsent('paid_payments', () => 0);
-      row.putIfAbsent('recurring_type', () => 'subscription');
+      _ensureDefault(row, 'payment_type', 'expense');
+      _ensureDefault(row, 'freq_val', 1);
+      _ensureDefault(row, 'freq_unit', 'months');
+      _ensureDefault(row, 'paid_payments', 0);
+      _ensureDefault(row, 'reminder_enabled', 0);
+      _ensureDefault(row, 'reminder_time', '09:00');
+      _ensureDefault(row, 'early_reminder_enabled', 0);
+      _ensureDefault(row, 'notes', '');
+      _ensureDefault(row, 'recurring_type', 'subscription');
+      _ensureDefault(row, 'auto_pay_enabled', 0);
+      _ensureDefault(row, 'auto_pay_time', '09:00');
       row.putIfAbsent('to_account_id', () => null);
       row.putIfAbsent('to_amount', () => null);
-      if (row.containsKey('freq_unit')) {
-        final u = row['freq_unit'] as String? ?? 'months';
+      if (row.containsKey('freq_unit') && row['freq_unit'] is String) {
+        final u = row['freq_unit'] as String;
         const map = {
           'day': 'days',
           'week': 'weeks',
@@ -1179,19 +1212,20 @@ class AppDatabase extends _$AppDatabase {
     }
 
     for (final row in _rows(data, 'wishlist')) {
-      row.putIfAbsent('is_purchased', () => 0);
-      row.putIfAbsent('notes', () => '');
-      row.putIfAbsent('priority', () => 'low');
+      _ensureDefault(row, 'is_purchased', 0);
+      _ensureDefault(row, 'notes', '');
+      _ensureDefault(row, 'priority', 'low');
+      _ensureDefault(row, 'created_at', nowIso);
       row.putIfAbsent('goal_id', () => null);
     }
 
     for (final row in _rows(data, 'lended_money')) {
-      row.putIfAbsent('is_settled', () => 0);
-      row.putIfAbsent('notes', () => '');
+      _ensureDefault(row, 'is_settled', 0);
+      _ensureDefault(row, 'notes', '');
       row.putIfAbsent('due_date', () => null);
       row.putIfAbsent('account_id', () => null);
-      row.putIfAbsent('reminder_enabled', () => 0);
-      row.putIfAbsent('reminder_time', () => '09:00');
+      _ensureDefault(row, 'reminder_enabled', 0);
+      _ensureDefault(row, 'reminder_time', '09:00');
     }
 
     data.putIfAbsent('lended_people', () => <dynamic>[]);
@@ -1234,7 +1268,7 @@ class AppDatabase extends _$AppDatabase {
             'name': name,
             'color_value': palette[colorIdx % palette.length],
             'notes': '',
-            'created_at': DateTime.now().toIso8601String(),
+            'created_at': nowIso,
           });
           colorIdx++;
         }
@@ -1243,51 +1277,69 @@ class AppDatabase extends _$AppDatabase {
     }
 
     for (final row in _rows(data, 'lended_people')) {
-      row.putIfAbsent('notes', () => '');
-      row.putIfAbsent('color_value', () => 0xFF1E88E5);
-      row.putIfAbsent('created_at', () => DateTime.now().toIso8601String());
+      _ensureDefault(row, 'notes', '');
+      _ensureDefault(row, 'color_value', 0xFF1E88E5);
+      _ensureDefault(row, 'created_at', nowIso);
     }
 
+    final accCurrencyById = <String, String>{
+      for (final a in _rows(data, 'accounts'))
+        if (a['id'] is String && a['currency'] is String && (a['currency'] as String).isNotEmpty)
+          a['id'] as String: a['currency'] as String,
+    };
+
     for (final row in _rows(data, 'lended_money')) {
-      row.putIfAbsent('currency', () => 'EGP');
+      if (!row.containsKey('currency') ||
+          row['currency'] == null ||
+          (row['currency'] as String).isEmpty) {
+        final accId = row['account_id'] as String?;
+        row['currency'] = (accId != null ? accCurrencyById[accId] : null) ??
+            fallbackCurrency;
+      }
     }
 
     for (final row in _rows(data, 'assets')) {
-      row.putIfAbsent('currency', () => 'EGP');
-      row.putIfAbsent('notes', () => '');
-      row.putIfAbsent('created_at', () => DateTime.now().toIso8601String());
+      _ensureDefault(row, 'currency', fallbackCurrency);
+      _ensureDefault(row, 'notes', '');
+      _ensureDefault(row, 'created_at', nowIso);
     }
 
     for (final row in _rows(data, 'budgets')) {
-      row.putIfAbsent('period', () => 'monthly');
-      row.putIfAbsent('created_at', () => DateTime.now().toIso8601String());
-      row.putIfAbsent('allow_rollover', () => 0);
+      _ensureDefault(row, 'period', 'monthly');
+      _ensureDefault(row, 'created_at', nowIso);
+      _ensureDefault(row, 'allow_rollover', 0);
     }
 
     for (final row in _rows(data, 'savings_goals')) {
-      row.putIfAbsent('current_amount', () => 0);
-      row.putIfAbsent('is_completed', () => 0);
-      row.putIfAbsent('color_value', () => 0xFF2E7D32);
-      row.putIfAbsent('created_at', () => DateTime.now().toIso8601String());
+      _ensureDefault(row, 'current_amount', 0);
+      _ensureDefault(row, 'currency', fallbackCurrency);
+      _ensureDefault(row, 'is_completed', 0);
+      _ensureDefault(row, 'color_value', 0xFF2E7D32);
+      _ensureDefault(row, 'created_at', nowIso);
       row.putIfAbsent('wishlist_item_id', () => null);
     }
 
     for (final row in _rows(data, 'savings_contributions')) {
-      row.putIfAbsent('note', () => '');
+      _ensureDefault(row, 'note', '');
     }
 
     for (final row in _rows(data, 'loans')) {
-      row.putIfAbsent('currency', () => 'EGP');
-      row.putIfAbsent('reminder_enabled', () => 0);
-      row.putIfAbsent('reminder_day', () => 1);
-      row.putIfAbsent('reminder_time', () => '09:00');
-      row.putIfAbsent('is_settled', () => 0);
-      row.putIfAbsent('notes', () => '');
-      row.putIfAbsent('created_at', () => DateTime.now().toIso8601String());
+      _ensureDefault(row, 'currency', fallbackCurrency);
+      _ensureDefault(row, 'reminder_enabled', 0);
+      _ensureDefault(row, 'reminder_day', 1);
+      _ensureDefault(row, 'reminder_time', '09:00');
+      _ensureDefault(row, 'is_settled', 0);
+      _ensureDefault(row, 'notes', '');
+      _ensureDefault(row, 'created_at', nowIso);
     }
 
     for (final row in _rows(data, 'loan_payments')) {
-      row.putIfAbsent('notes', () => '');
+      _ensureDefault(row, 'currency', fallbackCurrency);
+      _ensureDefault(row, 'notes', '');
+    }
+
+    for (final row in _rows(data, 'net_worth_snapshots')) {
+      _ensureDefault(row, 'currency', fallbackCurrency);
     }
     return data;
   }

@@ -57,7 +57,7 @@ class CreditReminderService {
     for (var i = 0; i < accountId.length; i++) {
       hash = 31 * hash + accountId.codeUnitAt(i);
     }
-    return ((hash & 0x7FFFFFFF) % 1000000) + 800000;
+    return 1000000 + ((hash & 0x0FFFFFFF) % 400000);
   }
 
   int _advanceId(String accountId) {
@@ -65,7 +65,7 @@ class CreditReminderService {
     for (var i = 0; i < accountId.length; i++) {
       hash = 31 * hash + accountId.codeUnitAt(i);
     }
-    return ((hash & 0x7FFFFFFF) % 1000000) + 900000;
+    return 1400000 + ((hash & 0x0FFFFFFF) % 400000);
   }
 
   NotificationDetails _buildDetails() {

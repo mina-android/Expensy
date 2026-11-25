@@ -50,29 +50,9 @@ class SplitTransactionSheet extends StatelessWidget {
 
     final totalAmount = transaction.amount > 0 ? transaction.amount : 1.0;
 
-    return Padding(
-      padding: EdgeInsets.only(
-        top: 16,
-        left: 20,
-        right: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Drag handle
-          Center(
-            child: Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: cs.onSurface.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
+    return SheetShell(
+      showHandle: true,
+      children: [
 
           // Title & Badge
           Row(
@@ -182,6 +162,7 @@ class SplitTransactionSheet extends StatelessWidget {
                             Text(
                               app.categoryDisplayName(
                                 split.categoryId,
+                                l10n: l10n,
                                 fallback: cat?.name ?? l10n.recurring_category,
                               ),
                               style: const TextStyle(
@@ -255,7 +236,6 @@ class SplitTransactionSheet extends StatelessWidget {
             ),
           ),
         ],
-      ),
     );
   }
 }

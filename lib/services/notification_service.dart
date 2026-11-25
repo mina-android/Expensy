@@ -135,15 +135,19 @@ class NotificationService {
           : (r.paymentType == 'expense'
               ? loc.notif_recurringExpenseBody(amount)
               : loc.notif_recurringIncomeBody(amount));
-      await _plugin.zonedSchedule(
-        id: _notifId(r.id),
-        title: '$emoji ${r.name}',
-        body: body,
-        scheduledDate: tzDate,
-        notificationDetails: details,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        payload: r.id,
-      );
+      try {
+        await _plugin.zonedSchedule(
+          id: _notifId(r.id),
+          title: '$emoji ${r.name}',
+          body: body,
+          scheduledDate: tzDate,
+          notificationDetails: details,
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          payload: r.id,
+        );
+      } catch (e) {
+        debugPrint('Notification scheduleReminder warning: $e');
+      }
     }
 
     // ── 2. 2-days-before advance notification ────────────────────────────
@@ -156,15 +160,19 @@ class NotificationService {
             : (r.paymentType == 'expense'
                 ? loc.notif_recurringExpenseDueSoonBody(amount)
                 : loc.notif_recurringIncomeDueSoonBody(amount));
-        await _plugin.zonedSchedule(
-          id: _advanceId(r.id),
-          title: '$emoji ${r.name}',
-          body: body,
-          scheduledDate: advTzDate,
-          notificationDetails: details,
-          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          payload: r.id,
-        );
+        try {
+          await _plugin.zonedSchedule(
+            id: _advanceId(r.id),
+            title: '$emoji ${r.name}',
+            body: body,
+            scheduledDate: advTzDate,
+            notificationDetails: details,
+            androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+            payload: r.id,
+          );
+        } catch (e) {
+          debugPrint('Notification scheduleAdvanceReminder warning: $e');
+        }
       }
     }
   }
@@ -227,13 +235,14 @@ class NotificationService {
     return tzDate;
   }
 
-  /// Stable positive int ID derived from the payment UUID.
-  int _notifId(String paymentId) => paymentId.hashCode & 0x7FFFFFFF;
+  /// Stable positive int ID derived from the payment UUID (range 100,000..499,999).
+  int _notifId(String paymentId) =>
+      100000 + ((paymentId.hashCode & 0x0FFFFFFF) % 400000);
 
-  /// Stable positive int ID for the 2-days-before advance notification.
-  /// Uses a distinct suffix so it never collides with [_notifId].
+  /// Stable positive int ID for the 2-days-before advance notification (range 500,000..899,999).
+  /// Uses a distinct partition & suffix so it never collides with [_notifId] or other services.
   int _advanceId(String paymentId) =>
-      ('${paymentId}_adv').hashCode & 0x7FFFFFFF;
+      500000 + ((('${paymentId}_adv').hashCode & 0x0FFFFFFF) % 400000);
 
   /// Builds the shared [NotificationDetails] for recurring payment reminders.
   NotificationDetails _buildDetails() => const NotificationDetails(

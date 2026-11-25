@@ -32,7 +32,6 @@ class PresetsCarousel extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
     final cs = Theme.of(context).colorScheme;
-    final isAmoled = isAmoledSurface(cs);
     final presets = allowedTypes == null
         ? app.presets
         : app.presets.where((p) => allowedTypes!.contains(p.type)).toList();
@@ -82,7 +81,7 @@ class PresetsCarousel extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Material(
-              color: isAmoled ? const Color(0xFF141414) : cs.surfaceContainerLow,
+              color: cs.surfaceContainerLow,
               borderRadius: BorderRadius.circular(16),
               child: InkWell(
                 borderRadius: BorderRadius.circular(16),
@@ -161,7 +160,7 @@ class PresetsCarousel extends StatelessWidget {
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: Material(
-                    color: isAmoled ? const Color(0xFF161616) : cs.surfaceContainerLow,
+                    color: cs.surfaceContainerLow,
                     borderRadius: BorderRadius.circular(14),
                     child: InkWell(
                       borderRadius: BorderRadius.circular(14),

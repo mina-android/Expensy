@@ -38,6 +38,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List<AppTransaction>? _prevTransactions;
   Map<String, double>? _prevRates;
+  List<TransactionSplit>? _prevSplits;
+  String? _prevCurrency;
   int _prevTxCount = -1;
   String? _prevFirstTxId;
   double _income = 0;
@@ -48,12 +50,16 @@ class _HomeScreenState extends State<HomeScreen> {
   void _computeTransactions(AppProvider app) {
     if (identical(_prevTransactions, app.transactions) &&
         identical(_prevRates, app.exchangeRates) &&
+        identical(_prevSplits, app.splits) &&
+        _prevCurrency == app.settings.currency &&
         _prevTxCount == app.transactions.length &&
         _prevFirstTxId == app.transactions.firstOrNull?.id) {
       return;
     }
     _prevTransactions = app.transactions;
     _prevRates = app.exchangeRates;
+    _prevSplits = app.splits;
+    _prevCurrency = app.settings.currency;
     _prevTxCount = app.transactions.length;
     _prevFirstTxId = app.transactions.firstOrNull?.id;
     final txs = app.transactions;
@@ -356,13 +362,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             style: TextStyle(
                               fontSize: 11.5,
                               fontWeight: FontWeight.w800,
-                              color: net >= 0
-                                  ? (isDark
-                                      ? const Color(0xFF81C784)
-                                      : kSuccessColor)
-                                  : (isDark
-                                      ? const Color(0xFFE57373)
-                                      : kDangerColor),
+                              color: net >= 0 ? kSuccessColor : kDangerColor,
                             ),
                           ),
                         ),
@@ -537,7 +537,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ? kSuccessColor
                                   .withValues(alpha: 0.35)
                               : (overallPacing.isCaution
-                                  ? Colors.orange.withValues(alpha: 0.4)
+                                  ? kWarningColor.withValues(alpha: 0.4)
                                   : cs.error.withValues(alpha: 0.4)))
                           : cs.outlineVariant.withValues(alpha: 0.35),
                     ),
@@ -1141,7 +1141,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ...List.generate(_recent.length, (index) {
                         final t = _recent[index];
                         final isLast = index == _recent.length - 1;
-                        final acc = app.accountById(t.accountId);
+                        final acc = app.accountById(t.paidViaAccountId ?? t.accountId);
                         final cat = app.categoryById(t.categoryId);
                         final isInc = t.type == 'income';
                         final isSplit = app.isTransactionSplit(t.id);
@@ -1156,7 +1156,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               type: MaterialType.transparency,
                               child: Dismissible(
                               key: ValueKey(t.id),
-                              direction: DismissDirection.startToEnd,
+                              direction: t.isInvestment
+                                  ? DismissDirection.none
+                                  : DismissDirection.startToEnd,
                               background: Container(
                                 color: cs.error,
                                 alignment: Alignment.centerLeft,
@@ -1220,7 +1222,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                 title: Text(
                                   t.description.isNotEmpty
                                       ? t.description
-                                      : t.type,
+                                      : app.categoryDisplayName(
+                                          t.categoryId,
+                                          l10n: l10n,
+                                        ),
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w700,
                                     fontSize: 13.5,
@@ -1266,13 +1271,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                         ),
                                       ),
                                 trailing: Text(
-                                  '${isInc ? '+' : '-'}${fmt(t.amount)}',
+                                  '${t.isTransfer ? '↔ ' : (isInc ? '+' : '-')}${formatAmount(t.amount, app.txCurrency(t))}',
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w800,
-                                    color: isInc
-                                        ? kSuccessColor
-                                        : kDangerColor,
+                                    color: t.isTransfer
+                                        ? cs.primary
+                                        : (isInc
+                                            ? kSuccessColor
+                                            : kDangerColor),
                                   ),
                                 ),
                               ),
@@ -1360,31 +1367,25 @@ class _HomeScreenState extends State<HomeScreen> {
         badgeLabel = l10n.pacing_onTrack;
         badgeBg = kSuccessColor
             .withValues(alpha: isDark ? 0.25 : 0.12);
-        badgeFg =
-            isDark ? const Color(0xFF81C784) : kSuccessColor;
-        valueColor =
-            isDark ? const Color(0xFF81C784) : kSuccessColor;
+        badgeFg = kSuccessColor;
+        valueColor = kSuccessColor;
         break;
       case BudgetPacingStatus.caution:
         icon = Icons.speed_rounded;
-        iconColor = Colors.orange;
+        iconColor = kWarningColor;
         badgeLabel = l10n.pacing_fast;
-        badgeBg = Colors.orange.withValues(alpha: isDark ? 0.25 : 0.12);
-        badgeFg =
-            isDark ? const Color(0xFFFFB74D) : kWarningColor;
-        valueColor =
-            isDark ? const Color(0xFFFFB74D) : kWarningColor;
+        badgeBg = kWarningColor.withValues(alpha: isDark ? 0.25 : 0.12);
+        badgeFg = kWarningColor;
+        valueColor = kWarningColor;
         break;
       case BudgetPacingStatus.overPaced:
         icon = Icons.warning_amber_rounded;
-        iconColor = const Color(0xFFD32F2F);
+        iconColor = kDangerColor;
         badgeLabel = l10n.pacing_alert;
-        badgeBg = const Color(0xFFD32F2F)
+        badgeBg = kDangerColor
             .withValues(alpha: isDark ? 0.25 : 0.12);
-        badgeFg =
-            isDark ? const Color(0xFFE57373) : kDangerColor;
-        valueColor =
-            isDark ? const Color(0xFFE57373) : kDangerColor;
+        badgeFg = kDangerColor;
+        valueColor = kDangerColor;
         break;
       case BudgetPacingStatus.exceeded:
         icon = Icons.error_outline_rounded;
@@ -1471,7 +1472,7 @@ class _HomeScreenState extends State<HomeScreen> {
         Row(
           children: [
             const Icon(Icons.local_fire_department_rounded,
-                size: 16, color: Color(0xFFF57C00)),
+                size: 16, color: kWarningColor),
             const SizedBox(width: 6),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,

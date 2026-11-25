@@ -223,9 +223,6 @@ class DBHelper {
   static Future<void> deleteLoanPayment(String id) =>
       AppDatabase.instance.deleteLoanPayment(id);
 
-  static Future<void> deleteLoanPaymentsFor(String loanId) =>
-      AppDatabase.instance.deleteLoanPaymentsFor(loanId);
-
   // ── Transaction Presets ───────────────────────────────────────────────
   static Future<List<TransactionPreset>> getPresets() =>
       AppDatabase.instance.getPresets();
@@ -250,9 +247,6 @@ class DBHelper {
   static Future<void> saveTransactionSplits(
           String transactionId, List<TransactionSplit> splits) =>
       AppDatabase.instance.saveTransactionSplits(transactionId, splits);
-
-  static Future<void> deleteSplitsForTransaction(String transactionId) =>
-      AppDatabase.instance.deleteSplitsForTransaction(transactionId);
 
   // ── Backup / Restore ──────────────────────────────────────────────────
   static Future<Map<String, dynamic>> exportAll() =>
@@ -290,10 +284,6 @@ class DBHelper {
         newAccountId: newAccountId,
         newDelta: newDelta,
       );
-
-  static Future<void> applyUpdateTransactionWithBalance(
-          AppTransaction t, double balanceDelta) =>
-      AppDatabase.instance.applyUpdateTransactionWithBalance(t, balanceDelta);
 
   static Future<void> applyDeleteTransactionWithBalance(
           String id, String accountId, double balanceDelta) =>

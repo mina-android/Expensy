@@ -6,7 +6,7 @@ This document provides a comprehensive blueprint of the **Expensy** architecture
 
 ## 1. High-Level System Architecture
 
-Expensy is built with Flutter and Dart targeting Android. It follows a clean offline-first reactive architecture powered by `Provider` for state management, `Drift` (backed by SQLite via Dart FFI in a background isolate) for relational persistence, and native Android services (AlarmManager, LocalNotifications, HomeWidget, QuickAdd EventChannels).
+Expensy is built with Flutter and Dart targeting Android. It follows a clean local-first reactive architecture powered by `Provider` for state management, `Drift` (backed by SQLite via Dart FFI in a background isolate) for relational persistence, and native Android services (AlarmManager, LocalNotifications, HomeWidget, QuickAdd EventChannels).
 
 ```mermaid
 flowchart TD

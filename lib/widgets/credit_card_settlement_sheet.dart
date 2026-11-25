@@ -29,7 +29,6 @@ class CreditCardSettlementSheet extends StatefulWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (_) => CreditCardSettlementSheet(cardAccount: cardAccount),
     );
   }
@@ -54,7 +53,7 @@ class _CreditCardSettlementSheetState extends State<CreditCardSettlementSheet> {
 
     // Pick default funding account
     final eligible = app.accounts
-        .where((a) => !['credit', 'debit'].contains(a.type))
+        .where((a) => !['credit', 'debit', 'gold'].contains(a.type))
         .toList();
 
     if (widget.cardAccount.linkedAccountId != null &&
@@ -158,7 +157,7 @@ class _CreditCardSettlementSheetState extends State<CreditCardSettlementSheet> {
     final statement = app.getCreditCardStatement(widget.cardAccount);
 
     final eligibleSources = app.accounts
-        .where((a) => !['credit', 'debit'].contains(a.type))
+        .where((a) => !['credit', 'debit', 'gold'].contains(a.type))
         .toList();
     final selectedSourceAcc = _sourceAccountId != null
         ? app.accountById(_sourceAccountId!)
@@ -167,34 +166,10 @@ class _CreditCardSettlementSheetState extends State<CreditCardSettlementSheet> {
     final payAmount = _resolvePaymentAmount(statement);
     final cardColor = Color(widget.cardAccount.colorValue);
 
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: popupSurfaceColor(cs),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        border: Border.fromBorderSide(popupBorderSide(cs)),
-      ),
-      padding: EdgeInsets.fromLTRB(20, 16, 20, 20 + bottomInset),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Drag handle
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: cs.onSurfaceVariant.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-
-            // Header Row
+    return SheetShell(
+      showHandle: true,
+      children: [
+        // Header Row
             Row(
               children: [
                 Container(
@@ -382,7 +357,6 @@ class _CreditCardSettlementSheetState extends State<CreditCardSettlementSheet> {
                 compact: true,
                 controller: _customAmountCtrl,
                 onChanged: (_) => setState(() {}),
-                showDoneButton: false,
               ),
             ],
 
@@ -522,9 +496,7 @@ class _CreditCardSettlementSheetState extends State<CreditCardSettlementSheet> {
                     : () => _submitPayment(app, statement),
               ),
             ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 

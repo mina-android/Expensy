@@ -181,7 +181,12 @@ class _WishCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
-                              item.priority.toUpperCase(),
+                              (item.priority == 'high'
+                                      ? l10n.wishlist_priorityHigh
+                                      : item.priority == 'low'
+                                          ? l10n.wishlist_priorityLow
+                                          : l10n.wishlist_priorityMedium)
+                                  .toUpperCase(),
                               style: TextStyle(
                                 fontSize: 9,
                                 fontWeight: FontWeight.w700,
@@ -233,6 +238,8 @@ class _WishCard extends StatelessWidget {
                           const BoxConstraints(minWidth: 32, minHeight: 32),
                       onPressed: () async {
                         AppHaptics.tap(context, HapticStrength.medium);
+                        if (!await showDeleteConfirm(context, item.name)) return;
+                        if (!context.mounted) return;
                         final undo = await context
                             .read<AppProvider>()
                             .deleteWishlistWithUndo(item.id);
@@ -321,8 +328,8 @@ class _WishCard extends StatelessWidget {
                                 Text(
                                   l10n.wishlist_funded(
                                     percent,
-                                    fmt(goal.currentAmount),
-                                    fmt(goal.targetAmount),
+                                    formatAmount(goal.currentAmount, goal.currency),
+                                    formatAmount(goal.targetAmount, goal.currency),
                                   ),
                                   style: TextStyle(
                                     fontSize: 11,
@@ -542,8 +549,6 @@ void _showPurchaseDialog(
                       AppNumericKeypad(
                         compact: true,
                         controller: amountCtrl,
-                        onDone: () =>
-                            setDialogState(() => showPurchaseKeypad = false),
                       ),
                     ],
                     const SizedBox(height: 12),
@@ -585,7 +590,8 @@ void _showPurchaseDialog(
                     AppHaptics.tap(context, HapticStrength.medium);
                     Navigator.pop(dialogCtx);
                     final amt =
-                        double.tryParse(amountCtrl.text) ?? item.targetPrice;
+                        ExpressionEvaluator.evaluate(amountCtrl.text) ??
+                            item.targetPrice;
                     await app.purchaseWishlistItem(
                       item: item,
                       accountId: selectedAccountId,
@@ -655,7 +661,8 @@ class _WishSheetState extends State<_WishSheet> {
     setState(() => _submitted = true);
     if (_nameCtrl.text.trim().isEmpty) return;
     final priceText = _priceCtrl.text.trim();
-    final price = priceText.isEmpty ? 0.0 : double.tryParse(priceText);
+    final price =
+        priceText.isEmpty ? 0.0 : ExpressionEvaluator.evaluate(priceText);
     if (price == null || price < 0) return;
     final app = context.read<AppProvider>();
     if (isEdit) {
@@ -683,19 +690,10 @@ class _WishSheetState extends State<_WishSheet> {
     final app = context.watch<AppProvider>();
     final l10n = AppLocalizations.of(context)!;
     final sym = currencyInfo(app.settings.currency).symbol;
-    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
-    // Render Padding layout container.
-    return Padding(
-      padding: EdgeInsets.only(
-          bottom: bottomInset + 16,
-          left: 20,
-          right: 20,
-          top: 20),
-      child: SingleChildScrollView(
-          child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+    // Render SheetShell layout container.
+    return SheetShell(
+      showHandle: true,
+      children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -713,8 +711,12 @@ class _WishSheetState extends State<_WishSheet> {
                             color: Theme.of(context).colorScheme.error),
                         onPressed: () async {
                           AppHaptics.tap(context, HapticStrength.medium);
-                          final navigator = Navigator.of(context);
                           final item = widget.existing!;
+                          if (!await showDeleteConfirm(context, item.name)) {
+                            return;
+                          }
+                          if (!context.mounted) return;
+                          final navigator = Navigator.of(context);
                           final undo = await context
                               .read<AppProvider>()
                               .deleteWishlistWithUndo(item.id);
@@ -758,7 +760,7 @@ class _WishSheetState extends State<_WishSheet> {
                           )
                         : null,
                     errorText: _submitted &&
-                            (double.tryParse(_priceCtrl.text) ?? 0) <= 0
+                            (ExpressionEvaluator.evaluate(_priceCtrl.text) ?? 0) <= 0
                         ? l10n.error_required
                         : null,
                   ),
@@ -770,7 +772,6 @@ class _WishSheetState extends State<_WishSheet> {
                     compact: true,
                     controller: _priceCtrl,
                     onChanged: (_) => setState(() {}),
-                    onDone: () => setState(() => _showKeypad = false),
                   ),
                 ],
                 const SizedBox(height: 14),
@@ -837,8 +838,7 @@ class _WishSheetState extends State<_WishSheet> {
                       ? l10n.wishlist_saveChanges
                       : l10n.wishlist_addItem),
                 ),
-              ]),
-        ),
+      ],
     );
   }
 }

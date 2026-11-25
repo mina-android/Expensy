@@ -47,6 +47,7 @@ class _RecurringScreenState extends State<RecurringScreen> {
   double _monthly(List<RecurringPayment> list, AppProvider app) {
     double t = 0;
     for (final r in list) {
+      if (r.isInstallment && r.isInstallmentEnded) continue;
       final accCur = app.accountById(r.accountId)?.currency ?? app.settings.currency;
       final amt = app.convertToMain(r.amount, accCur);
       switch (r.freqUnit) {
@@ -484,7 +485,10 @@ class _RecurringCardState extends State<_RecurringCard> {
         : null;
     final catColor =
         r.isTransfer ? cs.primary : (cat != null ? Color(cat.colorValue) : cs.primary);
-    final days = r.nextDate.difference(DateTime.now()).inDays;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final nextDay = DateTime(r.nextDate.year, r.nextDate.month, r.nextDate.day);
+    final days = nextDay.difference(today).inDays;
     final overdue = days < 0;
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -823,6 +827,7 @@ class _RecurringSheetState extends State<_RecurringSheet> {
   final _amtCtrl = TextEditingController();
   final _toAmtCtrl = TextEditingController();
   final _freqCtrl = TextEditingController(text: '1');
+  final _notesCtrl = TextEditingController();
 
   String _payType = 'expense';
   String _recurringType = 'subscription';
@@ -893,6 +898,7 @@ class _RecurringSheetState extends State<_RecurringSheet> {
       _reminderTime = _parseTime(e.reminderTime);
       _autoPayEnabled = e.autoPayEnabled;
       _autoPayTime = _parseTime(e.autoPayTime);
+      _notesCtrl.text = e.notes;
     }
   }
 
@@ -905,6 +911,7 @@ class _RecurringSheetState extends State<_RecurringSheet> {
     _amtCtrl.dispose();
     _toAmtCtrl.dispose();
     _freqCtrl.dispose();
+    _notesCtrl.dispose();
     super.dispose();
   }
 
@@ -1064,7 +1071,7 @@ class _RecurringSheetState extends State<_RecurringSheet> {
       reminderEnabled: _reminderEnabled,
       reminderTime: _reminderTimeStr,
       earlyReminderEnabled: _earlyReminderEnabled,
-      notes: isEdit ? widget.existing!.notes : '',
+      notes: _notesCtrl.text.trim(),
       autoPayEnabled: _autoPayEnabled,
       autoPayTime: _autoPayTimeStr,
     );
@@ -1091,22 +1098,10 @@ class _RecurringSheetState extends State<_RecurringSheet> {
     final amt = double.tryParse(_amtCtrl.text) ?? 0;
 
 
-    // Render Padding layout container.
-    return Padding(
-      padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-          left: 20,
-          right: 20,
-          top: 20),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.85,
-        ),
-        child: SingleChildScrollView(
-            child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    // Render SheetShell layout container.
+    return SheetShell(
+      maxHeightFactor: 0.85,
+      children: [
           Text(
               isEdit
                   ? l10n.recurring_editRecurring
@@ -1592,6 +1587,16 @@ class _RecurringSheetState extends State<_RecurringSheet> {
             const SizedBox(height: 8),
           ],
 
+          const SizedBox(height: 12),
+          TextField(
+            controller: _notesCtrl,
+            maxLines: 2,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: InputDecoration(
+              labelText: l10n.recurring_notes,
+              prefixIcon: const Icon(Icons.notes_rounded),
+            ),
+          ),
           const SizedBox(height: 16),
           FilledButton.icon(
             onPressed: () {
@@ -1607,9 +1612,7 @@ class _RecurringSheetState extends State<_RecurringSheet> {
                     borderRadius: BorderRadius.circular(28))),
           ),
           const SizedBox(height: 4),
-        ],
-      )),
-      ),
+      ],
     );
   }
 }

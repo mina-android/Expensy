@@ -212,10 +212,9 @@ class LendedNotificationService {
     return tzDate;
   }
 
-  /// Stable positive int ID for lended notifications.
-  /// Uses a 'lended_' prefix to guarantee it never collides with recurring
-  /// payment notification IDs even if the underlying UUIDs matched.
-  int _notifId(String lendedId) => 'lended_$lendedId'.hashCode & 0x7FFFFFFF;
+  /// Stable positive int ID for lended notifications (range 3,500,000..3,899,999).
+  int _notifId(String lendedId) =>
+      3500000 + (('lended_$lendedId'.hashCode & 0x0FFFFFFF) % 400000);
 
   /// Builds the [NotificationDetails] for all lent/borrowed reminders,
   /// pointed at the dedicated lended channel.

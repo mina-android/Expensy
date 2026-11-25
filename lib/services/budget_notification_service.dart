@@ -48,9 +48,9 @@ class BudgetNotificationService {
     final nf = NumberFormat.currency(symbol: '');
     final amountStr = nf.format(overAmount).trim();
 
-    // Stable ID that resets daily so budget alerts don't spam.
+    // Stable ID that resets daily so budget alerts don't spam (range 4,000,000..4,399,999).
     final today = DateFormat('yyyy-MM-dd', 'en_US').format(DateTime.now());
-    final id = ('budget_${budget.id}_$today').hashCode & 0x7FFFFFFF;
+    final id = 4000000 + ((('budget_${budget.id}_$today').hashCode & 0x0FFFFFFF) % 400000);
 
     const androidDetails = AndroidNotificationDetails(
       'expensy_budget',
@@ -85,9 +85,9 @@ class BudgetNotificationService {
     final nf = NumberFormat.currency(symbol: '');
     final amountStr = nf.format(goal.targetAmount).trim();
 
-    // Stable ID that resets daily.
+    // Stable ID that resets daily (range 4,000,000..4,399,999).
     final today = DateFormat('yyyy-MM-dd', 'en_US').format(DateTime.now());
-    final id = ('goal_${goal.id}_$today').hashCode & 0x7FFFFFFF;
+    final id = 4000000 + ((('goal_${goal.id}_$today').hashCode & 0x0FFFFFFF) % 400000);
 
     const androidDetails = AndroidNotificationDetails(
       'expensy_budget',

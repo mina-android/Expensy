@@ -28,6 +28,7 @@ class _BackupScreenState extends State<BackupScreen> {
   bool _restoring = false;
   String? _msg;
   bool _msgOk = true;
+  bool _canUndoRestore = false;
   Timer? _msgTimer;
 
   @override
@@ -38,15 +39,19 @@ class _BackupScreenState extends State<BackupScreen> {
   }
 
   // Helper method `_setMsg`: handles user action or computes derived UI state.
-  void _setMsg(String m, {bool ok = true}) {
+  void _setMsg(String m, {bool ok = true, bool showUndo = false}) {
     setState(() {
       _msg = m;
       _msgOk = ok;
+      _canUndoRestore = showUndo;
     });
     _msgTimer?.cancel();
-    _msgTimer = Timer(const Duration(seconds: 3), () {
+    _msgTimer = Timer(Duration(seconds: showUndo ? 8 : 3), () {
       if (mounted) {
-        setState(() => _msg = null);
+        setState(() {
+          _msg = null;
+          _canUndoRestore = false;
+        });
       }
     });
   }
@@ -78,7 +83,6 @@ class _BackupScreenState extends State<BackupScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (_) => const _SelectiveBackupSheet(),
     );
   }
@@ -114,10 +118,12 @@ class _BackupScreenState extends State<BackupScreen> {
       showModalBottomSheet(
         context: context,
         isScrollControlled: true,
-        backgroundColor: Colors.transparent,
         builder: (_) => _SelectiveRestoreSheet(
           data: backupData,
-          onRestored: () => _setMsg(l10n.backup_selectedRestoredSuccess),
+          onRestored: () => _setMsg(
+            l10n.backup_selectedRestoredSuccess,
+            showUndo: app.lastPreRestoreSnapshotPath != null,
+          ),
         ),
       );
       return;
@@ -154,11 +160,12 @@ class _BackupScreenState extends State<BackupScreen> {
               showModalBottomSheet(
                 context: context,
                 isScrollControlled: true,
-                backgroundColor: Colors.transparent,
                 builder: (_) => _SelectiveRestoreSheet(
                   data: data,
-                  onRestored: () =>
-                      _setMsg(l10n.backup_selectedRestoredSuccess),
+                  onRestored: () => _setMsg(
+                    l10n.backup_selectedRestoredSuccess,
+                    showUndo: context.read<AppProvider>().lastPreRestoreSnapshotPath != null,
+                  ),
                 ),
               );
             },
@@ -205,7 +212,10 @@ class _BackupScreenState extends State<BackupScreen> {
                             originalVersion.toString(),
                             app.schemaVersion.toString())
                         : '';
-                    _setMsg(l10n.backup_dataRestoredSuccessfully(vLabel));
+                    _setMsg(
+                      l10n.backup_dataRestoredSuccessfully(vLabel),
+                      showUndo: app.lastPreRestoreSnapshotPath != null,
+                    );
                   }
                 } catch (e) {
                   if (mounted) {
@@ -266,6 +276,8 @@ class _BackupScreenState extends State<BackupScreen> {
           app.accounts.length),
       _CountRow(Icons.receipt_long_outlined, l10n.backup_transactions,
           app.transactions.length),
+      _CountRow(Icons.call_split_rounded, l10n.split_transactions_title,
+          app.splits.length),
       _CountRow(Icons.repeat_rounded, l10n.backup_recurringPayments,
           app.recurring.length),
       _CountRow(Icons.bolt_rounded, l10n.presets_quickLog, app.presets.length),
@@ -293,6 +305,8 @@ class _BackupScreenState extends State<BackupScreen> {
           app.loanPayments.length),
       _CountRow(Icons.label_outline_rounded, l10n.backup_categories,
           app.userCategories.length),
+      _CountRow(Icons.account_balance_rounded, l10n.netWorth_title,
+          app.netWorthSnapshots.length),
       _CountRow(
           Icons.settings_outlined, l10n.backup_settings, -1), // -1 = 'included'
     ];
@@ -650,6 +664,34 @@ class _BackupScreenState extends State<BackupScreen> {
                         Expanded(
                             child: Text(_msg!,
                                 style: TextStyle(fontSize: 13, color: accent))),
+                        if (_canUndoRestore &&
+                            app.lastPreRestoreSnapshotPath != null) ...[
+                          const SizedBox(width: 8),
+                          TextButton(
+                            onPressed: _restoring
+                                ? null
+                                : () async {
+                                    setState(() => _restoring = true);
+                                    try {
+                                      final ok = await app.undoLastRestore();
+                                      if (mounted && ok) {
+                                        _setMsg(l10n.backup_dataRestoredSuccessfully(''));
+                                      }
+                                    } finally {
+                                      if (mounted) {
+                                        setState(() => _restoring = false);
+                                      }
+                                    }
+                                  },
+                            child: Text(
+                              l10n.common_undo,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w800,
+                                color: accent,
+                              ),
+                            ),
+                          ),
+                        ],
                       ]),
                 );
               }),
@@ -1044,6 +1086,8 @@ class _SelectiveBackupSheetState extends State<_SelectiveBackupSheet> {
     'budgets',
     'assets',
     'wishlist_goals',
+    'net_worth',
+    'settings',
   };
   bool _exporting = false;
 
@@ -1065,161 +1109,144 @@ class _SelectiveBackupSheetState extends State<_SelectiveBackupSheet> {
       ('budgets', l10n.backup_budgets, Icons.pie_chart_outline_rounded, app.budgets.length),
       ('assets', l10n.backup_entityAssetsValuables, Icons.inventory_2_outlined, app.assets.length),
       ('wishlist_goals', l10n.backup_entityWishlistGoals, Icons.star_outline_rounded, app.wishlist.length + app.savingsGoals.length),
+      ('net_worth', l10n.netWorth_title, Icons.account_balance_rounded, app.netWorthSnapshots.length),
+      ('settings', l10n.backup_settings, Icons.settings_outlined, 1),
     ];
 
-    // Render Container layout container.
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-      decoration: BoxDecoration(
-        color: popupSurfaceColor(cs),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        border: Border.fromBorderSide(popupBorderSide(cs)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: cs.onSurface.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
+    return SheetShell(
+      showHandle: true,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
                 l10n.backup_selectiveBackup,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
               ),
-              TextButton(
-                onPressed: () {
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  if (_selected.length == entities.length) {
+                    _selected.clear();
+                  } else {
+                    _selected.addAll(entities.map((e) => e.$1));
+                  }
+                });
+              },
+              child: Text(_selected.length == entities.length
+                  ? l10n.backup_deselectAll
+                  : l10n.backup_selectAll),
+            ),
+          ],
+        ),
+        Text(
+          l10n.backup_selectiveBackupDesc,
+          style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.6)),
+        ),
+        const SizedBox(height: 14),
+        ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.5),
+          child: ListView.separated(
+            shrinkWrap: true,
+            itemCount: entities.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 6),
+            itemBuilder: (context, i) {
+              final item = entities[i];
+              final isChecked = _selected.contains(item.$1);
+              return InkWell(
+                onTap: () {
                   setState(() {
-                    if (_selected.length == entities.length) {
-                      _selected.clear();
+                    if (isChecked) {
+                      _selected.remove(item.$1);
                     } else {
-                      _selected.addAll(entities.map((e) => e.$1));
+                      _selected.add(item.$1);
                     }
                   });
                 },
-                child: Text(_selected.length == entities.length
-                    ? l10n.backup_deselectAll
-                    : l10n.backup_selectAll),
-              ),
-            ],
-          ),
-          Text(
-            l10n.backup_selectiveBackupDesc,
-            style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.6)),
-          ),
-          const SizedBox(height: 14),
-          ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.5),
-            child: ListView.separated(
-              shrinkWrap: true,
-              itemCount: entities.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 6),
-              itemBuilder: (context, i) {
-                final item = entities[i];
-                final isChecked = _selected.contains(item.$1);
-                return InkWell(
-                  onTap: () {
-                    setState(() {
-                      if (isChecked) {
-                        _selected.remove(item.$1);
-                      } else {
-                        _selected.add(item.$1);
-                      }
-                    });
-                  },
-                  borderRadius: BorderRadius.circular(16),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: isChecked ? cs.primaryContainer.withValues(alpha: 0.3) : cs.surfaceContainerHigh.withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: isChecked ? cs.primary.withValues(alpha: 0.4) : Colors.transparent,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(item.$3, size: 22, color: isChecked ? cs.primary : cs.onSurface.withValues(alpha: 0.5)),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            item.$2,
-                            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: cs.onSurface.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            '${item.$4}',
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: cs.onSurface.withValues(alpha: 0.7)),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Checkbox(
-                          value: isChecked,
-                          onChanged: (v) {
-                            setState(() {
-                              if (v == true) {
-                                _selected.add(item.$1);
-                              } else {
-                                _selected.remove(item.$1);
-                              }
-                            });
-                          },
-                        ),
-                      ],
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isChecked ? cs.primaryContainer.withValues(alpha: 0.3) : cs.surfaceContainerHigh.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isChecked ? cs.primary.withValues(alpha: 0.4) : Colors.transparent,
                     ),
                   ),
-                );
-              },
-            ),
+                  child: Row(
+                    children: [
+                      Icon(item.$3, size: 22, color: isChecked ? cs.primary : cs.onSurface.withValues(alpha: 0.5)),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          item.$2,
+                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: cs.onSurface.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          item.$1 == 'settings' ? l10n.backup_included : '${item.$4}',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: cs.onSurface.withValues(alpha: 0.7)),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Checkbox(
+                        value: isChecked,
+                        onChanged: (v) {
+                          setState(() {
+                            if (v == true) {
+                              _selected.add(item.$1);
+                            } else {
+                              _selected.remove(item.$1);
+                            }
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
-          const SizedBox(height: 16),
-          FilledButton.icon(
-            onPressed: (_selected.isEmpty || _exporting)
-                ? null
-                : () async {
-                    setState(() => _exporting = true);
-                    try {
-                      final path = await app.createSelectiveBackup(_selected,
-                          dialogTitle: l10n.backup_selectiveBackup);
-                      if (!context.mounted) return;
-                      Navigator.pop(context);
-                      if (path != null) {
-                        showAppSnackbar(context, l10n.backup_selectiveSaved);
-                      }
-                    } catch (e) {
-                      if (!context.mounted) return;
-                      showAppSnackbar(context, l10n.backup_exportFailed(e.toString()));
-                    } finally {
-                      if (mounted) setState(() => _exporting = false);
+        ),
+        const SizedBox(height: 16),
+        FilledButton.icon(
+          onPressed: (_selected.isEmpty || _exporting)
+              ? null
+              : () async {
+                  setState(() => _exporting = true);
+                  try {
+                    final path = await app.createSelectiveBackup(_selected,
+                        dialogTitle: l10n.backup_selectiveBackup);
+                    if (!context.mounted) return;
+                    Navigator.pop(context);
+                    if (path != null) {
+                      showAppSnackbar(context, l10n.backup_selectiveSaved);
                     }
-                  },
-            icon: _exporting
-                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                : const Icon(Icons.file_upload_outlined),
-            label: Text(l10n.backup_exportSelected(_selected.length)),
-            style: FilledButton.styleFrom(
-              minimumSize: const Size.fromHeight(50),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            ),
+                  } catch (e) {
+                    if (!context.mounted) return;
+                    showAppSnackbar(context, l10n.backup_exportFailed(e.toString()));
+                  } finally {
+                    if (mounted) setState(() => _exporting = false);
+                  }
+                },
+          icon: _exporting
+              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+              : const Icon(Icons.file_upload_outlined),
+          label: Text(l10n.backup_exportSelected(_selected.length)),
+          style: FilledButton.styleFrom(
+            minimumSize: const Size.fromHeight(50),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -1284,6 +1311,9 @@ class _SelectiveRestoreSheetState extends State<_SelectiveRestoreSheet> {
 
   // Helper method `_countForGroup`: handles user action or computes derived UI state.
   int _countForGroup(String group) {
+    if (group == 'settings') {
+      return widget.data['settings'] is Map ? 1 : 0;
+    }
     int count = 0;
     final tables = AppProvider.entityGroupTables[group] ?? [];
     for (final t in tables) {
@@ -1310,163 +1340,148 @@ class _SelectiveRestoreSheetState extends State<_SelectiveRestoreSheet> {
       ('budgets', l10n.backup_budgets, Icons.pie_chart_outline_rounded),
       ('assets', l10n.backup_entityAssetsValuables, Icons.inventory_2_outlined),
       ('wishlist_goals', l10n.backup_entityWishlistGoals, Icons.star_outline_rounded),
+      ('net_worth', l10n.netWorth_title, Icons.account_balance_rounded),
+      ('settings', l10n.backup_settings, Icons.settings_outlined),
     ].where((e) => _countForGroup(e.$1) > 0).toList();
 
-    // Render Container layout container.
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-      decoration: BoxDecoration(
-        color: popupSurfaceColor(cs),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        border: Border.fromBorderSide(popupBorderSide(cs)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: cs.onSurface.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
+    return SheetShell(
+      showHandle: true,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
                 l10n.backup_selectiveRestore,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
               ),
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    if (_selected.length == availableEntities.length) {
-                      _selected.clear();
-                    } else {
-                      _selected.addAll(availableEntities.map((e) => e.$1));
-                    }
-                  });
-                },
-                child: Text(_selected.length == availableEntities.length
-                    ? l10n.backup_deselectAll
-                    : l10n.backup_selectAll),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  if (_selected.length == availableEntities.length) {
+                    _selected.clear();
+                  } else {
+                    _selected.addAll(availableEntities.map((e) => e.$1));
+                  }
+                });
+              },
+              child: Text(_selected.length == availableEntities.length
+                  ? l10n.backup_deselectAll
+                  : l10n.backup_selectAll),
+            ),
+          ],
+        ),
+        Container(
+          margin: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: cs.primary.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: cs.primary.withValues(alpha: 0.2)),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.shield_outlined, size: 20, color: cs.primary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  l10n.backup_selectiveRestoreNote,
+                  style: TextStyle(fontSize: 12, color: cs.onSurface),
+                ),
               ),
             ],
           ),
-          Container(
-            margin: const EdgeInsets.symmetric(vertical: 8),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: cs.primary.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: cs.primary.withValues(alpha: 0.2)),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.shield_outlined, size: 20, color: cs.primary),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    l10n.backup_selectiveRestoreNote,
-                    style: TextStyle(fontSize: 12, color: cs.onSurface),
+        ),
+        const SizedBox(height: 8),
+        ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.45),
+          child: ListView.separated(
+            shrinkWrap: true,
+            itemCount: availableEntities.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 6),
+            itemBuilder: (context, i) {
+              final item = availableEntities[i];
+              final count = _countForGroup(item.$1);
+              final isChecked = _selected.contains(item.$1);
+              return InkWell(
+                onTap: () => _toggleGroupSelection(item.$1, !isChecked),
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isChecked ? cs.primaryContainer.withValues(alpha: 0.3) : cs.surfaceContainerHigh.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isChecked ? cs.primary.withValues(alpha: 0.4) : Colors.transparent,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(item.$3, size: 22, color: isChecked ? cs.primary : cs.onSurface.withValues(alpha: 0.5)),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          item.$2,
+                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: cs.onSurface.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          item.$1 == 'settings'
+                              ? l10n.backup_included
+                              : l10n.backup_countInBackup(count),
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: cs.onSurface.withValues(alpha: 0.7)),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Checkbox(
+                        value: isChecked,
+                        onChanged: (v) =>
+                            _toggleGroupSelection(item.$1, v == true),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
+              );
+            },
           ),
-          const SizedBox(height: 8),
-          ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.45),
-            child: ListView.separated(
-              shrinkWrap: true,
-              itemCount: availableEntities.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 6),
-              itemBuilder: (context, i) {
-                final item = availableEntities[i];
-                final count = _countForGroup(item.$1);
-                final isChecked = _selected.contains(item.$1);
-                return InkWell(
-                  onTap: () => _toggleGroupSelection(item.$1, !isChecked),
-                  borderRadius: BorderRadius.circular(16),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: isChecked ? cs.primaryContainer.withValues(alpha: 0.3) : cs.surfaceContainerHigh.withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: isChecked ? cs.primary.withValues(alpha: 0.4) : Colors.transparent,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(item.$3, size: 22, color: isChecked ? cs.primary : cs.onSurface.withValues(alpha: 0.5)),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            item.$2,
-                            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: cs.onSurface.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            l10n.backup_countInBackup(count),
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: cs.onSurface.withValues(alpha: 0.7)),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Checkbox(
-                          value: isChecked,
-                          onChanged: (v) =>
-                              _toggleGroupSelection(item.$1, v == true),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
+        ),
+        const SizedBox(height: 16),
+        FilledButton.icon(
+          onPressed: (_selected.isEmpty || _restoring)
+              ? null
+              : () async {
+                  setState(() => _restoring = true);
+                  final app = context.read<AppProvider>();
+                  try {
+                    await app.restoreSelective(widget.data, _selected);
+                    if (!context.mounted) return;
+                    Navigator.pop(context);
+                    widget.onRestored();
+                  } catch (e) {
+                    if (!context.mounted) return;
+                    showAppSnackbar(
+                        context, l10n.backup_restoreFailed(e.toString()));
+                  } finally {
+                    if (mounted) setState(() => _restoring = false);
+                  }
+                },
+          icon: _restoring
+              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+              : const Icon(Icons.restore_page_outlined),
+          label: Text(l10n.backup_restoreSelected(_selected.length)),
+          style: FilledButton.styleFrom(
+            minimumSize: const Size.fromHeight(50),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
-          const SizedBox(height: 16),
-          FilledButton.icon(
-            onPressed: (_selected.isEmpty || _restoring)
-                ? null
-                : () async {
-                    setState(() => _restoring = true);
-                    final app = context.read<AppProvider>();
-                    try {
-                      await app.restoreSelective(widget.data, _selected);
-                      if (!context.mounted) return;
-                      Navigator.pop(context);
-                      widget.onRestored();
-                    } catch (e) {
-                      if (!context.mounted) return;
-                      showAppSnackbar(
-                          context, l10n.backup_restoreFailed(e.toString()));
-                    } finally {
-                      if (mounted) setState(() => _restoring = false);
-                    }
-                  },
-            icon: _restoring
-                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                : const Icon(Icons.restore_page_outlined),
-            label: Text(l10n.backup_restoreSelected(_selected.length)),
-            style: FilledButton.styleFrom(
-              minimumSize: const Size.fromHeight(50),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

@@ -193,17 +193,13 @@ class ExpressionEvaluator {
 /// Replaces the system soft-keyboard for amount & numeric fields.
 class AppNumericKeypad extends StatelessWidget {
   final TextEditingController controller;
-  final VoidCallback? onDone;
   final ValueChanged<String>? onChanged;
-  final bool showDoneButton;
   final bool compact;
 
   const AppNumericKeypad({
     super.key,
     required this.controller,
-    this.onDone,
     this.onChanged,
-    this.showDoneButton = true,
     this.compact = false,
   });
 
@@ -253,16 +249,6 @@ class AppNumericKeypad extends StatelessWidget {
         controller.text = formatted;
         onChanged?.call(formatted);
       }
-      return;
-    }
-
-    if (key == '✓') {
-      // Evaluate if needed then trigger onDone
-      final res = ExpressionEvaluator.evaluate(current);
-      if (res != null) {
-        controller.text = ExpressionEvaluator.formatResult(res);
-      }
-      onDone?.call();
       return;
     }
 
@@ -393,32 +379,25 @@ class AppNumericKeypad extends StatelessWidget {
     // Determine button style
     Color bgColor;
     Color fgColor;
-    bool isPrimaryAction = false;
 
-    if (key == '✓') {
-      bgColor = cs.primary;
-      fgColor = cs.onPrimary;
-      isPrimaryAction = true;
-    } else if (key == '=' || key == '+' || key == '-' || key == '×' || key == '÷' || key == '%') {
+    if (key == '=' || key == '+' || key == '-' || key == '×' || key == '÷' || key == '%') {
       bgColor = cs.primaryContainer.withValues(alpha: isAmoled ? 0.35 : 0.8);
       fgColor = cs.primary;
     } else if (key == 'C') {
       bgColor = cs.errorContainer.withValues(alpha: isAmoled ? 0.3 : 0.6);
       fgColor = cs.error;
     } else if (key == '⌫') {
-      bgColor = isAmoled ? const Color(0xFF1E1E1E) : cs.surfaceContainerHighest.withValues(alpha: 0.5);
+      bgColor = isAmoled ? cs.surfaceContainerHighest : cs.surfaceContainerHighest.withValues(alpha: 0.5);
       fgColor = cs.onSurface;
     } else {
       // Numbers: 0-9, 00, .
-      bgColor = isAmoled ? const Color(0xFF161616) : cs.surfaceContainerLow;
+      bgColor = cs.surfaceContainerLow;
       fgColor = cs.onSurface;
     }
 
     Widget content;
     if (key == '⌫') {
       content = Icon(Icons.backspace_outlined, size: compact ? 17 : 20, color: fgColor);
-    } else if (key == '✓') {
-      content = Icon(Icons.check, size: compact ? 20 : 24, color: fgColor);
     } else {
       content = Text(
         key,
@@ -426,7 +405,7 @@ class AppNumericKeypad extends StatelessWidget {
           fontSize: (key == '÷' || key == '×' || key == '+' || key == '-' || key == '=' || key == '%')
               ? (compact ? 19 : 22)
               : (compact ? 17 : 19),
-          fontWeight: isPrimaryAction ? FontWeight.w800 : FontWeight.w600,
+          fontWeight: FontWeight.w600,
           color: fgColor,
         ),
       );

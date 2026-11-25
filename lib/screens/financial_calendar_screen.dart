@@ -128,7 +128,7 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
                 color: cs.surfaceContainer.withValues(alpha: isDark ? 0.35 : 0.55),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04),
+                  color: hairlineBorderColor(cs),
                 ),
               ),
               child: Row(
@@ -191,7 +191,7 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
                 color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                  color: hairlineBorderColor(cs),
                 ),
               ),
               child: Padding(
@@ -366,7 +366,7 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
                 color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                  color: hairlineBorderColor(cs),
                 ),
               ),
               child: Padding(
@@ -521,7 +521,7 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
                               child: Icon(Icons.account_balance_outlined, size: 14, color: Colors.white),
                             ),
                             title: Text(l.name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-                            trailing: Text(formatAmount(l.monthlyPayment, cur), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+                            trailing: Text(formatAmount(l.monthlyPayment, l.currency), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
                           )),
                       const SizedBox(height: 10),
                     ],
@@ -544,7 +544,7 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
                             child: Icon(Icons.handshake_outlined, size: 14, color: Colors.white),
                           ),
                           title: Text(person?.name ?? l10n.calendar_repayment, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-                          trailing: Text(formatAmount(m.amount, cur), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+                          trailing: Text(formatAmount(m.amount, app.lendedCurrency(m)), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
                         );
                       }),
                       const SizedBox(height: 10),
@@ -554,7 +554,7 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
                     if (selectedDayTxs.isNotEmpty) ...[
                       ...selectedDayTxs.map((t) {
                         final cat = app.categoryById(t.categoryId);
-                        final acc = app.accountById(t.accountId);
+                        final acc = app.accountById(t.paidViaAccountId ?? t.accountId);
                         final isExpense = t.type == 'expense';
                         final isSplit = app.isTransactionSplit(t.id);
 
@@ -624,7 +624,7 @@ class _FinancialCalendarScreenState extends State<FinancialCalendarScreen> {
                               overflow: TextOverflow.ellipsis,
                             ),
                             trailing: Text(
-                              '${isExpense ? '-' : '+'}${formatAmount(t.amount, t.currency.isNotEmpty ? t.currency : cur)}',
+                              '${isExpense ? '-' : '+'}${formatAmount(t.amount, app.txCurrency(t))}',
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w800,

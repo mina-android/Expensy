@@ -461,6 +461,8 @@ void main() {
       expect(switchWidget.value, true);
 
       // Tap the switch to toggle it
+      await tester.ensureVisible(find.byType(SwitchListTile));
+      await tester.pumpAndSettle();
       await tester.tap(find.byType(SwitchListTile));
       await tester.pumpAndSettle();
 

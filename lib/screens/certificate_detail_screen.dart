@@ -70,7 +70,6 @@ class _CertificateDetailScreenState extends State<CertificateDetailScreen> {
               showModalBottomSheet(
                 context: context,
                 isScrollControlled: true,
-                backgroundColor: Colors.transparent,
                 builder: (_) => CertificateSheet(existing: _cert),
               );
             },

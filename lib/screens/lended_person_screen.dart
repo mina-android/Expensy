@@ -10,7 +10,7 @@ import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
 import '../widgets/app_numeric_keypad.dart';
 import '../services/lended_notification_service.dart';
-import 'lended_screen.dart' show kLendedPersonColors;
+import 'lended_screen.dart' show LendedPersonSheet;
 import '../utils/haptics.dart';
 
 /// Detail page for a single [LendedPerson] — shows their net balance and
@@ -79,7 +79,7 @@ class LendedPersonScreen extends StatelessWidget {
                   value: 'delete',
                   child: Row(children: [
                     const Icon(Icons.delete_outline_rounded,
-                        size: 18, color: Colors.red),
+                        size: 18, color: kDangerColor),
                     const SizedBox(width: 8),
                     Text(l10n.lended_person_deletePerson),
                   ])),
@@ -184,16 +184,8 @@ class LendedPersonScreen extends StatelessWidget {
     showModalBottomSheet(
       context: ctx,
       isScrollControlled: true,
-      builder: (_) => _EditPersonInlineSheet(person: p),
+      builder: (_) => LendedPersonSheet(existing: p),
     );
-  }
-
-  static void openEntrySheetFromExternal(
-      BuildContext ctx, LendedMoney existing) {
-    final app = ctx.read<AppProvider>();
-    final p = app.personById(existing.personId);
-    if (p == null) return;
-    _openEntrySheet(ctx, p, existing: existing);
   }
 
   static void _openEntrySheet(BuildContext ctx, LendedPerson person,
@@ -206,117 +198,6 @@ class LendedPersonScreen extends StatelessWidget {
         existing: existing,
         initialType: initialType,
       ),
-    );
-  }
-}
-
-// Thin wrapper reusing the same fields as the Add-Person sheet, but bound to
-// updateLendedPerson for an existing person (avoids duplicating the sheet UI
-// in lended_screen.dart, which is private to that file).
-class _EditPersonInlineSheet extends StatefulWidget {
-  final LendedPerson person;
-  const _EditPersonInlineSheet({required this.person});
-  @override
-  State<_EditPersonInlineSheet> createState() => _EditPersonInlineSheetState();
-}
-
-class _EditPersonInlineSheetState extends State<_EditPersonInlineSheet> {
-  late final _nameCtrl = TextEditingController(text: widget.person.name);
-  late final _notesCtrl = TextEditingController(text: widget.person.notes);
-  late int _color = widget.person.colorValue;
-  bool _submitted = false;
-
-  @override
-  void dispose() {
-    _nameCtrl.dispose();
-    _notesCtrl.dispose();
-    super.dispose();
-  }
-
-  Future<void> _submit() async {
-    setState(() => _submitted = true);
-    final name = _nameCtrl.text.trim();
-    if (name.isEmpty) return;
-    final app = context.read<AppProvider>();
-    await app.updateLendedPerson(widget.person.copyWith(
-      name: name,
-      colorValue: _color,
-      notes: _notesCtrl.text.trim(),
-    ));
-    if (mounted) Navigator.pop(context);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final cs = Theme.of(context).colorScheme;
-    return SheetShell(
-      title: l10n.lended_person_editPerson,
-      children: [
-        TextField(
-          controller: _nameCtrl,
-          textInputAction: TextInputAction.next,
-          decoration: InputDecoration(
-            labelText: l10n.lended_person_name,
-            prefixIcon: const Icon(Icons.person_outline_rounded),
-            errorText: _submitted && _nameCtrl.text.trim().isEmpty
-                ? l10n.error_required
-                : null,
-          ),
-        ),
-        const SizedBox(height: 14),
-        Text(l10n.lended_person_color,
-            style: Theme.of(context)
-                .textTheme
-                .labelMedium
-                ?.copyWith(letterSpacing: 1)),
-        const SizedBox(height: 8),
-        Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: kLendedPersonColors.map((col) {
-              final sel = _color == col;
-              return GestureDetector(
-                onTap: () => setState(() => _color = col),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 100),
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: Color(col),
-                    shape: BoxShape.circle,
-                    border: sel
-                        ? Border.all(color: cs.onSurface, width: 2.5)
-                        : null,
-                  ),
-                  child: sel
-                      ? const Icon(Icons.check, color: Colors.white, size: 18)
-                      : null,
-                ),
-              );
-            }).toList()),
-        const SizedBox(height: 14),
-        TextField(
-            controller: _notesCtrl,
-            maxLines: 2,
-            textInputAction: TextInputAction.done,
-            onSubmitted: (_) => _submit(),
-            decoration: InputDecoration(
-                labelText: l10n.lended_person_notesOptional,
-                prefixIcon: const Icon(Icons.sticky_note_2_outlined))),
-        const SizedBox(height: 20),
-        FilledButton(
-          onPressed: () {
-            AppHaptics.tap(context, HapticStrength.light);
-            _submit();
-          },
-          style: FilledButton.styleFrom(
-              minimumSize: const Size.fromHeight(50),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(28))),
-          child: Text(l10n.lended_person_saveChanges),
-        ),
-      ],
     );
   }
 }
@@ -381,7 +262,11 @@ class _EntryCard extends StatelessWidget {
                           color: cs.onSurface.withValues(alpha: 0.5))),
                 ])),
             Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-              Text(fmt(l.amount),
+              Text(
+                  formatAmount(
+                    l.amount,
+                    context.read<AppProvider>().lendedCurrency(l),
+                  ),
                   style: TextStyle(
                       fontSize: 16, fontWeight: FontWeight.w800, color: color)),
               if (l.dueDate != null)
@@ -588,12 +473,16 @@ class _EntrySheetState extends State<_EntrySheet> {
     final app = context.read<AppProvider>();
 
     final effectiveReminder = _reminderEnabled && _dueDate != null;
+    final entryCurrency = _accountId != null
+        ? (app.accountById(_accountId!)?.currency ?? app.settings.currency)
+        : app.settings.currency;
 
     if (isEdit) {
       final updated = widget.existing!.copyWith(
         amount: amount,
         type: _type,
         accountId: _accountId,
+        currency: entryCurrency,
         dueDate: _dueDate,
         clearDueDate: _dueDate == null,
         notes: _notesCtrl.text.trim(),
@@ -609,6 +498,7 @@ class _EntrySheetState extends State<_EntrySheet> {
         amount: amount,
         type: _type,
         accountId: _accountId,
+        currency: entryCurrency,
         date: DateTime.now(),
         dueDate: _dueDate,
         notes: _notesCtrl.text.trim(),
@@ -624,7 +514,10 @@ class _EntrySheetState extends State<_EntrySheet> {
     final l10n = AppLocalizations.of(context)!;
     final app = context.watch<AppProvider>();
     final cs = Theme.of(context).colorScheme;
-    final sym = currencyInfo(app.settings.currency).symbol;
+    final entryCurrency = _accountId != null
+        ? (app.accountById(_accountId!)?.currency ?? app.settings.currency)
+        : app.settings.currency;
+    final sym = currencyInfo(entryCurrency).symbol;
 
     return SheetShell(
       title: isEdit
@@ -638,11 +531,11 @@ class _EntrySheetState extends State<_EntrySheet> {
             firstValue: 'lent',
             firstLabel: l10n.lended_person_iLent,
             firstColor: kSuccessColor,
-            firstLightTint: const Color(0xFFE8F5E9),
+            firstLightTint: kSuccessColor.withValues(alpha: 0.12),
             secondValue: 'borrowed',
             secondLabel: l10n.lended_person_iBorrowed,
             secondColor: kDangerColor,
-            secondLightTint: const Color(0xFFFFEBEE),
+            secondLightTint: kDangerColor.withValues(alpha: 0.12),
             onChanged: (v) => setState(() => _type = v),
           ),
           const SizedBox(height: 12),
@@ -676,7 +569,6 @@ class _EntrySheetState extends State<_EntrySheet> {
               compact: true,
               controller: _amtCtrl,
               onChanged: (_) => setState(() {}),
-              onDone: () => setState(() => _showKeypad = false),
             ),
           ],
           const SizedBox(height: 14),

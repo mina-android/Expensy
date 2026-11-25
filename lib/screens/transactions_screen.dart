@@ -76,6 +76,11 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       app.lended,
       app.savingsContributions,
       app.loanPayments,
+      app.splits,
+      app.exchangeRates,
+      app.settings.currency,
+      app.categories,
+      app.accounts,
     );
 
     if (_cachedItems != null && _lastFilterSignature == currentSignature) {
@@ -95,7 +100,11 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         } else if (_filter != 'all') {
           if (t.isTransfer || t.type != _filter) continue;
         }
-        if (_accFilter != null && t.accountId != _accFilter) continue;
+        if (_accFilter != null &&
+            t.accountId != _accFilter &&
+            t.paidViaAccountId != _accFilter) {
+          continue;
+        }
         if (_minAmount != null && t.amount < _minAmount!) continue;
         if (_maxAmount != null && t.amount > _maxAmount!) continue;
         if (_advCategoryFilter != null) {
@@ -110,9 +119,21 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           final cat = app
               .categoryDisplayName(t.categoryId)
               .toLowerCase();
-          final acc = app.accountById(t.accountId)?.name.toLowerCase() ?? '';
+          final acc = app
+                  .accountById(t.paidViaAccountId ?? t.accountId)
+                  ?.name
+                  .toLowerCase() ??
+              '';
+          final matchesSplitCat = app.isTransactionSplit(t.id) &&
+              app.getSplits(t.id).any((s) => app
+                  .categoryDisplayName(s.categoryId)
+                  .toLowerCase()
+                  .contains(q));
           if (!t.description.toLowerCase().contains(q) &&
-              !cat.contains(q) && !acc.contains(q)) {
+              !t.note.toLowerCase().contains(q) &&
+              !cat.contains(q) &&
+              !acc.contains(q) &&
+              !matchesSplitCat) {
             continue;
           }
         }
@@ -219,7 +240,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     final keys = groups.keys.toList()..sort((a, b) => b.compareTo(a));
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final tabGreen = isDark ? const Color(0xFF81C784) : kSuccessColor;
+    final tabGreen = kSuccessColor;
 
     return PopScope(
       canPop: _selectedIds.isEmpty,
@@ -405,11 +426,31 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         for (final item in items) {
                           if (item.isTx) {
                             if (FinancialAggregations.isExcludedFromTotals(item.tx!)) continue;
-                            dayTotal += item.tx!.type == 'income' ? item.tx!.amount : -item.tx!.amount;
+                            final amt = app.convertToMain(
+                              item.tx!.amount,
+                              app.txCurrency(item.tx!),
+                            );
+                            dayTotal += item.tx!.type == 'income' ? amt : -amt;
                           } else if (item.isLended) {
-                            dayTotal += item.lended!.type == 'borrowed' ? item.lended!.amount : -item.lended!.amount;
+                            final amt = app.convertToMain(
+                              item.lended!.amount,
+                              app.lendedCurrency(item.lended!),
+                            );
+                            dayTotal += item.lended!.type == 'borrowed' ? amt : -amt;
                           } else if (item.isContribution) {
-                            dayTotal += item.contribution!.type == 'withdrawal' ? item.contribution!.amount : -item.contribution!.amount;
+                            final goal = app.savingsGoals
+                                .where((g) => g.id == item.contribution!.goalId)
+                                .firstOrNull;
+                            final cCur = goal?.currency ?? app.settings.currency;
+                            final amt = app.convertToMain(item.contribution!.amount, cCur);
+                            dayTotal += item.contribution!.type == 'withdrawal' ? amt : -amt;
+                          } else if (item.isLoanPayment) {
+                            final loan = app.loans
+                                .where((l) => l.id == item.loanPayment!.loanId)
+                                .firstOrNull;
+                            final lCur = loan?.currency ?? app.settings.currency;
+                            final amt = app.convertToMain(item.loanPayment!.amount, lCur);
+                            dayTotal -= amt;
                           }
                         }
 
@@ -438,7 +479,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                     color: dayTotal > 0
                                         ? kSuccessColor
                                         : (dayTotal < 0
-                                            ? (isDark ? const Color(0xFFE57373) : kDangerColor)
+                                            ? kDangerColor
                                             : cs.onSurface.withValues(alpha: 0.5)),
                                   ),
                                 ),
@@ -686,23 +727,36 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   // Helper method `_bulkChangeCategory`: handles user action or computes derived UI state.
   void _bulkChangeCategory(BuildContext context, AppProvider app) {
     final l10n = AppLocalizations.of(context)!;
-    final cats = app.userCategories;
+    final selectedTypes = _selectedIds
+        .map((id) => app.transactions.where((t) => t.id == id).firstOrNull)
+        .where((tx) => tx != null && !tx.isTransfer && !tx.isInvestment)
+        .map((tx) => tx!.type)
+        .toSet();
+    final cats = selectedTypes.length == 1
+        ? app.userCategories
+            .where((c) => c.type == selectedTypes.first)
+            .toList()
+        : app.userCategories;
     String? tempSelected;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setSheetState) {
-          void applyCategory(String catId) {
+          Future<void> applyCategory(String catId) async {
             Navigator.pop(ctx);
+            final targetCat = app.categoryById(catId);
             for (final id in _selectedIds.toList()) {
               final tx =
                   app.transactions.where((t) => t.id == id).firstOrNull;
               if (tx == null || tx.isTransfer || tx.isInvestment) {
                 continue;
               }
+              if (targetCat != null && targetCat.type != tx.type) {
+                continue;
+              }
               final updated = tx.copyWith(categoryId: catId);
-              app.updateTransaction(updated, tx);
+              await app.updateTransaction(updated, tx, splits: const []);
             }
             _clearSelection();
           }
@@ -787,7 +841,7 @@ class _TxTile extends StatelessWidget {
     final cs    = Theme.of(context).colorScheme;
     final cat   = app.categoryById(t.categoryId);
     final isInc = t.type == 'income';
-    final acc   = app.accountById(t.accountId);
+    final acc   = app.accountById(t.paidViaAccountId ?? t.accountId);
     final accCurrency = acc?.currency ?? app.settings.currency;
     final displayCurrency = t.currency.isNotEmpty ? t.currency : accCurrency;
 
@@ -1286,23 +1340,11 @@ class _AdvancedFilterSheetState extends State<_AdvancedFilterSheet> {
     final kbOpen = MediaQuery.of(context).viewInsets.bottom > 100;
     final showPad = _showKeypad && !kbOpen;
 
-    // Render Padding layout container.
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-        left: 24,
-        right: 24,
-        top: 24,
-      ),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.85,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+    // Render SheetShell layout container.
+    return SheetShell(
+      showHandle: true,
+      maxHeightFactor: 0.85,
+      children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -1415,7 +1457,6 @@ class _AdvancedFilterSheetState extends State<_AdvancedFilterSheet> {
                 AppNumericKeypad(
                   controller: _activeNumericCtrl!,
                   compact: true,
-                  onDone: () => setState(() => _showKeypad = false),
                   onChanged: (_) => setState(() {}),
                 ),
               ],
@@ -1426,8 +1467,8 @@ class _AdvancedFilterSheetState extends State<_AdvancedFilterSheet> {
                 child: FilledButton(
                   onPressed: () {
                     AppHaptics.tap(context, HapticStrength.light);
-                    final minAmt = double.tryParse(_minCtrl.text);
-                    final maxAmt = double.tryParse(_maxCtrl.text);
+                    final minAmt = ExpressionEvaluator.evaluate(_minCtrl.text);
+                    final maxAmt = ExpressionEvaluator.evaluate(_maxCtrl.text);
                     widget.onApply(minAmt, maxAmt, _catId);
                     Navigator.pop(context);
                   },
@@ -1435,10 +1476,7 @@ class _AdvancedFilterSheetState extends State<_AdvancedFilterSheet> {
                 ),
               ),
               const SizedBox(height: 8),
-            ],
-          ),
-        ),
-      ),
+      ],
     );
   }
 }

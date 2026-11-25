@@ -8,7 +8,7 @@ import '../widgets/fintech_components.dart';
 import '../theme/app_theme.dart';
 import '../l10n/app_localizations.dart';
 import '../utils/snackbar.dart';
-import '../services/loan_reminder_service.dart';
+import '../utils/notification_permissions.dart';
 import 'loan_detail_screen.dart';
 
 class LoansScreen extends StatefulWidget {
@@ -23,7 +23,6 @@ class _LoansScreenState extends State<LoansScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (_) => LoanSheet(existing: existing),
     );
   }
@@ -419,35 +418,19 @@ class _LoanSheetState extends State<LoanSheet> {
     final app = context.watch<AppProvider>();
     final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
-    final viewInsets = MediaQuery.of(context).viewInsets;
 
     final accountsList = app.spendableAccounts;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: popupSurfaceColor(cs),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        border: Border.fromBorderSide(popupBorderSide(cs)),
-      ),
-      padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + viewInsets.bottom),
-      child: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
+    return Form(
+      key: _formKey,
+      child: SheetShell(
+        showHandle: true,
+        title: widget.existing == null ? l10n.loans_addLoan : l10n.loans_editLoan,
+        children: [
+          Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    widget.existing == null ? l10n.loans_addLoan : l10n.loans_editLoan,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
 
               // Loan Name
               TextFormField(
@@ -473,9 +456,11 @@ class _LoanSheetState extends State<LoanSheet> {
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 textInputAction: TextInputAction.next,
                 validator: (val) {
-                  if (val == null || val.trim().isEmpty) return 'Required';
+                  if (val == null || val.trim().isEmpty) {
+                    return l10n.error_required;
+                  }
                   final num = double.tryParse(val);
-                  if (num == null || num <= 0) return 'Invalid';
+                  if (num == null || num <= 0) return l10n.common_invalid;
                   return null;
                 },
                 onChanged: (val) => setState(() => _principal = double.tryParse(val) ?? 0.0),
@@ -591,7 +576,7 @@ class _LoanSheetState extends State<LoanSheet> {
                 validator: (val) {
                   if (val != null && val.trim().isNotEmpty) {
                     final num = double.tryParse(val);
-                    if (num == null || num < 0) return 'Invalid';
+                    if (num == null || num < 0) return l10n.common_invalid;
                   }
                   return null;
                 },
@@ -673,7 +658,7 @@ class _LoanSheetState extends State<LoanSheet> {
                 activeColor: const Color(0xFF4A148C),
                 onChanged: (val) async {
                   if (val) {
-                    final granted = await LoanReminderService().hasPermission();
+                    final granted = await NotificationPermissions.ensure(context);
                     if (!granted) {
                       if (context.mounted) {
                         showAppSnackbar(context, l10n.loans_notificationsPermissionRequired);
@@ -681,7 +666,7 @@ class _LoanSheetState extends State<LoanSheet> {
                       return;
                     }
                   }
-                  setState(() => _reminderEnabled = val);
+                  if (mounted) setState(() => _reminderEnabled = val);
                 },
                 expandedContent: Row(
                   children: [
@@ -783,7 +768,7 @@ class _LoanSheetState extends State<LoanSheet> {
               ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }

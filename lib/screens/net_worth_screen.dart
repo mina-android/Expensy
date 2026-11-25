@@ -15,6 +15,7 @@ import '../utils/snackbar.dart';
 import '../widgets/fintech_components.dart';
 import 'accounts_screen.dart';
 import 'assets_screen.dart';
+import 'certificates_screen.dart';
 import 'loans_screen.dart';
 import 'lended_screen.dart';
 
@@ -81,7 +82,10 @@ class _NetWorthScreenState extends State<NetWorthScreen> {
     // Chart points: filtered snapshots + live current point
     final chartPoints = <_ChartDataPoint>[];
     for (final s in filteredSnaps) {
-      chartPoints.add(_ChartDataPoint(date: s.date, value: s.netWorth));
+      final converted = s.currency == currency
+          ? s.netWorth
+          : app.convertToMain(s.netWorth, s.currency);
+      chartPoints.add(_ChartDataPoint(date: s.date, value: converted));
     }
     final todayStr = DateFormat('yyyy-MM-dd').format(now);
     if (chartPoints.isEmpty || chartPoints.last.date != todayStr) {
@@ -298,7 +302,7 @@ class _NetWorthScreenState extends State<NetWorthScreen> {
               color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                color: hairlineBorderColor(cs),
               ),
             ),
             child: Padding(
@@ -469,7 +473,7 @@ class _NetWorthScreenState extends State<NetWorthScreen> {
               color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                color: hairlineBorderColor(cs),
               ),
             ),
             child: Padding(
@@ -561,10 +565,24 @@ class _NetWorthScreenState extends State<NetWorthScreen> {
                   ExpensyRoute(builder: (_) => const AssetsScreen()),
                 ),
               ),
+              if (app.totalCertificatesValue > 0)
+                _BreakdownItem(
+                  icon: Icons.workspace_premium_outlined,
+                  color: kCertificateColor,
+                  label: l10n.certificates_title,
+                  amountFormatted: fmt(app.totalCertificatesValue),
+                  percentage: totalAssets > 0
+                      ? app.totalCertificatesValue / totalAssets
+                      : 0,
+                  onTap: () => Navigator.push(
+                    context,
+                    ExpensyRoute(builder: (_) => const CertificatesScreen()),
+                  ),
+                ),
               if (app.totalLentMoneyValue > 0)
                 _BreakdownItem(
                   icon: Icons.handshake_outlined,
-                  color: const Color(0xFF6750A4),
+                  color: cs.primary,
                   label: l10n.netWorth_moneyLent,
                   amountFormatted: fmt(app.totalLentMoneyValue),
                   percentage: totalAssets > 0
@@ -640,7 +658,7 @@ class _NetWorthScreenState extends State<NetWorthScreen> {
                 color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                  color: hairlineBorderColor(cs),
                 ),
               ),
               child: Padding(
@@ -758,7 +776,7 @@ class _NetWorthScreenState extends State<NetWorthScreen> {
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
-                        color: delta >= 0 ? Colors.green : cs.error,
+                        color: delta >= 0 ? kSuccessColor : cs.error,
                       ),
                     ),
                 ],
@@ -928,7 +946,7 @@ class _SectionBreakdownCard extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Icon(Icons.check_circle_outline_rounded,
-                          size: 18, color: Colors.green),
+                          size: 18, color: kSuccessColor),
                       const SizedBox(width: 8),
                       Text(
                         l10n.netWorth_zeroLiabilities,

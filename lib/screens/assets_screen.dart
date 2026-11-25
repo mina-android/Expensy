@@ -260,17 +260,9 @@ class _AssetSheetState extends State<_AssetSheet> {
     final kbOpen = bottomInset > 100;
     final showPad = _showKeypad && !kbOpen;
 
-    return Padding(
-      padding: EdgeInsets.only(
-          bottom: bottomInset + 16,
-          left: 20,
-          right: 20,
-          top: 20),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    return SheetShell(
+      showHandle: true,
+      children: [
             Text(isEdit ? l10n.assets_editAsset : l10n.assets_addAsset,
                 style: Theme.of(context).textTheme.titleLarge
                     ?.copyWith(fontWeight: FontWeight.w800)),
@@ -385,7 +377,6 @@ class _AssetSheetState extends State<_AssetSheet> {
               AppNumericKeypad(
                 controller: _valueCtrl,
                 compact: true,
-                onDone: () => setState(() => _showKeypad = false),
               ),
             ],
             const SizedBox(height: 24),
@@ -398,9 +389,7 @@ class _AssetSheetState extends State<_AssetSheet> {
                       borderRadius: BorderRadius.circular(28))),
               child: Text(isEdit ? l10n.assets_saveChanges : l10n.assets_addAsset),
             ),
-            ],
-          ),
-        ),
+      ],
     );
   }
 }

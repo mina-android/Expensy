@@ -10,6 +10,7 @@ import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
 import '../widgets/fintech_components.dart';
 import '../widgets/credit_card_settlement_sheet.dart';
+import '../utils/notification_permissions.dart';
 import '../utils/haptics.dart';
 import '../utils/nav_metrics.dart';
 
@@ -23,7 +24,7 @@ class AccountsScreen extends StatefulWidget {
       isScrollControlled: true,
       builder: (_) => isCard
           ? _CardSheet(existing: existing, isCard: true)
-          : _AccountSheet(existing: existing, isCard: false),
+          : _AccountSheet(existing: existing),
     );
   }
 
@@ -385,7 +386,7 @@ class _AccountCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFD700).withValues(alpha: 0.18),
+                        color: kGoldColor.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -518,6 +519,9 @@ class _AccountCard extends StatelessWidget {
                     );
                     return;
                   }
+                  if (!context.mounted) return;
+                  if (!await showDeleteConfirm(context, acc.name)) return;
+                  if (!context.mounted) return;
                   final undo = await context
                       .read<AppProvider>()
                       .deleteAccountWithUndo(acc.id);
@@ -715,8 +719,7 @@ const List<int> _kColors = [
 
 class _AccountSheet extends StatefulWidget {
   final Account? existing;
-  final bool isCard;
-  const _AccountSheet({this.existing, this.isCard = false});
+  const _AccountSheet({this.existing});
   @override
   State<_AccountSheet> createState() => _AccountSheetState();
 }
@@ -726,35 +729,16 @@ class _AccountSheetState extends State<_AccountSheet> {
   final _balCtrl = TextEditingController();
   final _gramsCtrl = TextEditingController();
 
-  // Card specific
-  final _creditLimitCtrl = TextEditingController();
-  final _statementDayCtrl = TextEditingController();
-  final _dueDayCtrl = TextEditingController();
-  final _minPaymentAmountCtrl = TextEditingController();
-  final _cardHolderNameCtrl = TextEditingController();
-  final _cardNumberLast4Ctrl = TextEditingController();
-  final _cardExpiryCtrl = TextEditingController();
-  String? _linkedAccountId;
-
   late String _type;
   String _currency = 'EGP';
   int _color = 0xFF6750A4;
   bool _excludeFromTotal = false;
   int _goldKarat = 24;
 
-  // Reminders
-  bool _creditReminderEnabled = false;
-  bool _creditEarlyReminderEnabled = false;
-  TimeOfDay _creditReminderTime = const TimeOfDay(hour: 9, minute: 0);
-
   bool _submitted = false;
 
   bool get isEdit => widget.existing != null;
   bool get isGold => _type == 'gold';
-  bool get isCredit => _type == 'credit';
-  bool get isDebit => _type == 'debit';
-  bool get isPrepaid => _type == 'prepaid';
-  bool get isCard => widget.isCard;
 
   @override
   void initState() {
@@ -774,34 +758,11 @@ class _AccountSheetState extends State<_AccountSheet> {
         _goldKarat = e.goldKarat ?? 24;
         _gramsCtrl.text = e.goldGrams?.toStringAsFixed(2) ?? '';
       } else {
-        _balCtrl.text = (e.type == 'credit' && e.balance < 0)
-            ? (-e.balance).toStringAsFixed(2)
-            : e.balance.toStringAsFixed(2);
-      }
-      _cardHolderNameCtrl.text = e.cardHolderName ?? '';
-      _cardNumberLast4Ctrl.text = e.cardNumberLast4 ?? '';
-      _cardExpiryCtrl.text = e.cardExpiry ?? '';
-      _linkedAccountId = e.linkedAccountId;
-      if (e.type == 'credit') {
-        _creditLimitCtrl.text = e.creditLimit?.toString() ?? '';
-        _statementDayCtrl.text = e.statementDay?.toString() ?? '';
-        _dueDayCtrl.text = e.dueDay?.toString() ?? '';
-        _minPaymentAmountCtrl.text = e.minPaymentAmount?.toString() ?? '';
-        _creditReminderEnabled = e.creditReminderEnabled;
-        _creditEarlyReminderEnabled = e.creditEarlyReminderEnabled;
-        final parts = e.creditReminderTime.split(':');
-        if (parts.length == 2) {
-          _creditReminderTime = TimeOfDay(
-            hour: int.tryParse(parts[0]) ?? 9,
-            minute: int.tryParse(parts[1]) ?? 0,
-          );
-        }
+        _balCtrl.text = e.balance.toStringAsFixed(2);
       }
     } else {
       _type = 'bank';
-      _linkedAccountId = null;
     }
-    // (Live preview now updated via ValueListenableBuilder)
   }
 
   @override
@@ -809,13 +770,6 @@ class _AccountSheetState extends State<_AccountSheet> {
     _nameCtrl.dispose();
     _balCtrl.dispose();
     _gramsCtrl.dispose();
-    _creditLimitCtrl.dispose();
-    _statementDayCtrl.dispose();
-    _dueDayCtrl.dispose();
-    _minPaymentAmountCtrl.dispose();
-    _cardHolderNameCtrl.dispose();
-    _cardNumberLast4Ctrl.dispose();
-    _cardExpiryCtrl.dispose();
     super.dispose();
   }
 
@@ -828,14 +782,6 @@ class _AccountSheetState extends State<_AccountSheet> {
       karat: _goldKarat,
       currency: _currency,
     );
-  }
-
-  Future<void> _pickTime() async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: _creditReminderTime,
-    );
-    if (picked != null) setState(() => _creditReminderTime = picked);
   }
 
   Future<void> _submit() async {
@@ -887,41 +833,8 @@ class _AccountSheetState extends State<_AccountSheet> {
         ));
       }
     } else {
-      // Regular account or Card
       final rawAmount = double.tryParse(_balCtrl.text);
-      final double balance;
-      if (isDebit) {
-        balance = isEdit ? widget.existing!.balance : 0.0;
-      } else if (isCredit) {
-        final owed = rawAmount?.abs() ?? (isEdit ? (widget.existing!.balance < 0 ? -widget.existing!.balance : 0.0) : 0.0);
-        balance = owed > 0 ? -owed : 0.0;
-      } else {
-        balance = rawAmount ?? (isEdit ? widget.existing!.balance : 0.0);
-      }
-      double? creditLimit;
-      int? dueDay;
-      int? statementDay;
-      double? minPaymentAmount;
-      String? cardHolderName;
-      String? cardNumberLast4;
-      String? cardExpiry;
-      String? linkedAccountId;
-
-      if (isCard) {
-        cardHolderName = _cardHolderNameCtrl.text.trim();
-        cardNumberLast4 = _cardNumberLast4Ctrl.text.trim();
-        cardExpiry = _cardExpiryCtrl.text.trim();
-        linkedAccountId = _linkedAccountId;
-        if (isCredit) {
-          creditLimit = double.tryParse(_creditLimitCtrl.text);
-          dueDay = int.tryParse(_dueDayCtrl.text);
-          statementDay = int.tryParse(_statementDayCtrl.text);
-          minPaymentAmount = double.tryParse(_minPaymentAmountCtrl.text);
-        }
-      }
-
-      final reminderTimeStr =
-          '${_creditReminderTime.hour.toString().padLeft(2, '0')}:${_creditReminderTime.minute.toString().padLeft(2, '0')}';
+      final balance = rawAmount ?? (isEdit ? widget.existing!.balance : 0.0);
 
       if (isEdit) {
         await app.updateAccount(widget.existing!.copyWith(
@@ -931,22 +844,10 @@ class _AccountSheetState extends State<_AccountSheet> {
           balance: balance,
           colorValue: _color,
           excludeFromTotal: _excludeFromTotal,
-          excludeFromBankTotal: false,
-          dontLinkToCard: false,
-          cardHolderName: cardHolderName,
-          cardNumberLast4: cardNumberLast4,
-          cardExpiry: cardExpiry,
-          creditLimit: creditLimit,
-          statementDay: statementDay,
-          dueDay: dueDay,
-          minPaymentAmount: minPaymentAmount,
-          creditReminderEnabled: isCredit ? _creditReminderEnabled : false,
-          creditEarlyReminderEnabled: isCredit ? _creditEarlyReminderEnabled : false,
-          creditReminderTime: reminderTimeStr,
-          linkedAccountId: linkedAccountId,
-          clearLinkedAccount: _linkedAccountId == null,
+          excludeFromBankTotal: widget.existing!.excludeFromBankTotal,
+          dontLinkToCard: widget.existing!.dontLinkToCard,
           clearGold: true,
-          clearCredit: !isCredit,
+          clearCredit: true,
         ));
       } else {
         await app.addAccount(Account(
@@ -957,19 +858,6 @@ class _AccountSheetState extends State<_AccountSheet> {
           balance: balance,
           colorValue: _color,
           excludeFromTotal: _excludeFromTotal,
-          excludeFromBankTotal: false,
-          dontLinkToCard: false,
-          cardHolderName: cardHolderName,
-          cardNumberLast4: cardNumberLast4,
-          cardExpiry: cardExpiry,
-          creditLimit: creditLimit,
-          linkedAccountId: linkedAccountId,
-          statementDay: statementDay,
-          dueDay: dueDay,
-          minPaymentAmount: minPaymentAmount,
-          creditReminderEnabled: _creditReminderEnabled,
-          creditEarlyReminderEnabled: _creditEarlyReminderEnabled,
-          creditReminderTime: reminderTimeStr,
         ));
       }
     }
@@ -992,25 +880,11 @@ class _AccountSheetState extends State<_AccountSheet> {
       ['gold', l10n.accounts_gold],
     ];
 
-    return Padding(
-      padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-          left: 20,
-          right: 20,
-          top: 20),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.85,
-        ),
-        child: SingleChildScrollView(
-            child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    return SheetShell(
+      maxHeightFactor: 0.85,
+      children: [
           Text(
-              isEdit
-                  ? (isCard ? l10n.accounts_editCard : l10n.accounts_editAccount)
-                  : (isCard ? l10n.accounts_addCardBtn : l10n.accounts_addAccount),
+              isEdit ? l10n.accounts_editAccount : l10n.accounts_addAccount,
               style: Theme.of(context)
                   .textTheme
                   .titleLarge
@@ -1021,9 +895,7 @@ class _AccountSheetState extends State<_AccountSheet> {
             textInputAction: TextInputAction.next,
             controller: _nameCtrl,
             decoration: InputDecoration(
-              labelText: isCard
-                  ? l10n.accounts_cardNameHint
-                  : l10n.accounts_accountName,
+              labelText: l10n.accounts_accountName,
               prefixIcon: const Icon(Icons.label_outline),
               errorText: _submitted && _nameCtrl.text.trim().isEmpty
                   ? l10n.error_required
@@ -1052,13 +924,6 @@ class _AccountSheetState extends State<_AccountSheet> {
                     // When switching to gold, default currency to main currency.
                     if (val == 'gold') {
                       _currency = app.settings.currency;
-                    } else if (val == 'debit' && _linkedAccountId == null) {
-                      final banks = app.accounts
-                          .where((a) => a.type == 'bank')
-                          .toList();
-                      if (banks.isNotEmpty) {
-                        _linkedAccountId = banks.first.id;
-                      }
                     }
                   }),
                   child: AnimatedContainer(
@@ -1225,194 +1090,11 @@ class _AccountSheetState extends State<_AccountSheet> {
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
               decoration: InputDecoration(
-                  labelText: isCredit
-                      ? (isEdit
-                          ? l10n.accounts_amountCurrentlyOwed
-                          : l10n.accounts_initialAmountOwed)
-                      : (isEdit ? l10n.accounts_balance : l10n.accounts_initialBalance),
-                  helperText: isCredit
-                      ? l10n.accounts_cardDebtHint
-                      : null,
+                  labelText: isEdit ? l10n.accounts_balance : l10n.accounts_initialBalance,
                   prefixText: '${currencyInfo(_currency).symbol} '),
             ),
           ],
           if (_type != 'gold') const SizedBox(height: 6),
-
-          if (isCard) ...[
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(textInputAction: TextInputAction.next, 
-                    controller: _cardHolderNameCtrl,
-                    decoration: InputDecoration(
-                      labelText: l10n.accounts_cardHolderOptional,
-                      prefixIcon: const Icon(Icons.person_outline),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: TextField(textInputAction: TextInputAction.next, 
-                    controller: _cardNumberLast4Ctrl,
-                    keyboardType: TextInputType.number,
-                    maxLength: 4,
-                    decoration: InputDecoration(
-                      labelText: l10n.accounts_last4Digits,
-                      prefixIcon: const Icon(Icons.numbers),
-                      counterText: '',
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            TextField(textInputAction: TextInputAction.done, onSubmitted: (_) => _submit(), 
-              controller: _cardExpiryCtrl,
-              keyboardType: TextInputType.datetime,
-              maxLength: 5,
-              inputFormatters: [CardExpiryInputFormatter()],
-              decoration: InputDecoration(
-                labelText: l10n.accounts_expiryDate,
-                prefixIcon: const Icon(Icons.calendar_month),
-                counterText: '',
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
-
-          if (isCredit) ...[
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(textInputAction: TextInputAction.next, 
-                    controller: _creditLimitCtrl,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(
-                      labelText: l10n.accounts_creditLimitOptional,
-                      prefixText: '${currencyInfo(_currency).symbol} ',
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: TextField(textInputAction: TextInputAction.next, 
-                    controller: _minPaymentAmountCtrl,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(
-                      labelText: l10n.accounts_minPaymentOptional,
-                      prefixText: '${currencyInfo(_currency).symbol} ',
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(textInputAction: TextInputAction.next, 
-                    controller: _statementDayCtrl,
-                    keyboardType: TextInputType.number,
-                    maxLength: 2,
-                    decoration: InputDecoration(
-                      labelText: l10n.accounts_statementDayOptional,
-                      hintText: l10n.accounts_statementDayExample,
-                      counterText: '',
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: TextField(textInputAction: TextInputAction.done, onSubmitted: (_) => _submit(), 
-                    controller: _dueDayCtrl,
-                    keyboardType: TextInputType.number,
-                    maxLength: 2,
-                    decoration: InputDecoration(
-                      labelText: l10n.accounts_dueDayOptional,
-                      hintText: l10n.accounts_dueDayExample,
-                      counterText: '',
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-
-          if (isCard) ...[
-            const SizedBox(height: 16),
-            Text(l10n.accounts_linkedAccountOptional,
-                style: Theme.of(context)
-                    .textTheme
-                    .labelMedium
-                    ?.copyWith(letterSpacing: 1)),
-            const SizedBox(height: 8),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => setState(() => _linkedAccountId = null),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 140),
-                      margin: const EdgeInsets.only(right: 10),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 14),
-                      decoration: BoxDecoration(
-                        color: _linkedAccountId == null
-                            ? cs.primary
-                            : cs.surfaceContainerHigh,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Text(l10n.shared_widgets_none,
-                          style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: _linkedAccountId == null
-                                  ? Colors.white
-                                  : cs.onSurface)),
-                    ),
-                  ),
-                  ...app.accounts.where((a) => a.type == 'bank').map((a) {
-                    final sel = _linkedAccountId == a.id;
-                    return GestureDetector(
-                      onTap: () => setState(() => _linkedAccountId = a.id),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 140),
-                        margin: const EdgeInsets.only(right: 10),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 14),
-                        decoration: BoxDecoration(
-                          color: sel ? cs.primary : cs.surfaceContainerHigh,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Text(a.name,
-                            style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: sel ? Colors.white : cs.onSurface)),
-                      ),
-                    );
-                  }),
-                ],
-              ),
-            ),
-            const SizedBox(height: 4),
-          ],
-
-          if (isCredit) ...[
-            const SizedBox(height: 16),
-            _CreditReminderSection(
-              enabled: _creditReminderEnabled,
-              earlyEnabled: _creditEarlyReminderEnabled,
-              time: _creditReminderTime,
-              onEnabledChanged: (v) => setState(() => _creditReminderEnabled = v),
-              onEarlyEnabledChanged: (v) => setState(() => _creditEarlyReminderEnabled = v),
-              onPickTime: _pickTime,
-            ),
-          ],
 
           // ── Exclude from total ──────────────────────────────────────
           SwitchListTile.adaptive(
@@ -1498,9 +1180,7 @@ class _AccountSheetState extends State<_AccountSheet> {
                   : l10n.accounts_addAccount),
             )),
           ]),
-        ],
-      )),
-      ),
+      ],
     );
   }
 }
@@ -1517,7 +1197,6 @@ class _CardSheet extends StatefulWidget {
 class _CardSheetState extends State<_CardSheet> {
   final _nameCtrl = TextEditingController();
   final _balCtrl = TextEditingController();
-  final _gramsCtrl = TextEditingController();
 
   // Card specific
   final _creditLimitCtrl = TextEditingController();
@@ -1533,7 +1212,6 @@ class _CardSheetState extends State<_CardSheet> {
   String _currency = 'EGP';
   int _color = 0xFF6750A4;
   bool _excludeFromTotal = false;
-  int _goldKarat = 24;
 
   // Reminders
   bool _creditReminderEnabled = false;
@@ -1543,7 +1221,6 @@ class _CardSheetState extends State<_CardSheet> {
   bool _submitted = false;
 
   bool get isEdit => widget.existing != null;
-  bool get isGold => _type == 'gold';
   bool get isCredit => _type == 'credit';
   bool get isDebit => _type == 'debit';
   bool get isPrepaid => _type == 'prepaid';
@@ -1563,14 +1240,9 @@ class _CardSheetState extends State<_CardSheet> {
       _currency = e.currency;
       _color = e.colorValue;
       _excludeFromTotal = e.excludeFromTotal;
-      if (e.isGold) {
-        _goldKarat = e.goldKarat ?? 24;
-        _gramsCtrl.text = e.goldGrams?.toStringAsFixed(2) ?? '';
-      } else {
-        _balCtrl.text = (e.type == 'credit' && e.balance < 0)
-            ? (-e.balance).toStringAsFixed(2)
-            : e.balance.toStringAsFixed(2);
-      }
+      _balCtrl.text = (e.type == 'credit' && e.balance < 0)
+          ? (-e.balance).toStringAsFixed(2)
+          : e.balance.toStringAsFixed(2);
       _cardHolderNameCtrl.text = e.cardHolderName ?? '';
       _cardNumberLast4Ctrl.text = e.cardNumberLast4 ?? '';
       _cardExpiryCtrl.text = e.cardExpiry ?? '';
@@ -1601,7 +1273,6 @@ class _CardSheetState extends State<_CardSheet> {
   void dispose() {
     _nameCtrl.dispose();
     _balCtrl.dispose();
-    _gramsCtrl.dispose();
     _creditLimitCtrl.dispose();
     _statementDayCtrl.dispose();
     _dueDayCtrl.dispose();
@@ -1610,17 +1281,6 @@ class _CardSheetState extends State<_CardSheet> {
     _cardNumberLast4Ctrl.dispose();
     _cardExpiryCtrl.dispose();
     super.dispose();
-  }
-
-  /// Live-preview the gold value in the selected currency.
-  double? _previewGoldValue(AppProvider app) {
-    final grams = double.tryParse(_gramsCtrl.text);
-    if (grams == null || grams <= 0) return null;
-    return app.computeGoldValue(
-      grams: grams,
-      karat: _goldKarat,
-      currency: _currency,
-    );
   }
 
   Future<void> _pickTime() async {
@@ -1638,135 +1298,100 @@ class _CardSheetState extends State<_CardSheet> {
     if (name.isEmpty) return;
     final app = context.read<AppProvider>();
 
-    if (isGold) {
-      final grams = double.tryParse(_gramsCtrl.text);
-      if (grams == null || grams <= 0) return;
+    if (isDebit && _linkedAccountId == null) {
+      showAppSnackbar(context, l10n.accounts_selectLinkedBank);
+      return;
+    }
 
-      // Guard: gold price must be available before saving.
-      final computedBalance = app.computeGoldValue(
-        grams: grams,
-        karat: _goldKarat,
-        currency: _currency,
-      );
-      if (computedBalance == null) {
-        if (mounted) {
-          showAppSnackbar(context, l10n.accounts_goldPriceNotYetLoade);
-        }
-        return;
-      }
-
-      if (isEdit) {
-        await app.updateAccount(widget.existing!.copyWith(
-          name: name,
-          type: _type,
-          currency: _currency,
-          balance: computedBalance,
-          colorValue: _color,
-          excludeFromTotal: _excludeFromTotal,
-          goldKarat: _goldKarat,
-          goldGrams: grams,
-        ));
-      } else {
-        await app.addAccount(Account(
-          id: app.newId(),
-          name: name,
-          type: _type,
-          currency: _currency,
-          balance: computedBalance,
-          colorValue: _color,
-          excludeFromTotal: _excludeFromTotal,
-          goldKarat: _goldKarat,
-          goldGrams: grams,
-        ));
-      }
+    final rawAmount = double.tryParse(_balCtrl.text);
+    final double balance;
+    if (isDebit) {
+      balance = isEdit ? widget.existing!.balance : 0.0;
+    } else if (isCredit) {
+      final owed = rawAmount?.abs() ?? (isEdit ? (widget.existing!.balance < 0 ? -widget.existing!.balance : 0.0) : 0.0);
+      balance = owed > 0 ? -owed : 0.0;
     } else {
-      if (isDebit) {
-        if (_linkedAccountId == null) {
-          showAppSnackbar(context, l10n.accounts_selectLinkedBank);
+      balance = rawAmount ?? (isEdit ? widget.existing!.balance : 0.0);
+    }
+    double? creditLimit;
+    int? dueDay;
+    int? statementDay;
+    double? minPaymentAmount;
+    final cardHolderName = _cardHolderNameCtrl.text.trim();
+    final cardNumberLast4 = _cardNumberLast4Ctrl.text.trim();
+    final cardExpiry = _cardExpiryCtrl.text.trim();
+    final linkedAccountId = isPrepaid ? null : _linkedAccountId;
+    if (isCredit) {
+      creditLimit = double.tryParse(_creditLimitCtrl.text);
+      final dueTxt = _dueDayCtrl.text.trim();
+      if (dueTxt.isNotEmpty) {
+        dueDay = int.tryParse(dueTxt);
+        if (dueDay == null || dueDay < 1 || dueDay > 31) {
+          showAppSnackbar(context, l10n.common_invalid);
           return;
         }
       }
-
-      final rawAmount = double.tryParse(_balCtrl.text);
-      final double balance;
-      if (isDebit) {
-        balance = isEdit ? widget.existing!.balance : 0.0;
-      } else if (isCredit) {
-        final owed = rawAmount?.abs() ?? (isEdit ? (widget.existing!.balance < 0 ? -widget.existing!.balance : 0.0) : 0.0);
-        balance = owed > 0 ? -owed : 0.0;
-      } else {
-        balance = rawAmount ?? (isEdit ? widget.existing!.balance : 0.0);
+      final stmtTxt = _statementDayCtrl.text.trim();
+      if (stmtTxt.isNotEmpty) {
+        statementDay = int.tryParse(stmtTxt);
+        if (statementDay == null || statementDay < 1 || statementDay > 31) {
+          showAppSnackbar(context, l10n.common_invalid);
+          return;
+        }
       }
-      double? creditLimit;
-      int? dueDay;
-      int? statementDay;
-      double? minPaymentAmount;
-      String? cardHolderName;
-      String? cardNumberLast4;
-      String? cardExpiry;
-      String? linkedAccountId;
+      minPaymentAmount = double.tryParse(_minPaymentAmountCtrl.text);
+    }
 
-      cardHolderName = _cardHolderNameCtrl.text.trim();
-      cardNumberLast4 = _cardNumberLast4Ctrl.text.trim();
-      cardExpiry = _cardExpiryCtrl.text.trim();
-      linkedAccountId = isPrepaid ? null : _linkedAccountId;
-      if (isCredit) {
-        creditLimit = double.tryParse(_creditLimitCtrl.text);
-        dueDay = int.tryParse(_dueDayCtrl.text);
-        statementDay = int.tryParse(_statementDayCtrl.text);
-        minPaymentAmount = double.tryParse(_minPaymentAmountCtrl.text);
-      }
+    final reminderTimeStr =
+        '${_creditReminderTime.hour.toString().padLeft(2, '0')}:${_creditReminderTime.minute.toString().padLeft(2, '0')}';
 
-      final reminderTimeStr =
-          '${_creditReminderTime.hour.toString().padLeft(2, '0')}:${_creditReminderTime.minute.toString().padLeft(2, '0')}';
-
-      if (isEdit) {
-        await app.updateAccount(widget.existing!.copyWith(
-          name: name,
-          type: _type,
-          currency: _currency,
-          balance: balance,
-          colorValue: _color,
-          excludeFromTotal: _excludeFromTotal,
-          excludeFromBankTotal: false,
-          cardHolderName: cardHolderName,
-          cardNumberLast4: cardNumberLast4,
-          cardExpiry: cardExpiry,
-          creditLimit: creditLimit,
-          statementDay: statementDay,
-          dueDay: dueDay,
-          minPaymentAmount: minPaymentAmount,
-          creditReminderEnabled: _creditReminderEnabled,
-          creditEarlyReminderEnabled: _creditEarlyReminderEnabled,
-          creditReminderTime: reminderTimeStr,
-          linkedAccountId: linkedAccountId,
-          clearLinkedAccount: linkedAccountId == null,
-          clearGold: true,
-          clearCredit: !isCredit,
-        ));
-      } else {
-        await app.addAccount(Account(
-          id: app.newId(),
-          name: name,
-          type: _type,
-          currency: _currency,
-          balance: balance,
-          colorValue: _color,
-          excludeFromTotal: _excludeFromTotal,
-          excludeFromBankTotal: false,
-          cardHolderName: cardHolderName,
-          cardNumberLast4: cardNumberLast4,
-          cardExpiry: cardExpiry,
-          creditLimit: creditLimit,
-          linkedAccountId: linkedAccountId,
-          statementDay: statementDay,
-          dueDay: dueDay,
-          minPaymentAmount: minPaymentAmount,
-          creditReminderEnabled: _creditReminderEnabled,
-          creditEarlyReminderEnabled: _creditEarlyReminderEnabled,
-          creditReminderTime: reminderTimeStr,
-        ));
-      }
+    if (isEdit) {
+      await app.updateAccount(widget.existing!.copyWith(
+        name: name,
+        type: _type,
+        currency: _currency,
+        balance: balance,
+        colorValue: _color,
+        excludeFromTotal: _excludeFromTotal,
+        excludeFromBankTotal: widget.existing!.excludeFromBankTotal,
+        dontLinkToCard: widget.existing!.dontLinkToCard,
+        cardHolderName: cardHolderName,
+        cardNumberLast4: cardNumberLast4,
+        cardExpiry: cardExpiry,
+        creditLimit: creditLimit,
+        statementDay: statementDay,
+        dueDay: dueDay,
+        minPaymentAmount: minPaymentAmount,
+        creditReminderEnabled: _creditReminderEnabled,
+        creditEarlyReminderEnabled: _creditEarlyReminderEnabled,
+        creditReminderTime: reminderTimeStr,
+        linkedAccountId: linkedAccountId,
+        clearLinkedAccount: linkedAccountId == null,
+        clearGold: true,
+        clearCredit: !isCredit,
+      ));
+    } else {
+      await app.addAccount(Account(
+        id: app.newId(),
+        name: name,
+        type: _type,
+        currency: _currency,
+        balance: balance,
+        colorValue: _color,
+        excludeFromTotal: _excludeFromTotal,
+        excludeFromBankTotal: false,
+        cardHolderName: cardHolderName,
+        cardNumberLast4: cardNumberLast4,
+        cardExpiry: cardExpiry,
+        creditLimit: creditLimit,
+        linkedAccountId: linkedAccountId,
+        statementDay: statementDay,
+        dueDay: dueDay,
+        minPaymentAmount: minPaymentAmount,
+        creditReminderEnabled: _creditReminderEnabled,
+        creditEarlyReminderEnabled: _creditEarlyReminderEnabled,
+        creditReminderTime: reminderTimeStr,
+      ));
     }
     if (mounted) Navigator.pop(context);
   }
@@ -1774,10 +1399,8 @@ class _CardSheetState extends State<_CardSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    // Watch so live gold preview rebuilds when rates arrive.
     final app = context.watch<AppProvider>();
     final cs = Theme.of(context).colorScheme;
-    final preview = isGold ? _previewGoldValue(app) : null;
 
     final typeOptions = [
       ['credit', l10n.accounts_creditCard],
@@ -1785,25 +1408,11 @@ class _CardSheetState extends State<_CardSheet> {
       ['prepaid', l10n.accounts_prepaidCard],
     ];
 
-    return Padding(
-      padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-          left: 20,
-          right: 20,
-          top: 20),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.85,
-        ),
-        child: SingleChildScrollView(
-            child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    return SheetShell(
+      maxHeightFactor: 0.85,
+      children: [
           Text(
-              isEdit
-                  ? (isCard ? l10n.accounts_editCard : l10n.accounts_editAccount)
-                  : (isCard ? l10n.accounts_addCardBtn : l10n.accounts_addAccount),
+              isEdit ? l10n.accounts_editCard : l10n.accounts_addCardBtn,
               style: Theme.of(context)
                   .textTheme
                   .titleLarge
@@ -1813,9 +1422,7 @@ class _CardSheetState extends State<_CardSheet> {
           TextField(textInputAction: TextInputAction.next, 
             controller: _nameCtrl,
             decoration: InputDecoration(
-              labelText: isCard
-                  ? l10n.accounts_cardNameHint
-                  : l10n.accounts_accountName,
+              labelText: l10n.accounts_cardNameHint,
               prefixIcon: const Icon(Icons.label_outline),
               errorText: _submitted && _nameCtrl.text.trim().isEmpty
                   ? l10n.error_required
@@ -1915,102 +1522,8 @@ class _CardSheetState extends State<_CardSheet> {
           ),
           const SizedBox(height: 14),
 
-          // ── Gold-specific fields ────────────────────────────────────
-          if (isGold) ...[
-            // Karat selector
-            Text(l10n.accounts_goldPurityKarat,
-                style: Theme.of(context)
-                    .textTheme
-                    .labelMedium
-                    ?.copyWith(letterSpacing: 1)),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _kKarats.map((k) {
-                final sel = _goldKarat == k;
-                return GestureDetector(
-                  onTap: () => setState(() => _goldKarat = k),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 140),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-                    decoration: BoxDecoration(
-                      color: sel
-                          ? kGoldColor
-                          : kGoldColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: sel
-                            ? kGoldColor
-                            : kGoldColor.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: Column(mainAxisSize: MainAxisSize.min, children: [
-                      Text('${k}k',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w800,
-                              fontSize: 14,
-                              color: sel
-                                  ? Colors.white
-                                  : kGoldColor)),
-                      Text('${(k / 24 * 100).toStringAsFixed(0)}%',
-                          style: TextStyle(
-                              fontSize: 9,
-                              color: sel
-                                  ? Colors.white.withValues(alpha: 0.8)
-                                  : kGoldColor
-                                      .withValues(alpha: 0.7))),
-                    ]),
-                  ),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 14),
-
-            // Weight field
-            Text(l10n.accounts_weight,
-                style: Theme.of(context)
-                    .textTheme
-                    .labelMedium
-                    ?.copyWith(letterSpacing: 1)),
-            const SizedBox(height: 8),
-            TextField(textInputAction: TextInputAction.next, 
-              controller: _gramsCtrl,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                labelText: l10n.accounts_weightInGrams,
-                prefixIcon: const Icon(Icons.scale_outlined),
-                suffixText: 'g',
-                errorText:
-                    _submitted && (double.tryParse(_gramsCtrl.text) ?? 0) <= 0
-                        ? l10n.error_required
-                        : null,
-              ),
-              onChanged: (_) => setState(() {}),
-            ),
-            const SizedBox(height: 12),
-
-            // Live value preview card
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 220),
-              child: app.goldRatesAvailable
-                  ? _GoldPreviewCard(
-                      key: ValueKey(preview?.toStringAsFixed(0) ?? 'no'),
-                      preview: preview,
-                      currency: _currency,
-                      karat: _goldKarat,
-                      grams: double.tryParse(_gramsCtrl.text),
-                      app: app,
-                    )
-                  : _GoldRatesUnavailableBanner(
-                      key: ValueKey(app.ratesFetching),
-                      fetching: app.ratesFetching,
-                    ),
-            ),
-            const SizedBox(height: 14),
-          ] else if (isDebit) ...[
+          // ── Card-specific fields ────────────────────────────────────
+          if (isDebit) ...[
             Container(
               margin: const EdgeInsets.symmetric(vertical: 8),
               padding: const EdgeInsets.all(12),
@@ -2226,7 +1739,13 @@ class _CardSheetState extends State<_CardSheet> {
               enabled: _creditReminderEnabled,
               earlyEnabled: _creditEarlyReminderEnabled,
               time: _creditReminderTime,
-              onEnabledChanged: (v) => setState(() => _creditReminderEnabled = v),
+              onEnabledChanged: (v) async {
+                if (v) {
+                  final granted = await NotificationPermissions.ensure(context);
+                  if (!granted) return;
+                }
+                if (mounted) setState(() => _creditReminderEnabled = v);
+              },
               onEarlyEnabledChanged: (v) => setState(() => _creditEarlyReminderEnabled = v),
               onPickTime: _pickTime,
             ),
@@ -2315,9 +1834,7 @@ class _CardSheetState extends State<_CardSheet> {
               child: Text(isEdit ? l10n.accounts_saveChanges : l10n.accounts_addNewCardBtn),
             )),
           ]),
-        ],
-      )),
-      ),
+      ],
     );
   }
 }
@@ -2595,9 +2112,9 @@ class _RealWorldCard extends StatelessWidget {
     if (statement.utilizationPercent < 30.0) {
       tierColor = kSuccessColor; // Low: Emerald Green
     } else if (statement.utilizationPercent <= 70.0) {
-      tierColor = const Color(0xFFFFA000); // Moderate: Amber
+      tierColor = kWarningColor; // Moderate: Amber
     } else {
-      tierColor = const Color(0xFFD32F2F); // High: Crimson Red
+      tierColor = kDangerColor; // High: Crimson Red
     }
 
     return Padding(

@@ -1,6 +1,5 @@
 // lib/services/pdf_report_service.dart
 import 'dart:typed_data';
-import 'package:flutter/material.dart' show BuildContext;
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
@@ -190,7 +189,7 @@ class PdfReportService {
                   _tableCell(l10n.export_pdfOutflow, isHeader: true),
                   _tableCell(l10n.export_pdfNet, isHeader: true),
                   _tableCell(l10n.export_pdfSavingsRate, isHeader: true),
-                  _tableCell('Transactions', isHeader: true),
+                  _tableCell(l10n.export_pdfTransactions, isHeader: true),
                 ],
               ),
               pw.TableRow(
@@ -281,7 +280,9 @@ class PdfReportService {
                 ),
                 ...sortedCategories.expand((entry) {
                   final cat = app.categoryById(entry.key);
-                  final catName = cat?.name ?? 'Other';
+                  final catName = cat != null
+                      ? app.localizedCategoryName(cat, l10n)
+                      : l10n.statistics_other;
                   final pct = totalOutflow > 0
                       ? (entry.value / totalOutflow * 100).clamp(0.0, 100.0)
                       : 0.0;
@@ -304,7 +305,8 @@ class PdfReportService {
                           : 0.0;
                       return pw.TableRow(
                         children: [
-                          _tableCell('   > ${subCat?.name ?? 'Other'}',
+                          _tableCell(
+                              '   > ${subCat != null ? app.localizedCategoryName(subCat, l10n) : l10n.statistics_other}',
                               fontSize: 8.5),
                           _tableCell(sub.value.toStringAsFixed(2),
                               fontSize: 8.5),
@@ -346,18 +348,22 @@ class PdfReportService {
                   ],
                 ),
                 ...filteredTxs.map((t) {
-                  final acct = app.accountById(t.accountId);
+                  final acct = app.accountById(t.paidViaAccountId ?? t.accountId);
+                  final isTransfer = t.isTransfer;
                   final isIncome = t.type == 'income';
-                  final displayCur = t.currency.isNotEmpty
-                      ? t.currency
-                      : (acct?.currency ?? baseCurrency);
+                  final displayCur = app.txCurrency(t);
                   final catLabel = app.isTransactionSplit(t.id)
                       ? app
                           .getSplits(t.id)
-                          .map((s) => app.categoryDisplayName(s.categoryId))
+                          .map((s) => app.categoryDisplayName(s.categoryId, l10n: l10n))
                           .where((s) => s.isNotEmpty)
                           .join(', ')
-                      : app.categoryDisplayName(t.categoryId, fallback: '-');
+                      : app.categoryDisplayName(t.categoryId, fallback: '-', l10n: l10n);
+
+                  final amtSign = isTransfer ? '↔ ' : (isIncome ? '+' : '-');
+                  final amtColor = isTransfer
+                      ? primaryColor
+                      : (isIncome ? incomeColor : expenseColor);
 
                   return pw.TableRow(
                     children: [
@@ -378,8 +384,8 @@ class PdfReportService {
                         fontSize: 8.5,
                       ),
                       _tableCell(
-                        '${isIncome ? '+' : '-'}${t.amount.toStringAsFixed(2)} $displayCur',
-                        color: isIncome ? incomeColor : expenseColor,
+                        '$amtSign${t.amount.toStringAsFixed(2)} $displayCur',
+                        color: amtColor,
                         bold: true,
                         fontSize: 8.5,
                       ),
@@ -417,7 +423,6 @@ class PdfReportService {
 
   /// Exports and saves the generated PDF report via the platform FilePicker.
   static Future<String?> savePdfReport({
-    required BuildContext context,
     required AppProvider app,
     required DateTime from,
     required DateTime to,

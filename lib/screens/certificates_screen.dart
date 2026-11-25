@@ -24,7 +24,6 @@ class CertificatesScreen extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (_) => CertificateSheet(existing: existing),
     );
   }

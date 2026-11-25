@@ -1,7 +1,7 @@
 name: expensy
-description: A fully offline expense manager with Material You design.
+description: A local-first personal finance and expense manager with Material You design.
 publish_to: 'none'
-version: 1.2.5+22
+version: 1.2.6+23
 
 environment:
   sdk: '>=3.3.0 <4.0.0'

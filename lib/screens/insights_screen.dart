@@ -27,7 +27,6 @@ class _ComputePayload {
   final Map<String, double> rates;
   final Map<String, String> accountCurrencies;
   final DateTime now;
-  final Map<String, String> categoryNames;
   final Map<String, String> parentByCatId;
 
   _ComputePayload({
@@ -37,7 +36,6 @@ class _ComputePayload {
     required this.rates,
     required this.accountCurrencies,
     required this.now,
-    required this.categoryNames,
     required this.parentByCatId,
   });
 }
@@ -196,7 +194,11 @@ class InsightsScreen extends StatefulWidget {
 class _InsightsScreenState extends State<InsightsScreen> {
   bool _isLoading = true;
   _InsightsData? _data;
-  int _lastTxLength = -1;
+  List<AppTransaction>? _lastTxs;
+  List<TransactionSplit>? _lastSplits;
+  Map<String, double>? _lastRates;
+  String? _lastCurrency;
+  List<AppCategory>? _lastCategories;
   int _lastLoadTime = 0;
   final Set<String> _expandedTopCats = {};
 
@@ -218,7 +220,6 @@ class _InsightsScreenState extends State<InsightsScreen> {
       rates: app.exchangeRates,
       accountCurrencies: { for (var a in app.accounts) a.id: a.currency },
       now: DateTime.now(),
-      categoryNames: { for (var c in app.categories) c.id: c.name },
       parentByCatId: {
         for (var c in app.categories)
           if (c.isSubcategory) c.id: c.parentId!,
@@ -246,9 +247,17 @@ class _InsightsScreenState extends State<InsightsScreen> {
     // Helper method `fmt`: handles user action or computes derived UI state.
     String fmt(double v) => formatAmount(v, cur);
 
-    // Trigger reload if transactions changed
-    if (_lastTxLength != app.transactions.length) {
-      _lastTxLength = app.transactions.length;
+    // Trigger reload if transactions, splits, rates, currency, or categories changed
+    if (!identical(_lastTxs, app.transactions) ||
+        !identical(_lastSplits, app.splits) ||
+        !identical(_lastRates, app.exchangeRates) ||
+        _lastCurrency != app.settings.currency ||
+        !identical(_lastCategories, app.categories)) {
+      _lastTxs = app.transactions;
+      _lastSplits = app.splits;
+      _lastRates = app.exchangeRates;
+      _lastCurrency = app.settings.currency;
+      _lastCategories = app.categories;
       if (DateTime.now().millisecondsSinceEpoch - _lastLoadTime > 100) {
         Future.microtask(_loadData);
       }
@@ -303,7 +312,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
     final projectedTotal = dailyAverage * daysInMonth;
     final remainingDays = daysInMonth - daysElapsed;
     // Normalize weekly budgets to monthly equivalent and include rollover (C4)
-    final totalBudget = app.budgets.fold(0.0, (s, b) {
+    final totalBudget = app.nonOverlappingBudgets.fold(0.0, (s, b) {
       final eff = app.budgetEffectiveAllowance(b);
       return s + (b.period == 'weekly' ? eff * (52.0 / 12.0) : eff);
     });
@@ -315,7 +324,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
         ? (projectedTotal >= totalBudget
             ? cs.error
             : (projectedTotal >= totalBudget * 0.75
-                ? Colors.orange
+                ? kWarningColor
                 : cs.primary))
         : cs.primary;
 
@@ -754,8 +763,11 @@ class _InsightsScreenState extends State<InsightsScreen> {
                                                       children: [
                                                         Flexible(
                                                           child: Text(
-                                                            cat?.name ??
-                                                                l10n.statistics_other,
+                                                            cat != null
+                                                                ? app.localizedCategoryName(
+                                                                    cat, l10n)
+                                                                : l10n
+                                                                    .statistics_other,
                                                             overflow:
                                                                 TextOverflow
                                                                     .ellipsis,
@@ -831,11 +843,18 @@ class _InsightsScreenState extends State<InsightsScreen> {
                                                         e.value / daysElapsed;
                                                     final catProj =
                                                         catDaily * daysInMonth;
-                                                    final catBudget = app
-                                                            .budgetForCategory(
-                                                                cat?.id ?? '')
-                                                            ?.amount ??
-                                                        0;
+                                                    final b = cat != null
+                                                        ? app.budgetForCategory(
+                                                            cat.id)
+                                                        : null;
+                                                    final catBudget = b == null
+                                                        ? 0.0
+                                                        : (b.period == 'weekly'
+                                                            ? app.budgetEffectiveAllowance(
+                                                                    b) *
+                                                                (52.0 / 12.0)
+                                                            : app.budgetEffectiveAllowance(
+                                                                b));
                                                     String txt =
                                                         l10n.insights_projAmount(
                                                             fmt(catProj));
@@ -856,7 +875,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                                                             : (catProj >=
                                                                     catBudget *
                                                                         0.75
-                                                                ? Colors.orange
+                                                                ? kWarningColor
                                                                 : cs.onSurface
                                                                     .withValues(
                                                                         alpha:
@@ -900,8 +919,10 @@ class _InsightsScreenState extends State<InsightsScreen> {
                                               const SizedBox(width: 8),
                                               Expanded(
                                                 child: Text(
-                                                  subCat?.name ??
-                                                      l10n.statistics_other,
+                                                  subCat != null
+                                                      ? app.localizedCategoryName(
+                                                          subCat, l10n)
+                                                      : l10n.statistics_other,
                                                   style: TextStyle(
                                                     fontSize: 12,
                                                     fontWeight: FontWeight.w500,
@@ -995,7 +1016,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
-                  children: _buildTrendRows(app, thisCatMap, lastCatMap, cs, fmt),
+                  children: _buildTrendRows(app, thisCatMap, lastCatMap, cs, l10n, fmt),
                 ),
               ),
             ),
@@ -1347,6 +1368,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
     Map<String, double> current,
     Map<String, double> previous,
     ColorScheme cs,
+    AppLocalizations l10n,
     // Helper method `Function`: handles user action or computes derived UI state.
     String Function(double) fmt,
   ) {
@@ -1358,7 +1380,9 @@ class _InsightsScreenState extends State<InsightsScreen> {
       final cur = current[catId] ?? 0;
       final prev = previous[catId] ?? 0;
       final cat = app.categoryById(catId);
-      final catName = cat?.name ?? 'Other';
+      final catName = cat != null
+          ? app.localizedCategoryName(cat, l10n)
+          : l10n.statistics_other;
 
       final double pct;
       final Color trendColor;

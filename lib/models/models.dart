@@ -412,6 +412,8 @@ class RecurringPayment {
   final double? toAmount;
 
   bool get isTransfer => paymentType == 'transfer';
+  bool get isInstallment => recurringType == 'installment';
+  bool get isInstallmentEnded => endDate != null && remainingPayments == 0;
 
   RecurringPayment({
     required this.id,
@@ -451,22 +453,6 @@ class RecurringPayment {
 
   double get remainingAmount => (remainingPayments ?? 0) * amount;
   double get totalAmount => (totalPayments ?? 0) * amount;
-
-  String get frequencyLabel {
-    if (freqVal == 1) {
-      switch (freqUnit) {
-        case 'days':
-          return 'Daily';
-        case 'weeks':
-          return 'Weekly';
-        case 'months':
-          return 'Monthly';
-        case 'years':
-          return 'Yearly';
-      }
-    }
-    return 'Every $freqVal $freqUnit';
-  }
 
   /// Localized frequency label for UI rendering.
   String localizedFrequencyLabel(AppLocalizations l10n) {
@@ -1625,7 +1611,6 @@ class CreditCardStatement {
     required this.isFullyPaid,
   });
 
-  /// Utilization tier: 'low' (< 30%), 'moderate' (30% - 70%), 'high' (> 70%)
   String get utilizationTier {
     if (utilizationPercent < 30.0) return 'low';
     if (utilizationPercent <= 70.0) return 'moderate';
@@ -1742,8 +1727,6 @@ class Certificate {
     return (elapsedMs / totalMs).clamp(0.0, 1.0);
   }
 
-  bool get isMatured => DateTime.now().isAfter(endDate);
-
   // Returns the single next uncollected period date after [lastCollectedDate ?? startDate]
   // without skipping elapsed cycles, enabling bounded catch-up in [checkAndProcessCertificates].
   DateTime? get nextUncollectedPeriodDate {
@@ -1779,6 +1762,8 @@ class Certificate {
     if (candidate.isAfter(endDay)) return endDay;
     return candidate;
   }
+
+  DateTime? get nextCollectionDate => nextCollectionDateAt(DateTime.now());
 
   // Computes the current/upcoming collection date relative to [nowOverride ?? DateTime.now()].
   // Uses date-only comparison so due-day checks at any time 00:00..23:59 return today.
@@ -1835,8 +1820,6 @@ class Certificate {
     if (candidate.isAfter(endDay)) return endDate;
     return candidate;
   }
-
-  DateTime? get nextCollectionDate => nextCollectionDateAt();
 
   Map<String, dynamic> toMap() => {
         'id': id,

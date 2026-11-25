@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
+import 'package:timezone/timezone.dart' as tz;
 import '../models/models.dart';
 import '../utils/service_localizations.dart';
-import 'date_scheduling.dart';
 
 class CertificateReminderService {
   static final CertificateReminderService _instance =
@@ -58,8 +58,22 @@ class CertificateReminderService {
     for (var i = 0; i < certId.length; i++) {
       hash = 31 * hash + certId.codeUnitAt(i);
     }
-    final base = (hash & 0x7FFFFFFF) + 2000000;
-    return early ? base + 1 : base;
+    final offset = early ? 2900000 : 2500000;
+    return offset + ((hash & 0x0FFFFFFF) % 400000);
+  }
+
+  tz.TZDateTime? _toUtcTZDate(DateTime date, int hour, int minute) {
+    final local = DateTime(date.year, date.month, date.day, hour, minute);
+    final utc = local.subtract(local.timeZoneOffset);
+    final tzDate = tz.TZDateTime.utc(
+      utc.year,
+      utc.month,
+      utc.day,
+      utc.hour,
+      utc.minute,
+    );
+    if (tzDate.isBefore(tz.TZDateTime.now(tz.UTC))) return null;
+    return tzDate;
   }
 
   NotificationDetails _buildDetails() {
@@ -77,8 +91,16 @@ class CertificateReminderService {
   Future<void> scheduleReminder(Certificate c) async {
     await cancelReminder(c.id);
     if (!c.reminderEnabled || c.isSettled) return;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final endDay = DateTime(c.endDate.year, c.endDate.month, c.endDate.day);
+    if (today.isAfter(endDay)) return;
+
     await _ensureInit();
     if (!_initialized || !(await hasPermission())) return;
+
+    final nextDate = c.nextCollectionDateAt(now);
+    if (nextDate == null) return;
 
     final parts = c.reminderTime.split(':');
     final hour = int.tryParse(parts[0]) ?? 9;
@@ -87,12 +109,7 @@ class CertificateReminderService {
     final loc = ServiceLocalizations.current;
 
     // Day of payout
-    final tzDate = nextMonthlyReminderTzDate(
-      dueDay: c.collectionDay,
-      daysBefore: 0,
-      hour: hour,
-      minute: minute,
-    );
+    final tzDate = _toUtcTZDate(nextDate, hour, minute);
     if (tzDate != null) {
       await _plugin.zonedSchedule(
         id: _notifId(c.id, early: false),
@@ -107,11 +124,10 @@ class CertificateReminderService {
 
     // 2 Days Early
     if (c.reminderEarlyEnabled) {
-      final earlyDate = nextMonthlyReminderTzDate(
-        dueDay: c.collectionDay,
-        daysBefore: 2,
-        hour: hour,
-        minute: minute,
+      final earlyDate = _toUtcTZDate(
+        nextDate.subtract(const Duration(days: 2)),
+        hour,
+        minute,
       );
       if (earlyDate != null) {
         await _plugin.zonedSchedule(

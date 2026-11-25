@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../providers/app_provider.dart';
+import '../utils/notification_permissions.dart';
 import '../theme/app_theme.dart';
 import '../widgets/shared_widgets.dart';
 import '../l10n/app_localizations.dart';
@@ -45,7 +46,7 @@ class SettingsScreen extends StatelessWidget {
                   color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                    color: hairlineBorderColor(cs),
                   ),
                 ),
                 child: Column(children: [
@@ -221,7 +222,7 @@ class SettingsScreen extends StatelessWidget {
                   color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                    color: hairlineBorderColor(cs),
                   ),
                 ),
                 child: Padding(
@@ -299,7 +300,7 @@ class SettingsScreen extends StatelessWidget {
                   color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                    color: hairlineBorderColor(cs),
                   ),
                 ),
                 child: ListTile(
@@ -336,7 +337,7 @@ class SettingsScreen extends StatelessWidget {
                   color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                    color: hairlineBorderColor(cs),
                   ),
                 ),
                 child: ListTile(
@@ -371,7 +372,7 @@ class SettingsScreen extends StatelessWidget {
                   color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                    color: hairlineBorderColor(cs),
                   ),
                 ),
                 child: Column(children: [
@@ -431,8 +432,13 @@ class SettingsScreen extends StatelessWidget {
                       subtitle:
                           Text(l10n.settings_budgetAlertsSub),
                       value: s.budgetAlertsEnabled,
-                      onChanged: (v) {
+                      onChanged: (v) async {
                         AppHaptics.tap(context, HapticStrength.selection);
+                        if (v) {
+                          final granted =
+                              await NotificationPermissions.ensure(context);
+                          if (!granted) return;
+                        }
                         app.updateSetting('budgetAlertsEnabled', v);
                       },
                     ),
@@ -445,8 +451,13 @@ class SettingsScreen extends StatelessWidget {
                               fontWeight: FontWeight.w700, fontSize: 14)),
                       subtitle: Text(l10n.settings_dailyReminderSub),
                       value: s.dailyReminderEnabled,
-                      onChanged: (v) {
+                      onChanged: (v) async {
                         AppHaptics.tap(context, HapticStrength.selection);
+                        if (v) {
+                          final granted =
+                              await NotificationPermissions.ensure(context);
+                          if (!granted) return;
+                        }
                         app.updateSetting('dailyReminderEnabled', v);
                       },
                     ),
@@ -503,7 +514,7 @@ class SettingsScreen extends StatelessWidget {
                   color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                    color: hairlineBorderColor(cs),
                   ),
                 ),
                 child: ListTile(
@@ -534,7 +545,7 @@ class SettingsScreen extends StatelessWidget {
                   color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                    color: hairlineBorderColor(cs),
                   ),
                 ),
                 child: Column(children: [

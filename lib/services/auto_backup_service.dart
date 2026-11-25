@@ -280,6 +280,10 @@ class AutoBackupService {
   static Future<void> _showFailureNotification(String error) async {
     try {
       final plugin = FlutterLocalNotificationsPlugin();
+      const androidSettings = AndroidInitializationSettings('ic_notification');
+      await plugin.initialize(
+        settings: const InitializationSettings(android: androidSettings),
+      );
       const androidDetails = AndroidNotificationDetails(
         channelId,
         'Automatic Backup Alerts',

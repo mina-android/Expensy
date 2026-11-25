@@ -28,7 +28,6 @@ const List<int> kLendedPersonColors = [
   0xFF00695C,
   0xFFEF6C00,
   0xFF4527A0,
-  0xFF00838F,
 ];
 
 class LendedScreen extends StatelessWidget {
@@ -116,14 +115,11 @@ class LendedScreen extends StatelessWidget {
     );
   }
 
-  static void openPersonSheetFromExternal(BuildContext ctx) =>
-      _openPersonSheet(ctx);
-
   static void _openPersonSheet(BuildContext ctx, {LendedPerson? existing}) {
     showModalBottomSheet(
       context: ctx,
       isScrollControlled: true,
-      builder: (_) => _PersonSheet(existing: existing),
+      builder: (_) => LendedPersonSheet(existing: existing),
     );
   }
 }
@@ -248,14 +244,14 @@ class _PersonCard extends StatelessWidget {
 }
 
 // ── Add/Edit person sheet ────────────────────────────────────────────────────
-class _PersonSheet extends StatefulWidget {
+class LendedPersonSheet extends StatefulWidget {
   final LendedPerson? existing;
-  const _PersonSheet({this.existing});
+  const LendedPersonSheet({super.key, this.existing});
   @override
-  State<_PersonSheet> createState() => _PersonSheetState();
+  State<LendedPersonSheet> createState() => _LendedPersonSheetState();
 }
 
-class _PersonSheetState extends State<_PersonSheet> {
+class _LendedPersonSheetState extends State<LendedPersonSheet> {
   final _nameCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
   int _color = kLendedPersonColors.first;
@@ -308,24 +304,10 @@ class _PersonSheetState extends State<_PersonSheet> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
-    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
-    return Padding(
-      padding: EdgeInsets.only(
-          bottom: bottomInset + 16,
-          left: 20,
-          right: 20,
-          top: 20),
-      child: SingleChildScrollView(
-          child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(isEdit ? l10n.lended_editPerson : l10n.lended_addPerson,
-              style: Theme.of(context)
-                  .textTheme
-                  .titleLarge
-                  ?.copyWith(fontWeight: FontWeight.w800)),
-          const SizedBox(height: 12),
+    return SheetShell(
+      showHandle: true,
+      title: isEdit ? l10n.lended_editPerson : l10n.lended_addPerson,
+      children: [
           TextField(
             controller: _nameCtrl,
             textInputAction: TextInputAction.next,
@@ -392,8 +374,7 @@ class _PersonSheetState extends State<_PersonSheet> {
             child:
                 Text(isEdit ? l10n.lended_saveChanges : l10n.lended_addPerson),
           ),
-        ],
-      )),
+      ],
     );
   }
 }

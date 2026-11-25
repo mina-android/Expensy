@@ -2,6 +2,7 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'budget_notification_service.dart';
+import 'certificate_reminder_service.dart';
 import 'credit_reminder_service.dart';
 import 'daily_reminder_service.dart';
 import 'lended_notification_service.dart';
@@ -43,9 +44,9 @@ class NotificationBootstrap {
           playSound: true,
         )),
         android.createNotificationChannel(const AndroidNotificationChannel(
-          'expensy_budget_alerts',
-          'Budget Alerts',
-          description: 'Alerts when category spending exceeds budget',
+          'expensy_budget',
+          'Budget & Goal Alerts',
+          description: 'Immediate alerts for exceeded budgets and completed goals.',
           importance: Importance.high,
         )),
         android.createNotificationChannel(const AndroidNotificationChannel(
@@ -83,6 +84,7 @@ class NotificationBootstrap {
       DailyReminderService().initialize(),
       LoanReminderService().initialize(),
       CreditReminderService().initialize(),
+      CertificateReminderService().initialize(),
     ]);
 
     _initialized = true;

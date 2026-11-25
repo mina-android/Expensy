@@ -242,6 +242,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   static const int _totalPages = 7;
 
   bool _restoring = false;
+  bool _restoredFromBackup = false;
   String? _restoreError;
 
   // Step 2 — Name
@@ -395,7 +396,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         );
       }
       if (mounted) {
-        setState(() => _restoring = false);
+        setState(() {
+          _restoring = false;
+          _restoredFromBackup = true;
+        });
         // Direct to notification request page instead of immediately pushing MainShell
         _goTo(6);
       }
@@ -438,7 +442,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         );
       }
       if (mounted) {
-        setState(() => _restoring = false);
+        setState(() {
+          _restoring = false;
+          _restoredFromBackup = true;
+        });
         _goTo(6);
       }
     } on FormatException catch (e) {
@@ -470,38 +477,40 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       );
     }
 
-    final accName = _accNameCtrl.text.trim();
-    String? bankAccId;
-    if (accName.isNotEmpty) {
-      bankAccId = app.newId();
-      await app.addAccount(Account(
-        id: bankAccId,
-        name: accName,
-        type: _accType,
-        currency: _accCur,
-        balance: double.tryParse(_accBalCtrl.text) ?? 0,
-        colorValue: _accColor,
-        excludeFromTotal: _accExcludeFromTotal,
-      ));
-    }
+    if (!_restoredFromBackup) {
+      final accName = _accNameCtrl.text.trim();
+      String? bankAccId;
+      if (accName.isNotEmpty) {
+        bankAccId = app.newId();
+        await app.addAccount(Account(
+          id: bankAccId,
+          name: accName,
+          type: _accType,
+          currency: _accCur,
+          balance: ExpressionEvaluator.evaluate(_accBalCtrl.text) ?? 0,
+          colorValue: _accColor,
+          excludeFromTotal: _accExcludeFromTotal,
+        ));
+      }
 
-    final cardName = _cardNameCtrl.text.trim();
-    if (cardName.isNotEmpty && _accType == 'bank' && bankAccId != null) {
-      await app.addAccount(Account(
-        id: app.newId(),
-        name: cardName,
-        type: 'debit',
-        currency: _accCur,
-        balance: 0,
-        colorValue: _cardColor,
-        linkedAccountId: bankAccId,
-        cardHolderName: _cardHolderCtrl.text.trim().isNotEmpty
-            ? _cardHolderCtrl.text.trim()
-            : _nameCtrl.text.trim(),
-        cardNumberLast4: _cardDigitsCtrl.text.trim().isNotEmpty
-            ? _cardDigitsCtrl.text.trim()
-            : '1234',
-      ));
+      final cardName = _cardNameCtrl.text.trim();
+      if (cardName.isNotEmpty && _accType == 'bank' && bankAccId != null) {
+        await app.addAccount(Account(
+          id: app.newId(),
+          name: cardName,
+          type: 'debit',
+          currency: _accCur,
+          balance: 0,
+          colorValue: _cardColor,
+          linkedAccountId: bankAccId,
+          cardHolderName: _cardHolderCtrl.text.trim().isNotEmpty
+              ? _cardHolderCtrl.text.trim()
+              : _nameCtrl.text.trim(),
+          cardNumberLast4: _cardDigitsCtrl.text.trim().isNotEmpty
+              ? _cardDigitsCtrl.text.trim()
+              : '1234',
+        ));
+      }
     }
 
     if (mounted) {
@@ -995,7 +1004,7 @@ class _PageName extends StatelessWidget {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const SizedBox(height: 12),
         _fintechHeroIcon(context, Icons.waving_hand_rounded,
-            color: const Color(0xFFFFB74D)),
+            color: kWarningColor),
         const SizedBox(height: 20),
         Text(
           l10n.onboarding_letsGetYouSetUp,
@@ -1617,7 +1626,6 @@ class _PageAccountState extends State<_PageAccount> {
           AppNumericKeypad(
             controller: widget.balCtrl,
             compact: true,
-            onDone: () => setState(() => _showKeypad = false),
           ),
         ],
         const SizedBox(height: 20),
@@ -1758,7 +1766,7 @@ class _PageDebitCardState extends State<_PageDebitCard> {
                             width: 32,
                             height: 24,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFFD700)
+                              color: kGoldColor
                                   .withValues(alpha: 0.85),
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(

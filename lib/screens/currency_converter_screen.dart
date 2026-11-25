@@ -36,7 +36,7 @@ class _CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
   }
 
   void _convert(AppProvider app) {
-    final amount = double.tryParse(_ctrl.text);
+    final amount = ExpressionEvaluator.evaluate(_ctrl.text);
     if (amount == null) {
       setState(() => _result = null);
       return;
@@ -171,7 +171,7 @@ class _CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
                     color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
                     shape: BoxShape.circle,
                     border:
-                        Border.all(color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05)),
+                        Border.all(color: hairlineBorderColor(cs)),
                   ),
                   child: Icon(Icons.swap_vert_rounded,
                       size: 22, color: cs.primary),
@@ -197,7 +197,7 @@ class _CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
                     color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
                     borderRadius: BorderRadius.circular(16),
                     border:
-                        Border.all(color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05)),
+                        Border.all(color: hairlineBorderColor(cs)),
                   ),
                   child: Text(
                     _result != null
@@ -238,7 +238,7 @@ class _CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
                 decoration: BoxDecoration(
                   color: cs.surfaceContainer.withValues(alpha: isDark ? 0.35 : 0.55),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04)),
+                  border: Border.all(color: hairlineBorderColor(cs)),
                 ),
                 child: Row(children: [
                   Icon(Icons.info_outline_rounded,
@@ -273,7 +273,7 @@ class _CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
                       color: cs.onSurface.withValues(alpha: 0.5))),
               const SizedBox(height: 10),
               _QuickConversions(
-                amount: double.tryParse(_ctrl.text) ?? 0,
+                amount: ExpressionEvaluator.evaluate(_ctrl.text) ?? 0,
                 from: _from,
                 app: app,
                 cs: cs,
@@ -289,7 +289,6 @@ class _CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
           child: AppNumericKeypad(
             controller: _ctrl,
             onChanged: (_) => _convert(app),
-            showDoneButton: false,
           ),
         ),
       ],
@@ -324,7 +323,7 @@ class _CurrencyPill extends StatelessWidget {
         color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+          color: hairlineBorderColor(cs),
         ),
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [

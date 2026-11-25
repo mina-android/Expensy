@@ -4,7 +4,7 @@
 
 # Expensy
 
-[![Platform](https://img.shields.io/badge/Platform-Android-grey.svg?style=flat)](https://android.com) [![Flutter](https://img.shields.io/badge/Flutter-3.47.6-02569B.svg?style=flat&logo=flutter&logoColor=white)](https://flutter.dev) [![Release](https://img.shields.io/badge/Release-v1.2.5-blue.svg?style=flat)](https://github.com/mina-android/Expensy/releases) [![License](https://img.shields.io/badge/License-GPL--3.0-black.svg?style=flat)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platform-Android-3DDC84?style=flat&logo=android&logoColor=white)](https://developer.android.com) [![Framework](https://img.shields.io/badge/Framework-Flutter-02569B?style=flat&logo=flutter&logoColor=white)](https://flutter.dev) [![Release](https://img.shields.io/badge/Release-v1.2.6-blue?style=flat)](https://github.com/mina-android/Expensy/releases) [![License](https://img.shields.io/badge/License-GPL--3.0-black?style=flat)](LICENSE)
 
 <p align="center">
   A local-first personal finance tracker and budget manager for Android that keeps all financial records, accounts, and transaction history strictly on your physical device.
@@ -37,7 +37,7 @@
 ### Architecture & Data Handling
 
 - **Local-First Architecture**: All transactional ledgers, accounts, and preferences reside exclusively in an on-device SQLite database. No external account registration or cloud connectivity is required.
-- **Zero Outbound Telemetry**: The application runs completely offline. No diagnostic events, behavioral metrics, or financial figures are transmitted across the network.
+- **Zero Outbound Telemetry**: No diagnostic events, behavioral metrics, or personal financial figures are transmitted across the network. Network access is used only to fetch public currency exchange and gold rates.
 - **Resource Footprint**: Minimal storage footprint under 30 MB with near-instant startup times and zero persistent background services outside optional local notification triggers.
 
 ---
@@ -88,10 +88,10 @@ Official release packages are published under the [GitHub Releases](https://gith
 
 | Platform | Architecture | Package Type | Download Link | Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| **Android** | arm64-v8a | `.apk` | [Download (v1.2.5)](https://github.com/mina-android/Expensy/releases/latest) | Modern 64-bit devices (recommended) |
-| **Android** | armeabi-v7a | `.apk` | [Download (v1.2.5)](https://github.com/mina-android/Expensy/releases/latest) | Legacy 32-bit devices |
-| **Android** | x86_64 | `.apk` | [Download (v1.2.5)](https://github.com/mina-android/Expensy/releases/latest) | Android emulators and Intel-based tablets |
-| **Android** | Universal | `.apk` | [Download (v1.2.5)](https://github.com/mina-android/Expensy/releases/latest) | Combined installer supporting all architectures |
+| **Android** | arm64-v8a | `.apk` | [Download (v1.2.6)](https://github.com/mina-android/Expensy/releases/latest) | Modern 64-bit devices (recommended) |
+| **Android** | armeabi-v7a | `.apk` | [Download (v1.2.6)](https://github.com/mina-android/Expensy/releases/latest) | Legacy 32-bit devices |
+| **Android** | x86_64 | `.apk` | [Download (v1.2.6)](https://github.com/mina-android/Expensy/releases/latest) | Android emulators and Intel-based tablets |
+| **Android** | Universal | `.apk` | [Download (v1.2.6)](https://github.com/mina-android/Expensy/releases/latest) | Combined installer supporting all architectures |
 
 ---
 
@@ -101,10 +101,10 @@ Official release packages are published under the [GitHub Releases](https://gith
 
 Ensure your development environment has the following software installed:
 
-- **Flutter SDK**: `3.22.0` or higher (stable channel)
-- **Dart SDK**: `3.4.0` or higher
-- **Android SDK**: API level `34` (with Android Build Tools `34.0.0`)
-- **Java Development Kit**: JDK `17`
+- **Flutter SDK**: `3.47.6` or higher (stable channel)
+- **Dart SDK**: `3.13.5` or higher
+- **Android SDK**: API level `36`
+- **Java Development Kit**: JDK `21`
 - **Git**: `2.30+`
 
 ### 2. Repository Setup
@@ -184,9 +184,7 @@ Contributions aimed at bug fixes, translation improvements, and performance opti
 
 This project is authored and maintained by **mina-android**, focused on developing transparent, local-first Android utilities and privacy-conscious software.
 
-- **Developer Portfolio**: [portfolio.minaashraf285.workers.dev](https://portfolio.minaashraf285.workers.dev/)
-- **GitHub Profile**: [github.com/mina-android](https://github.com/mina-android)
-- **Issue Tracker**: [github.com/mina-android/Expensy/issues](https://github.com/mina-android/Expensy/issues)
+[![Portfolio](https://img.shields.io/badge/Portfolio-mina--android-181717?style=flat&logo=cloudflare&logoColor=white)](https://portfolio.minaashraf285.workers.dev/) [![GitHub](https://img.shields.io/badge/GitHub-mina--android-181717?style=flat&logo=github&logoColor=white)](https://github.com/mina-android) [![Issues](https://img.shields.io/badge/Issues-Report%20a%20Bug-181717?style=flat&logo=github&logoColor=white)](https://github.com/mina-android/Expensy/issues)
 
 ---
 
@@ -194,8 +192,7 @@ This project is authored and maintained by **mina-android**, focused on developi
 
 Development and maintenance of this software are independent and self-supported. If this project helps you manage your finances reliably, consider supporting development:
 
-- **PayPal**: [paypal.me/minaashraf285](https://paypal.me/minaashraf285)
-- **GitHub Sponsors**: [github.com/sponsors/mina-android](https://github.com/sponsors/mina-android)
+[![PayPal](https://img.shields.io/badge/PayPal-Donate-00457C?style=flat&logo=paypal&logoColor=white)](https://paypal.me/minaashraf285) [![GitHub Sponsors](https://img.shields.io/badge/GitHub%20Sponsors-Sponsor-EA4AAA?style=flat&logo=githubsponsors&logoColor=white)](https://github.com/sponsors/mina-android) [![Ko-fi](https://img.shields.io/badge/Ko--fi-Support-FF5E5B?style=flat&logo=kofi&logoColor=white)](https://ko-fi.com/minaashraf285)
 
 ---
 

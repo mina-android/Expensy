@@ -790,7 +790,7 @@ class _ExpandableFabState extends State<ExpandableFab>
       ExpandableFabItem(
         label: l10n.add_transaction_expense,
         icon: Icons.arrow_upward_rounded,
-        color: const Color(0xFFE53935),
+        color: kDangerColor,
         onTap: widget.onExpense ?? () {},
       ),
       ExpandableFabItem(

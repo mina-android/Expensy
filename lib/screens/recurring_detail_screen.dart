@@ -519,11 +519,17 @@ class _RecurringDetailScreenState extends State<RecurringDetailScreen> {
                         index: i,
                         dueDate: upcoming[i],
                         recurring: r,
-                        fmt: widget.fmt,
+                        fmt: nativeFmt,
                         isFirst: i == 0,
                         onPay: () async {
-                          await app.markRecurringPaid(r);
-                          await _loadHistory();
+                          try {
+                            await app.markRecurringPaid(r);
+                            await _loadHistory();
+                          } on RatesUnavailableException catch (e) {
+                            if (context.mounted) {
+                              showAppSnackbar(context, e.toString());
+                            }
+                          }
                         },
                         onSkip: () async {
                           final ok = await showDialog<bool>(
@@ -632,7 +638,7 @@ class _RecurringDetailScreenState extends State<RecurringDetailScreen> {
               child: Column(
                 children: [
                   for (final h in _history!)
-                    _HistoryRow(entry: h, fmt: widget.fmt),
+                    _HistoryRow(entry: h),
                 ],
               ),
             ),
@@ -861,8 +867,7 @@ class _UpcomingRow extends StatelessWidget {
 // Encapsulates UI state and rendering logic for _HistoryRow.
 class _HistoryRow extends StatelessWidget {
   final RecurringHistoryEntry entry;
-  final String Function(double) fmt;
-  const _HistoryRow({required this.entry, required this.fmt});
+  const _HistoryRow({required this.entry});
 
   @override
   // Builds the widget subtree using theme-adaptive colors and localization.

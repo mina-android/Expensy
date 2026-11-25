@@ -23,7 +23,6 @@ class PresetSheet extends StatefulWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (_) => PresetSheet(existing: existing, initialType: initialType),
     );
   }
@@ -235,44 +234,21 @@ class _PresetSheetState extends State<PresetSheet> {
         ? app.transferableAccounts
         : app.spendableAccounts;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: popupSurfaceColor(cs),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border.fromBorderSide(popupBorderSide(cs)),
-      ),
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-      ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return SheetShell(
+      showHandle: true,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: cs.onSurfaceVariant.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
+            Text(
+              isEdit ? l10n.presets_editQuickPreset : l10n.presets_newQuickPreset,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
             ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  isEdit ? l10n.presets_editQuickPreset : l10n.presets_newQuickPreset,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-                ),
-                if (isEdit)
-                  IconButton(
-                    icon: Icon(Icons.delete_outline, color: cs.error),
-                    onPressed: _delete,
-                  ),
+            if (isEdit)
+              IconButton(
+                icon: Icon(Icons.delete_outline, color: cs.error),
+                onPressed: _delete,
+              ),
               ],
             ),
             const SizedBox(height: 16),
@@ -342,7 +318,6 @@ class _PresetSheetState extends State<PresetSheet> {
                 compact: true,
                 controller: _amountCtrl,
                 onChanged: (_) => setState(() {}),
-                onDone: () => setState(() => _showAmountKeypad = false),
               ),
             ],
             const SizedBox(height: 16),
@@ -423,8 +398,6 @@ class _PresetSheetState extends State<PresetSheet> {
                             compact: true,
                             controller: _toAmtCtrl,
                             onChanged: (_) => setState(() {}),
-                            onDone: () =>
-                                setState(() => _showToAmountKeypad = false),
                           ),
                         ],
                       ],
@@ -488,9 +461,7 @@ class _PresetSheetState extends State<PresetSheet> {
               ),
               child: Text(isEdit ? l10n.accounts_saveChanges : l10n.presets_createPreset),
             ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 }

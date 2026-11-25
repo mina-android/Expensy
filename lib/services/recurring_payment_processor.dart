@@ -212,6 +212,7 @@ class RecurringPaymentProcessor {
           paidViaAccountId: paidViaAccountId,
           categoryId: r.categoryId,
           date: occurrence,
+          note: r.notes,
           currency: resolvedCurrency,
         );
 

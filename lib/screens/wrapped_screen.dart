@@ -513,7 +513,9 @@ class _TopCategorySlide extends StatelessWidget {
     final cat = data.topCategoryId != null
         ? app.categoryById(data.topCategoryId!)
         : null;
-    final catName = cat?.name ?? l10n.insights_other;
+    final catName = cat != null
+        ? app.localizedCategoryName(cat, l10n)
+        : l10n.insights_other;
     final catColor = cat != null ? Color(cat.colorValue) : cs.primary;
 
     // Render SingleChildScrollView layout container.
@@ -642,11 +644,11 @@ class _BiggestSplurgeSlide extends StatelessWidget {
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: const Color(0xFFFF8F00).withValues(alpha: 0.2),
+              color: kWarningColor.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.local_fire_department_rounded,
-                size: 44, color: Color(0xFFFF8F00)),
+                size: 44, color: kWarningColor),
           ),
           const SizedBox(height: 24),
           Text(
@@ -672,14 +674,16 @@ class _BiggestSplurgeSlide extends StatelessWidget {
                 color: cs.surfaceContainerHigh,
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                    color: const Color(0xFFFF8F00).withValues(alpha: 0.4)),
+                    color: kWarningColor.withValues(alpha: 0.4)),
               ),
               child: Column(
                 children: [
                   Text(
                     splurge.description.isNotEmpty
                         ? splurge.description
-                        : (cat?.name ?? l10n.insights_other),
+                        : (cat != null
+                            ? app.localizedCategoryName(cat, l10n)
+                            : l10n.insights_other),
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w800,
@@ -697,7 +701,7 @@ class _BiggestSplurgeSlide extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    '${DateFormat('EEEE, MMM d').format(splurge.date)} • ${cat?.name ?? l10n.insights_other}',
+                    '${DateFormat('EEEE, MMM d').format(splurge.date)} • ${cat != null ? app.localizedCategoryName(cat, l10n) : l10n.insights_other}',
                     style: TextStyle(
                       fontSize: 13,
                       color: cs.onSurface.withValues(alpha: 0.6),
@@ -869,7 +873,9 @@ class _ReceiptSummarySlide extends StatelessWidget {
     final cat = data.topCategoryId != null
         ? app.categoryById(data.topCategoryId!)
         : null;
-    final catName = cat?.name ?? l10n.insights_other;
+    final catName = cat != null
+        ? app.localizedCategoryName(cat, l10n)
+        : l10n.insights_other;
 
     // Render SingleChildScrollView layout container.
     return SingleChildScrollView(

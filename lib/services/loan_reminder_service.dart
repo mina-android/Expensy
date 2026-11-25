@@ -57,7 +57,7 @@ class LoanReminderService {
     for (var i = 0; i < loanId.length; i++) {
       hash = 31 * hash + loanId.codeUnitAt(i);
     }
-    return (hash & 0x7FFFFFFF) + 1000000; // offset distinct from credit, recurring, lended
+    return 2000000 + ((hash & 0x0FFFFFFF) % 400000);
   }
 
   NotificationDetails _buildDetails() {
@@ -107,7 +107,7 @@ class LoanReminderService {
     await _plugin.cancel(id: _notifId(loanId));
   }
 
-  Future<void> rescheduleAllLoans(List<Loan> loans, String mainCurrency) async {
+  Future<void> rescheduleAllLoans(List<Loan> loans) async {
     await _ensureInit();
     for (final l in loans) {
       await cancelReminder(l.id);

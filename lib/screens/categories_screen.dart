@@ -350,21 +350,10 @@ class _CategorySheetState extends State<_CategorySheet> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
-    return SafeArea(
-      top: true,
-      child: Padding(
-        padding: EdgeInsets.only(
-            bottom: bottomInset + 16,
-            left: 20,
-            right: 20,
-            top: 16),
-        child: SingleChildScrollView(
-        child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+    return SheetShell(
+      showHandle: true,
+      children: [
               // ── Title + live preview ────────────────────────────────────
               Row(children: [
                 Expanded(
@@ -422,10 +411,10 @@ class _CategorySheetState extends State<_CategorySheet> {
                   selectedValue: _type,
                   firstValue: 'expense',
                   firstLabel: l10n.categories_expense,
-                  firstLightTint: const Color(0xFFFFEBEE),
+                  firstLightTint: kDangerColor.withValues(alpha: 0.12),
                   secondValue: 'income',
                   secondLabel: l10n.categories_income,
-                  secondLightTint: const Color(0xFFE8F5E9),
+                  secondLightTint: kSuccessColor.withValues(alpha: 0.12),
                   onChanged: (v) => setState(() {
                     _type = v;
                     _parentId = null;
@@ -471,7 +460,8 @@ class _CategorySheetState extends State<_CategorySheet> {
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              Text(p.name, style: const TextStyle(fontSize: 13)),
+                              Text(app.localizedCategoryName(p, l10n),
+                                  style: const TextStyle(fontSize: 13)),
                             ],
                           ),
                         ),
@@ -625,9 +615,7 @@ class _CategorySheetState extends State<_CategorySheet> {
                     ? l10n.categories_saveChanges
                     : l10n.categories_addCategory),
               ),
-            ]),
-        ),
-      ),
+      ],
     );
   }
 }

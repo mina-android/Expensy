@@ -97,11 +97,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       _descCtrl.text = e.description;
       _noteCtrl.text = e.note;
       _type = e.type;
-      _accountId = e.accountId;
+      _accountId = e.paidViaAccountId ?? e.accountId;
       _categoryId = e.categoryId;
       _date = e.date;
       // If existing has a currency use it; otherwise fall back to account currency
-      final acc = app.accountById(e.accountId);
+      final acc = app.accountById(_accountId!);
       _currency = e.currency.isNotEmpty
           ? e.currency
           : (acc?.currency ?? app.settings.currency);
@@ -332,11 +332,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: const Color(0xFFF57C00).withValues(alpha: 0.12),
+            color: kWarningColor.withValues(alpha: 0.12),
             shape: BoxShape.circle,
           ),
           child: const Icon(Icons.warning_amber_rounded,
-              color: Color(0xFFF57C00), size: 24),
+              color: kWarningColor, size: 24),
         ),
         title: Text(l10n.add_transaction_possibleDuplicate,
             textAlign: TextAlign.center),
@@ -350,7 +350,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Text(
                         l10n.add_transaction_duplicateItem(
-                          formatAmount(d.amount, d.currency.isNotEmpty ? d.currency : ''),
+                          formatAmount(d.amount, context.read<AppProvider>().txCurrency(d)),
                           DateFormat('d MMM').format(d.date),
                           d.description.isNotEmpty ? ' — ${d.description}' : '',
                         ),
@@ -473,16 +473,17 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     final storeCurrency = _currency == accCurrency ? '' : _currency;
 
     final isTransferTx = isEdit && widget.existing!.isTransfer;
+    final isInvestmentTx = isEdit && widget.existing!.isInvestment;
     final targetTx = AppTransaction(
       id: isEdit ? widget.existing!.id : app.newId(),
       type: _type,
       amount: amount,
       description: _descCtrl.text.trim(),
       accountId: _accountId!,
-      paidViaAccountId: isEdit && widget.existing!.accountId == _accountId
-          ? widget.existing!.paidViaAccountId
-          : null,
-      categoryId: isTransferTx ? 'sys_transfer' : _categoryId!,
+      paidViaAccountId: null,
+      categoryId: isTransferTx
+          ? 'sys_transfer'
+          : (isInvestmentTx ? 'sys_investment' : _categoryId!),
       date: _date,
       note: _noteCtrl.text.trim(),
       currency: storeCurrency,
@@ -591,10 +592,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 selectedValue: _type,
                 firstValue: 'expense',
                 firstLabel: l10n.add_transaction_expense,
-                firstLightTint: const Color(0xFFFFEBEE),
+                firstLightTint: kDangerColor.withValues(alpha: 0.1),
                 secondValue: 'income',
                 secondLabel: l10n.add_transaction_income,
-                secondLightTint: const Color(0xFFE8F5E9),
+                secondLightTint: kSuccessColor.withValues(alpha: 0.1),
                 thirdValue: isEdit ? null : 'transfer',
                 thirdLabel: isEdit ? null : l10n.transfer_transfer,
                 thirdColor: cs.primary,
@@ -894,7 +895,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                           .labelMedium
                           ?.copyWith(letterSpacing: 1)),
                   const Spacer(),
-                  if (_type == 'expense')
+                  if (_type == 'expense' &&
+                      !_isTransferMode &&
+                      !(isEdit &&
+                          (widget.existing!.isTransfer ||
+                              widget.existing!.isInvestment)))
                     FilterChip(
                       selected: _isSplit,
                       onSelected: (val) => _toggleSplit(val, cats),
@@ -988,7 +993,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               child: AppNumericKeypad(
                 controller: _activeAmountController ?? _amtCtrl,
                 onChanged: (_) => setState(() => _submitted = false),
-                onDone: _submit,
               ),
             ),
           SafeArea(

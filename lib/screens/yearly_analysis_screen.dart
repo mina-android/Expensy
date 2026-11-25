@@ -17,7 +17,7 @@ class YearlyLineItem {
 
 const _kGreenAccent = kSuccessColor;
 const _kTealAccent  = kCertificateColor;
-const _kOrangeAccent = Color(0xFFF57C00);
+const _kOrangeAccent = kWarningColor;
 const _kPurpleAccent = Color(0xFF7B1FA2);
 
 class YearlyMonthData {
@@ -227,7 +227,7 @@ class _YearlyAnalysisScreenState extends State<YearlyAnalysisScreen> {
                     color: cs.surfaceContainer.withValues(alpha: isDark ? 0.35 : 0.55),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04),
+                      color: hairlineBorderColor(cs),
                     ),
                   ),
                   child: Row(
@@ -338,7 +338,7 @@ class _SummaryCard extends StatelessWidget {
         color: cs.surfaceContainer.withValues(alpha: isDark ? 0.35 : 0.55),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04),
+          color: hairlineBorderColor(cs),
         ),
       ),
       child: Column(
@@ -407,7 +407,7 @@ class _MonthCardState extends State<_MonthCard> {
         color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+          color: hairlineBorderColor(cs),
         ),
       ),
       child: AnimatedOpacity(

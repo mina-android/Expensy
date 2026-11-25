@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.2.6] - 2026-11-22
+
+### Full-Codebase Audit: Backup & Restore Hardening, Dead Code Removal, UI/UX Standardization, Financial Logic & Notification Fixes
+- **Backup & Restore Completeness & Backward Compatibility**:
+  - Version-gated `AppDatabase.runDataMigrationDataFixes({int? fromVersion})` so destructive/legacy fixes (D1 credit-card sign flip, D3 negative balance migration, D5 split backfill) run strictly for `< v28` backups, while `_syncRecurringProgressFromHistory()` runs for `< v30` and structural self-heals remain idempotent.
+  - Hardened `_normaliseBackup` with null-safe `_ensureDefault` across all 18 tables, falling back to `settings['currency']` and linked account currency for `lended_money`.
+  - Added `net_worth_snapshots` and `settings` to selective backup/restore (`AppProvider.entityGroupTables`, `createSelectiveBackup`, `restoreSelective`, `BackupScreen` selective sheets) and added `settings` to pre-restore safety snapshots (`_createSafetySnapshot` & `undoLastRestore`), plus an **Undo Restore** action directly in `BackupScreen`'s status banner.
+  - Added `transaction_splits` and `net_worth_snapshots` counts to `BackupScreen` and `settings` count + orphan `transaction_splits` check to `BackupValidator`.
+  - Tracked `_restoredFromBackup` in `OnboardingScreen` to skip duplicate `'Main Bank'` / `'Debit Card'` creation after restoring during onboarding.
+- **Dead Code Removal & Sheet Unification**:
+  - Removed dead `onDone` / `showDoneButton` parameters and unreachable `'✓'` branches from `AppNumericKeypad` and all 15 call sites.
+  - Pruned ~430 lines of dead card/credit/debit branches in `_AccountSheet` and dead gold branches in `_CardSheet` (`AccountsScreen`), unified `_EditPersonInlineSheet` into `LendedPersonSheet` (`LendedScreen`), replaced `_DetailStat` with `DetailStatCell` (`LoanDetailScreen`), and removed unused `dayTotals` (`aggregations.dart`), `rebuildSplitsCache`? (retained test-covered helpers while removing dead `deleteLoanPaymentsFor`, `deleteSplitsForTransaction`, `applyUpdateTransactionWithBalance`, `RecurringPayment.frequencyLabel`, `Certificate.isMatured`, and unused `BuildContext` on `savePdfReport`).
+- **UI/UX Consistency & Localization**:
+  - Standardized custom modal bottom sheets onto `SheetShell` (`BackupScreen`, `SplitTransactionSheet`, `CertificateSheet`, `TransactionsScreen`, `AccountsScreen`, `BudgetScreen`, `SavingsGoalDetailScreen`, `WishlistScreen`, `RecurringScreen`, `LoansScreen`, `LoanDetailScreen`, `LendedScreen`, `AssetsScreen`, `CategoriesScreen`), fixing keyboard overlap on `SavingsGoalDetailScreen._ContributionSheet`.
+  - Replaced hardcoded hex colors and inline borders with semantic theme tokens (`kSuccessColor`, `kDangerColor`, `kWarningColor`, `kGoldColor`, `hairlineBorderColor`) and localized category names, priority badges, PDF report labels, and form validators across `HomeScreen`, `InsightsScreen`, `StatisticsScreen`, `WrappedScreen`, `YearlyAnalysisScreen`, `CategoriesScreen`, `WishlistScreen`, `LoansScreen`, `LoanDetailScreen`, `CertificateSheet`, and `PdfReportService`.
+- **Financial Logic, Concurrency & Notifications**:
+  - Wrapped remaining `AppProvider` mutations (`Category`, `Preset`, `Recurring`, `Wishlist`, `LendedPerson`, `Asset`, `Budget`) in `_serializeMutation`, replaced `splits.removeWhere` in-place mutations with immutable reassignment, and fixed `logPreset` transfer failures to throw `FormatException` instead of falling through.
+  - Fixed Debit Card redirection gaps in `AppProvider._executeWidgetUpdate()` (`getEffectiveBalance`), `HomeScreen`, `TransactionsScreen` (filter, search, `_TxTile`, bulk recategorize guard), `AddTransactionScreen` (edit preservation + `sys_investment` guard), and `FinancialCalendarScreen`.
+  - Fixed multi-currency display & conversions via `AppProvider.lendedCurrency` (`LendedPersonScreen`, `FinancialCalendarScreen`), `HomeScreen`, `WishlistScreen` goal progress, `NetWorthScreen` (converted snapshots + Certificates breakdown), `InsightsScreen` (`nonOverlappingBudgets`, normalized weekly budgets, expanded cache key), `BudgetScreen` (duplicate check on edit, excluding transfers/ended installments), and `RecurringScreen` / `RecurringDetailScreen` (calendar-day `daysLeft`, editable `notes`, native currency).
+  - Partitioned all notification IDs into disjoint 32-bit-safe ranges across all notification services, aligned `NotificationBootstrap` budget channel (`expensy_budget`) & `CertificateReminderService` initialization, fixed `CertificateReminderService` `endDate`/frequency scheduling and `DailyReminderService` calendar-day advance, removed conflicting `WorkmanagerService` periodic backup task, and wired `NotificationPermissions.ensure` across `AccountsScreen`, `LoansScreen`, and `SettingsScreen`.
+- **Documentation & Metadata**:
+  - Updated `pubspec.yaml`, `README.md`, `CLAUDE.md`, and `STRUCTURE.md` to describe Expensy accurately as **local-first** (clarifying that network access is used for public exchange and gold rates, with zero outbound telemetry) rather than advertising "fully offline".
+
 ## [1.2.5] - 2026-11-22
 
 ### Unified Enter Transaction & Transfer, Home Quick Actions, Issues #32 & #33, Sheet Cleanup & Lent Money Expandable FAB

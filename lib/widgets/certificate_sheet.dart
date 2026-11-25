@@ -85,41 +85,20 @@ class _CertificateSheetState extends State<CertificateSheet> {
     final app = context.watch<AppProvider>();
     final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
-    final viewInsets = MediaQuery.of(context).viewInsets;
     final bankAccounts = app.accounts.where((a) => a.type == 'bank').toList();
 
-    return Container(
-      decoration: BoxDecoration(
-        color: popupSurfaceColor(cs),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border.fromBorderSide(popupBorderSide(cs)),
-      ),
-      padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + viewInsets.bottom),
-      child: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
+    return Form(
+      key: _formKey,
+      child: SheetShell(
+        showHandle: true,
+        title: widget.existing == null
+            ? l10n.certificates_addCertificate
+            : l10n.certificates_editCertificate,
+        children: [
+          Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    widget.existing == null
-                        ? l10n.certificates_addCertificate
-                        : l10n.certificates_editCertificate,
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.w800),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
 
               // Name
               TextFormField(
@@ -254,22 +233,9 @@ class _CertificateSheetState extends State<CertificateSheet> {
                 children: [
                   Expanded(
                     flex: 3,
-                    child: DropdownButtonFormField<String>(
-                      initialValue: _collectionType,
-                      borderRadius: BorderRadius.circular(16),
-                      decoration: InputDecoration(
-                        labelText: l10n.certificates_collectionType,
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16)),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .outlineVariant
-                                  .withValues(alpha: 0.6)),
-                        ),
-                      ),
+                    child: AppDropdownFormField<String>(
+                      value: _collectionType,
+                      labelText: l10n.certificates_collectionType,
                       items: [
                         DropdownMenuItem(
                             value: 'monthly', child: Text(l10n.recurring_monthly)),
@@ -304,7 +270,7 @@ class _CertificateSheetState extends State<CertificateSheet> {
                       validator: (val) {
                         final parsed = int.tryParse(val ?? '');
                         if (parsed == null || parsed < 1 || parsed > 31) {
-                          return '1-31';
+                          return l10n.common_invalid;
                         }
                         return null;
                       },
@@ -649,7 +615,7 @@ class _CertificateSheetState extends State<CertificateSheet> {
               ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }

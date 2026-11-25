@@ -91,7 +91,6 @@ class _ExportScreenState extends State<ExportScreen> {
     try {
       final app = context.read<AppProvider>();
       final path = await PdfReportService.savePdfReport(
-        context: context,
         app: app,
         from: _from,
         to: _to,

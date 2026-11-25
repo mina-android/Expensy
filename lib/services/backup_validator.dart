@@ -76,6 +76,31 @@ class BackupValidator {
         tableCounts[table] = list.length;
       }
     }
+    if (data['settings'] is Map) {
+      tableCounts['settings'] = 1;
+    }
+
+    // Check orphan transaction splits
+    if (data.containsKey('transaction_splits') && data.containsKey('transactions')) {
+      final txIds = (data['transactions'] as List?)
+              ?.whereType<Map<String, dynamic>>()
+              .map((t) => t['id'] as String?)
+              .whereType<String>()
+              .toSet() ??
+          <String>{};
+      final splits = (data['transaction_splits'] as List?)?.whereType<Map<String, dynamic>>() ?? [];
+      int orphanSplits = 0;
+      for (final s in splits) {
+        final txId = s['transaction_id'] as String?;
+        if (txId != null && !txIds.contains(txId)) {
+          orphanSplits++;
+        }
+      }
+      if (orphanSplits > 0) {
+        orphanCount += orphanSplits;
+        warnings.add('Found $orphanSplits transaction splits without a parent transaction.');
+      }
+    }
 
     // Check orphan recurring history
     if (data.containsKey('recurring_history') && data.containsKey('recurring_payments')) {

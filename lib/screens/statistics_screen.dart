@@ -122,9 +122,16 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     final sorted = totalsByCatId.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
     for (final entry in sorted) {
+      final cat = app.categoryById(entry.key);
       final label = _bySubcategory
-          ? app.categoryDisplayName(entry.key, fallback: l10n.statistics_other)
-          : (app.categoryById(entry.key)?.name ?? l10n.statistics_other);
+          ? app.categoryDisplayName(
+              entry.key,
+              l10n: l10n,
+              fallback: l10n.statistics_other,
+            )
+          : (cat != null
+              ? app.localizedCategoryName(cat, l10n)
+              : l10n.statistics_other);
       _expBycat[label] = (_expBycat[label] ?? 0) + entry.value;
       _expBycatId[label] = entry.key;
     }
@@ -169,7 +176,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 children: [
                   _FilterPill(
                     label: l10n.statistics_allAccounts,
-                    color: const Color(0xFF6750A4),
+                    color: cs.primary,
                     selected: _filterAccountId == null,
                     onTap: () {
                       AppHaptics.tap(context, HapticStrength.selection);
@@ -201,7 +208,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                color: hairlineBorderColor(cs),
               ),
             ),
             child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
@@ -244,9 +251,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 child: _StatCard(
                     label: l10n.statistics_net,
                     value: fmt(_income - _expense),
-                    color: _income >= _expense
-                        ? (isDark ? const Color(0xFF64B5F6) : kAssetsColor)
-                        : (isDark ? const Color(0xFFFFB74D) : const Color(0xFF785900)),
+                    color: _income >= _expense ? kAssetsColor : kWarningColor,
                     isDark: isDark)),
           ]),
           const SizedBox(height: 16),
@@ -257,7 +262,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               color: cs.surfaceContainer.withValues(alpha: isDark ? 0.45 : 0.65),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                color: hairlineBorderColor(cs),
               ),
             ),
             child: Padding(
@@ -335,9 +340,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                       .withValues(alpha: isDark ? 0.45 : 0.65),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.08)
-                        : Colors.black.withValues(alpha: 0.05),
+                    color: hairlineBorderColor(cs),
                   ),
                 ),
                 child: Padding(

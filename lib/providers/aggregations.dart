@@ -119,38 +119,4 @@ class FinancialAggregations {
 
     return result;
   }
-
-  /// Computes day-by-day totals for a calendar month or date range.
-  static Map<DateTime, PeriodTotals> dayTotals(
-    Iterable<AppTransaction> transactions, {
-    DateTime? start,
-    DateTime? end,
-    String? accountId,
-    CurrencyConverter? convert,
-    TransactionCurrencyResolver? resolveCurrency,
-  }) {
-    final Map<DateTime, List<AppTransaction>> dayMap = {};
-
-    for (final t in transactions) {
-      if (isExcludedFromTotals(t)) continue;
-      if (accountId != null && t.accountId != accountId && t.paidViaAccountId != accountId) {
-        continue;
-      }
-      if (start != null && t.date.isBefore(start)) continue;
-      if (end != null && !t.date.isBefore(end)) continue;
-
-      final dayKey = DateTime(t.date.year, t.date.month, t.date.day);
-      dayMap.putIfAbsent(dayKey, () => []).add(t);
-    }
-
-    final Map<DateTime, PeriodTotals> result = {};
-    for (final entry in dayMap.entries) {
-      result[entry.key] = periodTotals(
-        entry.value,
-        convert: convert,
-        resolveCurrency: resolveCurrency,
-      );
-    }
-    return result;
-  }
 }

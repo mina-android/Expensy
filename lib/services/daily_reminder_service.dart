@@ -37,21 +37,32 @@ class DailyReminderService {
 
   tz.TZDateTime _toUtcTZDate(int hour, int minute) {
     final nowLocal = DateTime.now();
-    final localTarget =
+    var localTarget =
         DateTime(nowLocal.year, nowLocal.month, nowLocal.day, hour, minute);
-    final offset = nowLocal.timeZoneOffset;
-    final utc = localTarget.subtract(offset);
-    var tzDate =
-        tz.TZDateTime.utc(utc.year, utc.month, utc.day, utc.hour, utc.minute);
 
-    // If passed for today in local time, schedule for tomorrow
-    if (tzDate.isBefore(tz.TZDateTime.now(tz.UTC))) {
-      tzDate = tzDate.add(const Duration(days: 1));
+    // If passed for today in local time, advance by 1 local calendar day
+    if (!localTarget.isAfter(nowLocal)) {
+      localTarget = DateTime(
+        nowLocal.year,
+        nowLocal.month,
+        nowLocal.day + 1,
+        hour,
+        minute,
+      );
     }
-    return tzDate;
+
+    final utc = localTarget.subtract(localTarget.timeZoneOffset);
+    return tz.TZDateTime.utc(
+      utc.year,
+      utc.month,
+      utc.day,
+      utc.hour,
+      utc.minute,
+    );
   }
 
   Future<void> scheduleDailyReminder(String timeString) async {
+    if (!_initialized) await initialize();
     if (!_initialized) return;
     if (!(await hasPermission())) return;
 

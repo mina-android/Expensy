@@ -4,6 +4,7 @@
 // All state mutations and queries route through AppProvider to preserve UI-DB decoupling.
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import 'shared_widgets.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../models/models.dart';
@@ -144,30 +145,17 @@ class _SavingsGoalSheetState extends State<SavingsGoalSheet> {
     final cs = Theme.of(context).colorScheme;
     final isNew = widget.existing == null;
 
-    // Render Padding layout container.
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: SingleChildScrollView(
-        child: Padding(
-          padding:
-              const EdgeInsets.only(left: 16, right: 16, top: 24, bottom: 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(isNew ? l10n.savings_newGoal : l10n.savings_editGoal,
-                  style: const TextStyle(
-                      fontSize: 20, fontWeight: FontWeight.w800)),
-              if (widget.wishlistItemId != null ||
-                  widget.existing?.wishlistItemId != null) ...[
-                const SizedBox(height: 8),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: kSuccessColor.withValues(alpha: 0.12),
+    return SheetShell(
+      showHandle: true,
+      title: isNew ? l10n.savings_newGoal : l10n.savings_editGoal,
+      children: [
+        if (widget.wishlistItemId != null ||
+            widget.existing?.wishlistItemId != null) ...[
+          Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: kSuccessColor.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
                         color: kSuccessColor.withValues(alpha: 0.3)),
@@ -249,7 +237,6 @@ class _SavingsGoalSheetState extends State<SavingsGoalSheet> {
                   compact: true,
                   controller: _amountCtrl,
                   onChanged: (_) => setState(() {}),
-                  onDone: () => setState(() => _showAmountKeypad = false),
                 ),
               ],
               const SizedBox(height: 16),
@@ -323,21 +310,21 @@ class _SavingsGoalSheetState extends State<SavingsGoalSheet> {
                   );
                 }).toList(),
               ),
-              const SizedBox(height: 32),
-              FilledButton(
-                onPressed: _save,
-                style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16))),
-                child: Text(l10n.savings_saveGoal,
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: _save,
+                  style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16))),
+                  child: Text(l10n.savings_saveGoal,
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w700)),
+                ),
               ),
-            ],
-          ),
-        ),
-      ),
+      ],
     );
   }
 }

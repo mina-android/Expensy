@@ -58,7 +58,10 @@ class _BudgetScreenState extends State<BudgetScreen> {
     final overallPacing = app.overallMonthlyBudgetPacing();
 
     // Calculate total monthly recurring income in main currency
-    final recurringIncomes = app.recurring.where((r) => r.paymentType == 'income');
+    final recurringIncomes = app.recurring.where((r) =>
+        !r.isTransfer &&
+        r.paymentType == 'income' &&
+        !(r.isInstallment && r.isInstallmentEnded));
     double totalMonthlyIncome = 0.0;
     for (final r in recurringIncomes) {
       final amountInMain = app.convertToMain(r.amount, app.accountById(r.accountId)?.currency ?? cur);
@@ -169,10 +172,10 @@ class _BudgetScreenState extends State<BudgetScreen> {
                                   fontSize: 10,
                                   fontWeight: FontWeight.w700,
                                   color: overallPacing.isOnTrack
-                                      ? (isDark ? const Color(0xFF81C784) : kSuccessColor)
+                                      ? kSuccessColor
                                       : (overallPacing.isCaution
-                                          ? (isDark ? const Color(0xFFFFB74D) : kWarningColor)
-                                          : (isDark ? const Color(0xFFE57373) : kDangerColor)),
+                                          ? kWarningColor
+                                          : kDangerColor),
                                 ),
                               ),
                             )
@@ -457,13 +460,16 @@ class _BudgetCard extends StatelessWidget {
         child: InkWell(
           onTap: () => BudgetScreen._openSheet(context, existing: budget),
           onLongPress: () async {
-            if (await showDeleteConfirm(context, cat?.name ?? l10n.budget_budget) &&
+            final catLabel = cat != null
+                ? app.localizedCategoryName(cat, l10n)
+                : l10n.budget_budget;
+            if (await showDeleteConfirm(context, catLabel) &&
                 context.mounted) {
               final undo = await context.read<AppProvider>().deleteBudgetWithUndo(budget.id);
               if (context.mounted) {
                 showAppSnackbar(
                   context,
-                  l10n.budget_deletedCategory(cat?.name ?? l10n.budget_budget),
+                  l10n.budget_deletedCategory(catLabel),
                   onUndo: undo,
                 );
               }
@@ -881,19 +887,17 @@ class _BudgetSheetState extends State<_BudgetSheet> {
   // Helper method `_submit`: handles user action or computes derived UI state.
   Future<void> _submit() async {
     setState(() => _submitted = true);
-    final amount = double.tryParse(_amtCtrl.text);
+    final amount = ExpressionEvaluator.evaluate(_amtCtrl.text);
     if (amount == null || amount <= 0 || _categoryId == null) return;
     final app = context.read<AppProvider>();
     final l10n = AppLocalizations.of(context)!;
 
-    // Guard: if adding and category already has a budget, block it
-    if (!isEdit) {
-      final existing = app.budgetForCategory(_categoryId!);
-      if (existing != null) {
-        if (!mounted) return;
-        showAppSnackbar(context, l10n.budget_thisCategoryAlreadyH);
-        return;
-      }
+    // Guard: if category already has another budget, block it
+    final existing = app.budgetForCategory(_categoryId!);
+    if (existing != null && existing.id != widget.existing?.id) {
+      if (!mounted) return;
+      showAppSnackbar(context, l10n.budget_thisCategoryAlreadyH);
+      return;
     }
 
     final b = Budget(
@@ -922,24 +926,11 @@ class _BudgetSheetState extends State<_BudgetSheet> {
     final sym     = currencyInfo(app.settings.currency).symbol;
     final expCats = app.userCategories.where((c) => c.type == 'expense').toList();
 
-    // Render Padding layout container.
-    return Padding(
-      padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-          left: 20, right: 20, top: 20),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              isEdit ? l10n.budget_editBudget : l10n.budget_setBudget,
-              style: Theme.of(context)
-                  .textTheme
-                  .titleLarge
-                  ?.copyWith(fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 16),
+    // Render SheetShell layout container.
+    return SheetShell(
+      showHandle: true,
+      title: isEdit ? l10n.budget_editBudget : l10n.budget_setBudget,
+      children: [
 
             // Amount
             TextField(
@@ -959,7 +950,10 @@ class _BudgetSheetState extends State<_BudgetSheet> {
                         onPressed: () => setState(() => _showKeypad = false),
                       )
                     : null,
-                errorText: _submitted && (double.tryParse(_amtCtrl.text) ?? 0) <= 0 ? l10n.error_required : null,
+                errorText: _submitted &&
+                        (ExpressionEvaluator.evaluate(_amtCtrl.text) ?? 0) <= 0
+                    ? l10n.error_required
+                    : null,
               ),
               onChanged: (_) => setState(() {}),
             ),
@@ -969,7 +963,6 @@ class _BudgetSheetState extends State<_BudgetSheet> {
                 compact: true,
                 controller: _amtCtrl,
                 onChanged: (_) => setState(() {}),
-                onDone: () => setState(() => _showKeypad = false),
               ),
             ],
             const SizedBox(height: 16),
@@ -981,55 +974,18 @@ class _BudgetSheetState extends State<_BudgetSheet> {
                     .labelMedium
                     ?.copyWith(letterSpacing: 1)),
             const SizedBox(height: 8),
-            Row(children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => setState(() => _period = 'monthly'),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 140),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    decoration: BoxDecoration(
-                      color: _period == 'monthly'
-                          ? cs.primary
-                          : cs.primaryContainer.withValues(alpha: 0.4),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Center(
-                      child: Text(l10n.budget_monthly,
-                          style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              color: _period == 'monthly'
-                                  ? cs.onPrimary
-                                  : cs.primary)),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => setState(() => _period = 'weekly'),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 140),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    decoration: BoxDecoration(
-                      color: _period == 'weekly'
-                          ? cs.secondary
-                          : cs.secondaryContainer.withValues(alpha: 0.4),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Center(
-                      child: Text(l10n.budget_weekly,
-                          style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              color: _period == 'weekly'
-                                  ? cs.onSecondary
-                                  : cs.secondary)),
-                    ),
-                  ),
-                ),
-              ),
-            ]),
+            TypeToggleChips(
+              selectedValue: _period,
+              firstValue: 'monthly',
+              firstLabel: l10n.budget_monthly,
+              firstColor: cs.primary,
+              firstLightTint: cs.primaryContainer.withValues(alpha: 0.4),
+              secondValue: 'weekly',
+              secondLabel: l10n.budget_weekly,
+              secondColor: cs.secondary,
+              secondLightTint: cs.secondaryContainer.withValues(alpha: 0.4),
+              onChanged: (v) => setState(() => _period = v),
+            ),
             const SizedBox(height: 16),
 
             // Category
@@ -1106,10 +1062,9 @@ class _BudgetSheetState extends State<_BudgetSheet> {
 
             // Preview
             if (_categoryId != null &&
-                double.tryParse(_amtCtrl.text) != null &&
-                double.parse(_amtCtrl.text) > 0) ...[
+                (ExpressionEvaluator.evaluate(_amtCtrl.text) ?? 0) > 0) ...[
               Builder(builder: (ctx) {
-                final baseAmt = double.parse(_amtCtrl.text);
+                final baseAmt = ExpressionEvaluator.evaluate(_amtCtrl.text)!;
                 final testBudget = Budget(
                   id: isEdit ? widget.existing!.id : '',
                   categoryId: _categoryId!,
@@ -1122,7 +1077,10 @@ class _BudgetSheetState extends State<_BudgetSheet> {
                 final allowance = app.budgetEffectiveAllowance(testBudget);
                 final rollover = app.budgetRollover(testBudget);
                 final pct = allowance > 0 ? (spent / allowance).clamp(0.0, 1.0) : 1.0;
-                final catName = app.categoryById(_categoryId!)?.name ?? '';
+                final catObj = app.categoryById(_categoryId!);
+                final catName = catObj != null
+                    ? app.localizedCategoryName(catObj, l10n)
+                    : '';
                 final cur = app.settings.currency;
 
                 // Render Container layout container.
@@ -1186,7 +1144,7 @@ class _BudgetSheetState extends State<_BudgetSheet> {
                             pct >= 1.0
                                 ? cs.error
                                 : pct >= 0.75
-                                    ? Colors.orange
+                                    ? kWarningColor
                                     : cs.primary,
                           ),
                         ),
@@ -1209,9 +1167,7 @@ class _BudgetSheetState extends State<_BudgetSheet> {
               ),
             ),
             const SizedBox(height: 4),
-          ],
-        ),
-      ),
+      ],
     );
   }
 }

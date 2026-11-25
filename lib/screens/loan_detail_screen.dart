@@ -31,7 +31,6 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (_) => _LogPaymentSheet(loan: _loan),
     );
   }
@@ -65,7 +64,6 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
               showModalBottomSheet(
                 context: context,
                 isScrollControlled: true,
-                backgroundColor: Colors.transparent,
                 builder: (_) => LoanSheet(existing: _loan),
               );
             },
@@ -241,9 +239,9 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
                   children: [
                     Row(
                       children: [
-                        Expanded(child: _DetailStat(l10n.loans_principal, formatAmount(_loan.principal, cur))),
+                        Expanded(child: DetailStatCell(l10n.loans_principal, formatAmount(_loan.principal, cur))),
                         Expanded(
-                          child: _DetailStat(
+                          child: DetailStatCell(
                             l10n.loans_interestRate,
                             _loan.interestRate != null && _loan.interestRate! > 0
                                 ? '${_loan.interestRate}%'
@@ -255,8 +253,8 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
                     const Divider(height: 16, thickness: 0.5),
                     Row(
                       children: [
-                        Expanded(child: _DetailStat(l10n.loans_duration, l10n.loans_durationMonths(_loan.durationMonths))),
-                        Expanded(child: _DetailStat(l10n.loans_totalPayable, formatAmount(_loan.totalPayable, cur))),
+                        Expanded(child: DetailStatCell(l10n.loans_duration, l10n.loans_durationMonths(_loan.durationMonths))),
+                        Expanded(child: DetailStatCell(l10n.loans_totalPayable, formatAmount(_loan.totalPayable, cur))),
                       ],
                     ),
                     if (_loan.accountId != null) ...[
@@ -264,7 +262,7 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
                       Row(
                         children: [
                           Expanded(
-                            child: _DetailStat(
+                            child: DetailStatCell(
                               l10n.recurring_linkedAccount,
                               app.accountById(_loan.accountId!)?.name ?? l10n.recurring_deletedAccount,
                             ),
@@ -485,37 +483,6 @@ class _LoanDetailScreenState extends State<LoanDetailScreen> {
   }
 }
 
-class _DetailStat extends StatelessWidget {
-  final String label, value;
-  const _DetailStat(this.label, this.value);
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: cs.onSurface.withValues(alpha: 0.5),
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class _LogPaymentSheet extends StatefulWidget {
   final Loan loan;
   const _LogPaymentSheet({required this.loan});
@@ -541,30 +508,19 @@ class _LogPaymentSheetState extends State<_LogPaymentSheet> {
   Widget build(BuildContext context) {
     final app = context.watch<AppProvider>();
     final l10n = AppLocalizations.of(context)!;
-    final cs = Theme.of(context).colorScheme;
-    final viewInsets = MediaQuery.of(context).viewInsets;
 
     final accountsList = app.spendableAccounts;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: popupSurfaceColor(cs),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        border: Border.fromBorderSide(popupBorderSide(cs)),
-      ),
-      padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + viewInsets.bottom),
-      child: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
+    return Form(
+      key: _formKey,
+      child: SheetShell(
+        showHandle: true,
+        title: l10n.loans_logPayment,
+        children: [
+          Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                l10n.loans_logPayment,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
 
               // Amount Form Field
               TextFormField(
@@ -577,9 +533,11 @@ class _LogPaymentSheetState extends State<_LogPaymentSheet> {
                 ),
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 validator: (val) {
-                  if (val == null || val.trim().isEmpty) return 'Required';
+                  if (val == null || val.trim().isEmpty) {
+                    return l10n.error_required;
+                  }
                   final num = double.tryParse(val);
-                  if (num == null || num <= 0) return 'Invalid';
+                  if (num == null || num <= 0) return l10n.common_invalid;
                   return null;
                 },
                 onChanged: (val) => setState(() => _amount = double.tryParse(val) ?? 0.0),
@@ -639,7 +597,7 @@ class _LogPaymentSheetState extends State<_LogPaymentSheet> {
               ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }

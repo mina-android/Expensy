@@ -12,6 +12,7 @@ import '../widgets/shared_widgets.dart';
 import '../widgets/savings_goal_sheet.dart';
 import '../widgets/app_numeric_keypad.dart';
 import '../utils/haptics.dart';
+import '../utils/snackbar.dart';
 import 'package:intl/intl.dart';
 
 // ── class SavingsGoalDetailScreen ──────────────────────────────────────────────────────────
@@ -351,45 +352,44 @@ class _ContributionSheetState extends State<_ContributionSheet> {
   }
 
   // Helper method `_submit`: handles user action or computes derived UI state.
-  void _submit() {
+  Future<void> _submit() async {
     setState(() => _submitted = true);
-    final amt = double.tryParse(_amountCtrl.text.replaceAll(',', '')) ?? 0.0;
+    final amt = ExpressionEvaluator.evaluate(_amountCtrl.text) ?? 0.0;
     if (amt <= 0 || _selectedAccountId == null) return;
 
-    if (widget.isContribution) {
-      widget.app.contributeToGoal(
-        goalId: widget.goal.id,
-        fromAccountId: _selectedAccountId!,
-        amount: amt, // Amount entered in account currency
-        note: _noteCtrl.text.trim(),
-      );
-    } else {
-      widget.app.withdrawFromGoal(
-        goalId: widget.goal.id,
-        toAccountId: _selectedAccountId!,
-        amount: amt, // Amount entered in goal currency
-        note: _noteCtrl.text.trim(),
-      );
+    try {
+      if (widget.isContribution) {
+        await widget.app.contributeToGoal(
+          goalId: widget.goal.id,
+          fromAccountId: _selectedAccountId!,
+          amount: amt, // Amount entered in account currency
+          note: _noteCtrl.text.trim(),
+        );
+      } else {
+        await widget.app.withdrawFromGoal(
+          goalId: widget.goal.id,
+          toAccountId: _selectedAccountId!,
+          amount: amt, // Amount entered in goal currency
+          note: _noteCtrl.text.trim(),
+        );
+      }
+      if (mounted) Navigator.pop(context);
+    } on RatesUnavailableException catch (e) {
+      if (mounted) showAppSnackbar(context, e.toString());
     }
-    Navigator.pop(context);
   }
 
   @override
   // Builds the widget subtree using theme-adaptive colors and localization.
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    // Render Padding layout container.
-    return Padding(
-      padding: const EdgeInsets.only(left: 16, right: 16, top: 24, bottom: 24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-              widget.isContribution ? l10n.savings_addContribution : l10n.savings_withdrawFromGoal,
-              style:
-                  const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 20),
+    // Render SheetShell layout container.
+    return SheetShell(
+      showHandle: true,
+      title: widget.isContribution
+          ? l10n.savings_addContribution
+          : l10n.savings_withdrawFromGoal,
+      children: [
           if (widget.app.nonBankAccounts.isEmpty)
             Text(l10n.savings_noAccounts)
           else ...[
@@ -426,8 +426,7 @@ class _ContributionSheetState extends State<_ContributionSheet> {
                       )
                     : null,
                 errorText: _submitted &&
-                        (double.tryParse(
-                                    _amountCtrl.text.replaceAll(',', '')) ??
+                        (ExpressionEvaluator.evaluate(_amountCtrl.text) ??
                                 0.0) <=
                             0
                     ? l10n.savings_amountRequired
@@ -441,7 +440,6 @@ class _ContributionSheetState extends State<_ContributionSheet> {
                 compact: true,
                 controller: _amountCtrl,
                 onChanged: (_) => setState(() {}),
-                onDone: () => setState(() => _showKeypad = false),
               ),
             ],
             const SizedBox(height: 16),
@@ -459,26 +457,28 @@ class _ContributionSheetState extends State<_ContributionSheet> {
               ),
             ),
             const SizedBox(height: 32),
-            FilledButton(
-              onPressed: () {
-                AppHaptics.tap(context, HapticStrength.light);
-                _submit();
-              },
-              style: FilledButton.styleFrom(
-                  backgroundColor: widget.isContribution
-                      ? kSuccessColor
-                      : Theme.of(context).colorScheme.error,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16))),
-              child: Text(
-                  widget.isContribution ? l10n.savings_addContribution : l10n.savings_withdraw,
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w700)),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () {
+                  AppHaptics.tap(context, HapticStrength.light);
+                  _submit();
+                },
+                style: FilledButton.styleFrom(
+                    backgroundColor: widget.isContribution
+                        ? kSuccessColor
+                        : Theme.of(context).colorScheme.error,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16))),
+                child: Text(
+                    widget.isContribution ? l10n.savings_addContribution : l10n.savings_withdraw,
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w700)),
+              ),
             ),
           ],
-        ],
-      ),
+      ],
     );
   }
 }
