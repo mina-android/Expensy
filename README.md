@@ -16,7 +16,7 @@
 
 ## Navigation
 
-[Features](#features) &bull; [Screenshots](#screenshots) &bull; [Downloads](#downloads) &bull; [Self Building & Local Setup](#self-building--local-setup) &bull; [Frequently Asked Questions](#frequently-asked-questions) &bull; [Contribution](#contribution) &bull; [About the Developer](#about-the-developer) &bull; [Donate](#donate) &bull; [License](#license)
+[Features](#features) &bull; [Screenshots](#screenshots) &bull; [Downloads](#downloads) &bull; [Self Building & Local Setup](#self-building--local-setup) &bull; [Contribution](#contribution) &bull; [About the Developer](#about-the-developer) &bull; [Donate](#donate) &bull; [License](#license)
 
 ---
 
@@ -145,22 +145,6 @@ Compiled binaries will be generated inside `build/app/outputs/flutter-apk/`.
 # Connect a device or launch an emulator, then execute
 flutter run --release
 ```
-
----
-
-## Frequently Asked Questions
-
-#### Where is my financial data stored?
-All data is stored locally in an SQLite database file inside the application private directory on your device storage (`/data/user/0/com.ma.expensy/`). It is never synced to any remote server.
-
-#### How do I transfer my records to a new phone or migrate from another app?
-Navigate to **Settings → Backup & Restore** within Expensy. Generate an encrypted (`.enc`) or JSON backup, save the file to your external storage or transfer folder, and import it on your new phone (during Onboarding or from Backup & Restore). You can also import existing history from **TrackWallet (`.csv`)** or **GreenStash (`.json`)**.
-
-#### How does balance inheritance work between Bank Accounts and Debit Cards?
-When you link a Debit Card to a specific Bank Account, transactions recorded against the debit card deduct directly from the parent bank account balance. This accurately reflects real-world banking where debit cards do not maintain an independent balance ledger.
-
-#### What happens if I delete an account with existing transactions?
-The application prompts you to choose between archiving the account (which preserves historic transactional records and spending reports) or cascade-deleting linked transactions.
 
 ---
 

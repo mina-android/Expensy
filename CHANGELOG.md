@@ -2,6 +2,9 @@
 
 ## [1.2.6] - 2026-11-22
 
+### Documentation & Release Notes
+- **README & GitHub Releases**: Removed the Frequently Asked Questions section and navigation link from `README.md` to match `README_TEMPLATE.md`, and reformatted all GitHub release notes (`v1.0.0`–`v1.2.6`) to match the `IT-Box` structured release note format.
+
 ### Full-Codebase Audit: Backup & Restore Hardening, Dead Code Removal, UI/UX Standardization, Financial Logic & Notification Fixes
 - **Backup & Restore Completeness & Backward Compatibility**:
   - Version-gated `AppDatabase.runDataMigrationDataFixes({int? fromVersion})` so destructive/legacy fixes (D1 credit-card sign flip, D3 negative balance migration, D5 split backfill) run strictly for `< v28` backups, while `_syncRecurringProgressFromHistory()` runs for `< v30` and structural self-heals remain idempotent.
